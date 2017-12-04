@@ -17,7 +17,7 @@ Inertia will contain two major components:
 * Deployment daemon
 * Command line interface
 
-The deployment daemon will run persistenly in the background, receiving webhook
+The deployment daemon will run persistently in the background, receiving webhook
 events from GitHub whenever new commits are pushed. The CLI will provide an
 interface to adjust settings, add repositories, etc.
 
