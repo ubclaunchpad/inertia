@@ -7,11 +7,13 @@ import (
 	"os/exec"
 )
 
-var pemFileLoc = "/Users/chadlagore/.ssh/id_inertia"
+var (
+	pemFileLoc = "/Users/chadlagore/.ssh/id_inertia"
+	host       = "brunocodesbad@35.227.171.49"
+)
 
 func main() {
-	host := os.Args[1]
-	remoteCmd := os.Args[2]
+	remoteCmd := os.Args[1]
 
 	result, err := RunSSHCommand(host, remoteCmd)
 
