@@ -23,9 +23,10 @@ fetchfile() {
     fi;
 }
 
-# Try to download using curl or wget,
-# before resorting to installing curl.
+# Get docker if it doesn't exist.
 if !(hash docker 2>/dev/null); then
+    # Try to download using curl or wget,
+    # before resorting to installing curl.
     if fetchfile $DOCKER_SOURCE $DOCKER_DEST; then
         sh $DOCKER_DEST
     else
