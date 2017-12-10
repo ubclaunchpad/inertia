@@ -3,7 +3,9 @@
 # Bootstraps a machine for use with inertia.
 # This is pretty alpha, it gets docker and docker-compose.
 # Installs curl only if it doesn't exist.
-# Tested on Ubuntu 16.04. 
+# Tested on Ubuntu 16.04, requires sudo for a few steps.
+
+set -e
 
 DOCKER_SOURCE=get.docker.com
 DOCKER_DEST='/tmp/get-docker.sh'
@@ -15,9 +17,9 @@ fetchfile() {
     #   $1 source URL
     #   $2 destination file.
     if hash curl 2>/dev/null; then
-        curl -fsSL $1 -o "$2"
+        sudo curl -fsSL $1 -o "$2"
     elif hash wget 2>/dev/null; then
-        wget -O "$2" $1
+        sudo wget -O "$2" $1
     else
         return 1
     fi;
@@ -39,7 +41,7 @@ fi
 # Now get docker-compose - if we've made it this
 # far, we have curl or wget installed.
 fetchfile $DOCKER_COMPOSE_SOURCE $DOCKER_COMPOSE_DEST
-chmod +x $DOCKER_COMPOSE_DEST  # may fail without sudo :(
+sudo chmod +x $DOCKER_COMPOSE_DEST
 
 # Try using.
 docker-compose --version

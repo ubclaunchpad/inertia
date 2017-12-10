@@ -3,6 +3,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/bramvdbogaerde/go-scp"
+  packages = ["."]
+  revision = "e1fc87afa32536b6f2a58fc9cf937432aeff91e7"
+
+[[projects]]
+  branch = "master"
   name = "github.com/google/go-github"
   packages = ["github"]
   revision = "fbfee053c26dab3772adfc7799d995eed379133e"
@@ -46,6 +52,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "99c0c7e5d9e98775e06fc344339939d12dd34af90e84ba7f97c6663d1beb4d99"
+  inputs-digest = "775e5bae169218c48959f7ff518c2eaeafe9664ff9c8f86cab366bd23b1942fe"
   solver-name = "gps-cdcl"
   solver-version = 1
