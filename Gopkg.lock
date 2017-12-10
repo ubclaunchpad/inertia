@@ -3,6 +3,18 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  revision = "fbfee053c26dab3772adfc7799d995eed379133e"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
+
+[[projects]]
+  branch = "master"
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
@@ -34,6 +46,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "55cf4b982d50b46d71cbdd056087fbb67caafd1f4451330ceae9fd82b7c5b52d"
+  inputs-digest = "99c0c7e5d9e98775e06fc344339939d12dd34af90e84ba7f97c6663d1beb4d99"
   solver-name = "gps-cdcl"
   solver-version = 1
