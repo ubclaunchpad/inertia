@@ -5,3 +5,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/google/go-github"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/bramvdbogaerde/go-scp"
