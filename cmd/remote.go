@@ -103,6 +103,7 @@ func AddNewRemote(name, IP, user, pemLoc string) {
 // in the configuration object.
 func DeployToRemote(config *Config) {
 	println("Deploying remote " + config.CurrentRemoteName + "...")
+	// TODO
 }
 
 // RunSSHCommand runs a command remotely.
