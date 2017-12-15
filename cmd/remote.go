@@ -16,9 +16,16 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
+	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 
+	scp "github.com/bramvdbogaerde/go-scp"
+	"github.com/bramvdbogaerde/go-scp/auth"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh"
 )
 
 // remoteCmd represents the remote command
@@ -29,11 +36,16 @@ var remoteCmd = &cobra.Command{
 SSH access to the instance via a PEM file. Similar behaviour to
 git remote`,
 	Run: func(cmd *cobra.Command, args []string) {
+		verbose, _ := cmd.Flags().GetBool("verbose")
 		config := GetProjectConfigFromDisk()
 		if config.CurrentRemoteName == noInertiaRemote {
 			println("No remote currently set.")
 		} else {
-			println(config.CurrentRemoteName)
+			if verbose {
+				fmt.Printf("%+v\n", config)
+			} else {
+				println(config.CurrentRemoteName)
+			}
 		}
 	},
 }
@@ -53,23 +65,8 @@ file. Specify a VPS name and an IP address.`,
 	},
 }
 
-// deployCmd represents the deploy command
-var deployCmd = &cobra.Command{
-	Use:   "deploy",
-	Short: "Deploy the application to the remote VPS instance specified",
-	Long: `Deploy the application to the remote VPS instance specified.
-A URL will be provided to direct GitHub webhooks too, the daemon will
-request access to the repository via a public key, the daemon will begin
-waiting for updates to this repository's remote master branch.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		config := GetProjectConfigFromDisk()
-		DeployToRemote(config)
-	},
-}
-
 func init() {
 	RootCmd.AddCommand(remoteCmd)
-	RootCmd.AddCommand(deployCmd)
 	remoteCmd.AddCommand(addCmd)
 
 	// Here you will define your flags and configuration settings.
@@ -82,6 +79,7 @@ func init() {
 	// is called directly, e.g.:
 	addCmd.Flags().StringP("user", "u", "root", "User for SSH access")
 	addCmd.Flags().StringP("identity", "i", "$HOME/.ssh/id_rsa", "PEM file location")
+	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 }
 
 // AddNewRemote adds a new remote to the project config file.
@@ -99,11 +97,9 @@ func AddNewRemote(name, IP, user, pemLoc string) {
 	println("Remote '" + name + "' added.")
 }
 
-// DeployToRemote deploys the project to the remote VPS instance specified
-// in the configuration object.
-func DeployToRemote(config *Config) {
-	println("Deploying remote " + config.CurrentRemoteName + "...")
-	// TODO
+// GetHost creates the user@IP string.
+func (remote *RemoteVPS) GetHost() string {
+	return remote.User + "@" + remote.IP
 }
 
 // RunSSHCommand runs a command remotely.
@@ -124,7 +120,52 @@ func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (*bytes.Buffer, error) 
 	return &out, err
 }
 
-// GetHost creates the user@IP string.
-func (remote *RemoteVPS) GetHost() string {
-	return remote.User + "@" + remote.IP
+// RunSSHScript runs a command remotely.
+func (remote *RemoteVPS) RunSSHScript(localScript string) (*bytes.Buffer, error) {
+	// To run this, we actually have to copy the script to the remote server
+	// using scp.
+	clientConfig, err := auth.PrivateKey(
+		remote.User, remote.PEM, ssh.InsecureIgnoreHostKey())
+
+	if err != nil {
+		fmt.Println("Couldn't establish a connection to the remote server ", err)
+		return nil, err
+	}
+
+	client := scp.NewClient(remote.IP+":22", &clientConfig)
+
+	// Connect to the remote server
+	err = client.Connect()
+	if err != nil {
+		fmt.Println("Couldn't establish a connection to the remote server ", err)
+		return nil, err
+	}
+
+	// Collect the local script.
+	f, _ := os.Open(localScript)
+	defer client.Session.Close()
+	defer f.Close()
+
+	// Finally, copy the file over
+	filename := filepath.Base(localScript)
+	remoteLoc := "/tmp/" + filename
+	client.CopyFile(f, remoteLoc, "0644")
+
+	// Run the script remotely.
+	result, err := remote.RunSSHCommand("sh " + remoteLoc)
+	if err != nil {
+		log.Fatal("Failed to run script on server ", err)
+		println(string(result.Bytes()))
+		return nil, err
+	}
+	println(string(result.Bytes()))
+
+	result, err = remote.RunSSHCommand("rm " + remoteLoc)
+	if err != nil {
+		log.Fatal("Failed to clean up server after run", err)
+		println(string(result.Bytes()))
+		return nil, err
+	}
+
+	return result, nil
 }
