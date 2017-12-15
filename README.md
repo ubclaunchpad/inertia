@@ -14,8 +14,36 @@ brew install dep
 
 Install project dependencies.
 
-```
+```bash
 dep ensure
+```
+
+## Bootstrapping
+
+To bootstrap servers, often some bash scripting is involved,
+but we'd like to avoid shipping bash scripts with our go binary.
+So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to
+compile shell scripts into our go executables.
+
+If you make changes to the bootstrapping shell scripts in
+`cmd/bootstrap/`, convert them to `Assets` by running.
+
+```bash
+go-bindata -o cmd/bootstrap.go cmd/bootstrap/...
+```
+
+Inspect the auto-generated file `cmd/bootstrap.go`. Change its
+package from `main` to `cmd`. Then use your asset!
+
+```go
+shellScriptData, err := Asset("cmd/bootstrap/myshellscript.sh")
+
+if err != nil {
+  log.Fatal("No asset with that name")
+}
+
+// Optionally run shell script over SSH.
+result, _ := remote.RunSSHCommand(string(shellScriptData))
 ```
 
 ## Motivation

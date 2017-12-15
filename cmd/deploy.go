@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +40,11 @@ waiting for updates to this repository's remote master branch.`,
 func (remote *RemoteVPS) Deploy() {
 	println("Deploying remote")
 	println("Installing Docker on remote instance...")
-	result, _ := remote.RunSSHScript("bootstrap/docker.sh")
+	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
+	if err != nil {
+		log.Fatal("Bootstrapping asset failed to load")
+	}
+	result, _ := remote.RunSSHCommand(string(installDockerSh))
 	print(string(result.Bytes()))
 
 	println("Running Inertia daemon on remote instance...")
