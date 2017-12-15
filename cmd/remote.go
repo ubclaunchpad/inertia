@@ -17,15 +17,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
-	"path/filepath"
 
-	scp "github.com/bramvdbogaerde/go-scp"
-	"github.com/bramvdbogaerde/go-scp/auth"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh"
 )
 
 // remoteCmd represents the remote command
@@ -118,54 +112,4 @@ func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (*bytes.Buffer, error) 
 	}
 
 	return &out, err
-}
-
-// RunSSHScript runs a command remotely.
-func (remote *RemoteVPS) RunSSHScript(localScript string) (*bytes.Buffer, error) {
-	// To run this, we actually have to copy the script to the remote server
-	// using scp.
-	clientConfig, err := auth.PrivateKey(
-		remote.User, remote.PEM, ssh.InsecureIgnoreHostKey())
-
-	if err != nil {
-		fmt.Println("Couldn't establish a connection to the remote server ", err)
-		return nil, err
-	}
-
-	client := scp.NewClient(remote.IP+":22", &clientConfig)
-
-	// Connect to the remote server
-	err = client.Connect()
-	if err != nil {
-		fmt.Println("Couldn't establish a connection to the remote server ", err)
-		return nil, err
-	}
-
-	// Collect the local script.
-	f, _ := os.Open(localScript)
-	defer client.Session.Close()
-	defer f.Close()
-
-	// Finally, copy the file over
-	filename := filepath.Base(localScript)
-	remoteLoc := "/tmp/" + filename
-	client.CopyFile(f, remoteLoc, "0644")
-
-	// Run the script remotely.
-	result, err := remote.RunSSHCommand("sh " + remoteLoc)
-	if err != nil {
-		log.Fatal("Failed to run script on server ", err)
-		println(string(result.Bytes()))
-		return nil, err
-	}
-	println(string(result.Bytes()))
-
-	result, err = remote.RunSSHCommand("rm " + remoteLoc)
-	if err != nil {
-		log.Fatal("Failed to clean up server after run", err)
-		println(string(result.Bytes()))
-		return nil, err
-	}
-
-	return result, nil
 }
