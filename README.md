@@ -25,6 +25,10 @@ but we'd like to avoid shipping bash scripts with our go binary.
 So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to
 compile shell scripts into our go executables.
 
+```bash
+go get -u github.com/jteeuwen/go-bindata/...
+```
+
 If you make changes to the bootstrapping shell scripts in
 `cmd/bootstrap/`, convert them to `Assets` by running.
 
