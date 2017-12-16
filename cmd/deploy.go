@@ -20,6 +20,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: Reference daemon pkg for this information?
+// We only want the package dependencies to go in one
+// direction, so best to think about how to do this.
+// Clearly cannot ask for this information over HTTP.
+var daemonPort = ":8081"
+
 // deployCmd represents the deploy command
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
@@ -38,17 +44,45 @@ waiting for updates to this repository's remote master branch.`,
 // Deploy deploys the project to the remote VPS instance specified
 // in the configuration object.
 func (remote *RemoteVPS) Deploy() {
-	println("Deploying remote")
-	println("Installing Docker on remote instance...")
+	println("Deploying remote...")
+
+	// Collect assets (docker shell script)
 	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
 	if err != nil {
 		log.Fatal("Bootstrapping asset failed to load")
 	}
-	result, _, _ := remote.RunSSHCommand(string(installDockerSh))
-	print(string(result.Bytes()))
 
-	println("Running Inertia daemon on remote instance...")
-	// remote.RunSSHCommand("docker run ubclaunchpad/inertia")
+	// Collect assets (keygen shell script)
+	keygenSh, err := Asset("cmd/bootstrap/keygen.sh")
+	if err != nil {
+		log.Fatal("Bootstrapping asset failed to load")
+	}
+
+	// Install docker.
+	_, stderr, err := remote.RunSSHCommand(string(installDockerSh))
+	if err != nil {
+		log.Println(stderr)
+		log.Fatal("Failed to install docker on remote")
+	}
+
+	// Run inertia daemon (TODO).
+	// remote.RunSSHCommand("docker run ubclaunchpad/inertia-daemon")
+	println("Daemon running on instance")
+
+	// Create deploy key.
+	result, stderr, err := remote.RunSSHCommand(string(keygenSh))
+
+	if err != nil {
+		log.Println(stderr)
+		log.Fatal("Failed to run keygen on remote")
+	}
+
+	// Output deploy key to user.
+	println("GitHub Deploy Key: ")
+	println(string(result.Bytes()))
+
+	// Outuput
+	println("GitHub WebHook URL: " + remote.IP + daemonPort)
 }
 
 func init() {
