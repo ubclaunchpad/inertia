@@ -87,7 +87,7 @@ func (remote *RemoteVPS) Deploy(name string) {
 	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
 	println(string(result.Bytes()))
 
-	// Outuput
+	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
 	println("https://" + remote.IP + daemonPort)
 
