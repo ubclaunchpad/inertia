@@ -82,3 +82,18 @@ current setup flow is:
   * A webhook URL and secret
 * Add the SSH key to your project's Deploy Keys on GitHub
 * Create a webhook with the URL and secret on your project repository
+
+
+### Testing
+
++ Build the test image.
+
+```bash
+docker build -f ./test/Dockerfile -t inertia-test .
+```
+
++ Run the tests.
+
+```bash
+docker run inertia-test
+```

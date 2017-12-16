@@ -17,10 +17,18 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os/exec"
 
 	"github.com/spf13/cobra"
 )
+
+// RemoteVPS holds access to a remote instance.
+type RemoteVPS struct {
+	User string
+	IP   string
+	PEM  string
+}
 
 // remoteCmd represents the remote command
 var remoteCmd = &cobra.Command{
@@ -31,7 +39,10 @@ SSH access to the instance via a PEM file. Similar behaviour to
 git remote`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		config := GetProjectConfigFromDisk()
+		config, err := GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
 		if config.CurrentRemoteName == noInertiaRemote {
 			println("No remote currently set.")
 		} else {
@@ -77,9 +88,13 @@ func init() {
 }
 
 // AddNewRemote adds a new remote to the project config file.
-func AddNewRemote(name, IP, user, pemLoc string) {
+func AddNewRemote(name, IP, user, pemLoc string) error {
 	// Just wipe configuration for MVP.
-	config := GetProjectConfigFromDisk()
+	config, err := GetProjectConfigFromDisk()
+	if err != nil {
+		return err
+	}
+
 	config.CurrentRemoteName = name
 	config.CurrentRemoteVPS = RemoteVPS{
 		IP:   IP,
@@ -89,6 +104,8 @@ func AddNewRemote(name, IP, user, pemLoc string) {
 
 	config.Write()
 	println("Remote '" + name + "' added.")
+
+	return nil
 }
 
 // GetHost creates the user@IP string.

@@ -36,7 +36,11 @@ A URL will be provided to direct GitHub webhooks too, the daemon will
 request access to the repository via a public key, the daemon will begin
 waiting for updates to this repository's remote master branch.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config := GetProjectConfigFromDisk()
+		config, err := GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		config.CurrentRemoteVPS.Deploy()
 	},
 }

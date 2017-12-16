@@ -15,35 +15,10 @@
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
-	"os/exec"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
-)
-
-// RemoteVPS holds access to a remote instance.
-type RemoteVPS struct {
-	User string
-	IP   string
-	PEM  string
-}
-
-// Config represents the current projects configuration.
-type Config struct {
-	CurrentRemoteName string    `json:"name"`
-	CurrentRemoteVPS  RemoteVPS `json:"remote"`
-}
-
-var (
-	configFolderName = ".inertia"
-	configFileName   = "config.json"
-	noInertiaRemote  = "No inertia remote"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -63,74 +38,4 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-}
-
-// CheckForGit raises an error if we're not in a git repository.
-func CheckForGit() {
-	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
-
-	// Capture result.
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-
-	// Output should be "true\n".
-	if err != nil || string(out.Bytes()) != "true\n" {
-		log.Fatal("This does not appear to be a git repository.")
-	}
-}
-
-// GetProjectConfigFromDisk returns the current projects configuration.
-// If an .inertia folder is not found, it creates one and
-// adds the configuration JSON with default settings.
-func GetProjectConfigFromDisk() *Config {
-	CheckForGit()
-
-	// If ConfigDir is missing, make it.
-	configDirPath := GetProjectConfigFolderPath()
-	if _, err := os.Stat(configDirPath); os.IsNotExist(err) {
-		os.Mkdir(configDirPath, os.ModePerm)
-		config := Config{
-			CurrentRemoteName: noInertiaRemote,
-			CurrentRemoteVPS:  RemoteVPS{},
-		}
-		config.Write()
-		return &config
-	}
-
-	configFilePath := filepath.Join(GetProjectConfigFolderPath(), configFileName)
-	raw, err := ioutil.ReadFile(configFilePath)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var result Config
-	json.Unmarshal(raw, &result)
-
-	return &result
-}
-
-// GetProjectConfigFolderPath gets the absolute location of the project
-// configuration folder.
-func GetProjectConfigFolderPath() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return filepath.Join(cwd, configFolderName)
-}
-
-// Write writes configuration to JSON file in .inertia folder.
-func (config *Config) Write() {
-	inertiaJSON, err := json.Marshal(config)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	path := filepath.Join(GetProjectConfigFolderPath(), configFileName)
-	err = ioutil.WriteFile(path, inertiaJSON, 0644)
 }
