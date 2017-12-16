@@ -41,14 +41,14 @@ waiting for updates to this repository's remote master branch.`,
 			log.Fatal(err)
 		}
 
-		config.CurrentRemoteVPS.Deploy()
+		config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName)
 	},
 }
 
 // Deploy deploys the project to the remote VPS instance specified
 // in the configuration object.
-func (remote *RemoteVPS) Deploy() {
-	println("Deploying remote...")
+func (remote *RemoteVPS) Deploy(name string) {
+	println("Deploying remote " + name)
 
 	// Collect assets (docker shell script)
 	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
