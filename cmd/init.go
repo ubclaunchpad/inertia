@@ -149,6 +149,9 @@ func GetProjectConfigFromDisk() (*Config, error) {
 	raw, err := ioutil.ReadFile(configFilePath)
 
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, errors.New("config file doesnt exist, try inertia init")
+		}
 		log.Fatal(err)
 	}
 
