@@ -82,11 +82,12 @@ func (remote *RemoteVPS) Deploy() {
 	}
 
 	// Output deploy key to user.
-	println("GitHub Deploy Key: ")
+	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
 	println(string(result.Bytes()))
 
 	// Outuput
-	println("GitHub WebHook URL: " + remote.IP + daemonPort)
+	print("GitHub WebHook URL ")
+	println("(add here https://www.github.com/<your_repo>/settings/keys/new): " + remote.IP + daemonPort)
 }
 
 func init() {
