@@ -24,9 +24,8 @@ import (
 // We only want the package dependencies to go in one
 // direction, so best to think about how to do this.
 // Clearly cannot ask for this information over HTTP.
-var daemonPort = ":8081"
+var defaultDaemonPort = "8081"
 
-// deployCmd represents the deploy command
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
 	Use:   "deploy",
@@ -41,13 +40,14 @@ waiting for updates to this repository's remote master branch.`,
 			log.Fatal(err)
 		}
 
-		config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName)
+		daemonPort, err := cmd.Flags().GetString("port")
+		config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName, daemonPort)
 	},
 }
 
 // Deploy deploys the project to the remote VPS instance specified
 // in the configuration object.
-func (remote *RemoteVPS) Deploy(name string) {
+func (remote *RemoteVPS) Deploy(name, daemonPort string) {
 	println("Deploying remote " + name)
 
 	// Collect assets (docker shell script)
@@ -70,7 +70,7 @@ func (remote *RemoteVPS) Deploy(name string) {
 	}
 
 	// Run inertia daemon (TODO).
-	// remote.RunSSHCommand("docker run ubclaunchpad/inertia-daemon")
+	// remote.RunSSHCommand("docker run ubclaunchpad/inertia deamon run -p " + daemonPort)
 	println("Daemon running on instance")
 
 	// Create deploy key.
@@ -89,7 +89,7 @@ func (remote *RemoteVPS) Deploy(name string) {
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
-	println("https://" + remote.IP + daemonPort)
+	println("https://" + remote.IP + string(defaultDaemonPort))
 
 	println()
 
@@ -107,5 +107,5 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// deployCmd.Flags().StringP("user", "u", "root", "Set the user for SSH access")
+	deployCmd.Flags().StringP("port", "p", defaultDaemonPort, "Set the daemon port")
 }
