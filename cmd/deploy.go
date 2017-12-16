@@ -81,6 +81,8 @@ func (remote *RemoteVPS) Deploy() {
 		log.Fatal("Failed to run keygen on remote")
 	}
 
+	println()
+
 	// Output deploy key to user.
 	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
 	println(string(result.Bytes()))
@@ -88,6 +90,10 @@ func (remote *RemoteVPS) Deploy() {
 	// Outuput
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
 	println("https://" + remote.IP + daemonPort)
+
+	println()
+
+	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
 }
 
 func init() {
