@@ -55,9 +55,9 @@ The output of `inertia deploy` has given you two important pieces of information
    provided. Again, add this webhook URL in your GitHub settings area (at the URL
    provided).
 
-# Development
+## Development
 
-## Dependencies
+### Dependencies
 
 We use [dep](https://github.com/golang/dep) for managing dependencies. Install
 that first if you haven't already.
@@ -72,7 +72,7 @@ Install project dependencies.
 dep ensure
 ```
 
-## Bootstrapping
+### Bootstrapping
 
 To bootstrap servers, often some bash scripting is involved,
 but we'd like to avoid shipping bash scripts with our go binary.
@@ -104,14 +104,14 @@ if err != nil {
 result, _ := remote.RunSSHCommand(string(shellScriptData))
 ```
 
-# Motivation
+## Motivation
 
 At Launch Pad we are frequently changing hosting providers based on available
 funding and sponsorship. Inertia is a project to develop an in-house continuous
 deployment system to make deploying applications simple and painless, regardless
 of the hosting provider.
 
-# Design
+## Design
 
 Inertia will contain two major components:
 
