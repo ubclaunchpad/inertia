@@ -42,13 +42,10 @@ var (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Initialize an inertia project in this repository",
+	Long: `Initialize an inertia project in this GitHub repository.
+There must be a local git repository in order for initialization
+to succeed.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := InitializeInertiaProject()
 		if err != nil {
