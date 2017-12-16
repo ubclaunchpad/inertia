@@ -97,19 +97,16 @@ func (remote *RemoteVPS) GetHost() string {
 }
 
 // RunSSHCommand runs a command remotely.
-func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (*bytes.Buffer, error) {
+func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (
+	*bytes.Buffer, *bytes.Buffer, error) {
 	cmd := exec.Command("ssh", "-i", remote.PEM, "-t", remote.GetHost(), remoteCmd)
 
 	// Capture result.
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
 
-	if err != nil {
-		out = stderr
-	}
-
-	return &out, err
+	return &stdout, &stderr, err
 }

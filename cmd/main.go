@@ -97,6 +97,7 @@ func GetProjectConfigFromDisk() *Config {
 			CurrentRemoteVPS:  RemoteVPS{},
 		}
 		config.Write()
+		return &config
 	}
 
 	configFilePath := filepath.Join(GetProjectConfigFolderPath(), configFileName)

@@ -44,7 +44,7 @@ func (remote *RemoteVPS) Deploy() {
 	if err != nil {
 		log.Fatal("Bootstrapping asset failed to load")
 	}
-	result, _ := remote.RunSSHCommand(string(installDockerSh))
+	result, _, _ := remote.RunSSHCommand(string(installDockerSh))
 	print(string(result.Bytes()))
 
 	println("Running Inertia daemon on remote instance...")
