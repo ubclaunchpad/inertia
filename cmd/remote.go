@@ -104,7 +104,7 @@ behaviour, and other information.`,
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 
-		if string(body) != "Hello, World!" {
+		if string(body) != okResp {
 			println("Could not connect to daemon")
 			println("Try running inertia deploy")
 			return

@@ -19,7 +19,13 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/go-github/github"
 	"github.com/spf13/cobra"
+)
+
+var (
+	defaultSecret = "inertia"
+	okResp        = "I'm a little Webhook, short and stout!"
 )
 
 // daemonCmd represents the daemon command
@@ -43,7 +49,7 @@ inertia daemon run 8081`,
 			log.Fatal(err)
 		}
 		println("Serving daemon on port " + port)
-		http.HandleFunc("/", rootHandler)
+		http.HandleFunc("/", requestHandler)
 		log.Fatal(http.ListenAndServe(":"+port, nil))
 	},
 }
@@ -63,8 +69,53 @@ func init() {
 	runCmd.Flags().StringP("port", "p", "8081", "Set port for daemon to run on")
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Hello, World!")
+// requestHandler writes a response to a request into the given ResponseWriter.
+func requestHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, okResp)
+
+	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	event, err := github.ParseWebHook(github.WebHookType(r), payload)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	switch event := event.(type) {
+	case *github.PushEvent:
+		processPushEvent(event)
+	case *github.PullRequestEvent:
+		processPullRequestEvent(event)
+	default:
+		log.Println("Unrecognized event type")
+	}
+}
+
+// processPushEvent prints information about the given PushEvent.
+func processPushEvent(event *github.PushEvent) {
+	repo := event.GetRepo()
+	log.Println("Received PushEvent")
+	log.Println(fmt.Sprintf("Repository Name: %s", *repo.Name))
+	log.Println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
+	log.Println(fmt.Sprintf("Ref: %s", event.GetRef()))
+}
+
+// processPullREquestEvent prints information about the given PullRequestEvent.
+// Handling PRs is unnecessary because merging one will trigger a PushEvent.
+func processPullRequestEvent(event *github.PullRequestEvent) {
+	repo := event.GetRepo()
+	pr := event.GetPullRequest()
+	merged := "false"
+	if *pr.Merged {
+		merged = "true"
+	}
+	log.Println("Received PullRequestEvent")
+	log.Println(fmt.Sprintf("Repository Name: %s", *repo.Name))
+	log.Println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
+	log.Println(fmt.Sprintf("Ref: %s", pr.GetBase().GetRef()))
+	log.Println(fmt.Sprintf("Merge status: %v", merged))
 }

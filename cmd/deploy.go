@@ -120,6 +120,7 @@ func (remote *RemoteVPS) Deploy(name, daemonPort string) error {
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
 	println("http://" + remote.IP + ":" + daemonPort)
+	println("Github WebHook Secret: " + defaultSecret)
 
 	println()
 
