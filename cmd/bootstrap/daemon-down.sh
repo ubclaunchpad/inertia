@@ -1,9 +1,5 @@
 # Basic script for bringing down the daemon.
 
-# Args:
-#    port (int): The port to run the remote daemon on.
-
-
 set -e
 
 DAEMON_NAME=inertia-daemon
