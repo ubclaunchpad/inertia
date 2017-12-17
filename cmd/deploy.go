@@ -94,7 +94,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 				log.Fatal(err)
 			}
 		default:
-			fmt.Printf("No such deployment command %s", args[1])
+			fmt.Printf("No such deployment command %s\n", args[1])
 			os.Exit(1)
 		}
 	},
