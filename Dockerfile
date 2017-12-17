@@ -1,5 +1,4 @@
-# Builds a tiny little dockerfile to ship the inertia binary in.
-# Useful for running the deamon remotely.
+# Builds a tiny little image to ship the inertia binary in.
 
 # Build the source in a preliminary container.
 FROM golang:alpine AS build-env
