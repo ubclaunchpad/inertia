@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 
 	"github.com/spf13/cobra"
@@ -69,6 +70,12 @@ information about the VPS including IP address, user and a PEM
 file. Specify a VPS name and an IP address.`,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		_, err := GetProjectConfigFromDisk()
+		if err != nil {
+			println(err.Error())
+			os.Exit(1)
+		}
 		user, _ := cmd.Flags().GetString("user")
 		pemLoc, _ := cmd.Flags().GetString("identity")
 		AddNewRemote(args[0], args[1], user, pemLoc)
