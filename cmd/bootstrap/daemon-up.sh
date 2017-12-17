@@ -5,6 +5,7 @@ set -e
 PORT=%s
 DAEMON_NAME=inertia-daemon
 CONTAINER_PORT=8081
+IMAGE_REPOSITORY=ubclaunchpad/inertia
 
 # Check if already running.
 ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`
@@ -15,8 +16,11 @@ if [ ! -z "$ALREADY_RUNNING" ]; then
     sudo docker rm -f $ALREADY_RUNNING
 fi;
 
+# Pull the latest inertia daemon.
+sudo docker pull $IMAGE_REPOSITORY
+
 # Run container.
 sudo docker run -d \
     -p "$PORT":8081 \
     --name "$DAEMON_NAME" \
-    ubclaunchpad/inertia
+    "$IMAGE_REPOSITORY"
