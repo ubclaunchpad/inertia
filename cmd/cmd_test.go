@@ -33,7 +33,8 @@ func TestConfigWrite(t *testing.T) {
 }
 
 // Go is a broken, broken language.
-// This hijacks the exec.Command call.
+// This closure hijacks the exec.Command call, and stuffs
+// some of the call args into my buffer.
 // https://npf.io/2015/06/testing-exec-command/
 func fakeCommand(buf *bytes.Buffer) func(string, ...string) *exec.Cmd {
 	return func(command string, args ...string) *exec.Cmd {
