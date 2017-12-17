@@ -40,9 +40,17 @@ type RemoteVPS struct {
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
 	Short: "Configure the local settings for a remote VPS instance",
-	Long: `Configure the local settings for a remote VPS instance. Requires
-SSH access to the instance via a PEM file. Similar behaviour to
-git remote`,
+	Long: `Remote is a low level command for interacting with this VPS
+over SSH. Provides functionality such as adding new remotes, removing remotes,
+bootstrapping the server for deployment, running install scripts such as
+installing docker, starting the Inertia daemon and other low level configuration
+of the VPS. Must run 'inertia init' in your repository before using.
+
+Example:
+
+inerta remote add gcloud 35.123.55.12 -i /Users/path/to/pem
+inerta remote bootstrap gcloud
+inerta remote status gcloud`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		config, err := GetProjectConfigFromDisk()
@@ -53,7 +61,8 @@ git remote`,
 			println("No remote currently set.")
 		} else {
 			if verbose {
-				fmt.Printf("%+v\n", config)
+				fmt.Printf("%s\n", config.CurrentRemoteName)
+				fmt.Printf("%+v\n", *config.CurrentRemoteVPS)
 			} else {
 				println(config.CurrentRemoteName)
 			}
@@ -82,16 +91,51 @@ file. Specify a VPS name and an IP address.`,
 	},
 }
 
+// bootstrapCmd represents the remote add command
+var bootstrapCmd = &cobra.Command{
+	Use:   "bootstrap [REMOTE]",
+	Short: "Bootstrap the VPS for continuous deployment",
+	Long: `Bootstrap the VPS for continuous deployment.
+A URL will be provided to direct GitHub webhooks to, the daemon will
+request access to the repository via a public key, and will listen
+for updates to this repository's remote master branch.`,
+	Args: cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		config, err := GetProjectConfigFromDisk()
+		if err != nil {
+			println(err.Error())
+			os.Exit(1)
+		}
+		port, _ := cmd.Flags().GetString("port")
+		if args[0] != config.CurrentRemoteName {
+			println("No such remote " + args[0])
+			println("Inertia currently supports one remote per repository")
+			println("Run `inertia remote -v' to see what remote is available")
+			os.Exit(1)
+		}
+		config.CurrentRemoteVPS.Bootstrap(args[0], port)
+	},
+}
+
 // statusCmd represents the remote add command
 var statusCmd = &cobra.Command{
-	Use:   "status",
+	Use:   "status [REMOTE]",
 	Short: "Query the status of a remote instance",
 	Long: `Query the remote VPS for connectivity, daemon
 behaviour, and other information.`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		if args[0] != config.CurrentRemoteName {
+			println("No such remote " + args[0])
+			println("Inertia currently supports one remote per repository")
+			println("Run `inertia remote -v' to see what remote is available")
+			os.Exit(1)
 		}
 
 		host := "http://" + config.CurrentRemoteVPS.GetIPAndPort()
@@ -110,13 +154,15 @@ behaviour, and other information.`,
 			return
 		}
 
-		println("Remote instance accepting requests at " + host)
+		fmt.Printf("Remote instance '%s' accepting requests at %s\n",
+			config.CurrentRemoteName, host)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
+	remoteCmd.AddCommand(bootstrapCmd)
 	remoteCmd.AddCommand(statusCmd)
 
 	// Here you will define your flags and configuration settings.
@@ -127,9 +173,11 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
+	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("user", "u", "root", "User for SSH access")
 	addCmd.Flags().StringP("identity", "i", "$HOME/.ssh/id_rsa", "PEM file location")
-	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
+	bootstrapCmd.Flags().StringP("port", "p", defaultDaemonPort,
+		"The port for the daemon to listen on")
 }
 
 // AddNewRemote adds a new remote to the project config file.
@@ -152,6 +200,51 @@ func AddNewRemote(name, IP, user, pemLoc string) error {
 	config.Write(f)
 
 	println("Remote '" + name + "' added.")
+
+	return nil
+}
+
+// Bootstrap configures a remote vps for continuous deployment
+// by installing docker, starting the daemon and building a
+// public-private key-pair. It outputs configuration information
+// for the user.
+func (remote *RemoteVPS) Bootstrap(name, daemonPort string) error {
+	println("Bootstrapping remote " + name)
+
+	println("Installing docker")
+	err := remote.InstallDocker()
+	if err != nil {
+		return err
+	}
+
+	println("Starting daemon")
+	err = remote.DaemonUp(daemonPort)
+	if err != nil {
+		return err
+	}
+
+	println("Building deploy key")
+	pub, err := remote.KeyGen()
+	if err != nil {
+		return err
+	}
+
+	println()
+	println("Daemon running on instance")
+
+	// Output deploy key to user.
+	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println(pub.String())
+
+	// Output Webhook url to user.
+	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
+	println("http://" + remote.IP + ":" + daemonPort)
+	println("Github WebHook Secret: " + defaultSecret)
+
+	println()
+
+	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
+	fmt.Printf("Then run `inertia deploy %s' to deploy your application.\n", name)
 
 	return nil
 }
