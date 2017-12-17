@@ -32,8 +32,7 @@ func TestConfigWrite(t *testing.T) {
 	assert.Equal(t, n, 98)
 }
 
-// Go is a broken, broken language.
-// This closure hijacks the exec.Command call, and stuffs
+// This disgusting closure hijacks the exec.Command call, and stuffs
 // some of the call args into my buffer.
 // https://npf.io/2015/06/testing-exec-command/
 func fakeCommand(buf *bytes.Buffer) func(string, ...string) *exec.Cmd {
