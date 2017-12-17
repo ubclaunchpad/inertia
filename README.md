@@ -143,3 +143,8 @@ current setup flow is:
 * Add the SSH key to your project's Deploy Keys on GitHub
 * Create a webhook with the URL and secret on your project repository
 
+## Testing
+
+```bash
+go test ./cmd -cover
+```
