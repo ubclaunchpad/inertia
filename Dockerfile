@@ -4,8 +4,9 @@
 # Build the source in a preliminary container.
 FROM golang:alpine AS build-env
 
-ENV INERTIA_HOME=/go/src/github.com/ubclaunchpad/inertia
+ENV INERTIA_BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia
 
+RUN apk add --update --no-cache git
 ADD . ${INERTIA_BUILD_HOME}
 RUN go get -u github.com/golang/dep/cmd/dep
 WORKDIR ${INERTIA_BUILD_HOME}
@@ -18,5 +19,10 @@ RUN go build -o /bin/inertia
 FROM alpine
 LABEL maintainer "UBC Launchpad team@ubclaunchpad.com"
 WORKDIR /app
-COPY --from=build-env /bin/inertia /app/
-ENTRYPOINT /app/inertia
+COPY --from=build-env /bin/inertia /usr/local/bin
+
+# Treat container as a binary.
+ENTRYPOINT ["inertia"]
+
+# Override the daemon startup if you wish.
+CMD ["daemon", "run"]

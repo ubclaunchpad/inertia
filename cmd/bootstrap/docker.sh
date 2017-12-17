@@ -11,6 +11,11 @@ DOCKER_DEST='/tmp/get-docker.sh'
 DOCKER_COMPOSE_SOURCE=https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m`
 DOCKER_COMPOSE_DEST='/usr/local/bin/docker-compose'
 
+# Check if docker/docker-compose aready exist.
+if hash docker 2>/dev/null && hash docker-compose 2>/dev/null; then
+    exit 0
+fi;
+
 fetchfile() {
     # Args:
     #   $1 source URL

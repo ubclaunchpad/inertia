@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -40,9 +41,52 @@ waiting for updates to this repository's remote master branch.`,
 			log.Fatal(err)
 		}
 
-		daemonPort, err := cmd.Flags().GetString("port")
-		config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName, daemonPort)
+		stop, err := cmd.Flags().GetBool("stop")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if stop {
+			// Collect assets (deamon-down shell script)
+			daemonCmd, err := Asset("cmd/bootstrap/daemon-down.sh")
+			if err != nil {
+				log.Fatal("Asset failed to load")
+			}
+
+			_, stderr, err := config.CurrentRemoteVPS.RunSSHCommand(string(daemonCmd))
+			if err != nil {
+				log.Println(stderr)
+				log.Fatal("Failed to kill daemon on remote")
+			}
+
+			println("Stopped daemon successfully")
+
+		} else {
+			daemonPort, err := cmd.Flags().GetString("port")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName, daemonPort)
+			config.CurrentRemoteVPS.Port = daemonPort
+			config.Write()
+		}
 	},
+}
+
+func init() {
+	RootCmd.AddCommand(deployCmd)
+
+	// Here you will define your flags and configuration settings.
+
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// deployCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	deployCmd.Flags().StringP("port", "p", defaultDaemonPort, "Set the daemon port")
+	deployCmd.Flags().BoolP("stop", "s", false, "Stop the daemon")
 }
 
 // Deploy deploys the project to the remote VPS instance specified
@@ -62,7 +106,14 @@ func (remote *RemoteVPS) Deploy(name, daemonPort string) {
 		log.Fatal("Bootstrapping asset failed to load")
 	}
 
+	// Collect assets (deamon-up shell script)
+	daemonCmd, err := Asset("cmd/bootstrap/daemon-up.sh")
+	if err != nil {
+		log.Fatal("Bootstrapping asset failed to load")
+	}
+
 	// Install docker.
+	println("Installing docker")
 	_, stderr, err := remote.RunSSHCommand(string(installDockerSh))
 	if err != nil {
 		log.Println(stderr)
@@ -70,7 +121,14 @@ func (remote *RemoteVPS) Deploy(name, daemonPort string) {
 	}
 
 	// Run inertia daemon (TODO).
-	// remote.RunSSHCommand("docker run ubclaunchpad/inertia deamon run -p " + daemonPort)
+	println("Starting daemon")
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
+	_, stderr, err = remote.RunSSHCommand(daemonCmdStr)
+	if err != nil {
+		log.Println(stderr)
+		log.Fatal("Failed to run daemon on remote")
+	}
+
 	println("Daemon running on instance")
 
 	// Create deploy key.
@@ -89,23 +147,9 @@ func (remote *RemoteVPS) Deploy(name, daemonPort string) {
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
-	println("https://" + remote.IP + string(defaultDaemonPort))
+	println("https://" + remote.IP + ":" + string(daemonPort))
 
 	println()
 
 	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
-}
-
-func init() {
-	RootCmd.AddCommand(deployCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deployCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	deployCmd.Flags().StringP("port", "p", defaultDaemonPort, "Set the daemon port")
 }

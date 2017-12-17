@@ -17,7 +17,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os/exec"
 
 	"github.com/spf13/cobra"
@@ -28,6 +30,7 @@ type RemoteVPS struct {
 	User string
 	IP   string
 	PEM  string
+	Port string
 }
 
 // remoteCmd represents the remote command
@@ -70,9 +73,42 @@ file. Specify a VPS name and an IP address.`,
 	},
 }
 
+// statusCmd represents the remote add command
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Query the status of a remote instance",
+	Long: `Query the remote VPS for connectivity, daemon
+behaviour, and other information.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		config, err := GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		host := "http://" + config.CurrentRemoteVPS.GetIPAndPort()
+		resp, err := http.Get(host)
+		if err != nil {
+			println("Could not connect to daemon")
+			println("Try running inertia deploy")
+			return
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+
+		if string(body) != "Hello, World!" {
+			println("Could not connect to daemon")
+			println("Try running inertia deploy")
+			return
+		}
+
+		println("Remote instance accepting requests at " + host)
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
+	remoteCmd.AddCommand(statusCmd)
 
 	// Here you will define your flags and configuration settings.
 
@@ -111,6 +147,11 @@ func AddNewRemote(name, IP, user, pemLoc string) error {
 // GetHost creates the user@IP string.
 func (remote *RemoteVPS) GetHost() string {
 	return remote.User + "@" + remote.IP
+}
+
+// GetIPAndPort creates the IP:Port string.
+func (remote *RemoteVPS) GetIPAndPort() string {
+	return remote.IP + ":" + remote.Port
 }
 
 // RunSSHCommand runs a command remotely.
