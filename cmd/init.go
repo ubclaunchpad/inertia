@@ -15,20 +15,42 @@
 package cmd
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
+)
+
+// Config represents the current projects configuration.
+type Config struct {
+	CurrentRemoteName string    `json:"name"`
+	CurrentRemoteVPS  RemoteVPS `json:"remote"`
+}
+
+var (
+	configFolderName = ".inertia"
+	configFileName   = "config.json"
+	noInertiaRemote  = "No inertia remote"
 )
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Bootstraps a server for continuous deployment",
-	Long: `Bootstraps a server for continuous deployment by installing the
-Inertia daemon and other dependencies. You will need SSH access to
-the server to initialize.`,
+	Short: "Initialize an inertia project in this repository",
+	Long: `Initialize an inertia project in this GitHub repository.
+There must be a local git repository in order for initialization
+to succeed.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
+		err := InitializeInertiaProject()
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
@@ -43,7 +65,123 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	initCmd.Flags().StringP("host", "H", "", "IP address of the host VPS")
-	initCmd.Flags().StringP("user", "u", "root", "User for SSH access")
-	initCmd.Flags().StringP("identity", "i", "$HOME/.ssh/id_rsa", "PEM file location")
+	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+// InitializeInertiaProject creates the inertia config folder and
+// returns an error if we're not in a git project.
+func InitializeInertiaProject() error {
+	err := CheckForGit()
+	if err != nil {
+		return err
+	}
+
+	err = CreateConfigDirectory()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CreateConfigDirectory returns an error if the config directory
+// already exists (the project is already initialized).
+func CreateConfigDirectory() error {
+	// Check if directory exists.
+	configDirPath := GetProjectConfigFolderPath()
+	configFilePath := GetConfigFilePath()
+
+	_, dirErr := os.Stat(configDirPath)
+	_, fileErr := os.Stat(configFilePath)
+
+	// Check if everything already exists.
+	if os.IsExist(dirErr) && os.IsExist(fileErr) {
+		return errors.New("inertia already properly configured in this folder")
+	}
+
+	// Something doesn't exist.
+	if os.IsNotExist(dirErr) {
+		os.Mkdir(configDirPath, os.ModePerm)
+	}
+
+	// Directory exists. Make sure JSON exists.
+	if os.IsNotExist(fileErr) {
+		config := Config{
+			CurrentRemoteName: noInertiaRemote,
+			CurrentRemoteVPS:  RemoteVPS{},
+		}
+		config.Write()
+	}
+
+	return nil
+}
+
+// CheckForGit returns an error if we're not in a git repository.
+func CheckForGit() error {
+	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
+
+	// Capture result.
+	var out, stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
+
+	// Output should be "true\n".
+	if string(out.Bytes()) != "true\n" {
+		return errors.New("this does not appear to be a git repository")
+	}
+
+	return nil
+}
+
+// GetProjectConfigFromDisk returns the current projects configuration.
+// If an .inertia folder is not found, it returns an error.
+func GetProjectConfigFromDisk() (*Config, error) {
+	configFilePath := GetConfigFilePath()
+	raw, err := ioutil.ReadFile(configFilePath)
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, errors.New("config file doesnt exist, try inertia init")
+		}
+		log.Fatal(err)
+	}
+
+	var result Config
+	json.Unmarshal(raw, &result)
+
+	return &result, err
+}
+
+// GetProjectConfigFolderPath gets the absolute location of the project
+// configuration folder.
+func GetProjectConfigFolderPath() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return filepath.Join(cwd, configFolderName)
+}
+
+// GetConfigFilePath returns the absolute path of the config JSON
+// file.
+func GetConfigFilePath() string {
+	return filepath.Join(GetProjectConfigFolderPath(), configFileName)
+}
+
+// Write writes configuration to JSON file in .inertia folder.
+func (config *Config) Write() {
+	inertiaJSON, err := json.Marshal(config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	path := GetConfigFilePath()
+	err = ioutil.WriteFile(path, inertiaJSON, 0644)
 }

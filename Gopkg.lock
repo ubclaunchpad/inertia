@@ -4,7 +4,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/bramvdbogaerde/go-scp"
-  packages = ["."]
+  packages = [".","auth"]
   revision = "e1fc87afa32536b6f2a58fc9cf937432aeff91e7"
 
 [[projects]]
@@ -20,10 +20,28 @@
   revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
 
 [[projects]]
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
+
+[[projects]]
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
+
+[[projects]]
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/src-d/gcfg"
@@ -52,6 +70,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "775e5bae169218c48959f7ff518c2eaeafe9664ff9c8f86cab366bd23b1942fe"
+  inputs-digest = "0b1ba09b6ea92ba1fb96f3ac0abaa8e647612287c7e20ab827fae07bb6b7686e"
   solver-name = "gps-cdcl"
   solver-version = 1
