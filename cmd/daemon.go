@@ -49,7 +49,9 @@ inertia daemon run 8081`,
 			log.Fatal(err)
 		}
 		println("Serving daemon on port " + port)
-		http.HandleFunc("/", requestHandler)
+		http.HandleFunc("/", gitHubWebHookHandler)
+		http.HandleFunc("/up", upHandler)
+		http.HandleFunc("/down", downHandler)
 		log.Fatal(http.ListenAndServe(":"+port, nil))
 	},
 }
@@ -69,8 +71,8 @@ func init() {
 	runCmd.Flags().StringP("port", "p", "8081", "Set port for daemon to run on")
 }
 
-// requestHandler writes a response to a request into the given ResponseWriter.
-func requestHandler(w http.ResponseWriter, r *http.Request) {
+// gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
+func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, okResp)
 
 	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
@@ -118,4 +120,15 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 	log.Println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
 	log.Println(fmt.Sprintf("Ref: %s", pr.GetBase().GetRef()))
 	log.Println(fmt.Sprintf("Merge status: %v", merged))
+}
+
+// upHandler tries to bring the deployment up. It may have to clone
+// and check for read access.
+func upHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "not implemented", 501)
+}
+
+// downHandler tries to bring the project down.
+func downHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "not implemented", 501)
 }
