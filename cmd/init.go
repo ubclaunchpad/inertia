@@ -18,10 +18,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -29,8 +29,8 @@ import (
 
 // Config represents the current projects configuration.
 type Config struct {
-	CurrentRemoteName string    `json:"name"`
-	CurrentRemoteVPS  RemoteVPS `json:"remote"`
+	CurrentRemoteName string     `json:"name"`
+	CurrentRemoteVPS  *RemoteVPS `json:"remote"`
 }
 
 var (
@@ -108,9 +108,12 @@ func CreateConfigDirectory() error {
 	if os.IsNotExist(fileErr) {
 		config := Config{
 			CurrentRemoteName: noInertiaRemote,
-			CurrentRemoteVPS:  RemoteVPS{},
+			CurrentRemoteVPS:  &RemoteVPS{},
 		}
-		config.Write()
+
+		f, _ := os.Create(GetConfigFilePath())
+		defer f.Close()
+		config.Write(f)
 	}
 
 	return nil
@@ -118,7 +121,7 @@ func CreateConfigDirectory() error {
 
 // CheckForGit returns an error if we're not in a git repository.
 func CheckForGit() error {
-	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
+	cmd := execCommand("git", "rev-parse", "--is-inside-work-tree")
 
 	// Capture result.
 	var out, stderr bytes.Buffer
@@ -176,12 +179,16 @@ func GetConfigFilePath() string {
 }
 
 // Write writes configuration to JSON file in .inertia folder.
-func (config *Config) Write() {
+func (config *Config) Write(w io.Writer) (int, error) {
 	inertiaJSON, err := json.Marshal(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	path := GetConfigFilePath()
-	err = ioutil.WriteFile(path, inertiaJSON, 0644)
+	return w.Write(inertiaJSON)
+}
+
+// GetConfigFile returns a config file descriptor for R/W.
+func GetConfigFile() (*os.File, error) {
+	return os.OpenFile(GetConfigFilePath(), os.O_RDWR, os.ModePerm)
 }

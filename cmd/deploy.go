@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -47,19 +46,11 @@ waiting for updates to this repository's remote master branch.`,
 		}
 
 		if stop {
-			// Collect assets (deamon-down shell script)
-			daemonCmd, err := Asset("cmd/bootstrap/daemon-down.sh")
-			if err != nil {
-				log.Fatal("Asset failed to load")
+			if err := config.CurrentRemoteVPS.DaemonDown; err != nil {
+				println("Stopped daemon successfully")
+			} else {
+				println("Failed to bring down daemon")
 			}
-
-			_, stderr, err := config.CurrentRemoteVPS.RunSSHCommand(string(daemonCmd))
-			if err != nil {
-				log.Println(stderr)
-				log.Fatal("Failed to kill daemon on remote")
-			}
-
-			println("Stopped daemon successfully")
 
 		} else {
 			daemonPort, err := cmd.Flags().GetString("port")
@@ -67,9 +58,16 @@ waiting for updates to this repository's remote master branch.`,
 				log.Fatal(err)
 			}
 
-			config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName, daemonPort)
+			err = config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName, daemonPort)
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			config.CurrentRemoteVPS.Port = daemonPort
-			config.Write()
+
+			f, err := GetConfigFile()
+			defer f.Close()
+			config.Write(f)
 		}
 	},
 }
@@ -91,65 +89,41 @@ func init() {
 
 // Deploy deploys the project to the remote VPS instance specified
 // in the configuration object.
-func (remote *RemoteVPS) Deploy(name, daemonPort string) {
+func (remote *RemoteVPS) Deploy(name, daemonPort string) error {
 	println("Deploying remote " + name)
 
-	// Collect assets (docker shell script)
-	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
-	if err != nil {
-		log.Fatal("Bootstrapping asset failed to load")
-	}
-
-	// Collect assets (keygen shell script)
-	keygenSh, err := Asset("cmd/bootstrap/keygen.sh")
-	if err != nil {
-		log.Fatal("Bootstrapping asset failed to load")
-	}
-
-	// Collect assets (deamon-up shell script)
-	daemonCmd, err := Asset("cmd/bootstrap/daemon-up.sh")
-	if err != nil {
-		log.Fatal("Bootstrapping asset failed to load")
-	}
-
-	// Install docker.
 	println("Installing docker")
-	_, stderr, err := remote.RunSSHCommand(string(installDockerSh))
+	err := remote.InstallDocker()
 	if err != nil {
-		log.Println(stderr)
-		log.Fatal("Failed to install docker on remote")
+		return err
 	}
 
-	// Run inertia daemon (TODO).
 	println("Starting daemon")
-	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
-	_, stderr, err = remote.RunSSHCommand(daemonCmdStr)
+	err = remote.DaemonUp(daemonPort)
 	if err != nil {
-		log.Println(stderr)
-		log.Fatal("Failed to run daemon on remote")
+		return err
 	}
 
-	println("Daemon running on instance")
-
-	// Create deploy key.
-	result, stderr, err := remote.RunSSHCommand(string(keygenSh))
-
+	println("Building deploy key")
+	pub, err := remote.KeyGen()
 	if err != nil {
-		log.Println(stderr)
-		log.Fatal("Failed to run keygen on remote")
+		return err
 	}
 
 	println()
+	println("Daemon running on instance")
 
 	// Output deploy key to user.
 	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println(string(result.Bytes()))
+	println(pub.String())
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
-	println("https://" + remote.IP + ":" + string(daemonPort))
+	println("http://" + remote.IP + ":" + daemonPort)
 
 	println()
 
 	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
+
+	return nil
 }

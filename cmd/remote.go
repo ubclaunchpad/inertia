@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var execCommand = exec.Command
+
 // RemoteVPS holds access to a remote instance.
 type RemoteVPS struct {
 	User string
@@ -132,13 +134,16 @@ func AddNewRemote(name, IP, user, pemLoc string) error {
 	}
 
 	config.CurrentRemoteName = name
-	config.CurrentRemoteVPS = RemoteVPS{
+	config.CurrentRemoteVPS = &RemoteVPS{
 		IP:   IP,
 		User: user,
 		PEM:  pemLoc,
 	}
 
-	config.Write()
+	f, err := GetConfigFile()
+	defer f.Close()
+	config.Write(f)
+
 	println("Remote '" + name + "' added.")
 
 	return nil
@@ -157,7 +162,7 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // RunSSHCommand runs a command remotely.
 func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (
 	*bytes.Buffer, *bytes.Buffer, error) {
-	cmd := exec.Command("ssh", "-i", remote.PEM, "-t", remote.GetHost(), remoteCmd)
+	cmd := execCommand("ssh", "-i", remote.PEM, "-t", remote.GetHost(), remoteCmd)
 
 	// Capture result.
 	var stdout, stderr bytes.Buffer
@@ -167,4 +172,78 @@ func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (
 	err := cmd.Run()
 
 	return &stdout, &stderr, err
+}
+
+// InstallDocker installs docker on a remote vps.
+func (remote *RemoteVPS) InstallDocker() error {
+	// Collect assets (docker shell script)
+	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
+	if err != nil {
+		return err
+	}
+
+	// Install docker.
+	_, stderr, err := remote.RunSSHCommand(string(installDockerSh))
+	if err != nil {
+		log.Println(stderr)
+		return err
+	}
+
+	return nil
+}
+
+// DaemonUp brings the daemon up on the remote instance.
+func (remote *RemoteVPS) DaemonUp(daemonPort string) error {
+	// Collect assets (deamon-up shell script)
+	daemonCmd, err := Asset("cmd/bootstrap/daemon-up.sh")
+	if err != nil {
+		return err
+	}
+
+	// Run inertia daemon.
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
+	_, stderr, err := remote.RunSSHCommand(daemonCmdStr)
+	if err != nil {
+		log.Println(stderr)
+		return err
+	}
+
+	return nil
+}
+
+// KeyGen creates a public-private key-pair on the remote vps
+// and returns the public key.
+func (remote *RemoteVPS) KeyGen() (*bytes.Buffer, error) {
+	// Collect assets (keygen shell script)
+	keygenSh, err := Asset("cmd/bootstrap/keygen.sh")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create deploy key.
+	result, stderr, err := remote.RunSSHCommand(string(keygenSh))
+
+	if err != nil {
+		log.Println(stderr)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// DaemonDown brings the daemon down on the remote instance
+func (remote *RemoteVPS) DaemonDown() error {
+	// Collect assets (deamon-up shell script)
+	daemonCmd, err := Asset("cmd/bootstrap/daemon-down.sh")
+	if err != nil {
+		return err
+	}
+
+	_, stderr, err := remote.RunSSHCommand(string(daemonCmd))
+	if err != nil {
+		log.Println(stderr)
+		return err
+	}
+
+	return nil
 }
