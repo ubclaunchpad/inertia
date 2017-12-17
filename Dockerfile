@@ -5,13 +5,14 @@ FROM golang:alpine AS build-env
 
 ENV INERTIA_BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia
 
+# Dependencies
 RUN apk add --update --no-cache git
-ADD . ${INERTIA_BUILD_HOME}
 RUN go get -u github.com/golang/dep/cmd/dep
+
+# Build the binary.
+ADD . ${INERTIA_BUILD_HOME}
 WORKDIR ${INERTIA_BUILD_HOME}
-
 RUN dep ensure
-
 RUN go build -o /bin/inertia
 
 # Copy the binary into a smaller image.
