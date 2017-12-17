@@ -29,8 +29,8 @@ import (
 var defaultDaemonPort = "8081"
 
 const (
-	DaemonUp   = "up"
-	DaemonDown = "down"
+	daemonUp   = "up"
+	daemonDown = "down"
 )
 
 // DaemonRequester can make HTTP requests to the daemon.
@@ -73,7 +73,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 		}
 
 		switch args[1] {
-		case DaemonUp:
+		case daemonUp:
 			// Start the deployment
 			deployment := &Deployment{
 				RemoteVPS:  config.CurrentRemoteVPS,
@@ -83,7 +83,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			if err != nil {
 				log.Fatal(err)
 			}
-		case DaemonDown:
+		case daemonDown:
 			// Start the deployment
 			deployment := &Deployment{
 				RemoteVPS:  config.CurrentRemoteVPS,
@@ -94,7 +94,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 				log.Fatal(err)
 			}
 		default:
-			fmt.Printf("No such deployment command %s\n", args[1])
+			fmt.Printf("No such deployment command: %s\n", args[1])
 			os.Exit(1)
 		}
 	},
@@ -102,15 +102,6 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 func init() {
 	RootCmd.AddCommand(deployCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deployCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
 }
 
 // Up brings the project up on the remote VPS instance specified
