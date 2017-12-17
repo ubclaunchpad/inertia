@@ -21,8 +21,5 @@ LABEL maintainer "UBC Launchpad team@ubclaunchpad.com"
 WORKDIR /app
 COPY --from=build-env /bin/inertia /usr/local/bin
 
-# Treat container as a binary.
-ENTRYPOINT ["inertia"]
-
-# Override the daemon startup if you wish.
-CMD ["daemon", "run"]
+# Container serves daemon by default.
+ENTRYPOINT ["inertia", "daemon", "run"]

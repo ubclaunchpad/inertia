@@ -1,12 +1,10 @@
 # Basic script for bringing up the daemon.
 
-# Args:
-#    port (int): The port to run the remote daemon on.
-
 set -e
 
 PORT=%s
 DAEMON_NAME=inertia-daemon
+CONTAINER_PORT=8081
 
 # Check if already running.
 ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`
@@ -19,6 +17,6 @@ fi;
 
 # Run container.
 sudo docker run -d \
-    -p "$PORT":"$PORT" \
+    -p "$PORT":8081 \
     --name "$DAEMON_NAME" \
     ubclaunchpad/inertia
