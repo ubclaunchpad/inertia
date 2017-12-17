@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -27,11 +28,29 @@ import (
 // Clearly cannot ask for this information over HTTP.
 var defaultDaemonPort = "8081"
 
+const (
+	DaemonUp   = "up"
+	DaemonDown = "down"
+)
+
+// DaemonRequester can make HTTP requests to the daemon.
+type DaemonRequester interface {
+	Up() error
+	Down() error
+}
+
+// Deployment manages a deployment and implements the
+// DaemonRequester interface.
+type Deployment struct {
+	*RemoteVPS
+	Repository string
+}
+
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
-	Use:   "deploy [REMOTE]",
-	Short: "Start continuous deployment to the remote VPS instance specified",
-	Long: `Start continuous deployment to the remote VPS instance specified.
+	Use:   "deploy [REMOTE] [COMMAND]",
+	Short: "Configure continuous deployment to the remote VPS instance specified",
+	Long: `Start or stop continuous deployment to the remote VPS instance specified.
 Run 'inertia remote status' beforehand to ensure your daemon is running.
 Requires:
 
@@ -39,7 +58,7 @@ Requires:
 2. A webhook url to registered for the daemon with your GitHub repository.
 
 Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
@@ -53,21 +72,30 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			os.Exit(1)
 		}
 
-		stop, err := cmd.Flags().GetBool("stop")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if stop {
-			// Stop the deployment.
-			println("stop not currently implemented")
-
-		} else {
+		switch args[1] {
+		case DaemonUp:
 			// Start the deployment
-			err = config.CurrentRemoteVPS.Deploy()
+			deployment := &Deployment{
+				RemoteVPS:  config.CurrentRemoteVPS,
+				Repository: "",
+			}
+			err := deployment.Up()
 			if err != nil {
 				log.Fatal(err)
 			}
+		case DaemonDown:
+			// Start the deployment
+			deployment := &Deployment{
+				RemoteVPS:  config.CurrentRemoteVPS,
+				Repository: "",
+			}
+			err := deployment.Down()
+			if err != nil {
+				log.Fatal(err)
+			}
+		default:
+			fmt.Printf("No such deployment command %s", args[1])
+			os.Exit(1)
 		}
 	},
 }
@@ -83,11 +111,16 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	deployCmd.Flags().BoolP("stop", "s", false, "Stop the deployment")
 }
 
-// Deploy deploys the project to the remote VPS instance specified
+// Up brings the project up on the remote VPS instance specified
 // in the configuration object.
-func (remote *RemoteVPS) Deploy() error {
+func (d *Deployment) Up() error {
+	return nil
+}
+
+// Down brings the project down on the remote VPS instance specified
+// in the configuration object.
+func (d *Deployment) Down() error {
 	return nil
 }
