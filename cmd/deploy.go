@@ -15,8 +15,11 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -35,8 +38,8 @@ const (
 
 // DaemonRequester can make HTTP requests to the daemon.
 type DaemonRequester interface {
-	Up() error
-	Down() error
+	Up() (int, string, error)
+	Down() (int, string, error)
 }
 
 // Deployment manages a deployment and implements the
@@ -77,12 +80,23 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			// Start the deployment
 			deployment := &Deployment{
 				RemoteVPS:  config.CurrentRemoteVPS,
-				Repository: "",
+				Repository: "", // TODO: Get repo from directory.
 			}
-			err := deployment.Up()
+
+			code, body, err := deployment.Up()
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			switch code {
+			case http.StatusOK:
+				fmt.Printf("Project up: %d %s\n", code, body)
+			case http.StatusForbidden:
+				fmt.Printf("Bad auth: %d %s\n", code, body)
+			default:
+				fmt.Printf("Unknown response from daemon: %d %s", code, body)
+			}
+
 		case daemonDown:
 			// Start the deployment
 			deployment := &Deployment{
@@ -105,13 +119,31 @@ func init() {
 }
 
 // Up brings the project up on the remote VPS instance specified
-// in the configuration object.
-func (d *Deployment) Up() error {
-	return nil
+// in the deployment object.
+func (d *Deployment) Up() (int, string, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
+	resp, err := http.Get(host)
+	if err != nil {
+		return -1, "", errors.New("Error when deploying project")
+	}
+
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	return resp.StatusCode, string(body), nil
 }
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
-func (d *Deployment) Down() error {
-	return nil
+func (d *Deployment) Down() (int, string, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
+	resp, err := http.Get(host)
+	if err != nil {
+		return -1, "", errors.New("Error when deploying project")
+	}
+
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	return resp.StatusCode, string(body), nil
 }

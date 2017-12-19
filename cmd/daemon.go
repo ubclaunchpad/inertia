@@ -125,6 +125,14 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 // upHandler tries to bring the deployment up. It may have to clone
 // and check for read access.
 func upHandler(w http.ResponseWriter, r *http.Request) {
+	// Check for repo.
+	// If no repo,
+	// 1. clonec
+	// 2. build
+	// 3. run.
+	// If repo,
+	// Check for existing containers.
+	// Check for existing images.
 	http.Error(w, "not implemented", 501)
 }
 
