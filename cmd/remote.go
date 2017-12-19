@@ -50,12 +50,10 @@ git remote`,
 		}
 		if config.CurrentRemoteName == noInertiaRemote {
 			println("No remote currently set.")
+		} else if verbose {
+			fmt.Printf("%+v\n", config)
 		} else {
-			if verbose {
-				fmt.Printf("%+v\n", config)
-			} else {
-				println(config.CurrentRemoteName)
-			}
+			println(config.CurrentRemoteName)
 		}
 	},
 }
