@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	git "gopkg.in/src-d/go-git.v4"
 )
 
 // TODO: Reference daemon pkg for this information?
@@ -46,7 +47,7 @@ type DaemonRequester interface {
 // DaemonRequester interface.
 type Deployment struct {
 	*RemoteVPS
-	Repository string
+	Repository *git.Repository
 }
 
 // deployCmd represents the deploy command
@@ -75,12 +76,17 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			os.Exit(1)
 		}
 
+		repo, err := getRepo()
+		if err != nil {
+			log.Fatal("Could not open the local repository")
+		}
+
 		switch args[1] {
 		case daemonUp:
 			// Start the deployment
 			deployment := &Deployment{
 				RemoteVPS:  config.CurrentRemoteVPS,
-				Repository: "", // TODO: Get repo from directory.
+				Repository: repo,
 			}
 
 			code, body, err := deployment.Up()
@@ -101,7 +107,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			// Start the deployment
 			deployment := &Deployment{
 				RemoteVPS:  config.CurrentRemoteVPS,
-				Repository: "",
+				Repository: repo,
 			}
 
 			code, body, err := deployment.Down()

@@ -137,7 +137,7 @@ func CreateConfigDirectory() error {
 func CheckForGit() error {
 	cwd, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Quick failure if no .git folder.
@@ -225,4 +225,16 @@ func GetConfigFile() (*os.File, error) {
 		return nil, err
 	}
 	return os.OpenFile(path, os.O_RDWR, os.ModePerm)
+}
+
+// getRepo gets the repo from disk.
+func getRepo() (*git.Repository, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	// Quick failure if no .git folder.
+	gitFolder := filepath.Join(cwd, ".git")
+	return git.NewFilesystemRepository(gitFolder)
 }
