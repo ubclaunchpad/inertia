@@ -40,9 +40,10 @@ var daemonCmd = &cobra.Command{
 var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run the daemon",
-	Long: `Run the daemon on a port. Example
-	
-inertia daemon run 8081`,
+	Long: `Run the daemon on a port.
+Example:
+
+inertia daemon run -p 8081`,
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetString("port")
 		if err != nil {

@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -59,13 +60,11 @@ inerta remote status gcloud`,
 		}
 		if config.CurrentRemoteName == noInertiaRemote {
 			println("No remote currently set.")
+		} else if verbose {
+			fmt.Printf("%s\n", config.CurrentRemoteName)
+			fmt.Printf("%+v\n", config.CurrentRemoteVPS)
 		} else {
-			if verbose {
-				fmt.Printf("%s\n", config.CurrentRemoteName)
-				fmt.Printf("%+v\n", *config.CurrentRemoteVPS)
-			} else {
-				println(config.CurrentRemoteName)
-			}
+			println(config.CurrentRemoteName)
 		}
 	},
 }
@@ -87,7 +86,8 @@ file. Specify a VPS name and an IP address.`,
 		}
 		user, _ := cmd.Flags().GetString("user")
 		pemLoc, _ := cmd.Flags().GetString("identity")
-		AddNewRemote(args[0], args[1], user, pemLoc)
+		port, _ := cmd.Flags().GetString("port")
+		AddNewRemote(args[0], args[1], user, pemLoc, port)
 	},
 }
 
@@ -107,14 +107,14 @@ for updates to this repository's remote master branch.`,
 			println(err.Error())
 			os.Exit(1)
 		}
-		port, _ := cmd.Flags().GetString("port")
+
 		if args[0] != config.CurrentRemoteName {
 			println("No such remote " + args[0])
 			println("Inertia currently supports one remote per repository")
 			println("Run `inertia remote -v' to see what remote is available")
 			os.Exit(1)
 		}
-		config.CurrentRemoteVPS.Bootstrap(args[0], port)
+		config.CurrentRemoteVPS.Bootstrap(args[0])
 	},
 }
 
@@ -165,6 +165,10 @@ func init() {
 	remoteCmd.AddCommand(bootstrapCmd)
 	remoteCmd.AddCommand(statusCmd)
 
+	homeEnvVar := os.Getenv("HOME")
+	sshDir := filepath.Join(homeEnvVar, ".ssh")
+	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
@@ -175,13 +179,12 @@ func init() {
 	// is called directly, e.g.:
 	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("user", "u", "root", "User for SSH access")
-	addCmd.Flags().StringP("identity", "i", "$HOME/.ssh/id_rsa", "PEM file location")
-	bootstrapCmd.Flags().StringP("port", "p", defaultDaemonPort,
-		"The port for the daemon to listen on")
+	addCmd.Flags().StringP("identity", "i", defaultSSHLoc, "PEM file location")
+	addCmd.Flags().StringP("port", "p", defaultDaemonPort, "Daemon port")
 }
 
 // AddNewRemote adds a new remote to the project config file.
-func AddNewRemote(name, IP, user, pemLoc string) error {
+func AddNewRemote(name, IP, user, pemLoc, port string) error {
 	// Just wipe configuration for MVP.
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {
@@ -193,11 +196,15 @@ func AddNewRemote(name, IP, user, pemLoc string) error {
 		IP:   IP,
 		User: user,
 		PEM:  pemLoc,
+		Port: port,
 	}
 
 	f, err := GetConfigFile()
 	defer f.Close()
-	config.Write(f)
+	_, err = config.Write(f)
+	if err != nil {
+		return err
+	}
 
 	println("Remote '" + name + "' added.")
 
@@ -208,7 +215,7 @@ func AddNewRemote(name, IP, user, pemLoc string) error {
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
 // for the user.
-func (remote *RemoteVPS) Bootstrap(name, daemonPort string) error {
+func (remote *RemoteVPS) Bootstrap(name string) error {
 	println("Bootstrapping remote " + name)
 
 	println("Installing docker")
@@ -218,18 +225,17 @@ func (remote *RemoteVPS) Bootstrap(name, daemonPort string) error {
 	}
 
 	println("Starting daemon")
-	err = remote.DaemonUp(daemonPort)
+	err = remote.DaemonUp(remote.Port)
 	if err != nil {
 		return err
 	}
 
-	println("Building deploy key")
+	println("Building deploy key\n")
 	pub, err := remote.KeyGen()
 	if err != nil {
 		return err
 	}
 
-	println()
 	println("Daemon running on instance")
 
 	// Output deploy key to user.
@@ -238,10 +244,8 @@ func (remote *RemoteVPS) Bootstrap(name, daemonPort string) error {
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
-	println("http://" + remote.IP + ":" + daemonPort)
-	println("Github WebHook Secret: " + defaultSecret)
-
-	println()
+	println("http://" + remote.IP + ":" + remote.Port)
+	println("Github WebHook Secret: " + defaultSecret + "\n")
 
 	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
 	fmt.Printf("Then run `inertia deploy %s' to deploy your application.\n", name)

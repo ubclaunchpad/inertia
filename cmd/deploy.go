@@ -103,9 +103,19 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 				RemoteVPS:  config.CurrentRemoteVPS,
 				Repository: "",
 			}
-			err := deployment.Down()
+
+			code, body, err := deployment.Down()
 			if err != nil {
 				log.Fatal(err)
+			}
+
+			switch code {
+			case http.StatusOK:
+				fmt.Printf("Project down: %d %s\n", code, body)
+			case http.StatusForbidden:
+				fmt.Printf("Bad auth: %d %s\n", code, body)
+			default:
+				fmt.Printf("Unknown response from daemon: %d %s", code, body)
 			}
 		default:
 			fmt.Printf("No such deployment command: %s\n", args[1])
