@@ -87,9 +87,16 @@ func InitializeInertiaProject() error {
 // CreateConfigDirectory returns an error if the config directory
 // already exists (the project is already initialized).
 func CreateConfigDirectory() error {
-	// Check if directory exists.
-	configDirPath := GetProjectConfigFolderPath()
-	configFilePath := GetConfigFilePath()
+
+	configDirPath, err := GetProjectConfigFolderPath()
+	if err != nil {
+		return err
+	}
+
+	configFilePath, err := GetConfigFilePath()
+	if err != nil {
+		return err
+	}
 
 	_, dirErr := os.Stat(configDirPath)
 	_, fileErr := os.Stat(configFilePath)
@@ -111,7 +118,11 @@ func CreateConfigDirectory() error {
 			CurrentRemoteVPS:  &RemoteVPS{},
 		}
 
-		f, _ := os.Create(GetConfigFilePath())
+		path, err := GetConfigFilePath()
+		if err != nil {
+			return err
+		}
+		f, _ := os.Create(path)
 		defer f.Close()
 		config.Write(f)
 	}
@@ -150,44 +161,55 @@ func CheckForGit() error {
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
 func GetProjectConfigFromDisk() (*Config, error) {
-	configFilePath := GetConfigFilePath()
+	configFilePath, err := GetConfigFilePath()
+	if err != nil {
+		return nil, err
+	}
+
 	raw, err := ioutil.ReadFile(configFilePath)
 
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, errors.New("config file doesnt exist, try inertia init")
 		}
-		log.Fatal(err)
+		return nil, err
 	}
 
 	var result Config
-	json.Unmarshal(raw, &result)
+	err = json.Unmarshal(raw, &result)
+	if err != nil {
+		return nil, err
+	}
 
 	return &result, err
 }
 
 // GetProjectConfigFolderPath gets the absolute location of the project
 // configuration folder.
-func GetProjectConfigFolderPath() string {
+func GetProjectConfigFolderPath() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	return filepath.Join(cwd, configFolderName)
+	return filepath.Join(cwd, configFolderName), nil
 }
 
 // GetConfigFilePath returns the absolute path of the config JSON
 // file.
-func GetConfigFilePath() string {
-	return filepath.Join(GetProjectConfigFolderPath(), configFileName)
+func GetConfigFilePath() (string, error) {
+	path, err := GetProjectConfigFolderPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(path, configFileName), nil
 }
 
 // Write writes configuration to JSON file in .inertia folder.
 func (config *Config) Write(w io.Writer) (int, error) {
 	inertiaJSON, err := json.Marshal(config)
 	if err != nil {
-		log.Fatal(err)
+		return -1, err
 	}
 
 	return w.Write(inertiaJSON)
@@ -195,5 +217,9 @@ func (config *Config) Write(w io.Writer) (int, error) {
 
 // GetConfigFile returns a config file descriptor for R/W.
 func GetConfigFile() (*os.File, error) {
-	return os.OpenFile(GetConfigFilePath(), os.O_RDWR, os.ModePerm)
+	path, err := GetConfigFilePath()
+	if err != nil {
+		return nil, err
+	}
+	return os.OpenFile(path, os.O_RDWR, os.ModePerm)
 }
