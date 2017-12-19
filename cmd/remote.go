@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh"
 )
 
 var execCommand = exec.Command
@@ -87,7 +88,7 @@ file. Specify a VPS name and an IP address.`,
 		user, _ := cmd.Flags().GetString("user")
 		pemLoc, _ := cmd.Flags().GetString("identity")
 		port, _ := cmd.Flags().GetString("port")
-		AddNewRemote(args[0], args[1], user, pemLoc, port)
+		addNewRemote(args[0], args[1], user, pemLoc, port)
 	},
 }
 
@@ -183,34 +184,6 @@ func init() {
 	addCmd.Flags().StringP("port", "p", defaultDaemonPort, "Daemon port")
 }
 
-// AddNewRemote adds a new remote to the project config file.
-func AddNewRemote(name, IP, user, pemLoc, port string) error {
-	// Just wipe configuration for MVP.
-	config, err := GetProjectConfigFromDisk()
-	if err != nil {
-		return err
-	}
-
-	config.CurrentRemoteName = name
-	config.CurrentRemoteVPS = &RemoteVPS{
-		IP:   IP,
-		User: user,
-		PEM:  pemLoc,
-		Port: port,
-	}
-
-	f, err := GetConfigFile()
-	defer f.Close()
-	_, err = config.Write(f)
-	if err != nil {
-		return err
-	}
-
-	println("Remote '" + name + "' added.")
-
-	return nil
-}
-
 // Bootstrap configures a remote vps for continuous deployment
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
@@ -266,14 +239,15 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // RunSSHCommand runs a command remotely.
 func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (
 	*bytes.Buffer, *bytes.Buffer, error) {
-	cmd := execCommand("ssh", "-i", remote.PEM, "-t", remote.GetHost(), remoteCmd)
+	session, err := getSSHSession(remote.PEM, remote.IP, remote.User)
+	defer session.Close()
 
 	// Capture result.
 	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	session.Stdout = &stdout
+	session.Stderr = &stderr
 
-	err := cmd.Run()
+	err = session.Run(remoteCmd)
 
 	return &stdout, &stderr, err
 }
@@ -289,7 +263,7 @@ func (remote *RemoteVPS) InstallDocker() error {
 	// Install docker.
 	_, stderr, err := remote.RunSSHCommand(string(installDockerSh))
 	if err != nil {
-		log.Println(stderr)
+		println(stderr)
 		return err
 	}
 
@@ -308,7 +282,7 @@ func (remote *RemoteVPS) DaemonUp(daemonPort string) error {
 	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
 	_, stderr, err := remote.RunSSHCommand(daemonCmdStr)
 	if err != nil {
-		log.Println(stderr)
+		println(stderr)
 		return err
 	}
 
@@ -350,4 +324,73 @@ func (remote *RemoteVPS) DaemonDown() error {
 	}
 
 	return nil
+}
+
+// addNewRemote adds a new remote to the project config file.
+func addNewRemote(name, IP, user, pemLoc, port string) error {
+	// Just wipe configuration for MVP.
+	config, err := GetProjectConfigFromDisk()
+	if err != nil {
+		return err
+	}
+
+	config.CurrentRemoteName = name
+	config.CurrentRemoteVPS = &RemoteVPS{
+		IP:   IP,
+		User: user,
+		PEM:  pemLoc,
+		Port: port,
+	}
+
+	f, err := GetConfigFile()
+	defer f.Close()
+	_, err = config.Write(f)
+	if err != nil {
+		return err
+	}
+
+	println("Remote '" + name + "' added.")
+
+	return nil
+}
+
+// Stubbed out for testing.
+func getSSHSession(PEM, IP, user string) (*ssh.Session, error) {
+	privateKey, err := ioutil.ReadFile(PEM)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := getSSHConfig(privateKey, user)
+	client, err := ssh.Dial("tcp", IP+":22", cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a session. It is one session per command.
+	return client.NewSession()
+}
+
+// getSSHConfig returns SSH configuration for the remote.
+func getSSHConfig(privateKey []byte, user string) (*ssh.ClientConfig, error) {
+	key, err := ssh.ParsePrivateKey(privateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Authentication
+	return &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		// TODO: We need to replace this with a callback
+		// to verify the host key. A security vulnerability
+		// comes from the fact that we recieve a public key
+		// from the server and we add it to our GitHub.
+		// This gives the server readonly access to our
+		// GitHub account. We need to know who we're
+		// connecting to.
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}, nil
 }
