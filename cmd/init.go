@@ -122,7 +122,10 @@ func CreateConfigDirectory() error {
 		if err != nil {
 			return err
 		}
-		f, _ := os.Create(path)
+		f, err := os.Create(path)
+		if err != nil {
+			return err
+		}
 		defer f.Close()
 		config.Write(f)
 	}
