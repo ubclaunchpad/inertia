@@ -191,20 +191,34 @@ func init() {
 func (remote *RemoteVPS) Bootstrap(name string) error {
 	println("Bootstrapping remote " + name)
 
+	// Generate a session for each command.
 	println("Installing docker")
-	err := remote.InstallDocker()
+	session, err := getSSHSession(remote.PEM, remote.IP, remote.User)
+	if err != nil {
+		return err
+	}
+	err = remote.InstallDocker(session)
 	if err != nil {
 		return err
 	}
 
 	println("Starting daemon")
-	err = remote.DaemonUp(remote.Port)
+	session, err = getSSHSession(remote.PEM, remote.IP, remote.User)
+	if err != nil {
+		return err
+	}
+	err = remote.DaemonUp(session, remote.Port)
 	if err != nil {
 		return err
 	}
 
 	println("Building deploy key\n")
-	pub, err := remote.KeyGen()
+	session, err = getSSHSession(remote.PEM, remote.IP, remote.User)
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+	pub, err := remote.KeyGen(session)
 	if err != nil {
 		return err
 	}
@@ -237,23 +251,21 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 }
 
 // RunSSHCommand runs a command remotely.
-func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (
+func (remote *RemoteVPS) RunSSHCommand(session *ssh.Session, remoteCmd string) (
 	*bytes.Buffer, *bytes.Buffer, error) {
-	session, err := getSSHSession(remote.PEM, remote.IP, remote.User)
-	defer session.Close()
 
 	// Capture result.
 	var stdout, stderr bytes.Buffer
 	session.Stdout = &stdout
 	session.Stderr = &stderr
 
-	err = session.Run(remoteCmd)
+	err := session.Run(remoteCmd)
 
 	return &stdout, &stderr, err
 }
 
 // InstallDocker installs docker on a remote vps.
-func (remote *RemoteVPS) InstallDocker() error {
+func (remote *RemoteVPS) InstallDocker(session *ssh.Session) error {
 	// Collect assets (docker shell script)
 	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
 	if err != nil {
@@ -261,7 +273,7 @@ func (remote *RemoteVPS) InstallDocker() error {
 	}
 
 	// Install docker.
-	_, stderr, err := remote.RunSSHCommand(string(installDockerSh))
+	_, stderr, err := remote.RunSSHCommand(session, string(installDockerSh))
 	if err != nil {
 		println(stderr)
 		return err
@@ -271,7 +283,7 @@ func (remote *RemoteVPS) InstallDocker() error {
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (remote *RemoteVPS) DaemonUp(daemonPort string) error {
+func (remote *RemoteVPS) DaemonUp(session *ssh.Session, daemonPort string) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("cmd/bootstrap/daemon-up.sh")
 	if err != nil {
@@ -280,7 +292,7 @@ func (remote *RemoteVPS) DaemonUp(daemonPort string) error {
 
 	// Run inertia daemon.
 	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
-	_, stderr, err := remote.RunSSHCommand(daemonCmdStr)
+	_, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
 	if err != nil {
 		println(stderr)
 		return err
@@ -291,7 +303,7 @@ func (remote *RemoteVPS) DaemonUp(daemonPort string) error {
 
 // KeyGen creates a public-private key-pair on the remote vps
 // and returns the public key.
-func (remote *RemoteVPS) KeyGen() (*bytes.Buffer, error) {
+func (remote *RemoteVPS) KeyGen(session *ssh.Session) (*bytes.Buffer, error) {
 	// Collect assets (keygen shell script)
 	keygenSh, err := Asset("cmd/bootstrap/keygen.sh")
 	if err != nil {
@@ -299,7 +311,7 @@ func (remote *RemoteVPS) KeyGen() (*bytes.Buffer, error) {
 	}
 
 	// Create deploy key.
-	result, stderr, err := remote.RunSSHCommand(string(keygenSh))
+	result, stderr, err := remote.RunSSHCommand(session, string(keygenSh))
 
 	if err != nil {
 		log.Println(stderr)
@@ -310,14 +322,14 @@ func (remote *RemoteVPS) KeyGen() (*bytes.Buffer, error) {
 }
 
 // DaemonDown brings the daemon down on the remote instance
-func (remote *RemoteVPS) DaemonDown() error {
+func (remote *RemoteVPS) DaemonDown(session *ssh.Session) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("cmd/bootstrap/daemon-down.sh")
 	if err != nil {
 		return err
 	}
 
-	_, stderr, err := remote.RunSSHCommand(string(daemonCmd))
+	_, stderr, err := remote.RunSSHCommand(session, string(daemonCmd))
 	if err != nil {
 		log.Println(stderr)
 		return err
