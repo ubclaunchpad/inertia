@@ -31,7 +31,7 @@ var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy the application to the remote VPS instance specified",
 	Long: `Deploy the application to the remote VPS instance specified.
-A URL will be provided to direct GitHub webhooks too, the daemon will
+A URL will be provided to direct GitHub webhooks to, the daemon will
 request access to the repository via a public key, the daemon will begin
 waiting for updates to this repository's remote master branch.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -104,13 +104,12 @@ func (remote *RemoteVPS) Deploy(name, daemonPort string) error {
 		return err
 	}
 
-	println("Building deploy key")
+	println("Building deploy key\n")
 	pub, err := remote.KeyGen()
 	if err != nil {
 		return err
 	}
 
-	println()
 	println("Daemon running on instance")
 
 	// Output deploy key to user.
@@ -119,9 +118,7 @@ func (remote *RemoteVPS) Deploy(name, daemonPort string) error {
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
-	println("http://" + remote.IP + ":" + daemonPort)
-
-	println()
+	println("http://" + remote.IP + ":" + daemonPort + "\n")
 
 	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
 

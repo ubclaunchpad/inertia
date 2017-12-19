@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -25,6 +24,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 // Config represents the current projects configuration.
@@ -121,28 +121,33 @@ func CreateConfigDirectory() error {
 
 // CheckForGit returns an error if we're not in a git repository.
 func CheckForGit() error {
-	cmd := execCommand("git", "rev-parse", "--is-inside-work-tree")
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 
-	// Capture result.
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
+	// Quick failure if no .git folder.
+	gitFolder := filepath.Join(cwd, ".git")
+	if _, err := os.Stat(gitFolder); os.IsNotExist(err) {
+		return errors.New("this does not appear to be a git repository")
+	}
 
-	err := cmd.Run()
-
+	repo, err := git.NewFilesystemRepository(gitFolder)
 	if err != nil {
 		return err
 	}
 
-	// Output should be "true\n".
-	if string(out.Bytes()) != "true\n" {
-		return errors.New("this does not appear to be a git repository")
+	remotes, err := repo.Remotes()
+
+	// Also fail if no remotes detected.
+	if len(remotes) == 0 {
+		return errors.New("there are no remotes associated with this repository")
 	}
 
 	return nil
 }
 
-// GetProjectConfigFromDisk returns the current projects configuration.
+// GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
 func GetProjectConfigFromDisk() (*Config, error) {
 	configFilePath := GetConfigFilePath()
