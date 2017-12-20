@@ -51,7 +51,7 @@ The output of `inertia deploy` has given you two important pieces of information
 
 1. A deploy key. The Inertia daemon requires readonly access to your GitHub repository.
    Add it to your GitHub repository settings at the URL provided in the output.
-1. A GitHub webhook URL. The daemon will accept POST requests from GitHub at the URL
+2. A GitHub webhook URL. The daemon will accept POST requests from GitHub at the URL
    provided. Again, add this webhook URL in your GitHub settings area (at the URL
    provided).
 

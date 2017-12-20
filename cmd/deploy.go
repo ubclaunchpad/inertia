@@ -24,15 +24,14 @@ import (
 // We only want the package dependencies to go in one
 // direction, so best to think about how to do this.
 // Clearly cannot ask for this information over HTTP.
-var daemonPort = ":8081"
+var defaultDaemonPort = "8081"
 
-// deployCmd represents the deploy command
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy the application to the remote VPS instance specified",
 	Long: `Deploy the application to the remote VPS instance specified.
-A URL will be provided to direct GitHub webhooks too, the daemon will
+A URL will be provided to direct GitHub webhooks to, the daemon will
 request access to the repository via a public key, the daemon will begin
 waiting for updates to this repository's remote master branch.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -41,59 +40,36 @@ waiting for updates to this repository's remote master branch.`,
 			log.Fatal(err)
 		}
 
-		config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName)
+		stop, err := cmd.Flags().GetBool("stop")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if stop {
+			if err := config.CurrentRemoteVPS.DaemonDown; err != nil {
+				println("Stopped daemon successfully")
+			} else {
+				println("Failed to bring down daemon")
+			}
+
+		} else {
+			daemonPort, err := cmd.Flags().GetString("port")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName, daemonPort)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			config.CurrentRemoteVPS.Port = daemonPort
+
+			f, err := GetConfigFile()
+			defer f.Close()
+			config.Write(f)
+		}
 	},
-}
-
-// Deploy deploys the project to the remote VPS instance specified
-// in the configuration object.
-func (remote *RemoteVPS) Deploy(name string) {
-	println("Deploying remote " + name)
-
-	// Collect assets (docker shell script)
-	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
-	if err != nil {
-		log.Fatal("Bootstrapping asset failed to load")
-	}
-
-	// Collect assets (keygen shell script)
-	keygenSh, err := Asset("cmd/bootstrap/keygen.sh")
-	if err != nil {
-		log.Fatal("Bootstrapping asset failed to load")
-	}
-
-	// Install docker.
-	_, stderr, err := remote.RunSSHCommand(string(installDockerSh))
-	if err != nil {
-		log.Println(stderr)
-		log.Fatal("Failed to install docker on remote")
-	}
-
-	// Run inertia daemon (TODO).
-	// remote.RunSSHCommand("docker run ubclaunchpad/inertia-daemon")
-	println("Daemon running on instance")
-
-	// Create deploy key.
-	result, stderr, err := remote.RunSSHCommand(string(keygenSh))
-
-	if err != nil {
-		log.Println(stderr)
-		log.Fatal("Failed to run keygen on remote")
-	}
-
-	println()
-
-	// Output deploy key to user.
-	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println(string(result.Bytes()))
-
-	// Output Webhook url to user.
-	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
-	println("https://" + remote.IP + daemonPort)
-
-	println()
-
-	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
 }
 
 func init() {
@@ -107,5 +83,44 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// deployCmd.Flags().StringP("user", "u", "root", "Set the user for SSH access")
+	deployCmd.Flags().StringP("port", "p", defaultDaemonPort, "Set the daemon port")
+	deployCmd.Flags().BoolP("stop", "s", false, "Stop the daemon")
+}
+
+// Deploy deploys the project to the remote VPS instance specified
+// in the configuration object.
+func (remote *RemoteVPS) Deploy(name, daemonPort string) error {
+	println("Deploying remote " + name)
+
+	println("Installing docker")
+	err := remote.InstallDocker()
+	if err != nil {
+		return err
+	}
+
+	println("Starting daemon")
+	err = remote.DaemonUp(daemonPort)
+	if err != nil {
+		return err
+	}
+
+	println("Building deploy key\n")
+	pub, err := remote.KeyGen()
+	if err != nil {
+		return err
+	}
+
+	println("Daemon running on instance")
+
+	// Output deploy key to user.
+	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println(pub.String())
+
+	// Output Webhook url to user.
+	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
+	println("http://" + remote.IP + ":" + daemonPort + "\n")
+
+	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
+
+	return nil
 }

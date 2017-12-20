@@ -17,17 +17,22 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os/exec"
 
 	"github.com/spf13/cobra"
 )
+
+var execCommand = exec.Command
 
 // RemoteVPS holds access to a remote instance.
 type RemoteVPS struct {
 	User string
 	IP   string
 	PEM  string
+	Port string
 }
 
 // remoteCmd represents the remote command
@@ -45,12 +50,10 @@ git remote`,
 		}
 		if config.CurrentRemoteName == noInertiaRemote {
 			println("No remote currently set.")
+		} else if verbose {
+			fmt.Printf("%+v\n", config)
 		} else {
-			if verbose {
-				fmt.Printf("%+v\n", config)
-			} else {
-				println(config.CurrentRemoteName)
-			}
+			println(config.CurrentRemoteName)
 		}
 	},
 }
@@ -70,9 +73,42 @@ file. Specify a VPS name and an IP address.`,
 	},
 }
 
+// statusCmd represents the remote add command
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Query the status of a remote instance",
+	Long: `Query the remote VPS for connectivity, daemon
+behaviour, and other information.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		config, err := GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		host := "http://" + config.CurrentRemoteVPS.GetIPAndPort()
+		resp, err := http.Get(host)
+		if err != nil {
+			println("Could not connect to daemon")
+			println("Try running inertia deploy")
+			return
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+
+		if string(body) != "Hello, World!" {
+			println("Could not connect to daemon")
+			println("Try running inertia deploy")
+			return
+		}
+
+		println("Remote instance accepting requests at " + host)
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
+	remoteCmd.AddCommand(statusCmd)
 
 	// Here you will define your flags and configuration settings.
 
@@ -96,13 +132,16 @@ func AddNewRemote(name, IP, user, pemLoc string) error {
 	}
 
 	config.CurrentRemoteName = name
-	config.CurrentRemoteVPS = RemoteVPS{
+	config.CurrentRemoteVPS = &RemoteVPS{
 		IP:   IP,
 		User: user,
 		PEM:  pemLoc,
 	}
 
-	config.Write()
+	f, err := GetConfigFile()
+	defer f.Close()
+	config.Write(f)
+
 	println("Remote '" + name + "' added.")
 
 	return nil
@@ -113,10 +152,15 @@ func (remote *RemoteVPS) GetHost() string {
 	return remote.User + "@" + remote.IP
 }
 
+// GetIPAndPort creates the IP:Port string.
+func (remote *RemoteVPS) GetIPAndPort() string {
+	return remote.IP + ":" + remote.Port
+}
+
 // RunSSHCommand runs a command remotely.
 func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (
 	*bytes.Buffer, *bytes.Buffer, error) {
-	cmd := exec.Command("ssh", "-i", remote.PEM, "-t", remote.GetHost(), remoteCmd)
+	cmd := execCommand("ssh", "-i", remote.PEM, "-t", remote.GetHost(), remoteCmd)
 
 	// Capture result.
 	var stdout, stderr bytes.Buffer
@@ -126,4 +170,78 @@ func (remote *RemoteVPS) RunSSHCommand(remoteCmd string) (
 	err := cmd.Run()
 
 	return &stdout, &stderr, err
+}
+
+// InstallDocker installs docker on a remote vps.
+func (remote *RemoteVPS) InstallDocker() error {
+	// Collect assets (docker shell script)
+	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
+	if err != nil {
+		return err
+	}
+
+	// Install docker.
+	_, stderr, err := remote.RunSSHCommand(string(installDockerSh))
+	if err != nil {
+		log.Println(stderr)
+		return err
+	}
+
+	return nil
+}
+
+// DaemonUp brings the daemon up on the remote instance.
+func (remote *RemoteVPS) DaemonUp(daemonPort string) error {
+	// Collect assets (deamon-up shell script)
+	daemonCmd, err := Asset("cmd/bootstrap/daemon-up.sh")
+	if err != nil {
+		return err
+	}
+
+	// Run inertia daemon.
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
+	_, stderr, err := remote.RunSSHCommand(daemonCmdStr)
+	if err != nil {
+		log.Println(stderr)
+		return err
+	}
+
+	return nil
+}
+
+// KeyGen creates a public-private key-pair on the remote vps
+// and returns the public key.
+func (remote *RemoteVPS) KeyGen() (*bytes.Buffer, error) {
+	// Collect assets (keygen shell script)
+	keygenSh, err := Asset("cmd/bootstrap/keygen.sh")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create deploy key.
+	result, stderr, err := remote.RunSSHCommand(string(keygenSh))
+
+	if err != nil {
+		log.Println(stderr)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// DaemonDown brings the daemon down on the remote instance
+func (remote *RemoteVPS) DaemonDown() error {
+	// Collect assets (deamon-up shell script)
+	daemonCmd, err := Asset("cmd/bootstrap/daemon-down.sh")
+	if err != nil {
+		return err
+	}
+
+	_, stderr, err := remote.RunSSHCommand(string(daemonCmd))
+	if err != nil {
+		log.Println(stderr)
+		return err
+	}
+
+	return nil
 }
