@@ -142,7 +142,9 @@ for updates to this repository's remote master branch.`,
 			println("Run `inertia remote -v' to see what remote is available")
 			os.Exit(1)
 		}
-		config.CurrentRemoteVPS.Bootstrap(args[0])
+
+		runner := &SSHRunner{r: config.CurrentRemoteVPS}
+		config.CurrentRemoteVPS.Bootstrap(runner, args[0])
 	},
 }
 
@@ -215,12 +217,11 @@ func init() {
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
 // for the user.
-func (remote *RemoteVPS) Bootstrap(name string) error {
+func (remote *RemoteVPS) Bootstrap(runner *SSHRunner, name string) error {
 	println("Bootstrapping remote " + name)
 
 	// Generate a session for each command.
 	println("Installing docker")
-	runner := SSHRunner{r: remote}
 	err := remote.InstallDocker(runner)
 	if err != nil {
 		return err
@@ -272,7 +273,7 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 }
 
 // RunSSHCommand runs a command remotely.
-func (remote *RemoteVPS) RunSSHCommand(runner SSHRunner, remoteCmd string) (
+func (remote *RemoteVPS) RunSSHCommand(runner *SSHRunner, remoteCmd string) (
 	*bytes.Buffer, *bytes.Buffer, error) {
 
 	// Capture result.
@@ -284,7 +285,7 @@ func (remote *RemoteVPS) RunSSHCommand(runner SSHRunner, remoteCmd string) (
 }
 
 // InstallDocker installs docker on a remote vps.
-func (remote *RemoteVPS) InstallDocker(session SSHRunner) error {
+func (remote *RemoteVPS) InstallDocker(session *SSHRunner) error {
 	// Collect assets (docker shell script)
 	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
 	if err != nil {
@@ -303,7 +304,7 @@ func (remote *RemoteVPS) InstallDocker(session SSHRunner) error {
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (remote *RemoteVPS) DaemonUp(session SSHRunner, daemonPort string) error {
+func (remote *RemoteVPS) DaemonUp(session *SSHRunner, daemonPort string) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("cmd/bootstrap/daemon-up.sh")
 	if err != nil {
@@ -323,7 +324,7 @@ func (remote *RemoteVPS) DaemonUp(session SSHRunner, daemonPort string) error {
 
 // KeyGen creates a public-private key-pair on the remote vps
 // and returns the public key.
-func (remote *RemoteVPS) KeyGen(session SSHRunner) (*bytes.Buffer, error) {
+func (remote *RemoteVPS) KeyGen(session *SSHRunner) (*bytes.Buffer, error) {
 	// Collect assets (keygen shell script)
 	keygenSh, err := Asset("cmd/bootstrap/keygen.sh")
 	if err != nil {
@@ -342,7 +343,7 @@ func (remote *RemoteVPS) KeyGen(session SSHRunner) (*bytes.Buffer, error) {
 }
 
 // DaemonDown brings the daemon down on the remote instance
-func (remote *RemoteVPS) DaemonDown(session SSHRunner) error {
+func (remote *RemoteVPS) DaemonDown(session *SSHRunner) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("cmd/bootstrap/daemon-down.sh")
 	if err != nil {
