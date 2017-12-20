@@ -21,14 +21,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 )
-
-var execCommand = exec.Command
 
 // RemoteVPS holds access to a remote instance.
 type RemoteVPS struct {
@@ -45,9 +42,7 @@ type SSHSession interface {
 
 // SSHRunner runs commands over SSH and captures results.
 type SSHRunner struct {
-	r      *RemoteVPS
-	Stdout *bytes.Buffer
-	Stderr *bytes.Buffer
+	r *RemoteVPS
 }
 
 // Run runs a command remotely.
@@ -58,8 +53,8 @@ func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
 	}
 	// Capture result.
 	var stdout, stderr bytes.Buffer
-	runner.Stdout = &stdout
-	runner.Stderr = &stderr
+	session.Stdout = &stdout
+	session.Stderr = &stderr
 
 	err = session.Run(cmd)
 	return &stdout, &stderr, err
@@ -275,12 +270,6 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // RunSSHCommand runs a command remotely.
 func (remote *RemoteVPS) RunSSHCommand(runner *SSHRunner, remoteCmd string) (
 	*bytes.Buffer, *bytes.Buffer, error) {
-
-	// Capture result.
-	var stdout, stderr bytes.Buffer
-	runner.Stdout = &stdout
-	runner.Stderr = &stderr
-
 	return runner.Run(remoteCmd)
 }
 
