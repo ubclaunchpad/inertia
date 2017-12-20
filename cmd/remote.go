@@ -38,6 +38,33 @@ type RemoteVPS struct {
 	Port string
 }
 
+// SSHSession can run remote commands over SSH
+type SSHSession interface {
+	Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error)
+}
+
+// SSHRunner runs commands over SSH and captures results.
+type SSHRunner struct {
+	r      *RemoteVPS
+	Stdout *bytes.Buffer
+	Stderr *bytes.Buffer
+}
+
+// Run runs a command remotely.
+func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
+	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.User)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Capture result.
+	var stdout, stderr bytes.Buffer
+	runner.Stdout = &stdout
+	runner.Stderr = &stderr
+
+	err = session.Run(cmd)
+	return &stdout, &stderr, err
+}
+
 // remoteCmd represents the remote command
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
@@ -193,32 +220,26 @@ func (remote *RemoteVPS) Bootstrap(name string) error {
 
 	// Generate a session for each command.
 	println("Installing docker")
-	session, err := getSSHSession(remote.PEM, remote.IP, remote.User)
-	if err != nil {
-		return err
-	}
-	err = remote.InstallDocker(session)
+	runner := SSHRunner{r: remote}
+	err := remote.InstallDocker(runner)
 	if err != nil {
 		return err
 	}
 
 	println("Starting daemon")
-	session, err = getSSHSession(remote.PEM, remote.IP, remote.User)
 	if err != nil {
 		return err
 	}
-	err = remote.DaemonUp(session, remote.Port)
+	err = remote.DaemonUp(runner, remote.Port)
 	if err != nil {
 		return err
 	}
 
 	println("Building deploy key\n")
-	session, err = getSSHSession(remote.PEM, remote.IP, remote.User)
 	if err != nil {
 		return err
 	}
-	defer session.Close()
-	pub, err := remote.KeyGen(session)
+	pub, err := remote.KeyGen(runner)
 	if err != nil {
 		return err
 	}
@@ -251,21 +272,19 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 }
 
 // RunSSHCommand runs a command remotely.
-func (remote *RemoteVPS) RunSSHCommand(session *ssh.Session, remoteCmd string) (
+func (remote *RemoteVPS) RunSSHCommand(runner SSHRunner, remoteCmd string) (
 	*bytes.Buffer, *bytes.Buffer, error) {
 
 	// Capture result.
 	var stdout, stderr bytes.Buffer
-	session.Stdout = &stdout
-	session.Stderr = &stderr
+	runner.Stdout = &stdout
+	runner.Stderr = &stderr
 
-	err := session.Run(remoteCmd)
-
-	return &stdout, &stderr, err
+	return runner.Run(remoteCmd)
 }
 
 // InstallDocker installs docker on a remote vps.
-func (remote *RemoteVPS) InstallDocker(session *ssh.Session) error {
+func (remote *RemoteVPS) InstallDocker(session SSHRunner) error {
 	// Collect assets (docker shell script)
 	installDockerSh, err := Asset("cmd/bootstrap/docker.sh")
 	if err != nil {
@@ -273,7 +292,8 @@ func (remote *RemoteVPS) InstallDocker(session *ssh.Session) error {
 	}
 
 	// Install docker.
-	_, stderr, err := remote.RunSSHCommand(session, string(installDockerSh))
+	cmdStr := string(installDockerSh)
+	_, stderr, err := remote.RunSSHCommand(session, cmdStr)
 	if err != nil {
 		println(stderr)
 		return err
@@ -283,7 +303,7 @@ func (remote *RemoteVPS) InstallDocker(session *ssh.Session) error {
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (remote *RemoteVPS) DaemonUp(session *ssh.Session, daemonPort string) error {
+func (remote *RemoteVPS) DaemonUp(session SSHRunner, daemonPort string) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("cmd/bootstrap/daemon-up.sh")
 	if err != nil {
@@ -303,7 +323,7 @@ func (remote *RemoteVPS) DaemonUp(session *ssh.Session, daemonPort string) error
 
 // KeyGen creates a public-private key-pair on the remote vps
 // and returns the public key.
-func (remote *RemoteVPS) KeyGen(session *ssh.Session) (*bytes.Buffer, error) {
+func (remote *RemoteVPS) KeyGen(session SSHRunner) (*bytes.Buffer, error) {
 	// Collect assets (keygen shell script)
 	keygenSh, err := Asset("cmd/bootstrap/keygen.sh")
 	if err != nil {
@@ -322,7 +342,7 @@ func (remote *RemoteVPS) KeyGen(session *ssh.Session) (*bytes.Buffer, error) {
 }
 
 // DaemonDown brings the daemon down on the remote instance
-func (remote *RemoteVPS) DaemonDown(session *ssh.Session) error {
+func (remote *RemoteVPS) DaemonDown(session SSHRunner) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("cmd/bootstrap/daemon-down.sh")
 	if err != nil {
