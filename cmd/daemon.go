@@ -100,6 +100,7 @@ func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(event *github.PushEvent) {
+	// TODO: Do deployment (git pull, docker-compose build, docker-compose up)
 	repo := event.GetRepo()
 	log.Println("Received PushEvent")
 	log.Println(fmt.Sprintf("Repository Name: %s", *repo.Name))
@@ -109,6 +110,8 @@ func processPushEvent(event *github.PushEvent) {
 
 // processPullREquestEvent prints information about the given PullRequestEvent.
 // Handling PRs is unnecessary because merging one will trigger a PushEvent.
+// For now, simply logs events - may in the future do something configured
+// by the user.
 func processPullRequestEvent(event *github.PullRequestEvent) {
 	repo := event.GetRepo()
 	pr := event.GetPullRequest()
@@ -126,7 +129,7 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 // upHandler tries to bring the deployment up. It may have to clone
 // and check for read access.
 func upHandler(w http.ResponseWriter, r *http.Request) {
-	// Check for repo.
+	// TODD: Check for repo.
 	// If no repo,
 	// 1. clonec
 	// 2. build
