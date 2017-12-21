@@ -18,10 +18,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	git "gopkg.in/src-d/go-git.v4"
 )
@@ -66,7 +66,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err)
 		}
 
 		if args[0] != config.CurrentRemoteName {
@@ -78,7 +78,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 		repo, err := getRepo()
 		if err != nil {
-			log.Fatal("Could not open the local repository")
+			log.WithError(err)
 		}
 
 		switch args[1] {
@@ -93,7 +93,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				log.WithError(err)
 			}
 
 			switch resp.StatusCode {
@@ -115,13 +115,13 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 			resp, err := deployment.Down()
 			if err != nil {
-				log.Fatal(err)
+				log.WithError(err)
 			}
 
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				log.WithError(err)
 			}
 
 			switch resp.StatusCode {

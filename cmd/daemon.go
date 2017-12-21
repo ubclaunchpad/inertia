@@ -16,10 +16,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/google/go-github/github"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -47,13 +47,13 @@ inertia daemon run -p 8081`,
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetString("port")
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err)
 		}
 		println("Serving daemon on port " + port)
 		http.HandleFunc("/", gitHubWebHookHandler)
 		http.HandleFunc("/up", upHandler)
 		http.HandleFunc("/down", downHandler)
-		log.Fatal(http.ListenAndServe(":"+port, nil))
+		log.WithError(http.ListenAndServe(":"+port, nil))
 	},
 }
 

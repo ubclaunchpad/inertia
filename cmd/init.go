@@ -19,10 +19,10 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/src-d/go-git.v4"
 )
@@ -49,7 +49,7 @@ to succeed.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := InitializeInertiaProject()
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err)
 		}
 	},
 }

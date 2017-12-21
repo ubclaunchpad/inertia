@@ -18,11 +18,11 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 )
@@ -79,7 +79,7 @@ inerta remote status gcloud`,
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err)
 		}
 		if config.CurrentRemoteName == noInertiaRemote {
 			println("No remote currently set.")
@@ -104,8 +104,7 @@ file. Specify a VPS name and an IP address.`,
 		// Ensure project initialized.
 		_, err := GetProjectConfigFromDisk()
 		if err != nil {
-			println(err.Error())
-			os.Exit(1)
+			log.WithError(err)
 		}
 		user, _ := cmd.Flags().GetString("user")
 		pemLoc, _ := cmd.Flags().GetString("identity")
@@ -127,8 +126,7 @@ for updates to this repository's remote master branch.`,
 		// Ensure project initialized.
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
-			println(err.Error())
-			os.Exit(1)
+			log.WithError(err)
 		}
 
 		if args[0] != config.CurrentRemoteName {
@@ -153,7 +151,7 @@ behaviour, and other information.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err)
 		}
 
 		if args[0] != config.CurrentRemoteName {
