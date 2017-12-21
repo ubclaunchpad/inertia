@@ -138,7 +138,7 @@ func init() {
 // in the deployment object.
 func (d *Deployment) Up() (int, string, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
-	resp, err := http.Get(host)
+	resp, err := http.Post(host, "application/json", nil)
 	if err != nil {
 		return -1, "", errors.New("Error when deploying project")
 	}
@@ -153,7 +153,7 @@ func (d *Deployment) Up() (int, string, error) {
 // in the configuration object.
 func (d *Deployment) Down() (int, string, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
-	resp, err := http.Get(host)
+	resp, err := http.Post(host, "application/json", nil)
 	if err != nil {
 		return -1, "", errors.New("Error when deploying project")
 	}
