@@ -39,8 +39,8 @@ const (
 
 // DaemonRequester can make HTTP requests to the daemon.
 type DaemonRequester interface {
-	Up() (int, string, error)
-	Down() (int, string, error)
+	Up() (*http.Response, error)
+	Down() (*http.Response, error)
 }
 
 // Deployment manages a deployment and implements the
@@ -89,18 +89,21 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 				Repository: repo,
 			}
 
-			code, body, err := deployment.Up()
+			resp, err := deployment.Up()
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			switch code {
+			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("Project up: %d %s\n", code, body)
+				fmt.Printf("Project down: %d\n", resp.StatusCode)
 			case http.StatusForbidden:
-				fmt.Printf("Bad auth: %d %s\n", code, body)
+				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
 			default:
-				fmt.Printf("Unknown response from daemon: %d %s", code, body)
+				fmt.Printf("Unknown response from daemon: %d %s",
+					resp.StatusCode, body)
 			}
 
 		case daemonDown:
@@ -110,18 +113,25 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 				Repository: repo,
 			}
 
-			code, body, err := deployment.Down()
+			resp, err := deployment.Down()
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			switch code {
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("Project down: %d %s\n", code, body)
+				fmt.Printf("Project down: %d\n", resp.StatusCode)
 			case http.StatusForbidden:
-				fmt.Printf("Bad auth: %d %s\n", code, body)
+				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
 			default:
-				fmt.Printf("Unknown response from daemon: %d %s", code, body)
+				fmt.Printf("Unknown response from daemon: %d %s",
+					resp.StatusCode, body)
 			}
 		default:
 			fmt.Printf("No such deployment command: %s\n", args[1])
@@ -136,30 +146,22 @@ func init() {
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (d *Deployment) Up() (int, string, error) {
+func (d *Deployment) Up() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
 	resp, err := http.Post(host, "application/json", nil)
 	if err != nil {
-		return -1, "", errors.New("Error when deploying project")
+		return nil, errors.New("Error when deploying project")
 	}
-
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return resp.StatusCode, string(body), nil
+	return resp, nil
 }
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
-func (d *Deployment) Down() (int, string, error) {
+func (d *Deployment) Down() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
 	resp, err := http.Post(host, "application/json", nil)
 	if err != nil {
-		return -1, "", errors.New("Error when deploying project")
+		return nil, errors.New("Error when deploying project")
 	}
-
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	return resp.StatusCode, string(body), nil
+	return resp, nil
 }
