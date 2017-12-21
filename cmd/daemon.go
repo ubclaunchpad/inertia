@@ -142,5 +142,6 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 // downHandler tries to bring the project down.
 func downHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO
 	http.Error(w, "not implemented", 501)
 }
