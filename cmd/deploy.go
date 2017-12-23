@@ -15,9 +15,15 @@
 package cmd
 
 import (
-	"log"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	git "gopkg.in/src-d/go-git.v4"
 )
 
 // TODO: Reference daemon pkg for this information?
@@ -26,101 +32,136 @@ import (
 // Clearly cannot ask for this information over HTTP.
 var defaultDaemonPort = "8081"
 
+const (
+	daemonUp   = "up"
+	daemonDown = "down"
+)
+
+// DaemonRequester can make HTTP requests to the daemon.
+type DaemonRequester interface {
+	Up() (*http.Response, error)
+	Down() (*http.Response, error)
+}
+
+// Deployment manages a deployment and implements the
+// DaemonRequester interface.
+type Deployment struct {
+	*RemoteVPS
+	Repository *git.Repository
+}
+
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
-	Use:   "deploy",
-	Short: "Deploy the application to the remote VPS instance specified",
-	Long: `Deploy the application to the remote VPS instance specified.
-A URL will be provided to direct GitHub webhooks to, the daemon will
-request access to the repository via a public key, the daemon will begin
-waiting for updates to this repository's remote master branch.`,
+	Use:   "deploy [REMOTE] [COMMAND]",
+	Short: "Configure continuous deployment to the remote VPS instance specified",
+	Long: `Start or stop continuous deployment to the remote VPS instance specified.
+Run 'inertia remote status' beforehand to ensure your daemon is running.
+Requires:
+
+1. A deploy key to be registered for the daemon with your GitHub repository.
+2. A webhook url to registered for the daemon with your GitHub repository.
+
+Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
+	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err)
 		}
 
-		stop, err := cmd.Flags().GetBool("stop")
+		if args[0] != config.CurrentRemoteName {
+			println("No such remote " + args[0])
+			println("Inertia currently supports one remote per repository")
+			println("Run `inertia remote -v' to see what remote is available")
+			os.Exit(1)
+		}
+
+		repo, err := getRepo()
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err)
 		}
 
-		if stop {
-			if err := config.CurrentRemoteVPS.DaemonDown; err != nil {
-				println("Stopped daemon successfully")
-			} else {
-				println("Failed to bring down daemon")
+		switch args[1] {
+		case daemonUp:
+			// Start the deployment
+			deployment := &Deployment{
+				RemoteVPS:  config.CurrentRemoteVPS,
+				Repository: repo,
 			}
 
-		} else {
-			daemonPort, err := cmd.Flags().GetString("port")
+			resp, err := deployment.Up()
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				log.WithError(err)
 			}
 
-			err = config.CurrentRemoteVPS.Deploy(config.CurrentRemoteName, daemonPort)
+			switch resp.StatusCode {
+			case http.StatusOK:
+				fmt.Printf("Project down: %d\n", resp.StatusCode)
+			case http.StatusForbidden:
+				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
+			default:
+				fmt.Printf("Unknown response from daemon: %d %s",
+					resp.StatusCode, body)
+			}
+
+		case daemonDown:
+			// Start the deployment
+			deployment := &Deployment{
+				RemoteVPS:  config.CurrentRemoteVPS,
+				Repository: repo,
+			}
+
+			resp, err := deployment.Down()
 			if err != nil {
-				log.Fatal(err)
+				log.WithError(err)
 			}
 
-			config.CurrentRemoteVPS.Port = daemonPort
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.WithError(err)
+			}
 
-			f, err := GetConfigFile()
-			defer f.Close()
-			config.Write(f)
+			switch resp.StatusCode {
+			case http.StatusOK:
+				fmt.Printf("Project down: %d\n", resp.StatusCode)
+			case http.StatusForbidden:
+				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
+			default:
+				fmt.Printf("Unknown response from daemon: %d %s",
+					resp.StatusCode, body)
+			}
+		default:
+			fmt.Printf("No such deployment command: %s\n", args[1])
+			os.Exit(1)
 		}
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(deployCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deployCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	deployCmd.Flags().StringP("port", "p", defaultDaemonPort, "Set the daemon port")
-	deployCmd.Flags().BoolP("stop", "s", false, "Stop the daemon")
 }
 
-// Deploy deploys the project to the remote VPS instance specified
+// Up brings the project up on the remote VPS instance specified
+// in the deployment object.
+func (d *Deployment) Up() (*http.Response, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
+	resp, err := http.Post(host, "application/json", nil)
+	if err != nil {
+		return nil, errors.New("Error when deploying project")
+	}
+	return resp, nil
+}
+
+// Down brings the project down on the remote VPS instance specified
 // in the configuration object.
-func (remote *RemoteVPS) Deploy(name, daemonPort string) error {
-	println("Deploying remote " + name)
-
-	println("Installing docker")
-	err := remote.InstallDocker()
+func (d *Deployment) Down() (*http.Response, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
+	resp, err := http.Post(host, "application/json", nil)
 	if err != nil {
-		return err
+		return nil, errors.New("Error when deploying project")
 	}
-
-	println("Starting daemon")
-	err = remote.DaemonUp(daemonPort)
-	if err != nil {
-		return err
-	}
-
-	println("Building deploy key\n")
-	pub, err := remote.KeyGen()
-	if err != nil {
-		return err
-	}
-
-	println("Daemon running on instance")
-
-	// Output deploy key to user.
-	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println(pub.String())
-
-	// Output Webhook url to user.
-	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
-	println("http://" + remote.IP + ":" + daemonPort + "\n")
-
-	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
-
-	return nil
+	return resp, nil
 }

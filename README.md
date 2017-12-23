@@ -18,8 +18,8 @@ $> inertia init
 $> inertia remote add glcoud 35.227.171.49 -u root -i /path/to/my/.ssh/id_rsa
 Remote 'glcoud' added.
 
-$> inertia deploy
-Deploying remote...
+$> inertia remote bootstrap gcloud
+Bootstrapping remote...
 Daemon running on instance
 GitHub Deploy Key Generation:
 Generating public/private rsa key pair.
@@ -44,16 +44,22 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCftKIy4/GQah6H4EcxdO5Qmdin6Xu/9DoBE7Qh1L1P
 GitHub WebHook URL: 35.227.171.49:8081
 ```
 
-A daemon is now running on your remote instance, continuously deploying your
-application for you!
+A daemon is now running on your remote instance - but your application is not yet
+continuously deployed.
 
-The output of `inertia deploy` has given you two important pieces of information.
+The output of `inertia bootstrap [REMOTE]` has given you two important pieces of information.
 
 1. A deploy key. The Inertia daemon requires readonly access to your GitHub repository.
    Add it to your GitHub repository settings at the URL provided in the output.
 2. A GitHub webhook URL. The daemon will accept POST requests from GitHub at the URL
    provided. Again, add this webhook URL in your GitHub settings area (at the URL
    provided).
+
+After adding these pieces of information to your GitHub settings,
+
+```bash
+$> inertia deploy glcoud
+```
 
 ## Development
 
@@ -137,3 +143,8 @@ current setup flow is:
 * Add the SSH key to your project's Deploy Keys on GitHub
 * Create a webhook with the URL and secret on your project repository
 
+## Testing
+
+```bash
+go test ./cmd -cover
+```

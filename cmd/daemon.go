@@ -16,10 +16,16 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
+	"github.com/google/go-github/github"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+)
+
+var (
+	defaultSecret = "inertia"
+	okResp        = "I'm a little Webhook, short and stout!"
 )
 
 // daemonCmd represents the daemon command
@@ -41,11 +47,13 @@ inertia daemon run -p 8081`,
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetString("port")
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err)
 		}
 		println("Serving daemon on port " + port)
-		http.HandleFunc("/", rootHandler)
-		log.Fatal(http.ListenAndServe(":"+port, nil))
+		http.HandleFunc("/", gitHubWebHookHandler)
+		http.HandleFunc("/up", upHandler)
+		http.HandleFunc("/down", downHandler)
+		log.WithError(http.ListenAndServe(":"+port, nil))
 	},
 }
 
@@ -64,8 +72,76 @@ func init() {
 	runCmd.Flags().StringP("port", "p", "8081", "Set port for daemon to run on")
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Hello, World!")
+// gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
+func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, okResp)
+
+	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	event, err := github.ParseWebHook(github.WebHookType(r), payload)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	switch event := event.(type) {
+	case *github.PushEvent:
+		processPushEvent(event)
+	case *github.PullRequestEvent:
+		processPullRequestEvent(event)
+	default:
+		log.Println("Unrecognized event type")
+	}
+}
+
+// processPushEvent prints information about the given PushEvent.
+func processPushEvent(event *github.PushEvent) {
+	// TODO: Do deployment (git pull, docker-compose build, docker-compose up)
+	repo := event.GetRepo()
+	log.Println("Received PushEvent")
+	log.Println(fmt.Sprintf("Repository Name: %s", *repo.Name))
+	log.Println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
+	log.Println(fmt.Sprintf("Ref: %s", event.GetRef()))
+}
+
+// processPullREquestEvent prints information about the given PullRequestEvent.
+// Handling PRs is unnecessary because merging one will trigger a PushEvent.
+// For now, simply logs events - may in the future do something configured
+// by the user.
+func processPullRequestEvent(event *github.PullRequestEvent) {
+	repo := event.GetRepo()
+	pr := event.GetPullRequest()
+	merged := "false"
+	if *pr.Merged {
+		merged = "true"
+	}
+	log.Println("Received PullRequestEvent")
+	log.Println(fmt.Sprintf("Repository Name: %s", *repo.Name))
+	log.Println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
+	log.Println(fmt.Sprintf("Ref: %s", pr.GetBase().GetRef()))
+	log.Println(fmt.Sprintf("Merge status: %v", merged))
+}
+
+// upHandler tries to bring the deployment up. It may have to clone
+// and check for read access.
+func upHandler(w http.ResponseWriter, r *http.Request) {
+	// TODD: Check for repo.
+	// If no repo,
+	// 1. clonec
+	// 2. build
+	// 3. run.
+	// If repo,
+	// Check for existing containers.
+	// Check for existing images.
+	http.Error(w, "not implemented", 501)
+}
+
+// downHandler tries to bring the project down.
+func downHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO
+	http.Error(w, "not implemented", 501)
 }
