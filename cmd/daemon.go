@@ -109,7 +109,6 @@ func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(event *github.PushEvent) {
-	// TODO: Do deployment (git pull, docker-compose build, docker-compose up)
 	repo := event.GetRepo()
 	log.Println("Received PushEvent")
 	log.Println(fmt.Sprintf("Repository Name: %s", *repo.Name))
@@ -125,16 +124,7 @@ func processPushEvent(event *github.PushEvent) {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	cfg, err := GetProjectConfigFromDisk()
-	if err != nil {
-		log.Println(err.Error())
-	}
-	pemFile := cfg.CurrentRemoteVPS.PEM
-	auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
-	if err != nil {
-		log.Println(err.Error())
-	}
-	deploy(localRepo, auth)
+	deploy(localRepo)
 }
 
 // processPullREquestEvent prints information about the given PullRequestEvent.
@@ -157,15 +147,6 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 
 // upHandler tries to bring the deployment online
 func upHandler(w http.ResponseWriter, r *http.Request) {
-	cfg, err := GetProjectConfigFromDisk()
-	if err != nil {
-		http.Error(w, "Not inertia-lized", 501)
-	}
-	pemFile := cfg.CurrentRemoteVPS.PEM
-	auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
-	if err != nil {
-		http.Error(w, err.Error(), 501)
-	}
 	cwd, err := os.Getwd()
 	if err != nil {
 		http.Error(w, err.Error(), 501)
@@ -183,6 +164,15 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Clone project
 		remoteURL := "" // TODO
+		cfg, err := GetProjectConfigFromDisk()
+		if err != nil {
+			log.Println(err.Error())
+		}
+		pemFile := cfg.CurrentRemoteVPS.PEM
+		auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
+		if err != nil {
+			log.Println(err.Error())
+		}
 		repo, err := git.PlainClone(cwd, false, &git.CloneOptions{
 			URL:  remoteURL,
 			Auth: auth,
@@ -190,7 +180,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), 501)
 		}
-		err = deploy(repo, auth)
+		err = deploy(repo)
 		if err != nil {
 			http.Error(w, err.Error(), 501)
 		}
@@ -200,7 +190,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), 501)
 		}
-		err = deploy(repo, auth)
+		err = deploy(repo)
 		if err != nil {
 			http.Error(w, err.Error(), 501)
 		}
@@ -212,7 +202,17 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // deploy does git pull, docker-compose build, docker-compose up
-func deploy(repo *git.Repository, auth ssh.AuthMethod) error {
+func deploy(repo *git.Repository) error {
+	cfg, err := GetProjectConfigFromDisk()
+	if err != nil {
+		log.Println(err.Error())
+	}
+	pemFile := cfg.CurrentRemoteVPS.PEM
+	auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
+	if err != nil {
+		log.Println(err.Error())
+	}
+
 	tree, err := repo.Worktree()
 	if err != nil {
 		return err

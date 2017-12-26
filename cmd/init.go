@@ -161,12 +161,6 @@ func CheckForGit() error {
 	return nil
 }
 
-// PullRepository pulls from remote of the git repository we're in
-func PullRepository() error {
-
-	return nil
-}
-
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
 func GetProjectConfigFromDisk() (*Config, error) {
