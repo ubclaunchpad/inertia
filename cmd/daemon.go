@@ -15,12 +15,20 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 var (
@@ -50,10 +58,11 @@ inertia daemon run -p 8081`,
 			log.WithError(err)
 		}
 		println("Serving daemon on port " + port)
-		http.HandleFunc("/", gitHubWebHookHandler)
-		http.HandleFunc("/up", upHandler)
-		http.HandleFunc("/down", downHandler)
-		log.WithError(http.ListenAndServe(":"+port, nil))
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", gitHubWebHookHandler)
+		mux.HandleFunc("/up", upHandler)
+		mux.HandleFunc("/down", downHandler)
+		log.Fatal(http.ListenAndServe(":"+port, mux))
 	},
 }
 
@@ -106,6 +115,26 @@ func processPushEvent(event *github.PushEvent) {
 	log.Println(fmt.Sprintf("Repository Name: %s", *repo.Name))
 	log.Println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
 	log.Println(fmt.Sprintf("Ref: %s", event.GetRef()))
+
+	// Deploy
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Println(err.Error())
+	}
+	localRepo, err := git.PlainOpen(filepath.Join(cwd, ".git"))
+	if err != nil {
+		log.Println(err.Error())
+	}
+	cfg, err := GetProjectConfigFromDisk()
+	if err != nil {
+		log.Println(err.Error())
+	}
+	pemFile := cfg.CurrentRemoteVPS.PEM
+	auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
+	if err != nil {
+		log.Println(err.Error())
+	}
+	deploy(localRepo, auth)
 }
 
 // processPullREquestEvent prints information about the given PullRequestEvent.
@@ -126,22 +155,111 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 	log.Println(fmt.Sprintf("Merge status: %v", merged))
 }
 
-// upHandler tries to bring the deployment up. It may have to clone
-// and check for read access.
+// upHandler tries to bring the deployment online
 func upHandler(w http.ResponseWriter, r *http.Request) {
+	cfg, err := GetProjectConfigFromDisk()
+	if err != nil {
+		http.Error(w, "Not inertia-lized", 501)
+	}
+	pemFile := cfg.CurrentRemoteVPS.PEM
+	auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+	}
 	// TODD: Check for repo.
 	// If no repo,
-	// 1. clonec
+	// 1. clone
 	// 2. build
 	// 3. run.
 	// If repo,
 	// Check for existing containers.
 	// Check for existing images.
-	http.Error(w, "not implemented", 501)
+
+	err = CheckForGit()
+	if err != nil {
+		// Clone project
+		remoteURL := "" // TODO
+		repo, err := git.PlainClone(cwd, false, &git.CloneOptions{
+			URL:  remoteURL,
+			Auth: auth,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), 501)
+		}
+		err = deploy(repo, auth)
+		if err != nil {
+			http.Error(w, err.Error(), 501)
+		}
+	} else {
+		// Pull project's current branch
+		repo, err := git.PlainOpen(filepath.Join(cwd, ".git"))
+		if err != nil {
+			http.Error(w, err.Error(), 501)
+		}
+		err = deploy(repo, auth)
+		if err != nil {
+			http.Error(w, err.Error(), 501)
+		}
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Project up and running!")
 }
 
-// downHandler tries to bring the project down.
+// deploy does git pull, docker-compose build, docker-compose up
+func deploy(repo *git.Repository, auth ssh.AuthMethod) error {
+	tree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+	err = tree.Pull(&git.PullOptions{
+		Auth: auth,
+	})
+
+	// Build and run
+	daemonCmd, err := Asset("cmd/bootstrap/docker.sh")
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(string(daemonCmd))
+	return cmd.Run()
+}
+
+// downHandler tries to take the deployment offline
 func downHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO
-	http.Error(w, "not implemented", 501)
+	// Check if daemon is the only active container
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+	}
+	containers, err := cli.ContainerList(
+		context.Background(),
+		types.ContainerListOptions{},
+	)
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+	}
+	if len(containers) == 1 {
+		http.Error(w, "No Docker containers are currently active", 501)
+	}
+
+	// Take project offline
+	daemonCmd, err := Asset("cmd/bootstrap/project-down.sh")
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+	}
+	cmd := exec.Command(string(daemonCmd))
+	err = cmd.Run()
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Project shut down.")
 }

@@ -4,6 +4,7 @@
 // cmd/bootstrap/daemon-up.sh
 // cmd/bootstrap/docker.sh
 // cmd/bootstrap/keygen.sh
+// cmd/bootstrap/project-down.sh
 // DO NOT EDIT!
 
 package cmd
@@ -86,7 +87,7 @@ func cmdBootstrapDaemonDownSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cmd/bootstrap/daemon-down.sh", size: 233, mode: os.FileMode(420), modTime: time.Unix(1513481814, 0)}
+	info := bindataFileInfo{name: "cmd/bootstrap/daemon-down.sh", size: 233, mode: os.FileMode(420), modTime: time.Unix(1514021421, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -106,7 +107,7 @@ func cmdBootstrapDaemonUpSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cmd/bootstrap/daemon-up.sh", size: 1029, mode: os.FileMode(420), modTime: time.Unix(1513579351, 0)}
+	info := bindataFileInfo{name: "cmd/bootstrap/daemon-up.sh", size: 1029, mode: os.FileMode(420), modTime: time.Unix(1514274580, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -126,7 +127,7 @@ func cmdBootstrapDockerSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cmd/bootstrap/docker.sh", size: 1395, mode: os.FileMode(493), modTime: time.Unix(1513472391, 0)}
+	info := bindataFileInfo{name: "cmd/bootstrap/docker.sh", size: 1395, mode: os.FileMode(493), modTime: time.Unix(1514021421, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -146,7 +147,27 @@ func cmdBootstrapKeygenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cmd/bootstrap/keygen.sh", size: 544, mode: os.FileMode(493), modTime: time.Unix(1513459024, 0)}
+	info := bindataFileInfo{name: "cmd/bootstrap/keygen.sh", size: 544, mode: os.FileMode(493), modTime: time.Unix(1514021421, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _cmdBootstrapProjectDownSh = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x4c\xcc\x31\x0e\x82\x40\x10\x46\xe1\x9e\x53\xfc\x41\x0a\x2d\xf6\x08\x16\x24\x50\x58\x80\x85\x07\x30\x93\xdd\x11\x37\xc0\xec\x3a\x4c\xd4\xc2\xc3\x5b\x40\x41\xf7\x92\x97\x7c\x07\xdc\xbc\xc6\x6c\x78\x24\x85\xd1\x18\x65\x40\x48\x1f\x01\x4d\x13\x9a\xe4\x47\x56\xf8\x24\x46\x51\x58\x17\xf0\xd7\x73\x36\xd8\x93\x71\x11\x56\x8b\x84\x40\x3c\x27\x29\x8a\xa6\x6e\xbb\x6b\x7f\xef\xeb\xae\x3d\xc7\xf5\xb9\xed\x85\xd5\xd1\x19\xd5\x71\xeb\xbc\xc0\x11\xdc\x0b\x3f\x0c\xca\x19\xee\x8d\xb2\xda\x11\xe5\xe9\x1f\x00\x00\xff\xff\xeb\xdb\x33\x6b\x9a\x00\x00\x00")
+
+func cmdBootstrapProjectDownShBytes() ([]byte, error) {
+	return bindataRead(
+		_cmdBootstrapProjectDownSh,
+		"cmd/bootstrap/project-down.sh",
+	)
+}
+
+func cmdBootstrapProjectDownSh() (*asset, error) {
+	bytes, err := cmdBootstrapProjectDownShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "cmd/bootstrap/project-down.sh", size: 154, mode: os.FileMode(420), modTime: time.Unix(1514274584, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -203,10 +224,11 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"cmd/bootstrap/daemon-down.sh": cmdBootstrapDaemonDownSh,
-	"cmd/bootstrap/daemon-up.sh":   cmdBootstrapDaemonUpSh,
-	"cmd/bootstrap/docker.sh":      cmdBootstrapDockerSh,
-	"cmd/bootstrap/keygen.sh":      cmdBootstrapKeygenSh,
+	"cmd/bootstrap/daemon-down.sh":  cmdBootstrapDaemonDownSh,
+	"cmd/bootstrap/daemon-up.sh":    cmdBootstrapDaemonUpSh,
+	"cmd/bootstrap/docker.sh":       cmdBootstrapDockerSh,
+	"cmd/bootstrap/keygen.sh":       cmdBootstrapKeygenSh,
+	"cmd/bootstrap/project-down.sh": cmdBootstrapProjectDownSh,
 }
 
 // AssetDir returns the file names below a certain
@@ -252,10 +274,11 @@ type bintree struct {
 var _bintree = &bintree{nil, map[string]*bintree{
 	"cmd": &bintree{nil, map[string]*bintree{
 		"bootstrap": &bintree{nil, map[string]*bintree{
-			"daemon-down.sh": &bintree{cmdBootstrapDaemonDownSh, map[string]*bintree{}},
-			"daemon-up.sh":   &bintree{cmdBootstrapDaemonUpSh, map[string]*bintree{}},
-			"docker.sh":      &bintree{cmdBootstrapDockerSh, map[string]*bintree{}},
-			"keygen.sh":      &bintree{cmdBootstrapKeygenSh, map[string]*bintree{}},
+			"daemon-down.sh":  &bintree{cmdBootstrapDaemonDownSh, map[string]*bintree{}},
+			"daemon-up.sh":    &bintree{cmdBootstrapDaemonUpSh, map[string]*bintree{}},
+			"docker.sh":       &bintree{cmdBootstrapDockerSh, map[string]*bintree{}},
+			"keygen.sh":       &bintree{cmdBootstrapKeygenSh, map[string]*bintree{}},
+			"project-down.sh": &bintree{cmdBootstrapProjectDownSh, map[string]*bintree{}},
 		}},
 	}},
 }}

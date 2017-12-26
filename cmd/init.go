@@ -146,7 +146,7 @@ func CheckForGit() error {
 		return errors.New("this does not appear to be a git repository")
 	}
 
-	repo, err := git.NewFilesystemRepository(gitFolder)
+	repo, err := git.PlainOpen(gitFolder)
 	if err != nil {
 		return err
 	}
@@ -157,6 +157,12 @@ func CheckForGit() error {
 	if len(remotes) == 0 {
 		return errors.New("there are no remotes associated with this repository")
 	}
+
+	return nil
+}
+
+// PullRepository pulls from remote of the git repository we're in
+func PullRepository() error {
 
 	return nil
 }
@@ -236,5 +242,5 @@ func getRepo() (*git.Repository, error) {
 
 	// Quick failure if no .git folder.
 	gitFolder := filepath.Join(cwd, ".git")
-	return git.NewFilesystemRepository(gitFolder)
+	return git.PlainOpen(gitFolder)
 }
