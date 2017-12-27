@@ -186,7 +186,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// Pull project's current branch
-		repo, err := git.PlainOpen(filepath.Join(cwd, ".git"))
+		repo, err := getRepo()
 		if err != nil {
 			http.Error(w, err.Error(), 501)
 		}
@@ -197,7 +197,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, "Project up and running!")
 }
 
@@ -222,7 +222,7 @@ func deploy(repo *git.Repository) error {
 	})
 
 	// Build and run
-	daemonCmd, err := Asset("cmd/bootstrap/docker.sh")
+	daemonCmd, err := Asset("cmd/bootstrap/project-up.sh") // TODO
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 501)
 	}
 	if len(containers) == 1 {
-		http.Error(w, "No Docker containers are currently active", 501)
+		http.Error(w, "No Docker containers are currently active", 412)
 	}
 
 	// Take project offline

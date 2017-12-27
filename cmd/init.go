@@ -146,7 +146,7 @@ func CheckForGit() error {
 		return errors.New("this does not appear to be a git repository")
 	}
 
-	repo, err := git.PlainOpen(gitFolder)
+	repo, err := git.PlainOpen(cwd)
 	if err != nil {
 		return err
 	}
@@ -235,6 +235,5 @@ func getRepo() (*git.Repository, error) {
 	}
 
 	// Quick failure if no .git folder.
-	gitFolder := filepath.Join(cwd, ".git")
-	return git.PlainOpen(gitFolder)
+	return git.PlainOpen(cwd)
 }

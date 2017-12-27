@@ -98,7 +98,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("Project down: %d\n", resp.StatusCode)
+				fmt.Printf("Project up: %d\n", resp.StatusCode)
 			case http.StatusForbidden:
 				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
 			default:
