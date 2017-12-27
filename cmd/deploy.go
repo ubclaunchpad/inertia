@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -41,6 +43,11 @@ const (
 type DaemonRequester interface {
 	Up() (*http.Response, error)
 	Down() (*http.Response, error)
+}
+
+// UpRequest is the body of a up request to the daemon.
+type UpRequest struct {
+	Repo string `json:"repo"`
 }
 
 // Deployment manages a deployment and implements the
@@ -90,6 +97,10 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			}
 
 			resp, err := deployment.Up()
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
@@ -148,10 +159,28 @@ func init() {
 // in the deployment object.
 func (d *Deployment) Up() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
-	resp, err := http.Post(host, "application/json", nil)
+	repo, err := getRepo()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Support other repo names.
+	origin, err := repo.Remote("origin")
+	if err != nil {
+		return nil, err
+	}
+
+	req := UpRequest{Repo: origin.Config().URL}
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Post(host, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, errors.New("Error when deploying project")
 	}
+
 	return resp, nil
 }
 
