@@ -16,7 +16,9 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -162,37 +164,55 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = CheckForGit()
 	if err != nil {
-		// Clone project
-		remoteURL := "" // TODO
-		cfg, err := GetProjectConfigFromDisk()
-		if err != nil {
-			log.Println(err.Error())
-		}
-		pemFile := cfg.CurrentRemoteVPS.PEM
+		// Get github deploy key (requires user to have run the bootstrap command
+		// and added the key to their repository)
+		home := os.Getenv("HOME")
+		pemFile := home + "/.ssh/id_rsa_inertia_deploy"
 		auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
 		if err != nil {
 			log.Println(err.Error())
+			return
 		}
+
+		// Get github URL from up request for cloning
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		defer r.Body.Close()
+		var upReq UpRequest
+		err = json.Unmarshal(body, &upReq)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		// Clone project
+		remoteURL := upReq.Repo
 		repo, err := git.PlainClone(cwd, false, &git.CloneOptions{
 			URL:  remoteURL,
 			Auth: auth,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), 501)
+			return
 		}
 		err = deploy(repo)
 		if err != nil {
 			http.Error(w, err.Error(), 501)
+			return
 		}
 	} else {
-		// Pull project's current branch
 		repo, err := getRepo()
 		if err != nil {
 			http.Error(w, err.Error(), 501)
+			return
 		}
 		err = deploy(repo)
 		if err != nil {
 			http.Error(w, err.Error(), 501)
+			return
 		}
 	}
 
@@ -203,16 +223,16 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 // deploy does git pull, docker-compose build, docker-compose up
 func deploy(repo *git.Repository) error {
-	cfg, err := GetProjectConfigFromDisk()
-	if err != nil {
-		log.Println(err.Error())
-	}
-	pemFile := cfg.CurrentRemoteVPS.PEM
+	// Get github deploy key (requires user to have run the bootstrap command
+	// and added the key to their repository)
+	home := os.Getenv("HOME")
+	pemFile := home + "/.ssh/id_rsa_inertia_deploy"
 	auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
 	if err != nil {
-		log.Println(err.Error())
+		return err
 	}
 
+	// Pull from working branch
 	tree, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -220,6 +240,9 @@ func deploy(repo *git.Repository) error {
 	err = tree.Pull(&git.PullOptions{
 		Auth: auth,
 	})
+	if err != nil {
+		return err
+	}
 
 	// Build and run
 	daemonCmd, err := Asset("cmd/bootstrap/project-up.sh") // TODO
@@ -232,31 +255,38 @@ func deploy(repo *git.Repository) error {
 
 // downHandler tries to take the deployment offline
 func downHandler(w http.ResponseWriter, r *http.Request) {
-	// Check if daemon is the only active container
+	// Get active Docker containers
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		http.Error(w, err.Error(), 501)
+		return
 	}
+	defer cli.Close()
 	containers, err := cli.ContainerList(
 		context.Background(),
 		types.ContainerListOptions{},
 	)
 	if err != nil {
 		http.Error(w, err.Error(), 501)
-	}
-	if len(containers) == 1 {
-		http.Error(w, "No Docker containers are currently active", 412)
+		return
 	}
 
-	// Take project offline
-	daemonCmd, err := Asset("cmd/bootstrap/project-down.sh")
-	if err != nil {
-		http.Error(w, err.Error(), 501)
+	// Check if daemon is the only running container
+	if len(containers) <= 1 {
+		http.Error(w, "No Docker containers are currently active", 412)
+		return
 	}
-	cmd := exec.Command(string(daemonCmd))
-	err = cmd.Run()
-	if err != nil {
-		http.Error(w, err.Error(), 501)
+
+	// Take project containers offline
+	for _, container := range containers {
+		log.Println(container.Names[0])
+		if container.Names[0] != "inertia-daemon" {
+			err := cli.ContainerKill(context.Background(), container.ID, "SIGKILL")
+			if err != nil {
+				http.Error(w, err.Error(), 501)
+				return
+			}
+		}
 	}
 
 	w.Header().Set("Content-Type", "text/html")

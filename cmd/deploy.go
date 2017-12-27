@@ -170,7 +170,7 @@ func (d *Deployment) Up() (*http.Response, error) {
 		return nil, err
 	}
 
-	req := UpRequest{Repo: origin.Config().URL}
+	req := UpRequest{Repo: origin.Config().URLs[0]}
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, err

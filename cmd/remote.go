@@ -241,11 +241,11 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string) error {
 	println("Daemon running on instance")
 
 	// Output deploy key to user.
-	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new): ")
 	println(pub.String())
 
 	// Output Webhook url to user.
-	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
+	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
 	println("http://" + remote.IP + ":" + remote.Port)
 	println("Github WebHook Secret: " + defaultSecret + "\n")
 
