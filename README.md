@@ -58,7 +58,7 @@ The output of `inertia bootstrap [REMOTE]` has given you two important pieces of
 After adding these pieces of information to your GitHub settings,
 
 ```bash
-$> inertia deploy glcoud
+$> inertia deploy [REMOTE] up
 ```
 
 ## Development
