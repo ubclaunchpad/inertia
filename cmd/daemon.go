@@ -17,6 +17,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -34,8 +35,9 @@ import (
 )
 
 var (
-	defaultSecret = "inertia"
-	okResp        = "I'm a little Webhook, short and stout!"
+	projectDirectory = "/app/host/project"
+	defaultSecret    = "inertia"
+	okResp           = "I'm a little Webhook, short and stout!"
 )
 
 // daemonCmd represents the daemon command
@@ -118,15 +120,14 @@ func processPushEvent(event *github.PushEvent) {
 	log.Println(fmt.Sprintf("Ref: %s", event.GetRef()))
 
 	// Deploy
-	cwd, err := os.Getwd()
+	localRepo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	localRepo, err := git.PlainOpen(filepath.Join(cwd, ".git"))
+	err = deploy(localRepo)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	deploy(localRepo)
 }
 
 // processPullREquestEvent prints information about the given PullRequestEvent.
@@ -149,28 +150,12 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 
 // upHandler tries to bring the deployment online
 func upHandler(w http.ResponseWriter, r *http.Request) {
-	cwd, err := os.Getwd()
+	// Check for existing git repository, clone if no git repository exists.
+	err := CheckForGit(projectDirectory)
 	if err != nil {
-		http.Error(w, err.Error(), 501)
-	}
-	// TODD: Check for repo.
-	// If no repo,
-	// 1. clone
-	// 2. build
-	// 3. run.
-	// If repo,
-	// Check for existing containers.
-	// Check for existing images.
-
-	err = CheckForGit()
-	if err != nil {
-		// Get github deploy key (requires user to have run the bootstrap command
-		// and added the key to their repository)
-		home := os.Getenv("HOME")
-		pemFile := home + "/.ssh/id_rsa_inertia_deploy"
-		auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
+		auth, err := getGithubKey()
 		if err != nil {
-			log.Println(err.Error())
+			http.Error(w, err.Error(), 500)
 			return
 		}
 
@@ -188,32 +173,49 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		//------ TEST REPO -------
+		upReq = UpRequest{
+			Repo: "git@github.com:bobheadxi/sleuth.git",
+		}
+		//------------------------
+
 		// Clone project
 		remoteURL := upReq.Repo
-		repo, err := git.PlainClone(cwd, false, &git.CloneOptions{
+		log.Println(remoteURL)
+		_, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
 			URL:  remoteURL,
 			Auth: auth,
 		})
 		if err != nil {
+			removeContents(projectDirectory)
 			http.Error(w, err.Error(), 501)
 			return
 		}
-		err = deploy(repo)
-		if err != nil {
-			http.Error(w, err.Error(), 501)
-			return
-		}
-	} else {
-		repo, err := getRepo()
-		if err != nil {
-			http.Error(w, err.Error(), 501)
-			return
-		}
-		err = deploy(repo)
-		if err != nil {
-			http.Error(w, err.Error(), 501)
-			return
-		}
+	}
+
+	// Update and deploy the repository
+	repo, err := git.PlainOpen(projectDirectory)
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+		return
+	}
+	err = deploy(repo)
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+		return
+	}
+
+	// Check that Project containers are active
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+		return
+	}
+	defer cli.Close()
+	_, err = getActiveContainers(cli)
+	if err != nil {
+		http.Error(w, err.Error(), 501)
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/html")
@@ -223,11 +225,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 // deploy does git pull, docker-compose build, docker-compose up
 func deploy(repo *git.Repository) error {
-	// Get github deploy key (requires user to have run the bootstrap command
-	// and added the key to their repository)
-	home := os.Getenv("HOME")
-	pemFile := home + "/.ssh/id_rsa_inertia_deploy"
-	auth, err := ssh.NewPublicKeysFromFile("git", pemFile, "")
+	auth, err := getGithubKey()
 	if err != nil {
 		return err
 	}
@@ -240,8 +238,12 @@ func deploy(repo *git.Repository) error {
 	err = tree.Pull(&git.PullOptions{
 		Auth: auth,
 	})
-	if err != nil {
-		return err
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		// If pull fails, attempt a force pull before returning error
+		repo, err = forcePull(repo, auth)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Build and run
@@ -255,32 +257,22 @@ func deploy(repo *git.Repository) error {
 
 // downHandler tries to take the deployment offline
 func downHandler(w http.ResponseWriter, r *http.Request) {
-	// Get active Docker containers
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		http.Error(w, err.Error(), 501)
 		return
 	}
 	defer cli.Close()
-	containers, err := cli.ContainerList(
-		context.Background(),
-		types.ContainerListOptions{},
-	)
+	containers, err := getActiveContainers(cli)
 	if err != nil {
-		http.Error(w, err.Error(), 501)
-		return
-	}
-
-	// Check if daemon is the only running container
-	if len(containers) <= 1 {
-		http.Error(w, "No Docker containers are currently active", 412)
+		http.Error(w, err.Error(), 412)
 		return
 	}
 
 	// Take project containers offline
 	for _, container := range containers {
-		log.Println(container.Names[0])
-		if container.Names[0] != "inertia-daemon" {
+		log.Println(container.Image)
+		if container.Image != "inertia-daemon" {
 			err := cli.ContainerKill(context.Background(), container.ID, "SIGKILL")
 			if err != nil {
 				http.Error(w, err.Error(), 501)
@@ -292,4 +284,71 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, "Project shut down.")
+}
+
+// getGithubKey returns the key generated by 'inertia remote bootstrap [REMOTE]'
+func getGithubKey() (ssh.AuthMethod, error) {
+	pemFile := "/app/host/.ssh/id_rsa_inertia_deploy"
+	return ssh.NewPublicKeysFromFile("git", pemFile, "")
+}
+
+// getActiveContainers returns all active containers and returns and error
+// if the Daemon is the only active container
+func getActiveContainers(cli *client.Client) ([]types.Container, error) {
+	containers, err := cli.ContainerList(
+		context.Background(),
+		types.ContainerListOptions{},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if daemon is the only running container
+	if len(containers) <= 1 {
+		return nil, errors.New("No docker containers currently active")
+	}
+
+	return containers, nil
+}
+
+// forcePull deletes the project directory and makes a fresh clone of given repo
+// git.Worktree.Pull() only supports merges that can be resolved as a fast-forward
+func forcePull(repo *git.Repository, auth ssh.AuthMethod) (*git.Repository, error) {
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return nil, err
+	}
+	remoteURL := remotes[0].Config().URLs[0]
+	err = removeContents(projectDirectory)
+	if err != nil {
+		repo, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
+			URL:  remoteURL,
+			Auth: auth,
+		})
+		if err != nil {
+			removeContents(projectDirectory)
+			return nil, err
+		}
+	}
+	return repo, nil
+}
+
+// removeContents removes all files within given directory, returns nil if successful
+func removeContents(directory string) error {
+	d, err := os.Open(directory)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(directory, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -170,7 +171,10 @@ func (d *Deployment) Up() (*http.Response, error) {
 		return nil, err
 	}
 
-	req := UpRequest{Repo: origin.Config().URLs[0]}
+	// Send Repo URL in form "git@github.com:[USER]/[REPOSITORY].git"
+	url := origin.Config().URLs[0]
+	url = strings.Replace(url, "https://github.com/", "git@github.com:", -1) + ".git"
+	req := UpRequest{Repo: url}
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, err

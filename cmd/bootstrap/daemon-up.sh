@@ -19,15 +19,21 @@ fi;
 # Pull the latest inertia daemon.
 sudo docker pull $IMAGE_REPOSITORY
 
-# Run container with access to the host docker socket - this
-# is necessary because we want the daemon to be able start
+# Run container with access to the host docker socket and related executables -
+# this is necessary because we want the daemon to be able start
 # and stop containers on the host. It's also controversial,
 # https://www.lvh.io/posts/dont-expose-the-docker-socket-not-even-to-a-container.html
 # It's also recommended,
 # https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
-# As a result, this container has root access on the remove vps.
+# As a result, this container has root access on the remote vps.
 sudo docker run -d \
     -p "$PORT":8081 \
     -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /usr/bin/docker:/usr/bin/docker \
+    -v /usr/local/bin/docker-compose:/usr/local/bin/docker-compose \
+    -v $HOME:/app/host \
+    -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     --name "$DAEMON_NAME" \
     "$IMAGE_REPOSITORY"
+
+# -v $HOME:/app/host mounts host directory so the daemon can access it

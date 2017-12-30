@@ -71,7 +71,11 @@ func init() {
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
 func InitializeInertiaProject() error {
-	err := CheckForGit()
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	err = CheckForGit(cwd)
 	if err != nil {
 		return err
 	}
@@ -134,12 +138,7 @@ func CreateConfigDirectory() error {
 }
 
 // CheckForGit returns an error if we're not in a git repository.
-func CheckForGit() error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
+func CheckForGit(cwd string) error {
 	// Quick failure if no .git folder.
 	gitFolder := filepath.Join(cwd, ".git")
 	if _, err := os.Stat(gitFolder); os.IsNotExist(err) {
