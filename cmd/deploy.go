@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -84,7 +83,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			os.Exit(1)
 		}
 
-		repo, err := getRepo()
+		repo, err := getLocalRepo()
 		if err != nil {
 			log.WithError(err)
 		}
@@ -160,7 +159,7 @@ func init() {
 // in the deployment object.
 func (d *Deployment) Up() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
-	repo, err := getRepo()
+	repo, err := getLocalRepo()
 	if err != nil {
 		return nil, err
 	}
@@ -171,10 +170,7 @@ func (d *Deployment) Up() (*http.Response, error) {
 		return nil, err
 	}
 
-	// Send Repo URL in form "git@github.com:[USER]/[REPOSITORY].git"
-	url := origin.Config().URLs[0]
-	url = strings.Replace(url, "https://github.com/", "git@github.com:", -1) + ".git"
-	req := UpRequest{Repo: url}
+	req := UpRequest{Repo: getSSHRemoteURL(origin)}
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, err

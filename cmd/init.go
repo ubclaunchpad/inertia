@@ -24,7 +24,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 // Config represents the current projects configuration.
@@ -75,7 +74,7 @@ func InitializeInertiaProject() error {
 	if err != nil {
 		return err
 	}
-	err = CheckForGit(cwd)
+	err = checkForGit(cwd)
 	if err != nil {
 		return err
 	}
@@ -91,7 +90,6 @@ func InitializeInertiaProject() error {
 // CreateConfigDirectory returns an error if the config directory
 // already exists (the project is already initialized).
 func CreateConfigDirectory() error {
-
 	configDirPath, err := GetProjectConfigFolderPath()
 	if err != nil {
 		return err
@@ -137,29 +135,6 @@ func CreateConfigDirectory() error {
 	return nil
 }
 
-// CheckForGit returns an error if we're not in a git repository.
-func CheckForGit(cwd string) error {
-	// Quick failure if no .git folder.
-	gitFolder := filepath.Join(cwd, ".git")
-	if _, err := os.Stat(gitFolder); os.IsNotExist(err) {
-		return errors.New("this does not appear to be a git repository")
-	}
-
-	repo, err := git.PlainOpen(cwd)
-	if err != nil {
-		return err
-	}
-
-	remotes, err := repo.Remotes()
-
-	// Also fail if no remotes detected.
-	if len(remotes) == 0 {
-		return errors.New("there are no remotes associated with this repository")
-	}
-
-	return nil
-}
-
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
 func GetProjectConfigFromDisk() (*Config, error) {
@@ -186,6 +161,16 @@ func GetProjectConfigFromDisk() (*Config, error) {
 	return &result, err
 }
 
+// Write writes configuration to JSON file in .inertia folder.
+func (config *Config) Write(w io.Writer) (int, error) {
+	inertiaJSON, err := json.Marshal(config)
+	if err != nil {
+		return -1, err
+	}
+
+	return w.Write(inertiaJSON)
+}
+
 // GetProjectConfigFolderPath gets the absolute location of the project
 // configuration folder.
 func GetProjectConfigFolderPath() (string, error) {
@@ -207,16 +192,6 @@ func GetConfigFilePath() (string, error) {
 	return filepath.Join(path, configFileName), nil
 }
 
-// Write writes configuration to JSON file in .inertia folder.
-func (config *Config) Write(w io.Writer) (int, error) {
-	inertiaJSON, err := json.Marshal(config)
-	if err != nil {
-		return -1, err
-	}
-
-	return w.Write(inertiaJSON)
-}
-
 // GetConfigFile returns a config file descriptor for R/W.
 func GetConfigFile() (*os.File, error) {
 	path, err := GetConfigFilePath()
@@ -224,15 +199,4 @@ func GetConfigFile() (*os.File, error) {
 		return nil, err
 	}
 	return os.OpenFile(path, os.O_RDWR, os.ModePerm)
-}
-
-// getRepo gets the repo from disk.
-func getRepo() (*git.Repository, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	// Quick failure if no .git folder.
-	return git.PlainOpen(cwd)
 }

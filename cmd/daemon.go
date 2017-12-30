@@ -21,9 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -151,7 +149,7 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 // upHandler tries to bring the deployment online
 func upHandler(w http.ResponseWriter, r *http.Request) {
 	// Check for existing git repository, clone if no git repository exists.
-	err := CheckForGit(projectDirectory)
+	err := checkForGit(projectDirectory)
 	if err != nil {
 		auth, err := getGithubKey()
 		if err != nil {
@@ -318,7 +316,7 @@ func forcePull(repo *git.Repository, auth ssh.AuthMethod) (*git.Repository, erro
 	if err != nil {
 		return nil, err
 	}
-	remoteURL := remotes[0].Config().URLs[0]
+	remoteURL := getSSHRemoteURL(remotes[0])
 	err = removeContents(projectDirectory)
 	if err != nil {
 		repo, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
@@ -331,24 +329,4 @@ func forcePull(repo *git.Repository, auth ssh.AuthMethod) (*git.Repository, erro
 		}
 	}
 	return repo, nil
-}
-
-// removeContents removes all files within given directory, returns nil if successful
-func removeContents(directory string) error {
-	d, err := os.Open(directory)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(directory, name))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
