@@ -188,12 +188,6 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//------ TEST REPO -------
-		upReq = UpRequest{
-			Repo: "git@github.com:bobheadxi/sleuth.git",
-		}
-		//------------------------
-
 		// Clone project
 		remoteURL := upReq.Repo
 		_, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
