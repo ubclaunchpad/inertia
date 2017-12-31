@@ -19,6 +19,9 @@ fi;
 # Pull the latest inertia daemon.
 sudo docker pull $IMAGE_REPOSITORY
 
+# Make Project directory
+mkdir $HOME/project
+
 # Run container with access to the host docker socket and related executables -
 # this is necessary because we want the daemon to be able start
 # and stop containers on the host. It's also controversial,
@@ -30,8 +33,8 @@ sudo docker run -d \
     -p "$PORT":8081 \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /usr/bin/docker:/usr/bin/docker \
-    -v /usr/local/bin/docker-compose:/usr/local/bin/docker-compose \
     -v $HOME:/app/host \
+    -e HOME=$HOME
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     --name "$DAEMON_NAME" \
     "$IMAGE_REPOSITORY"

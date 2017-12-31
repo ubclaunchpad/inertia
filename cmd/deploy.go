@@ -138,10 +138,12 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			switch resp.StatusCode {
 			case http.StatusOK:
 				fmt.Printf("Project down: %d\n", resp.StatusCode)
+			case http.StatusCreated:
+				fmt.Printf("Project started: %d\n", resp.StatusCode)
 			case http.StatusForbidden:
 				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
 			default:
-				fmt.Printf("Unknown response from daemon: %d %s",
+				fmt.Printf("Unknown response from daemon: %d %s\n",
 					resp.StatusCode, body)
 			}
 		default:
@@ -170,7 +172,7 @@ func (d *Deployment) Up() (*http.Response, error) {
 		return nil, err
 	}
 
-	req := UpRequest{Repo: getSSHRemoteURL(origin)}
+	req := UpRequest{Repo: getSSHRemoteURL(origin.Config().URLs[0])}
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, err

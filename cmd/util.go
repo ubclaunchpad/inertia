@@ -57,8 +57,7 @@ func getLocalRepo() (*git.Repository, error) {
 
 // getSSHRemoteURL gets the URL of the given remote in the form
 // "git@github.com:[USER]/[REPOSITORY].git"
-func getSSHRemoteURL(r *git.Remote) string {
-	url := r.Config().URLs[0]
+func getSSHRemoteURL(url string) string {
 	return strings.Replace(url, "https://github.com/", "git@github.com:", -1) + ".git"
 }
 

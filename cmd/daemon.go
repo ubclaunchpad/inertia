@@ -117,6 +117,23 @@ func processPushEvent(event *github.PushEvent) {
 	log.Println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
 	log.Println(fmt.Sprintf("Ref: %s", event.GetRef()))
 
+	// Clone repository if not available
+	err := checkForGit(projectDirectory)
+	if err != nil {
+		auth, err := getGithubKey()
+		if err != nil {
+			return
+		}
+		_, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
+			URL:  getSSHRemoteURL(*repo.GitURL),
+			Auth: auth,
+		})
+		if err != nil {
+			removeContents(projectDirectory)
+			return
+		}
+	}
+
 	// Deploy
 	localRepo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
@@ -179,14 +196,13 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Clone project
 		remoteURL := upReq.Repo
-		log.Println(remoteURL)
 		_, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
 			URL:  remoteURL,
 			Auth: auth,
 		})
 		if err != nil {
 			removeContents(projectDirectory)
-			http.Error(w, err.Error(), 501)
+			http.Error(w, err.Error(), 500)
 			return
 		}
 	}
@@ -194,25 +210,25 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	// Update and deploy the repository
 	repo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
-		http.Error(w, err.Error(), 501)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 	err = deploy(repo)
 	if err != nil {
-		http.Error(w, err.Error(), 501)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
 	// Check that Project containers are active
 	cli, err := client.NewEnvClient()
 	if err != nil {
-		http.Error(w, err.Error(), 501)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 	defer cli.Close()
 	_, err = getActiveContainers(cli)
 	if err != nil {
-		http.Error(w, err.Error(), 501)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
@@ -245,19 +261,23 @@ func deploy(repo *git.Repository) error {
 	}
 
 	// Build and run
-	daemonCmd, err := Asset("cmd/bootstrap/project-up.sh") // TODO
+	daemonCmd, err := Asset("cmd/bootstrap/project-up.sh")
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(string(daemonCmd))
-	return cmd.Run()
+	cmd := exec.Command("sh", "-c", string(daemonCmd))
+	err = cmd.Run()
+	if err != nil {
+		return errors.New("Deployment failed: " + err.Error())
+	}
+	return nil
 }
 
 // downHandler tries to take the deployment offline
 func downHandler(w http.ResponseWriter, r *http.Request) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
-		http.Error(w, err.Error(), 501)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 	defer cli.Close()
@@ -269,11 +289,11 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Take project containers offline
 	for _, container := range containers {
-		log.Println(container.Image)
-		if container.Image != "inertia-daemon" {
+		if container.Names[0] != "/inertia-daemon" {
+			log.Println("Killing " + container.Image + " (" + container.Names[0] + ")...")
 			err := cli.ContainerKill(context.Background(), container.ID, "SIGKILL")
 			if err != nil {
-				http.Error(w, err.Error(), 501)
+				http.Error(w, err.Error(), 500)
 				return
 			}
 		}
@@ -316,7 +336,7 @@ func forcePull(repo *git.Repository, auth ssh.AuthMethod) (*git.Repository, erro
 	if err != nil {
 		return nil, err
 	}
-	remoteURL := getSSHRemoteURL(remotes[0])
+	remoteURL := getSSHRemoteURL(remotes[0].Config().URLs[0])
 	err = removeContents(projectDirectory)
 	if err != nil {
 		repo, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
