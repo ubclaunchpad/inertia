@@ -41,11 +41,11 @@ var (
 	// specify docker-compose version
 	dockerCompose = "docker/compose:1.18.0"
 
-	defaultSecret = "inertia"
-
 	// specify common responses here
 	okResp           = "I'm a little Webhook, short and stout!"
 	noContainersResp = "There are currently no active containers."
+
+	defaultSecret = "inertia"
 )
 
 // daemonCmd represents the daemon command
@@ -337,9 +337,16 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	err = killActiveContainers(cli)
+	// Error if no project containers are active
+	_, err = getActiveContainers(cli)
 	if err != nil {
 		http.Error(w, err.Error(), 412)
+		return
+	}
+
+	err = killActiveContainers(cli)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
@@ -402,10 +409,8 @@ func getActiveContainers(cli *client.Client) ([]types.Container, error) {
 		return nil, err
 	}
 
-	// If 2 or fewer containers are active, that means either
-	// only the daemon is active or only the daemon and the
-	// docker-compose image is active
-	if len(containers) <= 2 {
+	// Error if only one container (daemon) is active
+	if len(containers) <= 1 {
 		return nil, errors.New(noContainersResp)
 	}
 
