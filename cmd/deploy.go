@@ -35,8 +35,9 @@ import (
 var defaultDaemonPort = "8081"
 
 const (
-	daemonUp   = "up"
-	daemonDown = "down"
+	daemonUp     = "up"
+	daemonDown   = "down"
+	daemonStatus = "status"
 )
 
 // DaemonRequester can make HTTP requests to the daemon.
@@ -88,14 +89,14 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			log.WithError(err)
 		}
 
+		deployment := &Deployment{
+			RemoteVPS:  config.CurrentRemoteVPS,
+			Repository: repo,
+		}
+
 		switch args[1] {
 		case daemonUp:
 			// Start the deployment
-			deployment := &Deployment{
-				RemoteVPS:  config.CurrentRemoteVPS,
-				Repository: repo,
-			}
-
 			resp, err := deployment.Up()
 			if err != nil {
 				log.Fatal(err)
@@ -108,22 +109,17 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			}
 
 			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("Project up: %d\n", resp.StatusCode)
+			case http.StatusCreated:
+				fmt.Printf("(Status code %d) Project up\n", resp.StatusCode)
 			case http.StatusForbidden:
-				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 			default:
-				fmt.Printf("Unknown response from daemon: %d %s",
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s",
 					resp.StatusCode, body)
 			}
 
 		case daemonDown:
-			// Start the deployment
-			deployment := &Deployment{
-				RemoteVPS:  config.CurrentRemoteVPS,
-				Repository: repo,
-			}
-
+			// Shut down the deployment
 			resp, err := deployment.Down()
 			if err != nil {
 				log.WithError(err)
@@ -137,15 +133,37 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("Project down: %d\n", resp.StatusCode)
-			case http.StatusCreated:
-				fmt.Printf("Project started: %d\n", resp.StatusCode)
+				fmt.Printf("(Status code %d) Project down\n", resp.StatusCode)
 			case http.StatusForbidden:
-				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+			default:
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+					resp.StatusCode, body)
+			}
+
+		case daemonStatus:
+			// Get status of the deployment
+			resp, err := deployment.Status()
+			if err != nil {
+				log.WithError(err)
+			}
+
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.WithError(err)
+			}
+
+			switch resp.StatusCode {
+			case http.StatusOK:
+				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+			case http.StatusForbidden:
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 			default:
 				fmt.Printf("Unknown response from daemon: %d %s\n",
 					resp.StatusCode, body)
 			}
+
 		default:
 			fmt.Printf("No such deployment command: %s\n", args[1])
 			os.Exit(1)
@@ -192,7 +210,17 @@ func (d *Deployment) Down() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
 	resp, err := http.Post(host, "application/json", nil)
 	if err != nil {
-		return nil, errors.New("Error when deploying project")
+		return nil, errors.New("Error when shutting down project")
+	}
+	return resp, nil
+}
+
+// Status lists the currently active containers on the remote VPS instance
+func (d *Deployment) Status() (*http.Response, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/status"
+	resp, err := http.Post(host, "application/json", nil)
+	if err != nil {
+		return nil, errors.New("Error when checking project status")
 	}
 	return resp, nil
 }

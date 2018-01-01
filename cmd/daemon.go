@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os/exec"
+	"os"
+	"strings"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
@@ -33,9 +35,17 @@ import (
 )
 
 var (
+	// specify location of deployed project
 	projectDirectory = "/app/host/project"
-	defaultSecret    = "inertia"
+
+	// specify docker-compose version
+	dockerCompose = "docker/compose:1.18.0"
+
+	defaultSecret = "inertia"
+
+	// specify common responses here
 	okResp           = "I'm a little Webhook, short and stout!"
+	noContainersResp = "There are currently no active containers."
 )
 
 // daemonCmd represents the daemon command
@@ -55,6 +65,20 @@ Example:
 
 inertia daemon run -p 8081`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Download docker-compose image
+		println("Downloading docker-compose...")
+		cli, err := client.NewEnvClient()
+		if err != nil {
+			return
+		}
+		_, err = cli.ImagePull(context.Background(), dockerCompose, types.ImagePullOptions{})
+		if err != nil {
+			cli.Close()
+			return
+		}
+		cli.Close()
+
+		// Run daemon on port
 		port, err := cmd.Flags().GetString("port")
 		if err != nil {
 			log.WithError(err)
@@ -64,6 +88,7 @@ inertia daemon run -p 8081`,
 		mux.HandleFunc("/", gitHubWebHookHandler)
 		mux.HandleFunc("/up", upHandler)
 		mux.HandleFunc("/down", downHandler)
+		mux.HandleFunc("/status", statusHandler)
 		log.Fatal(http.ListenAndServe(":"+port, mux))
 	},
 }
@@ -120,6 +145,7 @@ func processPushEvent(event *github.PushEvent) {
 	// Clone repository if not available
 	err := checkForGit(projectDirectory)
 	if err != nil {
+		log.Println("No git repository present - cloning from push event...")
 		auth, err := getGithubKey()
 		if err != nil {
 			return
@@ -129,17 +155,25 @@ func processPushEvent(event *github.PushEvent) {
 			Auth: auth,
 		})
 		if err != nil {
+			log.Println("Clone failed: " + err.Error())
 			removeContents(projectDirectory)
 			return
 		}
 	}
 
-	// Deploy
 	localRepo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = deploy(localRepo)
+
+	// Deploy project
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		log.Println(err.Error())
+	}
+	defer cli.Close()
+
+	err = deploy(localRepo, cli)
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -165,9 +199,17 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 
 // upHandler tries to bring the deployment online
 func upHandler(w http.ResponseWriter, r *http.Request) {
-	// Check for existing git repository, clone if no git repository exists.
-	err := checkForGit(projectDirectory)
+	cli, err := client.NewEnvClient()
 	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	defer cli.Close()
+
+	// Check for existing git repository, clone if no git repository exists.
+	err = checkForGit(projectDirectory)
+	if err != nil {
+		log.Println("No git repository present - cloning from POST event...")
 		auth, err := getGithubKey()
 		if err != nil {
 			http.Error(w, err.Error(), 500)
@@ -190,6 +232,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Clone project
 		remoteURL := upReq.Repo
+		log.Println("Attempting to clone " + remoteURL)
 		_, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
 			URL:  remoteURL,
 			Auth: auth,
@@ -207,20 +250,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	err = deploy(repo)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	// Check that Project containers are active
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	defer cli.Close()
-	_, err = getActiveContainers(cli)
+	err = deploy(repo, cli)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -232,7 +262,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // deploy does git pull, docker-compose build, docker-compose up
-func deploy(repo *git.Repository) error {
+func deploy(repo *git.Repository, cli *client.Client) error {
 	auth, err := getGithubKey()
 	if err != nil {
 		return err
@@ -248,23 +278,54 @@ func deploy(repo *git.Repository) error {
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		// If pull fails, attempt a force pull before returning error
+		log.Println("Pull failed - attempting a fresh clone...")
 		repo, err = forcePull(repo, auth)
 		if err != nil {
 			return err
 		}
 	}
 
-	// Build and run
-	daemonCmd, err := Asset("cmd/bootstrap/project-up.sh")
+	// Kill active project containers if there are any
+	err = killActiveContainers(cli)
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command("sh", "-c", string(daemonCmd))
-	err = cmd.Run()
+
+	// Build and run project - the following code performs the
+	// shell equivalent of:
+	//
+	//    docker run -d \
+	// 	    -v /var/run/docker.sock:/var/run/docker.sock \
+	// 	    -v $HOME:/build \
+	// 	    -w="/build/project" \
+	// 	    docker/compose:1.18.0 up --build
+	//
+	// This runs a docker-compose image to build the Docker project.
+	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
+	log.Println("Bringing project online.")
+	ctx := context.Background()
+	resp, err := cli.ContainerCreate(
+		ctx, &container.Config{
+			Image:      dockerCompose,
+			WorkingDir: "/build/project",
+			Cmd:        []string{"up", "--build"},
+		},
+		&container.HostConfig{
+			Binds: []string{
+				"/var/run/docker.sock:/var/run/docker.sock",
+				os.Getenv("HOME") + ":/build",
+			},
+		}, nil, "docker-compose",
+	)
 	if err != nil {
-		return errors.New("Deployment failed: " + err.Error())
+		return err
 	}
-	return nil
+	if len(resp.Warnings) > 0 {
+		warnings := strings.Join(resp.Warnings, "\n")
+		return errors.New(warnings)
+	}
+
+	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }
 
 // downHandler tries to take the deployment offline
@@ -275,27 +336,53 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	containers, err := getActiveContainers(cli)
+
+	err = killActiveContainers(cli)
 	if err != nil {
 		http.Error(w, err.Error(), 412)
 		return
 	}
 
-	// Take project containers offline
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Project shut down.")
+}
+
+// statusHandler lists currently active project containers
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	defer cli.Close()
+	containers, err := getActiveContainers(cli)
+	if err != nil {
+		if err.Error() == noContainersResp {
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, noContainersResp)
+			return
+		}
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	ignore := map[string]bool{
+		"/inertia-daemon": true,
+		"/docker-compose": true,
+	}
+
+	activeContainers := "Active containers:"
 	for _, container := range containers {
-		if container.Names[0] != "/inertia-daemon" {
-			log.Println("Killing " + container.Image + " (" + container.Names[0] + ")...")
-			err := cli.ContainerKill(context.Background(), container.ID, "SIGKILL")
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
+		if !ignore[container.Names[0]] {
+			activeContainers += "\n" + container.Image + " (" + container.Names[0] + ")"
 		}
 	}
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Project shut down.")
+	fmt.Fprint(w, activeContainers)
 }
 
 // getGithubKey returns the key generated by 'inertia remote bootstrap [REMOTE]'
@@ -315,12 +402,38 @@ func getActiveContainers(cli *client.Client) ([]types.Container, error) {
 		return nil, err
 	}
 
-	// Check if daemon is the only running container
-	if len(containers) <= 1 {
-		return nil, errors.New("No docker containers currently active")
+	// If 2 or fewer containers are active, that means either
+	// only the daemon is active or only the daemon and the
+	// docker-compose image is active
+	if len(containers) <= 2 {
+		return nil, errors.New(noContainersResp)
 	}
 
 	return containers, nil
+}
+
+// killActiveContainers kills all active project containers (ie not including daemon)
+func killActiveContainers(cli *client.Client) error {
+	ctx := context.Background()
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, container := range containers {
+		if container.Names[0] != "/inertia-daemon" {
+			log.Println("Killing " + container.Image + " (" + container.Names[0] + ")...")
+			err := cli.ContainerKill(ctx, container.ID, "SIGKILL")
+			if err != nil {
+				return err
+			}
+			err = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // forcePull deletes the project directory and makes a fresh clone of given repo
