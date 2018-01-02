@@ -308,6 +308,7 @@ func deploy(repo *git.Repository, cli *client.Client) error {
 		ctx, &container.Config{
 			Image:      dockerCompose,
 			WorkingDir: "/build/project",
+			Env:        []string{"HOME:/build"},
 			Cmd:        []string{"up", "--build"},
 		},
 		&container.HostConfig{
