@@ -20,9 +20,9 @@ fi;
 sudo docker pull $IMAGE_REPOSITORY
 
 # Make Project directory
-mkdir $HOME/project
+mkdir -p $HOME/project
 
-# Run container with access to the host docker socket and related executables -
+# Run container with access to the host docker socket and relevant directories -
 # this is necessary because we want the daemon to be able start
 # and stop containers on the host. It's also controversial,
 # https://www.lvh.io/posts/dont-expose-the-docker-socket-not-even-to-a-container.html
@@ -32,9 +32,8 @@ mkdir $HOME/project
 sudo docker run -d \
     -p "$PORT":8081 \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v /usr/bin/docker:/usr/bin/docker \
     -v $HOME:/app/host \
-    -e HOME=$HOME
+    -e HOME=$HOME \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     --name "$DAEMON_NAME" \
     "$IMAGE_REPOSITORY"

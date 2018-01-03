@@ -26,11 +26,12 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
@@ -67,12 +68,16 @@ inertia daemon run -p 8081`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Download docker-compose image
 		println("Downloading docker-compose...")
-		cli, err := client.NewEnvClient()
+		cli, err := docker.NewEnvClient()
 		if err != nil {
+			log.WithError(err)
+			println("Failed to pull docker-compose image - shutting down daemon.")
 			return
 		}
 		_, err = cli.ImagePull(context.Background(), dockerCompose, types.ImagePullOptions{})
 		if err != nil {
+			log.WithError(err)
+			println("Failed to pull docker-compose image - shutting down daemon.")
 			cli.Close()
 			return
 		}
@@ -150,10 +155,7 @@ func processPushEvent(event *github.PushEvent) {
 		if err != nil {
 			return
 		}
-		_, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
-			URL:  getSSHRemoteURL(*repo.GitURL),
-			Auth: auth,
-		})
+		_, err = clone(projectDirectory, getSSHRemoteURL(*repo.GitURL), auth)
 		if err != nil {
 			log.Println("Clone failed: " + err.Error())
 			removeContents(projectDirectory)
@@ -167,7 +169,7 @@ func processPushEvent(event *github.PushEvent) {
 	}
 
 	// Deploy project
-	cli, err := client.NewEnvClient()
+	cli, err := docker.NewEnvClient()
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -199,9 +201,9 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 
 // upHandler tries to bring the deployment online
 func upHandler(w http.ResponseWriter, r *http.Request) {
-	cli, err := client.NewEnvClient()
+	cli, err := docker.NewEnvClient()
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
@@ -212,34 +214,31 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("No git repository present - cloning from POST event...")
 		auth, err := getGithubKey()
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		// Get github URL from up request for cloning
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), http.StatusLengthRequired)
 			return
 		}
 		defer r.Body.Close()
 		var upReq UpRequest
 		err = json.Unmarshal(body, &upReq)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		// Clone project
 		remoteURL := upReq.Repo
 		log.Println("Attempting to clone " + remoteURL)
-		_, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
-			URL:  remoteURL,
-			Auth: auth,
-		})
+		_, err = clone(projectDirectory, remoteURL, auth)
 		if err != nil {
 			removeContents(projectDirectory)
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), http.StatusPreconditionFailed)
 			return
 		}
 	}
@@ -247,12 +246,12 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	// Update and deploy the repository
 	repo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	err = deploy(repo, cli)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -262,7 +261,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // deploy does git pull, docker-compose build, docker-compose up
-func deploy(repo *git.Repository, cli *client.Client) error {
+func deploy(repo *git.Repository, cli *docker.Client) error {
 	auth, err := getGithubKey()
 	if err != nil {
 		return err
@@ -300,7 +299,10 @@ func deploy(repo *git.Repository, cli *client.Client) error {
 	// 	    -w="/build/project" \
 	// 	    docker/compose:1.18.0 up --build
 	//
-	// This runs a docker-compose image to build the Docker project.
+	// This starts a new container running a docker-compose image for
+	// the sole purpose of building the project. This container is
+	// separate from the daemon and the user's project, and is the
+	// second container to require access to the docker socket.
 	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
 	log.Println("Bringing project online.")
 	ctx := context.Background()
@@ -331,9 +333,9 @@ func deploy(repo *git.Repository, cli *client.Client) error {
 
 // downHandler tries to take the deployment offline
 func downHandler(w http.ResponseWriter, r *http.Request) {
-	cli, err := client.NewEnvClient()
+	cli, err := docker.NewEnvClient()
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
@@ -341,13 +343,13 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 	// Error if no project containers are active
 	_, err = getActiveContainers(cli)
 	if err != nil {
-		http.Error(w, err.Error(), 412)
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
 		return
 	}
 
 	err = killActiveContainers(cli)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -358,29 +360,50 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 
 // statusHandler lists currently active project containers
 func statusHandler(w http.ResponseWriter, r *http.Request) {
-	cli, err := client.NewEnvClient()
+	// Get status of repository
+	repo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		return
+	}
+	head, err := repo.Head()
+	s := head.String() + "\n"
+
+	// Get containers
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
 	containers, err := getActiveContainers(cli)
 	if err != nil {
 		if err.Error() == noContainersResp {
+			// This is different from having 2 containers active -
+			// noContainersResp means that no attempt to build the project
+			// was made or the project was cleanly shut down.
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, noContainersResp)
+			fmt.Fprint(w, s+noContainersResp)
 			return
 		}
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	// If there are only 2 containers active, that means that a build
+	// attempt was made but only the daemon and the docker-compose containers
+	// are active, indicating a build failure.
+	if len(containers) == 2 {
+		errorString := s + "It appears that an attempt to start your project was made but the build failed."
+		http.Error(w, errorString, http.StatusNotFound)
 	}
 
 	ignore := map[string]bool{
 		"/inertia-daemon": true,
 		"/docker-compose": true,
 	}
-
+	// Only list project containers
 	activeContainers := "Active containers:"
 	for _, container := range containers {
 		if !ignore[container.Names[0]] {
@@ -390,7 +413,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, activeContainers)
+	fmt.Fprint(w, s+activeContainers)
 }
 
 // getGithubKey returns the key generated by 'inertia remote bootstrap [REMOTE]'
@@ -401,7 +424,7 @@ func getGithubKey() (ssh.AuthMethod, error) {
 
 // getActiveContainers returns all active containers and returns and error
 // if the Daemon is the only active container
-func getActiveContainers(cli *client.Client) ([]types.Container, error) {
+func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 	containers, err := cli.ContainerList(
 		context.Background(),
 		types.ContainerListOptions{},
@@ -419,7 +442,7 @@ func getActiveContainers(cli *client.Client) ([]types.Container, error) {
 }
 
 // killActiveContainers kills all active project containers (ie not including daemon)
-func killActiveContainers(cli *client.Client) error {
+func killActiveContainers(cli *docker.Client) error {
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
@@ -452,14 +475,26 @@ func forcePull(repo *git.Repository, auth ssh.AuthMethod) (*git.Repository, erro
 	remoteURL := getSSHRemoteURL(remotes[0].Config().URLs[0])
 	err = removeContents(projectDirectory)
 	if err != nil {
-		repo, err = git.PlainClone(projectDirectory, false, &git.CloneOptions{
-			URL:  remoteURL,
-			Auth: auth,
-		})
+		repo, err = clone(projectDirectory, remoteURL, auth)
 		if err != nil {
 			removeContents(projectDirectory)
 			return nil, err
 		}
+	}
+	return repo, nil
+}
+
+// clone wraps git.PlainClone() and returns a more helpful error message
+// if the given error is an authentication-related error.
+func clone(directory string, remoteURL string, auth ssh.AuthMethod) (*git.Repository, error) {
+	repo, err := git.PlainClone(projectDirectory, false, &git.CloneOptions{
+		URL:  remoteURL,
+		Auth: auth,
+	})
+	if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthenticationRequired || err == transport.ErrAuthorizationFailed {
+		return nil, errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + auth.String())
+	} else if err != nil {
+		return nil, err
 	}
 	return repo, nil
 }
