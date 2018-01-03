@@ -30,6 +30,7 @@ import (
 type Config struct {
 	CurrentRemoteName string     `json:"name"`
 	CurrentRemoteVPS  *RemoteVPS `json:"remote"`
+	DaemonAPIToken    string     `json:"token"`
 }
 
 var (

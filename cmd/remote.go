@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -126,7 +127,7 @@ for updates to this repository's remote master branch.`,
 		// Ensure project initialized.
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		if args[0] != config.CurrentRemoteName {
@@ -137,7 +138,10 @@ for updates to this repository's remote master branch.`,
 		}
 
 		session := &SSHRunner{r: config.CurrentRemoteVPS}
-		config.CurrentRemoteVPS.Bootstrap(session, args[0])
+		err = config.CurrentRemoteVPS.Bootstrap(session, args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
@@ -234,6 +238,26 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string) error {
 		return err
 	}
 	pub, err := remote.KeyGen(runner)
+	if err != nil {
+		return err
+	}
+
+	println("Fetching daemon API token")
+	token, err := remote.GetDaemonAPIToken(runner)
+	if err != nil {
+		return err
+	}
+
+	println(token)
+	config, err := GetProjectConfigFromDisk()
+	if err != nil {
+		return err
+	}
+
+	config.DaemonAPIToken = token
+	f, err := GetConfigFile()
+	defer f.Close()
+	_, err = config.Write(f)
 	if err != nil {
 		return err
 	}
@@ -344,6 +368,25 @@ func (remote *RemoteVPS) DaemonDown(session SSHSession) error {
 	}
 
 	return nil
+}
+
+// GetDaemonAPIToken returns the daemon API token for RESTful access
+// to the daemon.
+func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
+	// Collect asset (token.sh script)
+	daemonCmd, err := Asset("cmd/bootstrap/token.sh")
+	if err != nil {
+		return "", err
+	}
+
+	stdout, stderr, err := remote.RunSSHCommand(session, string(daemonCmd))
+	if err != nil {
+		log.Println(stderr)
+		return "", err
+	}
+
+	// There may be a newline, remove it.
+	return strings.TrimSuffix(stdout.String(), "\n"), nil
 }
 
 // addNewRemote adds a new remote to the project config file.
