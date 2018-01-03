@@ -20,6 +20,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "dbeaa9332f19a944acb5736b4456cfcc02140e29"
+  version = "v3.1.0"
+
+[[projects]]
   name = "github.com/docker/distribution"
   packages = ["digest","reference"]
   revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
@@ -172,6 +178,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f4ad4c7e3c771ec5f15d080015433a61092dcab55273275e51eb3e971500841a"
+  inputs-digest = "405ffc9f136ff99d103026173f1492dfe0b11effc29fcf942e5f620eac47ef36"
   solver-name = "gps-cdcl"
   solver-version = 1
