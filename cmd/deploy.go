@@ -38,12 +38,15 @@ const (
 	daemonUp     = "up"
 	daemonDown   = "down"
 	daemonStatus = "status"
+	daemonReset  = "reset"
 )
 
 // DaemonRequester can make HTTP requests to the daemon.
 type DaemonRequester interface {
 	Up() (*http.Response, error)
 	Down() (*http.Response, error)
+	Status() (*http.Response, error)
+	Reset() (*http.Response, error)
 }
 
 // UpRequest is the body of a up request to the daemon.
@@ -161,8 +164,35 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 			case http.StatusForbidden:
 				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+			case http.StatusNotFound:
+				fmt.Printf("(Status code %d) Problem with deployment: %s\n", resp.StatusCode, body)
+			case http.StatusPreconditionFailed:
+				fmt.Printf("(Status code %d) Problem with deployment setup: %s\n", resp.StatusCode, body)
 			default:
-				fmt.Printf("Unknown response from daemon: %d %s\n",
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+					resp.StatusCode, body)
+			}
+
+		case daemonReset:
+			// Remove project from deployment
+			resp, err := deployment.Reset()
+			if err != nil {
+				log.WithError(err)
+			}
+
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.WithError(err)
+			}
+
+			switch resp.StatusCode {
+			case http.StatusOK:
+				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+			case http.StatusForbidden:
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+			default:
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
 					resp.StatusCode, body)
 			}
 
@@ -192,17 +222,26 @@ func (d *Deployment) Up() (*http.Response, error) {
 		return nil, err
 	}
 
-	req := UpRequest{Repo: getSSHRemoteURL(origin.Config().URLs[0])}
-	body, err := json.Marshal(req)
+	reqContent := UpRequest{Repo: getSSHRemoteURL(origin.Config().URLs[0])}
+	body, err := json.Marshal(reqContent)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := http.Post(host, "application/json", bytes.NewBuffer(body))
+	auth, err := getAPIPrivateKeyFromConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", host, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+auth)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.New("Error when deploying project")
 	}
-
 	return resp, nil
 }
 
@@ -210,19 +249,63 @@ func (d *Deployment) Up() (*http.Response, error) {
 // in the configuration object.
 func (d *Deployment) Down() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
-	resp, err := http.Post(host, "application/json", nil)
+	auth, err := getAPIPrivateKeyFromConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", host, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+auth)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.New("Error when shutting down project")
 	}
+
 	return resp, nil
 }
 
 // Status lists the currently active containers on the remote VPS instance
 func (d *Deployment) Status() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/status"
-	resp, err := http.Post(host, "application/json", nil)
+	auth, err := getAPIPrivateKeyFromConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", host, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+auth)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.New("Error when checking project status")
 	}
+
+	return resp, nil
+}
+
+// Reset shuts down deployment and deletes the contents of the deployment's
+// project directory
+func (d *Deployment) Reset() (*http.Response, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/reset"
+	auth, err := getAPIPrivateKeyFromConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", host, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+auth)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.New("Error when reseting project on deployment")
+	}
+
 	return resp, nil
 }

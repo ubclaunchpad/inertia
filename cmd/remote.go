@@ -248,7 +248,6 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string) error {
 		return err
 	}
 
-	println(token)
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return err

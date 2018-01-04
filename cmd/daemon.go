@@ -31,8 +31,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 var (
@@ -46,8 +44,13 @@ var (
 	okResp           = "I'm a little Webhook, short and stout!"
 	noContainersResp = "There are currently no active containers."
 
-	defaultSecret = "inertia"
+	daemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"
+	defaultSecret           = "inertia"
 )
+
+/*
+ * CLI Commands
+ */
 
 // daemonCmd represents the daemon command
 var daemonCmd = &cobra.Command{
@@ -94,9 +97,10 @@ inertia daemon run -p 8081`,
 		// Example usage of `authorized' decorator.
 		mux.HandleFunc("/health-check", authorized(healthCheckHandler, getAPIPrivateKey))
 		mux.HandleFunc("/", gitHubWebHookHandler)
-		mux.HandleFunc("/up", upHandler)
-		mux.HandleFunc("/down", downHandler)
-		mux.HandleFunc("/status", statusHandler)
+		mux.HandleFunc("/up", authorized(upHandler, getAPIPrivateKey))
+		mux.HandleFunc("/down", authorized(downHandler, getAPIPrivateKey))
+		mux.HandleFunc("/status", authorized(statusHandler, getAPIPrivateKey))
+		mux.HandleFunc("/reset", authorized(resetHandler, getAPIPrivateKey))
 		log.Fatal(http.ListenAndServe(":"+port, mux))
 	},
 }
@@ -138,7 +142,11 @@ func init() {
 	runCmd.Flags().StringP("port", "p", "8081", "Set port for daemon to run on")
 }
 
-// healthCheckHandler returns a 200 if the daemon is happily.
+/*
+ * Handlers
+ */
+
+// healthCheckHandler returns a 200 if the daemon is happy.
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, okResp)
 }
@@ -169,6 +177,215 @@ func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// upHandler tries to bring the deployment online
+func upHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("UP request received")
+
+	// Get github URL from up request
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusLengthRequired)
+		return
+	}
+	defer r.Body.Close()
+	var upReq UpRequest
+	err = json.Unmarshal(body, &upReq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	remoteURL := upReq.Repo
+
+	// Check for existing git repository, clone if no git repository exists.
+	err = checkForGit(projectDirectory)
+	if err != nil {
+		log.Println("No git repository present - cloning from POST event...")
+		pemFile, err := os.Open(daemonGithubKeyLocation)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusPreconditionFailed)
+			return
+		}
+		auth, err := getGithubKey(pemFile)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Clone project
+		log.Println("Attempting to clone " + remoteURL)
+		_, err = clone(projectDirectory, remoteURL, auth)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusPreconditionFailed)
+			err = removeContents(projectDirectory)
+			if err != nil {
+				log.WithError(err)
+			}
+			return
+		}
+	}
+
+	repo, err := git.PlainOpen(projectDirectory)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Check for matching remotes
+	err = compareRemotes(repo, remoteURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		return
+	}
+
+	// Update and deploy project
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cli.Close()
+	err = deploy(repo, cli)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprint(w, "Project up and running!")
+}
+
+// downHandler tries to take the deployment offline
+func downHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("DOWN request received")
+
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cli.Close()
+
+	// Error if no project containers are active
+	_, err = getActiveContainers(cli)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		return
+	}
+
+	err = killActiveContainers(cli)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Project shut down.")
+}
+
+// statusHandler lists currently active project containers
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("STATUS request received")
+
+	// Get status of repository
+	repo, err := git.PlainOpen(projectDirectory)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		return
+	}
+	remotes, err := repo.Remotes()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		return
+	}
+	remoteURL := remotes[0].Config().URLs[0]
+	head, err := repo.Head()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		return
+	}
+	repoStatus := remoteURL + "\n" + head.String() + "\n"
+
+	// Get containers
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cli.Close()
+	containers, err := getActiveContainers(cli)
+	if err != nil {
+		if err.Error() == noContainersResp {
+			// This is different from having 2 containers active -
+			// noContainersResp means that no attempt to build the project
+			// was made or the project was cleanly shut down.
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, repoStatus+noContainersResp)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// If there are only 2 containers active, that means that a build
+	// attempt was made but only the daemon and the docker-compose containers
+	// are active, indicating a build failure.
+	if len(containers) == 2 {
+		errorString := repoStatus + "It appears that an attempt to start your project was made but the build failed."
+		http.Error(w, errorString, http.StatusNotFound)
+		return
+	}
+
+	ignore := map[string]bool{
+		"/inertia-daemon": true,
+		"/docker-compose": true,
+	}
+	// Only list project containers
+	activeContainers := "Active containers:"
+	for _, container := range containers {
+		if !ignore[container.Names[0]] {
+			activeContainers += "\n" + container.Image + " (" + container.Names[0] + ")"
+		}
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, repoStatus+activeContainers)
+}
+
+// resetHandler shuts down and wipes the project directory
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("RESET request received")
+
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cli.Close()
+	err = killActiveContainers(cli)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = removeContents(projectDirectory)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Project removed from remote.")
+}
+
+/*
+ * Helper Functions
+ */
+
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(event *github.PushEvent) {
 	repo := event.GetRepo()
@@ -181,37 +398,54 @@ func processPushEvent(event *github.PushEvent) {
 	err := checkForGit(projectDirectory)
 	if err != nil {
 		log.Println("No git repository present - cloning from push event...")
-		auth, err := getGithubKey()
+		pemFile, err := os.Open(daemonGithubKeyLocation)
 		if err != nil {
+			log.Println("No GitHub key found: " + err.Error())
+			return
+		}
+		auth, err := getGithubKey(pemFile)
+		if err != nil {
+			log.Println("Github key couldn't be read: " + err.Error())
 			return
 		}
 		_, err = clone(projectDirectory, getSSHRemoteURL(*repo.GitURL), auth)
 		if err != nil {
 			log.Println("Clone failed: " + err.Error())
-			removeContents(projectDirectory)
+			err = removeContents(projectDirectory)
+			if err != nil {
+				log.WithError(err)
+			}
 			return
 		}
 	}
 
 	localRepo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
-		log.Println(err.Error())
+		log.WithError(err)
+		return
+	}
+
+	// Check for matching remotes
+	err = compareRemotes(localRepo, getSSHRemoteURL(*repo.GitURL))
+	if err != nil {
+		log.WithError(err)
+		return
 	}
 
 	// Deploy project
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		log.Println(err.Error())
+		log.WithError(err)
+		return
 	}
 	defer cli.Close()
-
 	err = deploy(localRepo, cli)
 	if err != nil {
-		log.Println(err.Error())
+		log.WithError(err)
 	}
 }
 
-// processPullREquestEvent prints information about the given PullRequestEvent.
+// processPullRequestEvent prints information about the given PullRequestEvent.
 // Handling PRs is unnecessary because merging one will trigger a PushEvent.
 // For now, simply logs events - may in the future do something configured
 // by the user.
@@ -229,70 +463,13 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 	log.Println(fmt.Sprintf("Merge status: %v", merged))
 }
 
-// upHandler tries to bring the deployment online
-func upHandler(w http.ResponseWriter, r *http.Request) {
-	cli, err := docker.NewEnvClient()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-
-	// Check for existing git repository, clone if no git repository exists.
-	err = checkForGit(projectDirectory)
-	if err != nil {
-		log.Println("No git repository present - cloning from POST event...")
-		auth, err := getGithubKey()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Get github URL from up request for cloning
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusLengthRequired)
-			return
-		}
-		defer r.Body.Close()
-		var upReq UpRequest
-		err = json.Unmarshal(body, &upReq)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		// Clone project
-		remoteURL := upReq.Repo
-		log.Println("Attempting to clone " + remoteURL)
-		_, err = clone(projectDirectory, remoteURL, auth)
-		if err != nil {
-			removeContents(projectDirectory)
-			http.Error(w, err.Error(), http.StatusPreconditionFailed)
-			return
-		}
-	}
-
-	// Update and deploy the repository
-	repo, err := git.PlainOpen(projectDirectory)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = deploy(repo, cli)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, "Project up and running!")
-}
-
 // deploy does git pull, docker-compose build, docker-compose up
 func deploy(repo *git.Repository, cli *docker.Client) error {
-	auth, err := getGithubKey()
+	pemFile, err := os.Open(daemonGithubKeyLocation)
+	if err != nil {
+		return err
+	}
+	auth, err := getGithubKey(pemFile)
 	if err != nil {
 		return err
 	}
@@ -361,91 +538,6 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }
 
-// downHandler tries to take the deployment offline
-func downHandler(w http.ResponseWriter, r *http.Request) {
-	cli, err := docker.NewEnvClient()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-
-	// Error if no project containers are active
-	_, err = getActiveContainers(cli)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusPreconditionFailed)
-		return
-	}
-
-	err = killActiveContainers(cli)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Project shut down.")
-}
-
-// statusHandler lists currently active project containers
-func statusHandler(w http.ResponseWriter, r *http.Request) {
-	// Get status of repository
-	repo, err := git.PlainOpen(projectDirectory)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusPreconditionFailed)
-		return
-	}
-	head, err := repo.Head()
-	s := head.String() + "\n"
-
-	// Get containers
-	cli, err := docker.NewEnvClient()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-	containers, err := getActiveContainers(cli)
-	if err != nil {
-		if err.Error() == noContainersResp {
-			// This is different from having 2 containers active -
-			// noContainersResp means that no attempt to build the project
-			// was made or the project was cleanly shut down.
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, s+noContainersResp)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// If there are only 2 containers active, that means that a build
-	// attempt was made but only the daemon and the docker-compose containers
-	// are active, indicating a build failure.
-	if len(containers) == 2 {
-		errorString := s + "It appears that an attempt to start your project was made but the build failed."
-		http.Error(w, errorString, http.StatusNotFound)
-	}
-
-	ignore := map[string]bool{
-		"/inertia-daemon": true,
-		"/docker-compose": true,
-	}
-	// Only list project containers
-	activeContainers := "Active containers:"
-	for _, container := range containers {
-		if !ignore[container.Names[0]] {
-			activeContainers += "\n" + container.Image + " (" + container.Names[0] + ")"
-		}
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, s+activeContainers)
-}
-
 // getActiveContainers returns all active containers and returns and error
 // if the Daemon is the only active container
 func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
@@ -487,38 +579,4 @@ func killActiveContainers(cli *docker.Client) error {
 		}
 	}
 	return nil
-}
-
-// forcePull deletes the project directory and makes a fresh clone of given repo
-// git.Worktree.Pull() only supports merges that can be resolved as a fast-forward
-func forcePull(repo *git.Repository, auth ssh.AuthMethod) (*git.Repository, error) {
-	remotes, err := repo.Remotes()
-	if err != nil {
-		return nil, err
-	}
-	remoteURL := getSSHRemoteURL(remotes[0].Config().URLs[0])
-	err = removeContents(projectDirectory)
-	if err != nil {
-		repo, err = clone(projectDirectory, remoteURL, auth)
-		if err != nil {
-			removeContents(projectDirectory)
-			return nil, err
-		}
-	}
-	return repo, nil
-}
-
-// clone wraps git.PlainClone() and returns a more helpful error message
-// if the given error is an authentication-related error.
-func clone(directory string, remoteURL string, auth ssh.AuthMethod) (*git.Repository, error) {
-	repo, err := git.PlainClone(projectDirectory, false, &git.CloneOptions{
-		URL:  remoteURL,
-		Auth: auth,
-	})
-	if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthenticationRequired || err == transport.ErrAuthorizationFailed {
-		return nil, errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + auth.String())
-	} else if err != nil {
-		return nil, err
-	}
-	return repo, nil
 }
