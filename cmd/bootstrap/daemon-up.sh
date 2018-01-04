@@ -2,7 +2,7 @@
 
 set -e
 
-PORT=8081
+PORT=%s
 DAEMON_NAME=inertia-daemon
 CONTAINER_PORT=8081
 IMAGE_REPOSITORY=ubclaunchpad/inertia
