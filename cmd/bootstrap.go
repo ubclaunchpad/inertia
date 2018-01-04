@@ -107,6 +107,7 @@ func cmdBootstrapDaemonUpSh() (*asset, error) {
 		return nil, err
 	}
 
+
 	info := bindataFileInfo{name: "cmd/bootstrap/daemon-up.sh", size: 1313, mode: os.FileMode(493), modTime: time.Unix(1515036973, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
@@ -126,6 +127,7 @@ func cmdBootstrapDockerSh() (*asset, error) {
 	if err != nil {
 		return nil, err
 	}
+
 
 	info := bindataFileInfo{name: "cmd/bootstrap/docker.sh", size: 1395, mode: os.FileMode(493), modTime: time.Unix(1513744908, 0)}
 	a := &asset{bytes: bytes, info: info}
