@@ -138,7 +138,7 @@ for updates to this repository's remote master branch.`,
 		}
 
 		session := &SSHRunner{r: config.CurrentRemoteVPS}
-		err = config.CurrentRemoteVPS.Bootstrap(session, args[0])
+		err = config.CurrentRemoteVPS.Bootstrap(session, args[0], config)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -214,7 +214,7 @@ func init() {
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
 // for the user.
-func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string) error {
+func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Config) error {
 	println("Bootstrapping remote " + name)
 
 	// Generate a session for each command.
@@ -244,11 +244,6 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string) error {
 
 	println("Fetching daemon API token")
 	token, err := remote.GetDaemonAPIToken(runner)
-	if err != nil {
-		return err
-	}
-
-	config, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return err
 	}

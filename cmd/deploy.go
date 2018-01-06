@@ -97,10 +97,15 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			Repository: repo,
 		}
 
+		auth, err := getAPIPrivateKeyFromConfig()
+		if err != nil {
+			log.WithError(err)
+		}
+
 		switch args[1] {
 		case daemonUp:
 			// Start the deployment
-			resp, err := deployment.Up()
+			resp, err := deployment.Up(auth)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -123,7 +128,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 		case daemonDown:
 			// Shut down the deployment
-			resp, err := deployment.Down()
+			resp, err := deployment.Down(auth)
 			if err != nil {
 				log.WithError(err)
 			}
@@ -148,7 +153,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 		case daemonStatus:
 			// Get status of the deployment
-			resp, err := deployment.Status()
+			resp, err := deployment.Status(auth)
 			if err != nil {
 				log.WithError(err)
 			}
@@ -175,7 +180,7 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 		case daemonReset:
 			// Remove project from deployment
-			resp, err := deployment.Reset()
+			resp, err := deployment.Reset(auth)
 			if err != nil {
 				log.WithError(err)
 			}
@@ -209,26 +214,17 @@ func init() {
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (d *Deployment) Up() (*http.Response, error) {
+func (d *Deployment) Up(auth string) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
-	repo, err := getLocalRepo()
-	if err != nil {
-		return nil, err
-	}
 
 	// TODO: Support other repo names.
-	origin, err := repo.Remote("origin")
+	origin, err := d.Repository.Remote("origin")
 	if err != nil {
 		return nil, err
 	}
 
 	reqContent := UpRequest{Repo: getSSHRemoteURL(origin.Config().URLs[0])}
 	body, err := json.Marshal(reqContent)
-	if err != nil {
-		return nil, err
-	}
-
-	auth, err := getAPIPrivateKeyFromConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +243,7 @@ func (d *Deployment) Up() (*http.Response, error) {
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
-func (d *Deployment) Down() (*http.Response, error) {
+func (d *Deployment) Down(auth string) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
 	auth, err := getAPIPrivateKeyFromConfig()
 	if err != nil {
@@ -268,7 +264,7 @@ func (d *Deployment) Down() (*http.Response, error) {
 }
 
 // Status lists the currently active containers on the remote VPS instance
-func (d *Deployment) Status() (*http.Response, error) {
+func (d *Deployment) Status(auth string) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/status"
 	auth, err := getAPIPrivateKeyFromConfig()
 	if err != nil {
@@ -290,12 +286,8 @@ func (d *Deployment) Status() (*http.Response, error) {
 
 // Reset shuts down deployment and deletes the contents of the deployment's
 // project directory
-func (d *Deployment) Reset() (*http.Response, error) {
+func (d *Deployment) Reset(auth string) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/reset"
-	auth, err := getAPIPrivateKeyFromConfig()
-	if err != nil {
-		return nil, err
-	}
 
 	req, err := http.NewRequest("POST", host, nil)
 	if err != nil {
