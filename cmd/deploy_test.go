@@ -91,7 +91,7 @@ func TestDown(t *testing.T) {
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
-		assert.Equal(t, "/up", endpoint)
+		assert.Equal(t, "/down", endpoint)
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -104,7 +104,61 @@ func TestDown(t *testing.T) {
 	d, err := getMockDeployment(testServer, memory)
 	assert.Nil(t, err)
 
-	resp, err := d.Up(fakeAuth)
+	resp, err := d.Down(fakeAuth)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestStatus(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/status", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	memory := memory.NewStorage()
+	defer func() { memory = nil }()
+
+	d, err := getMockDeployment(testServer, memory)
+	assert.Nil(t, err)
+
+	resp, err := d.Status(fakeAuth)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestReset(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/reset", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	memory := memory.NewStorage()
+	defer func() { memory = nil }()
+
+	d, err := getMockDeployment(testServer, memory)
+	assert.Nil(t, err)
+
+	resp, err := d.Reset(fakeAuth)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

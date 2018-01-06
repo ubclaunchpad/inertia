@@ -245,10 +245,6 @@ func (d *Deployment) Up(auth string) (*http.Response, error) {
 // in the configuration object.
 func (d *Deployment) Down(auth string) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
-	auth, err := getAPIPrivateKeyFromConfig()
-	if err != nil {
-		return nil, err
-	}
 
 	req, err := http.NewRequest("POST", host, nil)
 	if err != nil {
@@ -266,10 +262,6 @@ func (d *Deployment) Down(auth string) (*http.Response, error) {
 // Status lists the currently active containers on the remote VPS instance
 func (d *Deployment) Status(auth string) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/status"
-	auth, err := getAPIPrivateKeyFromConfig()
-	if err != nil {
-		return nil, err
-	}
 
 	req, err := http.NewRequest("POST", host, nil)
 	if err != nil {
