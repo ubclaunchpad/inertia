@@ -8,11 +8,9 @@ set -e
 
 DOCKER_SOURCE=get.docker.com
 DOCKER_DEST='/tmp/get-docker.sh'
-DOCKER_COMPOSE_SOURCE=https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m`
-DOCKER_COMPOSE_DEST='/usr/local/bin/docker-compose'
 
-# Check if docker/docker-compose aready exist.
-if hash docker 2>/dev/null && hash docker-compose 2>/dev/null; then
+# Check if docker aready installed.
+if hash docker 2>/dev/null; then
     exit 0
 fi;
 
@@ -41,11 +39,3 @@ if !(hash docker 2>/dev/null); then
         sh $DOCKER_DEST
     fi
 fi
-
-# Now get docker-compose - if we've made it this
-# far, we have curl or wget installed.
-fetchfile $DOCKER_COMPOSE_SOURCE $DOCKER_COMPOSE_DEST
-sudo chmod +x $DOCKER_COMPOSE_DEST
-
-# Try using.
-docker-compose --version
