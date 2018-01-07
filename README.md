@@ -46,7 +46,7 @@ Remote instance 'gcloud' accepting requests at http://myhost.com:8081
 A daemon is now running on your remote instance - but your application is not yet
 continuously deployed.
 
-The output of `inertia [REMOTE] bootstrap` has given you two important pieces of information:
+The output of `inertia [REMOTE] init` has given you two important pieces of information:
 
 1. A deploy key. The Inertia daemon requires readonly access to your GitHub repository.
    Add it to your GitHub repository settings at the URL provided in the output.

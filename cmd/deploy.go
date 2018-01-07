@@ -89,6 +89,8 @@ var deployUpCmd = &cobra.Command{
 			fmt.Printf("(Status code %d) Project up\n", resp.StatusCode)
 		case http.StatusForbidden:
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+		case http.StatusPreconditionFailed:
+			fmt.Printf("(Status code %d) Problem with deployment setup: %s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon: %s",
 				resp.StatusCode, body)
@@ -99,7 +101,7 @@ var deployUpCmd = &cobra.Command{
 var deployDownCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Bring project offline on remote",
-	Long: `Bring project online on remote.
+	Long: `Bring project offline on remote.
 	This will kill all active project containers on your remote.
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
