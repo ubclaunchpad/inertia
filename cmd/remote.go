@@ -166,7 +166,7 @@ behaviour, and other information.`,
 		resp, err := http.Get(host)
 		if err != nil {
 			println("Could not connect to daemon")
-			println("Try running inertia deploy")
+			println("Try running inertia [REMOTE] init")
 			return
 		}
 		defer resp.Body.Close()

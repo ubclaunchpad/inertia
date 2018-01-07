@@ -56,8 +56,11 @@ var (
 var daemonCmd = &cobra.Command{
 	Use:   "daemon",
 	Short: "Configure daemon behaviour from command line",
-	Args:  cobra.MinimumNArgs(1),
-	Run:   func(cmd *cobra.Command, args []string) {},
+	Long: `Configure daemon behaviour from the command line.
+This is intended for use on a remote VPS - do not use these commands
+locally.`,
+	Args: cobra.MinimumNArgs(1),
+	Run:  func(cmd *cobra.Command, args []string) {},
 }
 
 // runCmd represents the daemon run command
