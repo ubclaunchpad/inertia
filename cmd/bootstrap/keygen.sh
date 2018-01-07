@@ -18,5 +18,6 @@ else
     ssh-keygen -f $ID_DESTINATION -t rsa -N ''
 fi
 
+ssh-keyscan github.com >> ~/.ssh/known_hosts
 
 cat $PUB_ID_DESTINATION

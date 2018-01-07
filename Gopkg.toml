@@ -1,6 +1,6 @@
 [[constraint]]
   name = "gopkg.in/src-d/go-git.v4"
-  version = "4.0.0-rc15"
+  version = "=4.0.0-rc15"
 
 [[constraint]]
   branch = "master"
@@ -13,10 +13,6 @@
 [[constraint]]
   name = "gopkg.in/sourcegraph/go-vcsurl.v1"
   version = "1.0.0"
-
-[[constraint]]
-  name = "github.com/src-d/go-git"
-  version = "3.2.0"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"

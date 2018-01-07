@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -77,9 +78,9 @@ inerta remote bootstrap gcloud
 inerta remote status gcloud`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		config, err := GetProjectConfigFromDisk()
+		config, err := getProjectConfigFromDisk()
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 		if config.CurrentRemoteName == noInertiaRemote {
 			println("No remote currently set.")
@@ -102,14 +103,17 @@ file. Specify a VPS name and an IP address.`,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		_, err := GetProjectConfigFromDisk()
+		_, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.WithError(err)
 		}
 		user, _ := cmd.Flags().GetString("user")
 		pemLoc, _ := cmd.Flags().GetString("identity")
 		port, _ := cmd.Flags().GetString("port")
-		addNewRemote(args[0], args[1], user, pemLoc, port)
+		err = addNewRemote(args[0], args[1], user, pemLoc, port)
+		if err != nil {
+			log.WithError(err)
+		}
 	},
 }
 
@@ -124,9 +128,9 @@ for updates to this repository's remote master branch.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, err := GetProjectConfigFromDisk()
+		config, err := getProjectConfigFromDisk()
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		if args[0] != config.CurrentRemoteName {
@@ -137,7 +141,10 @@ for updates to this repository's remote master branch.`,
 		}
 
 		session := &SSHRunner{r: config.CurrentRemoteVPS}
-		config.CurrentRemoteVPS.Bootstrap(session, args[0])
+		err = config.CurrentRemoteVPS.Bootstrap(session, args[0], config)
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
@@ -149,7 +156,7 @@ var statusCmd = &cobra.Command{
 behaviour, and other information.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := GetProjectConfigFromDisk()
+		config, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.WithError(err)
 		}
@@ -210,7 +217,7 @@ func init() {
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
 // for the user.
-func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string) error {
+func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Config) error {
 	println("Bootstrapping remote " + name)
 
 	// Generate a session for each command.
@@ -238,14 +245,26 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string) error {
 		return err
 	}
 
+	println("Fetching daemon API token")
+	token, err := remote.GetDaemonAPIToken(runner)
+	if err != nil {
+		return err
+	}
+
+	config.DaemonAPIToken = token
+	_, err = config.Write()
+	if err != nil {
+		return err
+	}
+
 	println("Daemon running on instance")
 
 	// Output deploy key to user.
-	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new): ")
 	println(pub.String())
 
 	// Output Webhook url to user.
-	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/keys/new): ")
+	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
 	println("http://" + remote.IP + ":" + remote.Port)
 	println("Github WebHook Secret: " + defaultSecret + "\n")
 
@@ -302,7 +321,7 @@ func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonPort string) error {
 	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
 	_, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
 	if err != nil {
-		println(stderr)
+		println(stderr.String())
 		return err
 	}
 
@@ -346,10 +365,29 @@ func (remote *RemoteVPS) DaemonDown(session SSHSession) error {
 	return nil
 }
 
+// GetDaemonAPIToken returns the daemon API token for RESTful access
+// to the daemon.
+func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
+	// Collect asset (token.sh script)
+	daemonCmd, err := Asset("cmd/bootstrap/token.sh")
+	if err != nil {
+		return "", err
+	}
+
+	stdout, stderr, err := remote.RunSSHCommand(session, string(daemonCmd))
+	if err != nil {
+		log.Println(stderr.String())
+		return "", err
+	}
+
+	// There may be a newline, remove it.
+	return strings.TrimSuffix(stdout.String(), "\n"), nil
+}
+
 // addNewRemote adds a new remote to the project config file.
 func addNewRemote(name, IP, user, pemLoc, port string) error {
 	// Just wipe configuration for MVP.
-	config, err := GetProjectConfigFromDisk()
+	config, err := getProjectConfigFromDisk()
 	if err != nil {
 		return err
 	}
@@ -362,14 +400,14 @@ func addNewRemote(name, IP, user, pemLoc, port string) error {
 		Port: port,
 	}
 
-	f, err := GetConfigFile()
-	defer f.Close()
-	_, err = config.Write(f)
+	_, err = config.Write()
 	if err != nil {
 		return err
 	}
 
 	println("Remote '" + name + "' added.")
+	println("You can now run 'inertia " + name + " init' to set this remote")
+	println("up for continuous deployment.")
 
 	return nil
 }

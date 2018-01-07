@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -33,14 +35,23 @@ import (
 var defaultDaemonPort = "8081"
 
 const (
-	daemonUp   = "up"
-	daemonDown = "down"
+	daemonUp     = "up"
+	daemonDown   = "down"
+	daemonStatus = "status"
+	daemonReset  = "reset"
 )
 
 // DaemonRequester can make HTTP requests to the daemon.
 type DaemonRequester interface {
 	Up() (*http.Response, error)
 	Down() (*http.Response, error)
+	Status() (*http.Response, error)
+	Reset() (*http.Response, error)
+}
+
+// UpRequest is the body of a up request to the daemon.
+type UpRequest struct {
+	Repo string `json:"repo"`
 }
 
 // Deployment manages a deployment and implements the
@@ -64,7 +75,7 @@ Requires:
 Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := GetProjectConfigFromDisk()
+		config, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.WithError(err)
 		}
@@ -76,7 +87,17 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			os.Exit(1)
 		}
 
-		repo, err := getRepo()
+		repo, err := getLocalRepo()
+		if err != nil {
+			log.WithError(err)
+		}
+
+		deployment := &Deployment{
+			RemoteVPS:  config.CurrentRemoteVPS,
+			Repository: repo,
+		}
+
+		auth, err := getAPIPrivateKeyFromConfig()
 		if err != nil {
 			log.WithError(err)
 		}
@@ -84,12 +105,11 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 		switch args[1] {
 		case daemonUp:
 			// Start the deployment
-			deployment := &Deployment{
-				RemoteVPS:  config.CurrentRemoteVPS,
-				Repository: repo,
+			resp, err := deployment.Up(auth)
+			if err != nil {
+				log.Fatal(err)
 			}
 
-			resp, err := deployment.Up()
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
@@ -97,23 +117,18 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 			}
 
 			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("Project down: %d\n", resp.StatusCode)
+			case http.StatusCreated:
+				fmt.Printf("(Status code %d) Project up\n", resp.StatusCode)
 			case http.StatusForbidden:
-				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 			default:
-				fmt.Printf("Unknown response from daemon: %d %s",
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s",
 					resp.StatusCode, body)
 			}
 
 		case daemonDown:
-			// Start the deployment
-			deployment := &Deployment{
-				RemoteVPS:  config.CurrentRemoteVPS,
-				Repository: repo,
-			}
-
-			resp, err := deployment.Down()
+			// Shut down the deployment
+			resp, err := deployment.Down(auth)
 			if err != nil {
 				log.WithError(err)
 			}
@@ -126,13 +141,66 @@ Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 
 			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("Project down: %d\n", resp.StatusCode)
+				fmt.Printf("(Status code %d) Project down\n", resp.StatusCode)
+			case http.StatusPreconditionFailed:
+				fmt.Printf("(Status code %d) No containers are currently active\n", resp.StatusCode)
 			case http.StatusForbidden:
-				fmt.Printf("Bad auth: %d %s\n", resp.StatusCode, body)
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 			default:
-				fmt.Printf("Unknown response from daemon: %d %s",
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
 					resp.StatusCode, body)
 			}
+
+		case daemonStatus:
+			// Get status of the deployment
+			resp, err := deployment.Status(auth)
+			if err != nil {
+				log.WithError(err)
+			}
+
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.WithError(err)
+			}
+
+			switch resp.StatusCode {
+			case http.StatusOK:
+				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+			case http.StatusForbidden:
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+			case http.StatusNotFound:
+				fmt.Printf("(Status code %d) Problem with deployment: %s\n", resp.StatusCode, body)
+			case http.StatusPreconditionFailed:
+				fmt.Printf("(Status code %d) Problem with deployment setup: %s\n", resp.StatusCode, body)
+			default:
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+					resp.StatusCode, body)
+			}
+
+		case daemonReset:
+			// Remove project from deployment
+			resp, err := deployment.Reset(auth)
+			if err != nil {
+				log.WithError(err)
+			}
+
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.WithError(err)
+			}
+
+			switch resp.StatusCode {
+			case http.StatusOK:
+				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+			case http.StatusForbidden:
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+			default:
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+					resp.StatusCode, body)
+			}
+
 		default:
 			fmt.Printf("No such deployment command: %s\n", args[1])
 			os.Exit(1)
@@ -146,9 +214,27 @@ func init() {
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (d *Deployment) Up() (*http.Response, error) {
+func (d *Deployment) Up(auth string) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
-	resp, err := http.Post(host, "application/json", nil)
+
+	// TODO: Support other repo names.
+	origin, err := d.Repository.Remote("origin")
+	if err != nil {
+		return nil, err
+	}
+
+	reqContent := UpRequest{Repo: getSSHRemoteURL(origin.Config().URLs[0])}
+	body, err := json.Marshal(reqContent)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", host, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+auth)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.New("Error when deploying project")
 	}
@@ -157,11 +243,53 @@ func (d *Deployment) Up() (*http.Response, error) {
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
-func (d *Deployment) Down() (*http.Response, error) {
+func (d *Deployment) Down(auth string) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
-	resp, err := http.Post(host, "application/json", nil)
+
+	req, err := http.NewRequest("POST", host, nil)
 	if err != nil {
-		return nil, errors.New("Error when deploying project")
+		return nil, err
 	}
+	req.Header.Set("Authorization", "Bearer "+auth)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.New("Error when shutting down project")
+	}
+
+	return resp, nil
+}
+
+// Status lists the currently active containers on the remote VPS instance
+func (d *Deployment) Status(auth string) (*http.Response, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/status"
+
+	req, err := http.NewRequest("POST", host, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+auth)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.New("Error when checking project status")
+	}
+
+	return resp, nil
+}
+
+// Reset shuts down deployment and deletes the contents of the deployment's
+// project directory
+func (d *Deployment) Reset(auth string) (*http.Response, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/reset"
+
+	req, err := http.NewRequest("POST", host, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+auth)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.New("Error when reseting project on deployment")
+	}
+
 	return resp, nil
 }
