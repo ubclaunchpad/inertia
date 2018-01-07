@@ -52,6 +52,11 @@ to succeed.`,
 		if err != nil {
 			log.Fatal(err)
 		}
+		println("A .inertia folder has been created to store Inertia configuration.")
+		println("It is recommended that you DO NOT commit this folder in source")
+		println("control since it will be used to store sensitive information.")
+		println("\nYou can now use 'inertia remote add' to connect your remote")
+		println("VPS instance.")
 	},
 }
 

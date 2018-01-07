@@ -71,11 +71,7 @@ func getLocalRepo() (*git.Repository, error) {
 // getSSHRemoteURL gets the URL of the given remote in the form
 // "git@github.com:[USER]/[REPOSITORY].git"
 func getSSHRemoteURL(url string) string {
-	newURL := strings.Replace(url, "https://github.com/", "git@github.com:", -1)
-	if url != newURL {
-		return newURL + ".git"
-	}
-	return url
+	return strings.Replace(url, "https://github.com/", "git@github.com:", -1)
 }
 
 // removeContents removes all files within given directory, returns nil if successful

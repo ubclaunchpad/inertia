@@ -110,7 +110,10 @@ file. Specify a VPS name and an IP address.`,
 		user, _ := cmd.Flags().GetString("user")
 		pemLoc, _ := cmd.Flags().GetString("identity")
 		port, _ := cmd.Flags().GetString("port")
-		addNewRemote(args[0], args[1], user, pemLoc, port)
+		err = addNewRemote(args[0], args[1], user, pemLoc, port)
+		if err != nil {
+			log.WithError(err)
+		}
 	},
 }
 
@@ -403,6 +406,8 @@ func addNewRemote(name, IP, user, pemLoc, port string) error {
 	}
 
 	println("Remote '" + name + "' added.")
+	println("You can now run 'inertia " + name + " init' to set this remote")
+	println("up for continuous deployment.")
 
 	return nil
 }

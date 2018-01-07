@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -535,7 +536,18 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 		return errors.New(warnings)
 	}
 
-	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	time.Sleep(2 * time.Second)
+	_, err = getActiveContainers(cli)
+	if err != nil {
+		return errors.New("Docker-compose failed")
+	}
+
+	return nil
 }
 
 // getActiveContainers returns all active containers and returns and error
