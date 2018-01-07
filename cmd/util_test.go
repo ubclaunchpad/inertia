@@ -83,3 +83,11 @@ func TestAuthorizationSignatureInvalid(t *testing.T) {
 
 	assert.Equal(t, rr.Code, http.StatusForbidden)
 }
+
+func TestGetSSHRemoteURL(t *testing.T) {
+	httpsURL := "https://github.com/ubclaunchpad/inertia.git"
+	sshURL := "git@github.com:ubclaunchpad/inertia.git"
+
+	assert.Equal(t, sshURL, getSSHRemoteURL(httpsURL))
+	assert.Equal(t, sshURL, getSSHRemoteURL(sshURL))
+}

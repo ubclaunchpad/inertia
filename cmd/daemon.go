@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -228,6 +229,10 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+
+		// Wait arbitrary amount of time for clone to complete
+		// TODO: find a better way to do this
+		time.Sleep(2 * time.Second)
 	}
 
 	repo, err := git.PlainOpen(projectDirectory)
@@ -272,10 +277,16 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	// Error if no project containers are active
+	// Error if no project containers are active, but try to kill
+	// everything anyway in case the docker-compose image is still
+	// active
 	_, err = getActiveContainers(cli)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		err = killActiveContainers(cli)
+		if err != nil {
+			log.WithError(err)
+		}
 		return
 	}
 
@@ -423,6 +434,10 @@ func processPushEvent(event *github.PushEvent) {
 			}
 			return
 		}
+
+		// Wait arbitrary amount of time for clone to complete
+		// TODO: find a better way to do this
+		time.Sleep(2 * time.Second)
 	}
 
 	localRepo, err := git.PlainOpen(projectDirectory)
@@ -495,6 +510,10 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 		if err != nil {
 			return err
 		}
+
+		// Wait arbitrary amount of time for clone to complete
+		// TODO: find a better way to do this
+		time.Sleep(2 * time.Second)
 	}
 
 	// Kill active project containers if there are any
@@ -541,7 +560,20 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 		return errors.New(warnings)
 	}
 
-	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Check if build failed abruptly
+	time.Sleep(4 * time.Second)
+	_, err = getActiveContainers(cli)
+	if err != nil {
+		err := killActiveContainers(cli)
+		return errors.New("Docker-compose failed: " + err.Error())
+	}
+
+	return nil
 }
 
 // getActiveContainers returns all active containers and returns and error
