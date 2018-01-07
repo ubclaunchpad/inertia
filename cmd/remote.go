@@ -125,7 +125,7 @@ A URL will be provided to direct GitHub webhooks to, the daemon will
 request access to the repository via a public key, and will listen
 for updates to this repository's remote master branch.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: chagne support correct remote based on which
+		// TODO: support correct remote based on which
 		// cmd is calling this init, see "deploy.go"
 
 		// Ensure project initialized.
@@ -135,7 +135,7 @@ for updates to this repository's remote master branch.`,
 		}
 
 		session := &SSHRunner{r: config.CurrentRemoteVPS}
-		err = config.CurrentRemoteVPS.Bootstrap(session, args[0], config)
+		err = config.CurrentRemoteVPS.Bootstrap(session, "", config)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -174,7 +174,7 @@ behaviour, and other information.`,
 
 		if string(body) != okResp {
 			println("Could not connect to daemon")
-			println("Try running inertia deploy")
+			println("Try running inertia [REMOTE] init")
 			return
 		}
 
@@ -264,7 +264,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	println("Github WebHook Secret: " + defaultSecret + "\n")
 
 	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
-	fmt.Printf("Then run `inertia deploy %s' to deploy your application.\n", name)
+	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", name)
 
 	return nil
 }
