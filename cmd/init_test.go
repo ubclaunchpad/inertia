@@ -9,15 +9,16 @@ import (
 )
 
 func TestConfigWrite(t *testing.T) {
+	var writer bytes.Buffer
 	config := &Config{
 		CurrentRemoteName: "test",
 		CurrentRemoteVPS:  getTestRemote(),
+		Writer:            &writer,
 	}
 	inertiaJSON, err := json.Marshal(config)
 	assert.Nil(t, err)
 
-	var f bytes.Buffer
-	n, err := config.Write(&f)
+	n, err := config.Write()
 
 	assert.Nil(t, err)
 	assert.Equal(t, n, len(inertiaJSON))

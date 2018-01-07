@@ -158,7 +158,7 @@ func getAPIPrivateKey(*jwt.Token) (interface{}, error) {
 // requests sent to the daemon from local config. For now, we simply use the GitHub
 // deploy key.
 func getAPIPrivateKeyFromConfig() (string, error) {
-	cfg, err := GetProjectConfigFromDisk()
+	cfg, err := getProjectConfigFromDisk()
 	if err != nil {
 		return "", err
 	}
