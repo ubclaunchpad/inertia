@@ -75,7 +75,7 @@ Requires:
 Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := GetProjectConfigFromDisk()
+		config, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.WithError(err)
 		}
