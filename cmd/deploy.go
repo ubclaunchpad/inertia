@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -59,12 +58,160 @@ type UpRequest struct {
 type Deployment struct {
 	*RemoteVPS
 	Repository *git.Repository
+	Auth       string
+}
+
+var deployUpCmd = &cobra.Command{
+	Use:   "up",
+	Short: "Bring project online on remote",
+	Long: `Bring project online on remote.
+	This will run 'docker-compose up --build'. Requires the Inertia daemon
+	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Start the deployment
+		deployment, err := getDeployment()
+		if err != nil {
+			log.Fatal(err)
+		}
+		resp, err := deployment.Up()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err)
+		}
+
+		switch resp.StatusCode {
+		case http.StatusCreated:
+			fmt.Printf("(Status code %d) Project up\n", resp.StatusCode)
+		case http.StatusForbidden:
+			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+		default:
+			fmt.Printf("(Status code %d) Unknown response from daemon: %s",
+				resp.StatusCode, body)
+		}
+	},
+}
+
+var deployDownCmd = &cobra.Command{
+	Use:   "down",
+	Short: "Bring project offline on remote",
+	Long: `Bring project online on remote.
+	This will kill all active project containers on your remote.
+	Requires project to be online - do this by running 'inertia [REMOTE] up`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Shut down the deployment
+		deployment, err := getDeployment()
+		if err != nil {
+			log.Fatal(err)
+		}
+		resp, err := deployment.Down()
+		if err != nil {
+			log.WithError(err)
+		}
+
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err)
+		}
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			fmt.Printf("(Status code %d) Project down\n", resp.StatusCode)
+		case http.StatusPreconditionFailed:
+			fmt.Printf("(Status code %d) No containers are currently active\n", resp.StatusCode)
+		case http.StatusForbidden:
+			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+		default:
+			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+				resp.StatusCode, body)
+		}
+	},
+}
+
+var deployStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Print the status of deployment on remote",
+	Long: `Print the status of deployment on remote.
+	Requires the Inertia daemon to be active on your remote - do this by 
+	running 'inertia [REMOTE] up'`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Get status of the deployment
+		deployment, err := getDeployment()
+		if err != nil {
+			log.Fatal(err)
+		}
+		resp, err := deployment.Status()
+		if err != nil {
+			log.WithError(err)
+		}
+
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err)
+		}
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+		case http.StatusForbidden:
+			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+		case http.StatusNotFound:
+			fmt.Printf("(Status code %d) Problem with deployment: %s\n", resp.StatusCode, body)
+		case http.StatusPreconditionFailed:
+			fmt.Printf("(Status code %d) Problem with deployment setup: %s\n", resp.StatusCode, body)
+		default:
+			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+				resp.StatusCode, body)
+		}
+	},
+}
+
+var deployResetCmd = &cobra.Command{
+	Use:   "reset",
+	Short: "Reset the project on your remote",
+	Long: `Reset the project on your remote.
+	On this remote, this kills all active containers and clears the project
+	directory, allowing you to assign a different Inertia project to this
+	remote. Requires Inertia daemon to be active on your remote - do this by
+	running 'inertia [REMOTE] init'`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Remove project from deployment
+		deployment, err := getDeployment()
+		if err != nil {
+			log.Fatal(err)
+		}
+		resp, err := deployment.Reset()
+		if err != nil {
+			log.WithError(err)
+		}
+
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err)
+		}
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+		case http.StatusForbidden:
+			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
+		default:
+			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+				resp.StatusCode, body)
+		}
+	},
 }
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
-	Use:   "deploy [REMOTE] [COMMAND]",
-	Short: "Configure continuous deployment to the remote VPS instance specified",
+	Hidden: true,
 	Long: `Start or stop continuous deployment to the remote VPS instance specified.
 Run 'inertia remote status' beforehand to ensure your daemon is running.
 Requires:
@@ -72,149 +219,63 @@ Requires:
 1. A deploy key to be registered for the daemon with your GitHub repository.
 2. A webhook url to registered for the daemon with your GitHub repository.
 
-Run 'inertia remote bootstrap [REMOTE]' to collect these.`,
-	Args: cobra.MinimumNArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		config, err := GetProjectConfigFromDisk()
-		if err != nil {
-			log.WithError(err)
-		}
-
-		if args[0] != config.CurrentRemoteName {
-			println("No such remote " + args[0])
-			println("Inertia currently supports one remote per repository")
-			println("Run `inertia remote -v' to see what remote is available")
-			os.Exit(1)
-		}
-
-		repo, err := getLocalRepo()
-		if err != nil {
-			log.WithError(err)
-		}
-
-		deployment := &Deployment{
-			RemoteVPS:  config.CurrentRemoteVPS,
-			Repository: repo,
-		}
-
-		auth, err := getAPIPrivateKeyFromConfig()
-		if err != nil {
-			log.WithError(err)
-		}
-
-		switch args[1] {
-		case daemonUp:
-			// Start the deployment
-			resp, err := deployment.Up(auth)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.WithError(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusCreated:
-				fmt.Printf("(Status code %d) Project up\n", resp.StatusCode)
-			case http.StatusForbidden:
-				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon: %s",
-					resp.StatusCode, body)
-			}
-
-		case daemonDown:
-			// Shut down the deployment
-			resp, err := deployment.Down(auth)
-			if err != nil {
-				log.WithError(err)
-			}
-
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.WithError(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("(Status code %d) Project down\n", resp.StatusCode)
-			case http.StatusPreconditionFailed:
-				fmt.Printf("(Status code %d) No containers are currently active\n", resp.StatusCode)
-			case http.StatusForbidden:
-				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-					resp.StatusCode, body)
-			}
-
-		case daemonStatus:
-			// Get status of the deployment
-			resp, err := deployment.Status(auth)
-			if err != nil {
-				log.WithError(err)
-			}
-
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.WithError(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-			case http.StatusForbidden:
-				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-			case http.StatusNotFound:
-				fmt.Printf("(Status code %d) Problem with deployment: %s\n", resp.StatusCode, body)
-			case http.StatusPreconditionFailed:
-				fmt.Printf("(Status code %d) Problem with deployment setup: %s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-					resp.StatusCode, body)
-			}
-
-		case daemonReset:
-			// Remove project from deployment
-			resp, err := deployment.Reset(auth)
-			if err != nil {
-				log.WithError(err)
-			}
-
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.WithError(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-			case http.StatusForbidden:
-				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-					resp.StatusCode, body)
-			}
-
-		default:
-			fmt.Printf("No such deployment command: %s\n", args[1])
-			os.Exit(1)
-		}
-	},
+Run 'inertia [REMOTE] init' to collect these.`,
 }
 
 func init() {
+	// TODO: multiple remotes - loop through and add each one as a
+	// new copy of a command using addRemoteCommand
+	config, err := GetProjectConfigFromDisk()
+	if err != nil {
+		return
+	}
+
+	newCmd := &cobra.Command{}
+	newCmd = deployCmd
+	newCmd.AddCommand()
+
+	addRemoteCommand(config.CurrentRemoteName, newCmd)
+}
+
+func addRemoteCommand(remoteName string, cmd *cobra.Command) {
+	cmd.Use = remoteName + " [COMMAND]"
+	cmd.Short = "Configure continuous deployment to " + remoteName
+	cmd.AddCommand(deployUpCmd)
+	cmd.AddCommand(deployDownCmd)
+	cmd.AddCommand(deployStatusCmd)
+	cmd.AddCommand(deployResetCmd)
+	cmd.AddCommand(deployInitCmd)
 	RootCmd.AddCommand(deployCmd)
+}
+
+// TODO: add args to support getting the appropriate deployment
+// based on the command (aka remote) that calls it
+func getDeployment() (*Deployment, error) {
+	config, err := GetProjectConfigFromDisk()
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err := getLocalRepo()
+	if err != nil {
+		return nil, err
+	}
+
+	auth, err := getAPIPrivateKeyFromConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Deployment{
+		RemoteVPS:  config.CurrentRemoteVPS,
+		Repository: repo,
+		Auth:       auth,
+	}, nil
 }
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (d *Deployment) Up(auth string) (*http.Response, error) {
+func (d *Deployment) Up() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
 
 	// TODO: Support other repo names.
@@ -233,7 +294,7 @@ func (d *Deployment) Up(auth string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+auth)
+	req.Header.Set("Authorization", "Bearer "+d.Auth)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.New("Error when deploying project")
@@ -243,18 +304,14 @@ func (d *Deployment) Up(auth string) (*http.Response, error) {
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
-func (d *Deployment) Down(auth string) (*http.Response, error) {
+func (d *Deployment) Down() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
-	auth, err := getAPIPrivateKeyFromConfig()
-	if err != nil {
-		return nil, err
-	}
 
 	req, err := http.NewRequest("POST", host, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+auth)
+	req.Header.Set("Authorization", "Bearer "+d.Auth)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.New("Error when shutting down project")
@@ -264,18 +321,14 @@ func (d *Deployment) Down(auth string) (*http.Response, error) {
 }
 
 // Status lists the currently active containers on the remote VPS instance
-func (d *Deployment) Status(auth string) (*http.Response, error) {
+func (d *Deployment) Status() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/status"
-	auth, err := getAPIPrivateKeyFromConfig()
-	if err != nil {
-		return nil, err
-	}
 
 	req, err := http.NewRequest("POST", host, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+auth)
+	req.Header.Set("Authorization", "Bearer "+d.Auth)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.New("Error when checking project status")
@@ -286,14 +339,14 @@ func (d *Deployment) Status(auth string) (*http.Response, error) {
 
 // Reset shuts down deployment and deletes the contents of the deployment's
 // project directory
-func (d *Deployment) Reset(auth string) (*http.Response, error) {
+func (d *Deployment) Reset() (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/reset"
 
 	req, err := http.NewRequest("POST", host, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+auth)
+	req.Header.Set("Authorization", "Bearer "+d.Auth)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.New("Error when reseting project on deployment")

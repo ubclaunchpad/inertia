@@ -127,6 +127,9 @@ var tokenCmd = &cobra.Command{
 }
 
 func init() {
+	if os.Getenv("DAEMON") != "true" {
+		daemonCmd.Hidden = true
+	}
 	RootCmd.AddCommand(daemonCmd)
 	daemonCmd.AddCommand(runCmd)
 	daemonCmd.AddCommand(tokenCmd)

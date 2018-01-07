@@ -114,27 +114,24 @@ file. Specify a VPS name and an IP address.`,
 	},
 }
 
-// bootstrapCmd represents the remote add command
-var bootstrapCmd = &cobra.Command{
-	Use:   "bootstrap [REMOTE]",
-	Short: "Bootstrap the VPS for continuous deployment",
-	Long: `Bootstrap the VPS for continuous deployment.
+// deployInitCmd represents the inertia [REMOTE] init command
+var deployInitCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize the VPS for continuous deployment",
+	Long: `Initialize the VPS for continuous deployment.
+This sets up everything you might need and brings the Inertia daemon
+online on your remote.
 A URL will be provided to direct GitHub webhooks to, the daemon will
 request access to the repository via a public key, and will listen
 for updates to this repository's remote master branch.`,
-	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: chagne support correct remote based on which
+		// cmd is calling this init, see "deploy.go"
+
 		// Ensure project initialized.
 		config, err := GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
-		}
-
-		if args[0] != config.CurrentRemoteName {
-			println("No such remote " + args[0])
-			println("Inertia currently supports one remote per repository")
-			println("Run `inertia remote -v' to see what remote is available")
-			os.Exit(1)
 		}
 
 		session := &SSHRunner{r: config.CurrentRemoteVPS}
@@ -145,7 +142,7 @@ for updates to this repository's remote master branch.`,
 	},
 }
 
-// statusCmd represents the remote add command
+// statusCmd represents the remote status command
 var statusCmd = &cobra.Command{
 	Use:   "status [REMOTE]",
 	Short: "Query the status of a remote instance",
@@ -189,7 +186,6 @@ behaviour, and other information.`,
 func init() {
 	RootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
-	remoteCmd.AddCommand(bootstrapCmd)
 	remoteCmd.AddCommand(statusCmd)
 
 	homeEnvVar := os.Getenv("HOME")

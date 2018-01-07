@@ -33,6 +33,7 @@ sudo docker run -d \
     -p "$PORT":8081 \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $HOME:/app/host \
+    -e DAEMON="true" \
     -e HOME=$HOME \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     --name "$DAEMON_NAME" \
