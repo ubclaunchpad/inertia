@@ -267,10 +267,16 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	// Error if no project containers are active
+	// Error if no project containers are active, but try to kill
+	// everything anyway in case the docker-compose image is still
+	// active
 	_, err = getActiveContainers(cli)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		err = killActiveContainers(cli)
+		if err != nil {
+			log.WithError(err)
+		}
 		return
 	}
 
@@ -541,10 +547,12 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 		return err
 	}
 
+	// Check if build failed abruptly
 	time.Sleep(2 * time.Second)
 	_, err = getActiveContainers(cli)
 	if err != nil {
-		return errors.New("Docker-compose failed")
+		err := killActiveContainers(cli)
+		return errors.New("Docker-compose failed: " + err.Error())
 	}
 
 	return nil
