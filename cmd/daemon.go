@@ -223,6 +223,10 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+
+		// Wait arbitrary amount of time for clone to complete
+		// TODO: find a better way to do this
+		time.Sleep(2 * time.Second)
 	}
 
 	repo, err := git.PlainOpen(projectDirectory)
@@ -424,6 +428,10 @@ func processPushEvent(event *github.PushEvent) {
 			}
 			return
 		}
+
+		// Wait arbitrary amount of time for clone to complete
+		// TODO: find a better way to do this
+		time.Sleep(2 * time.Second)
 	}
 
 	localRepo, err := git.PlainOpen(projectDirectory)
@@ -496,6 +504,10 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 		if err != nil {
 			return err
 		}
+
+		// Wait arbitrary amount of time for clone to complete
+		// TODO: find a better way to do this
+		time.Sleep(2 * time.Second)
 	}
 
 	// Kill active project containers if there are any
@@ -548,7 +560,7 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 	}
 
 	// Check if build failed abruptly
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 	_, err = getActiveContainers(cli)
 	if err != nil {
 		err := killActiveContainers(cli)
