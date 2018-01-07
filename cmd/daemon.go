@@ -27,6 +27,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
@@ -566,10 +567,13 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 	}
 
 	// Check if build failed abruptly
-	time.Sleep(4 * time.Second)
+	time.Sleep(3 * time.Second)
 	_, err = getActiveContainers(cli)
 	if err != nil {
-		err := killActiveContainers(cli)
+		killErr := killActiveContainers(cli)
+		if killErr != nil {
+			log.WithError(err)
+		}
 		return errors.New("Docker-compose failed: " + err.Error())
 	}
 
@@ -610,11 +614,13 @@ func killActiveContainers(cli *docker.Client) error {
 			if err != nil {
 				return err
 			}
-			err = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
-			if err != nil {
-				return err
-			}
 		}
 	}
+
+	report, err := cli.ContainersPrune(ctx, filters.Args{})
+	if err != nil {
+		return err
+	}
+	log.Println("Removed " + strings.Join(report.ContainersDeleted, ", "))
 	return nil
 }
