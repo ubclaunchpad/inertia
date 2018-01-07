@@ -3,14 +3,17 @@
 Inertia makes it easy to set up automated deployment for Dockerized
 applications.
 
+## Installation
+
 ```bash
 go get -u github.com/ubclauncpad/inertia
 ```
 
-## Deploy an Application
+Alternatively, you can download Inertia from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page.
 
-Applications are deployed over SSH. You will need an SSH username and PEM file
-to get started. Inside of a git repository, run the following:
+## Usage
+
+Inside of a git repository, run the following:
 
 ```bash
 $> inertia init
@@ -18,36 +21,32 @@ $> inertia init
 $> inertia remote add glcoud 35.227.171.49 -u root -i /path/to/my/.ssh/id_rsa
 Remote 'glcoud' added.
 
-$> inertia remote bootstrap gcloud
-Bootstrapping remote...
-Daemon running on instance
-GitHub Deploy Key Generation:
-Generating public/private rsa key pair.
-Your identification has been saved in /home/root/.ssh/id_rsa_inertia_deploy.
-Your public key has been saved in /home/root/.ssh/id_rsa_inertia_deploy.pub.
-The key fingerprint is:
-SHA256:EO6Wp6QkeDPf67ODy5W329bJiEZcHKSVBRYZ0BKbFPU root@instance
-The keys randomart image is:
-+---[RSA 2048]----+
-|      . =BOB.    |
-|     . o.*=.     |
-|      o +o .E    |
-| .   . o  o      |
-|. = . =.S.       |
-| . * = +o        |
-|    o.=... + .   |
-|   ...ooooo +    |
-|    oo+=oo.      |
-+----[SHA256]-----+
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCftKIy4/GQah6H4EcxdO5Qmdin6Xu/9DoBE7Qh1L1P44B08szTJkzjhcMNexr0bzLstU+nks8qQT66zfkfih89gFb+7kF4KsZT5ITMAO/gZyqCoAMS/1FxQVkLvcMrAxTbXOcU3Uvq39RN2ELec5I6AaVZe328495fuB2RyLehYcS0oEWd8+WVA/0iS+qHx7yKacdOFkmX7LZOrdY1F4IMJpN+t1/oiSaBF77b1Fjhvlw9/iOMkj2P1tUudsh5QhXCWWBO0FmzyvIgSWx24PmU7cL131Ok6KhDukv62YAZj0Vmk73bvMrma5DWqK35+FNUi0IMMKlV3X5JyDY4pRt9 root@instance
+$> inertia gcloud init
+Bootstrapping remote
+Installing docker
+Starting daemon
+Building deploy key
 
-GitHub WebHook URL: 35.227.171.49:8081
+Fetching daemon API token
+Daemon running on instance
+GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new):
+ssh-rsa <...>
+
+GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
+http://myhost.com:8081
+Github WebHook Secret: inertia
+
+Inertia daemon successfully deployed, add webhook url and deploy key to enable it.
+Then run 'inertia gcloud up' to deploy your application.
+
+$> inertia remote status gcloud
+Remote instance 'gcloud' accepting requests at http://myhost.com:8081
 ```
 
 A daemon is now running on your remote instance - but your application is not yet
 continuously deployed.
 
-The output of `inertia bootstrap [REMOTE]` has given you two important pieces of information.
+The output of `inertia [REMOTE] init` has given you two important pieces of information:
 
 1. A deploy key. The Inertia daemon requires readonly access to your GitHub repository.
    Add it to your GitHub repository settings at the URL provided in the output.
@@ -58,7 +57,19 @@ The output of `inertia bootstrap [REMOTE]` has given you two important pieces of
 After adding these pieces of information to your GitHub settings,
 
 ```bash
-$> inertia deploy [REMOTE] up
+$> inertia gcloud up
+(Status code 201) Project up
+
+$> inertia gcloud status
+(Status code 200) 7b7be0b7097a26169e17037f4220fd0ce039bde1 refs/heads/master
+Active containers:
+project_frontend (/project_frontend_1)
+project_web (/project_web_1)
+project_solr (/project_solr_1)
+postgres (/project_db_1)
+
+$> inertia gcloud down
+(Status code 200) Project down
 ```
 
 ## Development
@@ -110,6 +121,12 @@ if err != nil {
 result, _ := remote.RunSSHCommand(string(shellScriptData))
 ```
 
+### Testing
+
+```bash
+go test ./cmd -cover
+```
+
 ## Motivation
 
 At Launch Pad we are frequently changing hosting providers based on available
@@ -142,9 +159,3 @@ current setup flow is:
   * A webhook URL and secret
 * Add the SSH key to your project's Deploy Keys on GitHub
 * Create a webhook with the URL and secret on your project repository
-
-## Testing
-
-```bash
-go test ./cmd -cover
-```

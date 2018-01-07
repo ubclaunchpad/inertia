@@ -43,6 +43,7 @@ func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, err
 	return &Deployment{
 		RemoteVPS:  mockRemote,
 		Repository: mockRepo,
+		Auth:       fakeAuth,
 	}, nil
 }
 
@@ -77,7 +78,7 @@ func TestUp(t *testing.T) {
 	d, err := getMockDeployment(testServer, memory)
 	assert.Nil(t, err)
 
-	resp, err := d.Up(fakeAuth)
+	resp, err := d.Up()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
@@ -104,7 +105,7 @@ func TestDown(t *testing.T) {
 	d, err := getMockDeployment(testServer, memory)
 	assert.Nil(t, err)
 
-	resp, err := d.Down(fakeAuth)
+	resp, err := d.Down()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
@@ -131,7 +132,7 @@ func TestStatus(t *testing.T) {
 	d, err := getMockDeployment(testServer, memory)
 	assert.Nil(t, err)
 
-	resp, err := d.Status(fakeAuth)
+	resp, err := d.Status()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
@@ -158,7 +159,7 @@ func TestReset(t *testing.T) {
 	d, err := getMockDeployment(testServer, memory)
 	assert.Nil(t, err)
 
-	resp, err := d.Reset(fakeAuth)
+	resp, err := d.Reset()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

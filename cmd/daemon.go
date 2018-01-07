@@ -27,6 +27,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
@@ -57,8 +58,11 @@ var (
 var daemonCmd = &cobra.Command{
 	Use:   "daemon",
 	Short: "Configure daemon behaviour from command line",
-	Args:  cobra.MinimumNArgs(1),
-	Run:   func(cmd *cobra.Command, args []string) {},
+	Long: `Configure daemon behaviour from the command line.
+This is intended for use on a remote VPS - do not use these commands
+locally.`,
+	Args: cobra.MinimumNArgs(1),
+	Run:  func(cmd *cobra.Command, args []string) {},
 }
 
 // runCmd represents the daemon run command
@@ -128,6 +132,9 @@ var tokenCmd = &cobra.Command{
 }
 
 func init() {
+	if os.Getenv("DAEMON") != "true" {
+		daemonCmd.Hidden = true
+	}
 	RootCmd.AddCommand(daemonCmd)
 	daemonCmd.AddCommand(runCmd)
 	daemonCmd.AddCommand(tokenCmd)
@@ -560,10 +567,13 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 	}
 
 	// Check if build failed abruptly
-	time.Sleep(4 * time.Second)
+	time.Sleep(3 * time.Second)
 	_, err = getActiveContainers(cli)
 	if err != nil {
-		err := killActiveContainers(cli)
+		killErr := killActiveContainers(cli)
+		if killErr != nil {
+			log.WithError(err)
+		}
 		return errors.New("Docker-compose failed: " + err.Error())
 	}
 
@@ -604,11 +614,13 @@ func killActiveContainers(cli *docker.Client) error {
 			if err != nil {
 				return err
 			}
-			err = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
-			if err != nil {
-				return err
-			}
 		}
 	}
+
+	report, err := cli.ContainersPrune(ctx, filters.Args{})
+	if err != nil {
+		return err
+	}
+	log.Println("Removed " + strings.Join(report.ContainersDeleted, ", "))
 	return nil
 }

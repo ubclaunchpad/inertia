@@ -217,7 +217,7 @@ func compareRemotes(localRepo *git.Repository, remoteURL string) error {
 	}
 	localRemoteURL := getSSHRemoteURL(remotes[0].Config().URLs[0])
 	if localRemoteURL != remoteURL {
-		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia deploy [REMOTE] reset'")
+		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
 	return nil
 }
