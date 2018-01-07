@@ -225,7 +225,7 @@ Run 'inertia [REMOTE] init' to collect these.`,
 func init() {
 	// TODO: multiple remotes - loop through and add each one as a
 	// new copy of a command using addRemoteCommand
-	config, err := GetProjectConfigFromDisk()
+	config, err := getProjectConfigFromDisk()
 	if err != nil {
 		return
 	}
@@ -251,7 +251,7 @@ func addRemoteCommand(remoteName string, cmd *cobra.Command) {
 // TODO: add args to support getting the appropriate deployment
 // based on the command (aka remote) that calls it
 func getDeployment() (*Deployment, error) {
-	config, err := GetProjectConfigFromDisk()
+	config, err := getProjectConfigFromDisk()
 	if err != nil {
 		return nil, err
 	}

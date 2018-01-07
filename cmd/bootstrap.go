@@ -107,7 +107,7 @@ func cmdBootstrapDaemonUpSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cmd/bootstrap/daemon-up.sh", size: 1297, mode: os.FileMode(493), modTime: time.Unix(1515333898, 0)}
+	info := bindataFileInfo{name: "cmd/bootstrap/daemon-up.sh", size: 1297, mode: os.FileMode(493), modTime: time.Unix(1515346025, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -147,7 +147,7 @@ func cmdBootstrapKeygenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cmd/bootstrap/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1515333605, 0)}
+	info := bindataFileInfo{name: "cmd/bootstrap/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1515346036, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -167,7 +167,7 @@ func cmdBootstrapTokenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cmd/bootstrap/token.sh", size: 295, mode: os.FileMode(493), modTime: time.Unix(1515333296, 0)}
+	info := bindataFileInfo{name: "cmd/bootstrap/token.sh", size: 295, mode: os.FileMode(493), modTime: time.Unix(1515346036, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
