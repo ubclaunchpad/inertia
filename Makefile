@@ -18,7 +18,6 @@ test-race:
 
 clean: inertia
 	rm -f inertia
-	rm -f cover.html
 
 docker:
 	docker build -t ubclaunchpad/inertia .
