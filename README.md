@@ -101,14 +101,13 @@ go get -u github.com/jteeuwen/go-bindata/...
 ```
 
 If you make changes to the bootstrapping shell scripts in
-`cmd/bootstrap/`, convert them to `Assets` by running.
+`client/bootstrap/`, convert them to `Assets` by running.
 
 ```bash
-go-bindata -o cmd/bootstrap.go cmd/bootstrap/...
+make bootstrap
 ```
 
-Inspect the auto-generated file `cmd/bootstrap.go`. Change its
-package from `main` to `cmd`. Then use your asset!
+Then use your asset!
 
 ```go
 shellScriptData, err := Asset("cmd/bootstrap/myshellscript.sh")
@@ -124,7 +123,7 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 ### Testing
 
 ```bash
-go test ./cmd -cover
+make test
 ```
 
 ## Motivation

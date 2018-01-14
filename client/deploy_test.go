@@ -1,4 +1,4 @@
-package cmd
+package client
 
 import (
 	"encoding/json"
@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/common"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
@@ -58,7 +59,7 @@ func TestUp(t *testing.T) {
 		body, err := ioutil.ReadAll(req.Body)
 		assert.Nil(t, err)
 		defer req.Body.Close()
-		var upReq UpRequest
+		var upReq common.UpRequest
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "www.myremote.com", upReq.Repo)

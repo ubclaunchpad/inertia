@@ -15,51 +15,15 @@
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	git "gopkg.in/src-d/go-git.v4"
+
+	"github.com/ubclaunchpad/inertia/client"
 )
-
-// TODO: Reference daemon pkg for this information?
-// We only want the package dependencies to go in one
-// direction, so best to think about how to do this.
-// Clearly cannot ask for this information over HTTP.
-var defaultDaemonPort = "8081"
-
-const (
-	daemonUp     = "up"
-	daemonDown   = "down"
-	daemonStatus = "status"
-	daemonReset  = "reset"
-)
-
-// DaemonRequester can make HTTP requests to the daemon.
-type DaemonRequester interface {
-	Up() (*http.Response, error)
-	Down() (*http.Response, error)
-	Status() (*http.Response, error)
-	Reset() (*http.Response, error)
-}
-
-// UpRequest is the body of a up request to the daemon.
-type UpRequest struct {
-	Repo string `json:"repo"`
-}
-
-// Deployment manages a deployment and implements the
-// DaemonRequester interface.
-type Deployment struct {
-	*RemoteVPS
-	Repository *git.Repository
-	Auth       string
-}
 
 var deployUpCmd = &cobra.Command{
 	Use:   "up",
@@ -69,7 +33,7 @@ var deployUpCmd = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Start the deployment
-		deployment, err := getDeployment()
+		deployment, err := client.GetDeployment()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -106,7 +70,7 @@ var deployDownCmd = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Shut down the deployment
-		deployment, err := getDeployment()
+		deployment, err := client.GetDeployment()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -143,7 +107,7 @@ var deployStatusCmd = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get status of the deployment
-		deployment, err := getDeployment()
+		deployment, err := client.GetDeployment()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -184,7 +148,7 @@ var deployResetCmd = &cobra.Command{
 	running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Remove project from deployment
-		deployment, err := getDeployment()
+		deployment, err := client.GetDeployment()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -227,7 +191,7 @@ Run 'inertia [REMOTE] init' to collect these.`,
 func init() {
 	// TODO: multiple remotes - loop through and add each one as a
 	// new copy of a command using addRemoteCommand
-	config, err := getProjectConfigFromDisk()
+	config, err := client.GetProjectConfigFromDisk()
 	if err != nil {
 		return
 	}
@@ -248,111 +212,4 @@ func addRemoteCommand(remoteName string, cmd *cobra.Command) {
 	cmd.AddCommand(deployResetCmd)
 	cmd.AddCommand(deployInitCmd)
 	RootCmd.AddCommand(deployCmd)
-}
-
-// TODO: add args to support getting the appropriate deployment
-// based on the command (aka remote) that calls it
-func getDeployment() (*Deployment, error) {
-	config, err := getProjectConfigFromDisk()
-	if err != nil {
-		return nil, err
-	}
-
-	repo, err := getLocalRepo()
-	if err != nil {
-		return nil, err
-	}
-
-	auth, err := getAPIPrivateKeyFromConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Deployment{
-		RemoteVPS:  config.CurrentRemoteVPS,
-		Repository: repo,
-		Auth:       auth,
-	}, nil
-}
-
-// Up brings the project up on the remote VPS instance specified
-// in the deployment object.
-func (d *Deployment) Up() (*http.Response, error) {
-	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
-
-	// TODO: Support other repo names.
-	origin, err := d.Repository.Remote("origin")
-	if err != nil {
-		return nil, err
-	}
-
-	reqContent := UpRequest{Repo: getSSHRemoteURL(origin.Config().URLs[0])}
-	body, err := json.Marshal(reqContent)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", host, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+d.Auth)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, errors.New("Error when deploying project")
-	}
-	return resp, nil
-}
-
-// Down brings the project down on the remote VPS instance specified
-// in the configuration object.
-func (d *Deployment) Down() (*http.Response, error) {
-	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/down"
-
-	req, err := http.NewRequest("POST", host, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+d.Auth)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, errors.New("Error when shutting down project")
-	}
-
-	return resp, nil
-}
-
-// Status lists the currently active containers on the remote VPS instance
-func (d *Deployment) Status() (*http.Response, error) {
-	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/status"
-
-	req, err := http.NewRequest("POST", host, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+d.Auth)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, errors.New("Error when checking project status")
-	}
-
-	return resp, nil
-}
-
-// Reset shuts down deployment and deletes the contents of the deployment's
-// project directory
-func (d *Deployment) Reset() (*http.Response, error) {
-	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/reset"
-
-	req, err := http.NewRequest("POST", host, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+d.Auth)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, errors.New("Error when reseting project on deployment")
-	}
-
-	return resp, nil
 }
