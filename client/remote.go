@@ -270,6 +270,10 @@ func getSSHSession(PEM, IP, user string) (*ssh.Session, error) {
 	}
 
 	cfg, err := getSSHConfig(privateKey, user)
+	if err != nil {
+		return nil, err
+	}
+
 	client, err := ssh.Dial("tcp", IP+":22", cfg)
 	if err != nil {
 		return nil, err

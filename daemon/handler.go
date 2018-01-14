@@ -42,7 +42,6 @@ const (
 	// specify common responses here
 	noContainersResp            = "There are currently no active containers."
 	malformedAuthStringErrorMsg = "Malformed authentication string"
-	noAuthTokenErrorMsg         = "Must provide auth token"
 	tokenInvalidErrorMsg        = "Token invalid"
 
 	defaultSecret = "inertia"

@@ -52,7 +52,7 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		// If pull fails, attempt a force pull before returning error
 		log.Println("Pull failed - attempting a fresh clone...")
-		repo, err = common.ForcePull(projectDirectory, repo, auth)
+		_, err = common.ForcePull(projectDirectory, repo, auth)
 		if err != nil {
 			return err
 		}

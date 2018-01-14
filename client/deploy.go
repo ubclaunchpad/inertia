@@ -32,13 +32,6 @@ type Deployment struct {
 	Auth       string
 }
 
-const (
-	daemonUp     = "up"
-	daemonDown   = "down"
-	daemonStatus = "status"
-	daemonReset  = "reset"
-)
-
 // DaemonRequester can make HTTP requests to the daemon.
 type DaemonRequester interface {
 	Up() (*http.Response, error)
