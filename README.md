@@ -3,6 +3,8 @@
 Inertia makes it easy to set up automated deployment for Dockerized
 applications.
 
+[![Coverage Status](https://coveralls.io/repos/github/ubclaunchpad/inertia/badge.svg?branch=master)](https://coveralls.io/github/ubclaunchpad/inertia?branch=master)
+
 ## Installation
 
 ```bash
