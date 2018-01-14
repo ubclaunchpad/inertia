@@ -23,12 +23,14 @@ before_script:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
   - go get honnef.co/go/tools/cmd/megacheck                     # Static analysis
   - go get github.com/fzipp/gocyclo                             # Look for complexity
+  - go get github.com/mattn/goveralls
   - go get -u github.com/golang/dep/cmd/dep
   - dep ensure
 
 # script always run to completion (set +e).
 script:
   - go test -v -race -cover ./...            # Run all the tests with the race detector enabled
-  - go vet ./...                             # go vet is the official Go static analyzer
-  - megacheck ./...                          # "go vet on steroids" + linter
+  - go vet ./...
+  - megacheck ./...
   - gocyclo -over 19 $GO_FILES               # forbid code with huge functions
+  - goveralls -service=travis-ci
