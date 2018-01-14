@@ -51,12 +51,8 @@ func InitializeInertiaProject() error {
 	if err != nil {
 		return err
 	}
-	err = createConfigDirectory()
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return createConfigDirectory()
 }
 
 // createConfigDirectory returns an error if the config directory
@@ -174,13 +170,4 @@ func getConfigFilePath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(path, configFileName), nil
-}
-
-// GetConfigFile returns a config file descriptor for R/W.
-func getConfigFile() (*os.File, error) {
-	path, err := getConfigFilePath()
-	if err != nil {
-		return nil, err
-	}
-	return os.OpenFile(path, os.O_RDWR, os.ModePerm)
 }

@@ -1,0 +1,34 @@
+language: go
+
+go:
+  - 1.9
+  - master 
+
+install: true
+
+matrix:
+  # It's ok if our code fails on unstable development versions of Go.
+  allow_failures:
+    - go: master
+  # Don't wait for tip tests to finish. Mark the test run green if the
+  # tests pass on the stable versions of Go.
+  fast_finish: true
+
+# Don't email me the results of the test runs.
+notifications:
+  email: false
+
+# before_script fails fast (set -e).
+before_script:
+  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
+  - go get honnef.co/go/tools/cmd/megacheck                     # Static analysis
+  - go get github.com/fzipp/gocyclo                             # Look for complexity
+  - go get -u github.com/golang/dep/cmd/dep
+  - dep ensure
+
+# script always run to completion (set +e).
+script:
+  - go test -v -race -cover ./...            # Run all the tests with the race detector enabled
+  - go vet ./...                             # go vet is the official Go static analyzer
+  - megacheck ./...                          # "go vet on steroids" + linter
+  - gocyclo -over 19 $GO_FILES               # forbid code with huge functions

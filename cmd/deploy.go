@@ -196,8 +196,7 @@ func init() {
 		return
 	}
 
-	newCmd := &cobra.Command{}
-	newCmd = deployCmd
+	newCmd := deployCmd
 	newCmd.AddCommand()
 
 	addRemoteCommand(config.CurrentRemoteName, newCmd)

@@ -43,6 +43,9 @@ func CheckForGit(cwd string) error {
 	}
 
 	remotes, err := repo.Remotes()
+	if err != nil {
+		return err
+	}
 
 	// Also fail if no remotes detected.
 	if len(remotes) == 0 {
