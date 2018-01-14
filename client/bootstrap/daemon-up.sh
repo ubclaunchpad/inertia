@@ -29,7 +29,7 @@ mkdir -p $HOME/project
 # It's also recommended,
 # https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
 # As a result, this container has root access on the remote vps.
-sudo docker run -d \
+sudo docker run -d --rm \
     -p "$PORT":8081 \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $HOME:/app/host \
