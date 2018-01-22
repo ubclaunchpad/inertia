@@ -40,7 +40,7 @@ of the VPS. Must run 'inertia init' in your repository before using.
 
 Example:
 
-inerta remote add gcloud 35.123.55.12 -i /Users/path/to/pem
+inerta remote add gcloud
 inerta remote bootstrap gcloud
 inerta remote status gcloud`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -62,7 +62,7 @@ inerta remote status gcloud`,
 
 // addCmd represents the remote add command
 var addCmd = &cobra.Command{
-	Use:   "add",
+	Use:   "add [REMOTE]",
 	Short: "Add a reference to a remote VPS instance",
 	Long: `Add a reference to a remote VPS instance. Requires 
 information about the VPS including IP address, user and a PEM
@@ -77,25 +77,29 @@ file. Specify a VPS name.`,
 
 		port, _ := cmd.Flags().GetString("port")
 
+		homeEnvVar := os.Getenv("HOME")
+		sshDir := filepath.Join(homeEnvVar, ".ssh")
+		defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
+
 		var response string
-		fmt.Printf("Enter location of PEM file: ")
+		fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'): ")
 		_, err = fmt.Scanln(&response)
 		if err != nil {
-			log.Fatal(err)
+			response = defaultSSHLoc
 		}
 		pemLoc := response
 
-		fmt.Printf("Enter IP address of remote: ")
+		fmt.Printf("Enter IP address of remote: \n")
 		_, err = fmt.Scanln(&response)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("That is not a valid IP address - please try again.")
 		}
 		address := response
 
-		fmt.Printf("Enter user: ")
+		fmt.Printf("Enter user: \n")
 		_, err = fmt.Scanln(&response)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("That is not a valid user - please try again.")
 		}
 		user := response
 
@@ -185,10 +189,6 @@ func init() {
 	remoteCmd.AddCommand(addCmd)
 	remoteCmd.AddCommand(statusCmd)
 
-	homeEnvVar := os.Getenv("HOME")
-	sshDir := filepath.Join(homeEnvVar, ".ssh")
-	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
-
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
@@ -198,7 +198,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
-	addCmd.Flags().StringP("user", "u", "root", "User for SSH access")
-	addCmd.Flags().StringP("identity", "i", defaultSSHLoc, "PEM file location")
 	addCmd.Flags().StringP("port", "p", daemon.DefaultPort, "Daemon port")
 }

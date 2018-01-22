@@ -22,6 +22,16 @@ $> inertia init
 
 $> inertia remote add glcoud 35.227.171.49 -u root -i /path/to/my/.ssh/id_rsa
 Remote 'glcoud' added.
+$> inertia remote add gcloud
+Enter location of PEM file (leave blank to use '/Users/yourspecialname/.ssh/id_rsa'):
+/path/to/my/.ssh/id_rsa
+Enter IP address of remote:
+35.227.171.49
+Enter user:
+root
+Remote 'gcloud' added.
+You can now run 'inertia gcloud init' to set this remote
+up for continuous deployment.
 
 $> inertia gcloud init
 Bootstrapping remote
