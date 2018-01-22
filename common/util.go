@@ -55,6 +55,22 @@ func CheckForGit(cwd string) error {
 	return nil
 }
 
+// CheckForDockerCompose returns error if current directory is a
+// not a docker-compose project
+func CheckForDockerCompose(cwd string) error {
+	dockerComposeYML := filepath.Join(cwd, "docker-compose.yml")
+	dockerComposeYAML := filepath.Join(cwd, "docker-compose.yaml")
+	_, err := os.Stat(dockerComposeYML)
+	YMLpresent := os.IsNotExist(err)
+	_, err = os.Stat(dockerComposeYAML)
+	YAMLpresent := os.IsNotExist(err)
+	if YMLpresent && YAMLpresent {
+		return errors.New("this does not appear to be a docker-compose project - currently,\n" +
+			"Inertia only supports docker-compose projects.")
+	}
+	return nil
+}
+
 // GetLocalRepo gets the repo from disk.
 func GetLocalRepo() (*git.Repository, error) {
 	cwd, err := os.Getwd()
