@@ -66,18 +66,40 @@ var addCmd = &cobra.Command{
 	Short: "Add a reference to a remote VPS instance",
 	Long: `Add a reference to a remote VPS instance. Requires 
 information about the VPS including IP address, user and a PEM
-file. Specify a VPS name and an IP address.`,
-	Args: cobra.MinimumNArgs(2),
+file. Specify a VPS name.`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
 		_, err := client.GetProjectConfigFromDisk()
 		if err != nil {
 			log.WithError(err)
 		}
-		user, _ := cmd.Flags().GetString("user")
-		pemLoc, _ := cmd.Flags().GetString("identity")
+
 		port, _ := cmd.Flags().GetString("port")
-		err = client.AddNewRemote(args[0], args[1], user, pemLoc, port)
+
+		var response string
+		fmt.Printf("Enter location of PEM file: ")
+		_, err = fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pemLoc := response
+
+		fmt.Printf("Enter IP address of remote: ")
+		_, err = fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		address := response
+
+		fmt.Printf("Enter user: ")
+		_, err = fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		user := response
+
+		err = client.AddNewRemote(args[0], address, user, pemLoc, port)
 		if err != nil {
 			log.WithError(err)
 		}
