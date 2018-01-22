@@ -1,6 +1,8 @@
 package common
 
 import (
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,4 +25,24 @@ func TestGetSSHRemoteURL(t *testing.T) {
 
 	assert.Equal(t, sshURL, GetSSHRemoteURL(httpsURL))
 	assert.Equal(t, sshURL, GetSSHRemoteURL(sshURL))
+}
+
+func TestCheckForGit(t *testing.T) {
+	cwd, _ := os.Getwd()
+	assert.NotEqual(t, nil, CheckForGit(cwd))
+	inertia := strings.TrimSuffix(cwd, "/common")
+	assert.Equal(t, nil, CheckForGit(inertia))
+}
+
+func TestCheckForDockerCompose(t *testing.T) {
+	cwd, _ := os.Getwd()
+	assert.NotEqual(t, nil, CheckForDockerCompose(cwd))
+	file, _ := os.Create(cwd + "/docker-compose.yml")
+	file.Close()
+	assert.Equal(t, nil, CheckForDockerCompose(cwd))
+	os.Remove(cwd + "/docker-compose.yml")
+	file, _ = os.Create(cwd + "/docker-compose.yaml")
+	file.Close()
+	assert.Equal(t, nil, CheckForDockerCompose(cwd))
+	os.Remove(cwd + "/docker-compose.yaml")
 }

@@ -51,6 +51,10 @@ func InitializeInertiaProject() error {
 	if err != nil {
 		return err
 	}
+	err = common.CheckForDockerCompose(cwd)
+	if err != nil {
+		return err
+	}
 
 	return createConfigDirectory()
 }
