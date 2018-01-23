@@ -51,6 +51,10 @@ func InitializeInertiaProject() error {
 	if err != nil {
 		return err
 	}
+	err = common.CheckForDockerCompose(cwd)
+	if err != nil {
+		return err
+	}
 
 	return createConfigDirectory()
 }
@@ -69,10 +73,10 @@ func createConfigDirectory() error {
 	}
 
 	_, dirErr := os.Stat(configDirPath)
-	_, fileErr := os.Stat(configFilePath)
+	s, fileErr := os.Stat(configFilePath)
 
 	// Check if everything already exists.
-	if os.IsExist(dirErr) && os.IsExist(fileErr) {
+	if s != nil {
 		return errors.New("inertia already properly configured in this folder")
 	}
 
