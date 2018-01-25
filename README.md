@@ -20,8 +20,19 @@ Inside of a git repository, run the following:
 ```bash
 $> inertia init
 
-$> inertia remote add glcoud 35.227.171.49 -u root -i /path/to/my/.ssh/id_rsa
-Remote 'glcoud' added.
+$> inertia remote add gcloud
+Enter location of PEM file (leave blank to use '/Users/yourspecialname/.ssh/id_rsa'):
+/path/to/my/.ssh/id_rsa
+Enter user:
+root
+Enter IP address of remote:
+35.227.171.49
+Port 8081 will be used as the daemon port.
+Run this 'inertia remote add' with the -p flag to set a custom port.
+
+Remote 'gcloud' has been added!
+You can now run 'inertia gcloud init' to set this remote up
+for continuous deployment.
 
 $> inertia gcloud init
 Bootstrapping remote

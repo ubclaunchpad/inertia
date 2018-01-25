@@ -40,7 +40,7 @@ of the VPS. Must run 'inertia init' in your repository before using.
 
 Example:
 
-inerta remote add gcloud 35.123.55.12 -i /Users/path/to/pem
+inerta remote add gcloud
 inerta remote bootstrap gcloud
 inerta remote status gcloud`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -62,25 +62,57 @@ inerta remote status gcloud`,
 
 // addCmd represents the remote add command
 var addCmd = &cobra.Command{
-	Use:   "add",
+	Use:   "add [REMOTE]",
 	Short: "Add a reference to a remote VPS instance",
 	Long: `Add a reference to a remote VPS instance. Requires 
 information about the VPS including IP address, user and a PEM
-file. Specify a VPS name and an IP address.`,
-	Args: cobra.MinimumNArgs(2),
+file. Specify a VPS name.`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
 		_, err := client.GetProjectConfigFromDisk()
 		if err != nil {
 			log.WithError(err)
 		}
-		user, _ := cmd.Flags().GetString("user")
-		pemLoc, _ := cmd.Flags().GetString("identity")
+
 		port, _ := cmd.Flags().GetString("port")
-		err = client.AddNewRemote(args[0], args[1], user, pemLoc, port)
+
+		homeEnvVar := os.Getenv("HOME")
+		sshDir := filepath.Join(homeEnvVar, ".ssh")
+		defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
+
+		var response string
+		fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'):")
+		_, err = fmt.Scanln(&response)
+		if err != nil {
+			response = defaultSSHLoc
+		}
+		pemLoc := response
+
+		fmt.Println("Enter user:")
+		_, err = fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal("That is not a valid user - please try again.")
+		}
+		user := response
+
+		fmt.Println("Enter IP address of remote:")
+		_, err = fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal("That is not a valid IP address - please try again.")
+		}
+		address := response
+		fmt.Println("Port " + port + " will be used as the daemon port.")
+		fmt.Println("Run this 'inertia remote add' with the -p flag to set a custom port.")
+
+		err = client.AddNewRemote(args[0], address, user, pemLoc, port)
 		if err != nil {
 			log.WithError(err)
 		}
+
+		fmt.Println("\nRemote '" + args[0] + "' has been added!")
+		fmt.Println("You can now run 'inertia " + args[0] + " init' to set this remote up")
+		fmt.Println("for continuous deployment.")
 	},
 }
 
@@ -163,10 +195,6 @@ func init() {
 	remoteCmd.AddCommand(addCmd)
 	remoteCmd.AddCommand(statusCmd)
 
-	homeEnvVar := os.Getenv("HOME")
-	sshDir := filepath.Join(homeEnvVar, ".ssh")
-	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
-
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
@@ -176,7 +204,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
-	addCmd.Flags().StringP("user", "u", "root", "User for SSH access")
-	addCmd.Flags().StringP("identity", "i", defaultSSHLoc, "PEM file location")
 	addCmd.Flags().StringP("port", "p", daemon.DefaultPort, "Daemon port")
 }
