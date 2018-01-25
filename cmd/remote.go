@@ -82,31 +82,37 @@ file. Specify a VPS name.`,
 		defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
 
 		var response string
-		fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'): ")
+		fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'):")
 		_, err = fmt.Scanln(&response)
 		if err != nil {
 			response = defaultSSHLoc
 		}
 		pemLoc := response
 
-		fmt.Printf("Enter IP address of remote: \n")
-		_, err = fmt.Scanln(&response)
-		if err != nil {
-			log.Fatal("That is not a valid IP address - please try again.")
-		}
-		address := response
-
-		fmt.Printf("Enter user: \n")
+		fmt.Println("Enter user:")
 		_, err = fmt.Scanln(&response)
 		if err != nil {
 			log.Fatal("That is not a valid user - please try again.")
 		}
 		user := response
 
+		fmt.Println("Enter IP address of remote:")
+		_, err = fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal("That is not a valid IP address - please try again.")
+		}
+		address := response
+		fmt.Println("Port " + port + " will be used as the daemon port.")
+		fmt.Println("Run this 'inertia remote add' with the -p flag to set a custom port.")
+
 		err = client.AddNewRemote(args[0], address, user, pemLoc, port)
 		if err != nil {
 			log.WithError(err)
 		}
+
+		fmt.Println("\nRemote '" + args[0] + "' has been added!")
+		fmt.Println("You can now run 'inertia " + args[0] + " init' to set this remote up")
+		fmt.Println("for continuous deployment.")
 	},
 }
 

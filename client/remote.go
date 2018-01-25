@@ -255,10 +255,6 @@ func AddNewRemote(name, IP, user, pemLoc, port string) error {
 		return err
 	}
 
-	println("Remote '" + name + "' added.")
-	println("You can now run 'inertia " + name + " init' to set this remote")
-	println("up for continuous deployment.")
-
 	return nil
 }
 
