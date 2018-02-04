@@ -119,5 +119,4 @@ func TestInstrumentedBootstrap(t *testing.T) {
 	var writer bytes.Buffer
 	err := remote.Bootstrap(session, "testvps", &Config{Writer: &writer})
 	assert.Nil(t, err)
-	// TODO: Check if success
 }

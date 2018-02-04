@@ -209,5 +209,5 @@ func init() {
 	// is called directly, e.g.:
 	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("port", "p", daemon.DefaultPort, "Daemon port")
-	addCmd.Flags().StringP("sshPort", "ssh", "22", "SSH port")
+	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }

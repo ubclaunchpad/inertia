@@ -136,7 +136,8 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 ### Testing
 
 ```bash
-make test
+make test                                     # test ubuntu:16.04
+make test VPS_OS=ubuntu UBUNTU_VERSION=latest # test ubuntu:latest
 ```
 
 ## Motivation

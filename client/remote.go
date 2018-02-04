@@ -253,11 +253,7 @@ func AddNewRemote(name, IP, sshPort, user, pemLoc, port string) error {
 	}
 
 	_, err = config.Write()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // Stubbed out for testing.
