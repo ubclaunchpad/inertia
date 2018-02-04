@@ -35,7 +35,7 @@ before_script:
   - go get github.com/mattn/goveralls
   - go get -u github.com/golang/dep/cmd/dep
   - dep ensure
-  - if [ "$TEST_OS" = "UBUNTU" ]; then make testenv-ubuntu UBUNTU_VERSION="$UBUNTU_VERSION"; fi
+  - if [ "$TEST_OS" = "ubuntu" ]; then make testenv-ubuntu UBUNTU_VERSION="$UBUNTU_VERSION"; fi
 
 # script always run to completion (set +e).
 script:

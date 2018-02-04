@@ -11,20 +11,20 @@ import (
 
 func getTestRemote() *RemoteVPS {
 	return &RemoteVPS{
-		IP:   "127.0.0.1",
-		PEM:  "/Users/me/and/my/pem",
-		User: "me",
-		Port: "5555",
+		IP:         "127.0.0.1",
+		PEM:        "/Users/me/and/my/pem",
+		User:       "me",
+		DaemonPort: "5555",
 	}
 }
 
 func getInstrumentedTestRemote() *RemoteVPS {
 	return &RemoteVPS{
-		IP:      "0.0.0.0",
-		SSHPort: "22",
-		PEM:     "../test_env/test_key",
-		User:    "root",
-		Port:    "8081",
+		IP:         "0.0.0.0",
+		SSHPort:    "22",
+		PEM:        "../test_env/test_key",
+		User:       "root",
+		DaemonPort: "8081",
 	}
 }
 

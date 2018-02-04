@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -77,6 +76,7 @@ file. Specify a VPS name.`,
 		}
 
 		port, _ := cmd.Flags().GetString("port")
+		sshPort, _ := cmd.Flags().GetString("sshPort")
 
 		homeEnvVar := os.Getenv("HOME")
 		sshDir := filepath.Join(homeEnvVar, ".ssh")
@@ -97,21 +97,17 @@ file. Specify a VPS name.`,
 		}
 		user := response
 
-		fmt.Println("Enter IP address of remote (include SSH port if not standard '22'):")
+		fmt.Println("Enter IP address of remote:")
 		_, err = fmt.Scanln(&response)
 		if err != nil {
 			log.Fatal("That is not a valid IP address - please try again.")
 		}
 		address := response
-		sshPort := "22"
-		if strings.Contains(address, ":") {
-			addressComponents := strings.Split(address, ":")
-			address = addressComponents[0]
-			sshPort = addressComponents[1]
-		}
 
 		fmt.Println("Port " + port + " will be used as the daemon port.")
-		fmt.Println("Run 'inertia remote add' with the -p flag to set a custom port.")
+		fmt.Println("Port " + sshPort + " will be used as the SSH port.")
+		fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
+		fmt.Println("of the -ssh flag to set a custom SSH port.")
 
 		err = client.AddNewRemote(args[0], address, sshPort, user, pemLoc, port)
 		if err != nil {
@@ -213,4 +209,5 @@ func init() {
 	// is called directly, e.g.:
 	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("port", "p", daemon.DefaultPort, "Daemon port")
+	addCmd.Flags().StringP("sshPort", "ssh", "22", "SSH port")
 }

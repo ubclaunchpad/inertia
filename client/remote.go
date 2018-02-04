@@ -27,11 +27,11 @@ import (
 
 // RemoteVPS contains parameters for the VPS
 type RemoteVPS struct {
-	User    string
-	IP      string
-	SSHPort string
-	PEM     string
-	Port    string
+	User       string
+	IP         string
+	SSHPort    string
+	PEM        string
+	DaemonPort string
 }
 
 // SSHSession can run remote commands over SSH
@@ -82,7 +82,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	if err != nil {
 		return err
 	}
-	err = remote.DaemonUp(runner, remote.Port)
+	err = remote.DaemonUp(runner, remote.DaemonPort)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println("http://" + remote.IP + ":" + remote.Port)
+	println("http://" + remote.IP + ":" + remote.DaemonPort)
 	println("Github WebHook Secret: " + common.DefaultSecret + "\n")
 
 	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
@@ -132,7 +132,7 @@ func (remote *RemoteVPS) GetHost() string {
 
 // GetIPAndPort creates the IP:Port string.
 func (remote *RemoteVPS) GetIPAndPort() string {
-	return remote.IP + ":" + remote.Port
+	return remote.IP + ":" + remote.DaemonPort
 }
 
 // RunSSHCommand runs a command remotely.
@@ -245,11 +245,11 @@ func AddNewRemote(name, IP, sshPort, user, pemLoc, port string) error {
 
 	config.CurrentRemoteName = name
 	config.CurrentRemoteVPS = &RemoteVPS{
-		IP:      IP,
-		SSHPort: sshPort,
-		User:    user,
-		PEM:     pemLoc,
-		Port:    port,
+		IP:         IP,
+		SSHPort:    sshPort,
+		User:       user,
+		PEM:        pemLoc,
+		DaemonPort: port,
 	}
 
 	_, err = config.Write()

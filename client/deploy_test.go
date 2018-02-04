@@ -24,10 +24,10 @@ func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, err
 	url := strings.Trim(wholeURL[1], "/")
 	port := wholeURL[2]
 	mockRemote := &RemoteVPS{
-		User: "",
-		IP:   url,
-		PEM:  "",
-		Port: port,
+		User:       "",
+		IP:         url,
+		PEM:        "",
+		DaemonPort: port,
 	}
 	mockRepo, err := git.Init(s, nil)
 	if err != nil {
