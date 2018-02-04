@@ -39,3 +39,5 @@ if !(hash docker 2>/dev/null); then
         sh $DOCKER_DEST
     fi
 fi
+
+sudo service docker start

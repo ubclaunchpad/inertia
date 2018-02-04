@@ -1,4 +1,4 @@
-.PHONY: test test-verbose test-profile test-race clean docker bootstrap
+.PHONY: test test-verbose test-profile test-env clean docker bootstrap
 
 PACKAGES = `go list ./... | grep -v vendor/`
 
@@ -13,8 +13,10 @@ test:
 test-verbose:
 	go test $(PACKAGES) -v --cover
 
-test-race:
-	go test $(PACKAGES) -race --cover
+test-env:
+	docker build -t sshvps -f ./test_env/Dockerfile.sshvps ./test_env
+	docker run --rm -d -p 22:22 -p 8081:8081 --name testvps --privileged sshvps
+	bash ./test_env/info.sh
 
 clean: inertia
 	rm -f inertia

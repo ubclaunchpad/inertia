@@ -25,12 +25,13 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-//
+// RemoteVPS contains parameters for the VPS
 type RemoteVPS struct {
-	User string
-	IP   string
-	PEM  string
-	Port string
+	User    string
+	IP      string
+	SSHPort string
+	PEM     string
+	Port    string
 }
 
 // SSHSession can run remote commands over SSH
@@ -50,7 +51,7 @@ func NewSSHRunner(r *RemoteVPS) *SSHRunner {
 
 // Run runs a command remotely.
 func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
-	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.User)
+	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.SSHPort, runner.r.User)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -152,7 +153,7 @@ func (remote *RemoteVPS) InstallDocker(session SSHSession) error {
 	cmdStr := string(installDockerSh)
 	_, stderr, err := remote.RunSSHCommand(session, cmdStr)
 	if err != nil {
-		println(stderr)
+		println(stderr.String())
 		return err
 	}
 
@@ -235,7 +236,7 @@ func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
 }
 
 // AddNewRemote adds a new remote to the project config file.
-func AddNewRemote(name, IP, user, pemLoc, port string) error {
+func AddNewRemote(name, IP, sshPort, user, pemLoc, port string) error {
 	// Just wipe configuration for MVP.
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {
@@ -244,10 +245,11 @@ func AddNewRemote(name, IP, user, pemLoc, port string) error {
 
 	config.CurrentRemoteName = name
 	config.CurrentRemoteVPS = &RemoteVPS{
-		IP:   IP,
-		User: user,
-		PEM:  pemLoc,
-		Port: port,
+		IP:      IP,
+		SSHPort: sshPort,
+		User:    user,
+		PEM:     pemLoc,
+		Port:    port,
 	}
 
 	_, err = config.Write()
@@ -259,7 +261,7 @@ func AddNewRemote(name, IP, user, pemLoc, port string) error {
 }
 
 // Stubbed out for testing.
-func getSSHSession(PEM, IP, user string) (*ssh.Session, error) {
+func getSSHSession(PEM, IP, sshPort, user string) (*ssh.Session, error) {
 	privateKey, err := ioutil.ReadFile(PEM)
 	if err != nil {
 		return nil, err
@@ -270,7 +272,7 @@ func getSSHSession(PEM, IP, user string) (*ssh.Session, error) {
 		return nil, err
 	}
 
-	client, err := ssh.Dial("tcp", IP+":22", cfg)
+	client, err := ssh.Dial("tcp", IP+":"+sshPort, cfg)
 	if err != nil {
 		return nil, err
 	}

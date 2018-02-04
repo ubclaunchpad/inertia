@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -96,16 +97,23 @@ file. Specify a VPS name.`,
 		}
 		user := response
 
-		fmt.Println("Enter IP address of remote:")
+		fmt.Println("Enter IP address of remote (include SSH port if not standard '22'):")
 		_, err = fmt.Scanln(&response)
 		if err != nil {
 			log.Fatal("That is not a valid IP address - please try again.")
 		}
 		address := response
-		fmt.Println("Port " + port + " will be used as the daemon port.")
-		fmt.Println("Run this 'inertia remote add' with the -p flag to set a custom port.")
+		sshPort := "22"
+		if strings.Contains(address, ":") {
+			addressComponents := strings.Split(address, ":")
+			address = addressComponents[0]
+			sshPort = addressComponents[1]
+		}
 
-		err = client.AddNewRemote(args[0], address, user, pemLoc, port)
+		fmt.Println("Port " + port + " will be used as the daemon port.")
+		fmt.Println("Run 'inertia remote add' with the -p flag to set a custom port.")
+
+		err = client.AddNewRemote(args[0], address, sshPort, user, pemLoc, port)
 		if err != nil {
 			log.WithError(err)
 		}
