@@ -2,7 +2,7 @@
 
 PACKAGES = `go list ./... | grep -v vendor/`
 SSH_PORT = 22
-UBUNTU_VERSION = 16.04
+VERSION = latest
 VPS_OS = ubuntu
 
 all: inertia
@@ -11,18 +11,18 @@ inertia:
 	go build
 
 test:
-	make testenv-$(VPS_OS) VERSION=$(UBUNTU_VERSION)
+	make testenv-$(VPS_OS) VERSION=$(VERSION)
 	go test $(PACKAGES) --cover
 
 test-verbose:
-	make testenv-$(VPS_OS) VERSION=$(UBUNTU_VERSION)	
+	make testenv-$(VPS_OS) VERSION=$(VERSION)	
 	go test $(PACKAGES) -v --cover
 
 testenv-ubuntu:
-	docker stop testenv || true && docker rm rabbitmq || true
+	docker stop testvps || true && docker rm testvps || true
 	docker build -f ./test_env/Dockerfile.ubuntu \
 		-t ubuntuvps \
-		--build-arg VERSION=$(UBUNTU_VERSION) \
+		--build-arg VERSION=$(VERSION) \
 		./test_env
 	docker run --rm -d \
 		-p $(SSH_PORT):22 -p 8081:8081 \
