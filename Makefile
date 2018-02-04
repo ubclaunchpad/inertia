@@ -17,7 +17,6 @@ test-verbose:
 	go test $(PACKAGES) -v --cover
 
 testenv-ubuntu:
-	docker kill testvps
 	docker build -f ./test_env/Dockerfile.ubuntu \
 		-t ubuntuvps \
 		--build-arg VERSION=$(UBUNTU_VERSION) \

@@ -9,11 +9,13 @@ install: true
 services:
   - docker
 
+# Test different VPS platforms we want to support
+env:
+  - TEST_OS=ubuntu UBUNTU_VERSION=16.04
+  - TEST_OS=ubuntu UBUNTU_VERSION=14.04
+  - TEST_OS=ubuntu UBUNTU_VERSION=latest
+
 matrix:
-  # Test different VPS platforms we want to support
-  include:
-    - env: TEST_OS=ubuntu UBUNTU_VERSION=16.04
-    - env: TEST_OS=ubuntu UBUNTU_VERSION=14.04
   # It's ok if our code fails on unstable development versions of Go
   # and/or VPS platforms
   allow_failures:
