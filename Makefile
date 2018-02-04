@@ -1,6 +1,7 @@
 .PHONY: test test-verbose test-profile testenv-ubuntu clean docker bootstrap
 
 PACKAGES = `go list ./... | grep -v vendor/`
+SSH_PORT = 22
 UBUNTU_VERSION = 16.04
 
 all: inertia
@@ -22,7 +23,7 @@ testenv-ubuntu:
 		--build-arg VERSION=$(UBUNTU_VERSION) \
 		./test_env
 	docker run --rm -d \
-		-p 22:22 -p 8081:8081 \
+		-p $(SSH_PORT):22 -p 8081:8081 \
 		--name testvps \
 		--privileged \
 		ubuntuvps

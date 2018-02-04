@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,13 +20,19 @@ func getTestRemote() *RemoteVPS {
 }
 
 func getInstrumentedTestRemote() *RemoteVPS {
-	return &RemoteVPS{
+	remote := &RemoteVPS{
 		IP:         "0.0.0.0",
-		SSHPort:    "22",
 		PEM:        "../test_env/test_key",
 		User:       "root",
 		DaemonPort: "8081",
 	}
+	travis := os.Getenv("TRAVIS")
+	if travis != "" {
+		remote.SSHPort = "69"
+	} else {
+		remote.SSHPort = "22"
+	}
+	return remote
 }
 
 // SSHRunner runs commands over SSH and captures results.
