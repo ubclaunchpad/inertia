@@ -42,7 +42,7 @@ of the VPS. Must run 'inertia init' in your repository before using.
 Example:
 
 inerta remote add gcloud
-inerta remote bootstrap gcloud
+inerta gcloud init
 inerta remote status gcloud`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")

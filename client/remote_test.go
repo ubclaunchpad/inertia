@@ -18,6 +18,16 @@ func getTestRemote() *RemoteVPS {
 	}
 }
 
+func getInstrumentedTestRemote() *RemoteVPS {
+	return &RemoteVPS{
+		IP:      "0.0.0.0",
+		SSHPort: "22",
+		PEM:     "../test_env/test_key",
+		User:    "root",
+		Port:    "8081",
+	}
+}
+
 // SSHRunner runs commands over SSH and captures results.
 type mockSSHRunner struct {
 	r        *RemoteVPS
@@ -94,4 +104,13 @@ func TestBootstrap(t *testing.T) {
 	// Just check last call.
 	assert.Nil(t, err)
 	assert.Equal(t, session.LastCall, string(script))
+}
+
+func TestInstrumentedBootstrap(t *testing.T) {
+	remote := getInstrumentedTestRemote()
+	session := NewSSHRunner(remote)
+	var writer bytes.Buffer
+	err := remote.Bootstrap(session, "testvps", &Config{Writer: &writer})
+	assert.Nil(t, err)
+	// TODO: Check if success
 }

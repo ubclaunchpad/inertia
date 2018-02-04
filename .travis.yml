@@ -6,10 +6,19 @@ go:
 
 install: true
 
+services:
+  - docker
+
 matrix:
-  # It's ok if our code fails on unstable development versions of Go.
+  # Test different VPS platforms we want to support
+  include:
+    - env: TEST_OS=ubuntu UBUNTU_VERSION=16.04
+    - env: TEST_OS=ubuntu UBUNTU_VERSION=14.04
+  # It's ok if our code fails on unstable development versions of Go
+  # and/or VPS platforms
   allow_failures:
     - go: master
+    - env: TEST_OS=ubuntu UBUNTU_VERSION=latest
   # Don't wait for tip tests to finish. Mark the test run green if the
   # tests pass on the stable versions of Go.
   fast_finish: true
@@ -26,6 +35,7 @@ before_script:
   - go get github.com/mattn/goveralls
   - go get -u github.com/golang/dep/cmd/dep
   - dep ensure
+  - if [ "$TEST_OS" = "UBUNTU" ]; then make testenv-ubuntu UBUNTU_VERSION="$UBUNTU_VERSION"; fi
 
 # script always run to completion (set +e).
 script:

@@ -1,6 +1,7 @@
-.PHONY: test test-verbose test-profile test-env clean docker bootstrap
+.PHONY: test test-verbose test-profile testenv-ubuntu clean docker bootstrap
 
 PACKAGES = `go list ./... | grep -v vendor/`
+UBUNTU_VERSION = 16.04
 
 all: inertia
 
@@ -8,14 +9,24 @@ inertia:
 	go build
 
 test:
+	make testenv-ubuntu VERSION=$(UBUNTU_VERSION)
 	go test $(PACKAGES) --cover
 
 test-verbose:
+	make testenv-ubuntu VERSION=$(UBUNTU_VERSION)	
 	go test $(PACKAGES) -v --cover
 
-test-env:
-	docker build -t sshvps -f ./test_env/Dockerfile.sshvps ./test_env
-	docker run --rm -d -p 22:22 -p 8081:8081 --name testvps --privileged sshvps
+testenv-ubuntu:
+	docker kill testvps
+	docker build -f ./test_env/Dockerfile.ubuntu \
+		-t ubuntuvps \
+		--build-arg VERSION=$(UBUNTU_VERSION) \
+		./test_env
+	docker run --rm -d \
+		-p 22:22 -p 8081:8081 \
+		--name testvps \
+		--privileged \
+		ubuntuvps
 	bash ./test_env/info.sh
 
 clean: inertia
