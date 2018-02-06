@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
 
@@ -118,5 +119,14 @@ func TestInstrumentedBootstrap(t *testing.T) {
 	session := NewSSHRunner(remote)
 	var writer bytes.Buffer
 	err := remote.Bootstrap(session, "testvps", &Config{Writer: &writer})
+	assert.Nil(t, err)
+
+	// Check if daemon is online following bootstrap
+	host := "http://" + remote.GetIPAndPort()
+	resp, err := http.Get(host)
+	assert.Nil(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+	defer resp.Body.Close()
+	_, err = ioutil.ReadAll(resp.Body)
 	assert.Nil(t, err)
 }

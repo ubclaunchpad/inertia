@@ -49,6 +49,7 @@ const (
 
 // healthCheckHandler returns a 200 if the daemon is happy.
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, common.DaemonOkResp)
 }
 
