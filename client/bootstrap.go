@@ -127,7 +127,7 @@ func clientBootstrapDockerSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/docker.sh", size: 989, mode: os.FileMode(493), modTime: time.Unix(1517770112, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/docker.sh", size: 989, mode: os.FileMode(493), modTime: time.Unix(1517974712, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

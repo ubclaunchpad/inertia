@@ -26,6 +26,14 @@ testenv-ubuntu:
 		./test_env
 	bash ./test_env/startvps.sh $(SSH_PORT) ubuntuvps
 
+testenv-centos:
+	docker stop testvps || true && docker rm testvps || true
+	docker build -f ./test_env/Dockerfile.centos \
+		-t centosvps \
+		--build-arg VERSION=$(VERSION) \
+		./test_env
+	bash ./test_env/startvps.sh $(SSH_PORT) centosvps
+
 clean: inertia
 	rm -f inertia
 

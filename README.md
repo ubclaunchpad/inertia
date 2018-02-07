@@ -17,7 +17,7 @@
       alt="Coverage Status" />
   </a>
 
-  <img src="https://img.shields.io/badge/VPS%20platforms-ubuntu-blue.svg" />
+  <img src="https://img.shields.io/badge/VPS%20platforms-Ubuntu%2014.04%2F16.04%20%7C%20CentOS%207-blue.svg" />
 </p>
 
 ----------------
