@@ -40,7 +40,7 @@ before_script:
   - go get github.com/mattn/goveralls
   - go get -u github.com/golang/dep/cmd/dep
   - dep ensure
-  - if [ "$VPS_OS" = "ubuntu" ]; then make testenv-ubuntu VERSION="$VERSION" SSH_PORT=69; fi
+  - make testenv-"$VPS_OS" VERSION="$VERSION" SSH_PORT=69
 
 # script always run to completion (set +e).
 script:
