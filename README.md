@@ -27,7 +27,7 @@ Inertia is a cross-platform command line tool that aims to simplify setup and ma
 ## Installation
 
 ```bash
-go get -u github.com/ubclauncpad/inertia
+go get -u github.com/ubclaunchpad/inertia
 ```
 
 Alternatively, you can download Inertia executables from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page.
