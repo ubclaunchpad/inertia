@@ -1,9 +1,28 @@
-# 👩‍🚀 Inertia
+<p>
+  <h1 align="center"> 👩‍🚀 Inertia </h1>
+</p>
 
-Inertia makes it easy to set up automated deployment for Dockerized
-applications.
+<p align="center">
+  Simple, self-hosted continuous deployment.
+</p>
 
-[![Build Status](https://travis-ci.org/ubclaunchpad/inertia.svg?branch=master)](https://travis-ci.org/ubclaunchpad/inertia)[![Coverage Status](https://coveralls.io/repos/github/ubclaunchpad/inertia/badge.svg?branch=master)](https://coveralls.io/github/ubclaunchpad/inertia?branch=master)
+<p align="center">
+  <a href="https://travis-ci.org/ubclaunchpad/inertia">
+    <img src="https://travis-ci.org/ubclaunchpad/inertia.svg?branch=master"
+      alt="Built Status" />
+  </a>
+
+  <a href="https://coveralls.io/github/ubclaunchpad/inertia?branch=master">
+    <img src="https://coveralls.io/repos/github/ubclaunchpad/inertia/badge.svg?branch=master"
+      alt="Coverage Status" />
+  </a>
+
+  <img src="https://img.shields.io/badge/VPS%20platforms-ubuntu-blue.svg" />
+</p>
+
+----------------
+
+Inertia is a cross-platform command line tool that aims to simplify setup and management of automated deployment for docker-compose projects on any virtual private server.
 
 ## Installation
 
@@ -11,11 +30,11 @@ applications.
 go get -u github.com/ubclauncpad/inertia
 ```
 
-Alternatively, you can download Inertia from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page.
+Alternatively, you can download Inertia executables from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page.
 
 ## Usage
 
-Inside of a git repository, run the following:
+Inside of a git repository, simply running the following commands to initialize Inertia and add a remote VPS:
 
 ```bash
 $> inertia init
@@ -33,7 +52,11 @@ Run this 'inertia remote add' with the -p flag to set a custom port.
 Remote 'gcloud' has been added!
 You can now run 'inertia gcloud init' to set this remote up
 for continuous deployment.
+```
 
+After adding a remote, you can now bring the Inertia daemon online:
+
+```bash
 $> inertia gcloud init
 Bootstrapping remote
 Installing docker
@@ -56,18 +79,14 @@ $> inertia remote status gcloud
 Remote instance 'gcloud' accepting requests at http://myhost.com:8081
 ```
 
-A daemon is now running on your remote instance - but your application is not yet
-continuously deployed.
+A daemon is now running on your remote instance - but your application is not yet continuously deployed.
 
 The output of `inertia [REMOTE] init` has given you two important pieces of information:
 
-1. A deploy key. The Inertia daemon requires readonly access to your GitHub repository.
-   Add it to your GitHub repository settings at the URL provided in the output.
-2. A GitHub webhook URL. The daemon will accept POST requests from GitHub at the URL
-   provided. Again, add this webhook URL in your GitHub settings area (at the URL
-   provided).
+1. A deploy key. The Inertia daemon requires readonly access to your GitHub repository. Add it to your GitHub repository settings at the URL provided in the output.
+2. A GitHub webhook URL. The daemon will accept POST requests from GitHub at the URL provided. Again, add this webhook URL in your GitHub settings area (at the URL provided).
 
-After adding these pieces of information to your GitHub settings,
+After adding these pieces of information to your GitHub settings, the Inertia daemon will automatically deploy any changes you make to your repository's default branch. You can also manually manage your project's deployment through the CLI:
 
 ```bash
 $> inertia gcloud up
@@ -89,42 +108,32 @@ $> inertia gcloud down
 
 ### Dependencies
 
-We use [dep](https://github.com/golang/dep) for managing dependencies. Install
-that first if you haven't already.
-
-```
-brew install dep
-```
-
-Install project dependencies.
+We use [dep](https://github.com/golang/dep) for managing dependencies.
 
 ```bash
-dep ensure
+$> brew install dep
+$> dep ensure
 ```
 
-### Bootstrapping
+### Compiling Bash Scripts
 
-To bootstrap servers, often some bash scripting is involved,
-but we'd like to avoid shipping bash scripts with our go binary.
-So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to
-compile shell scripts into our go executables.
+To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary. So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our go executables.
 
 ```bash
-go get -u github.com/jteeuwen/go-bindata/...
+$> go get -u github.com/jteeuwen/go-bindata/...
 ```
 
 If you make changes to the bootstrapping shell scripts in
-`client/bootstrap/`, convert them to `Assets` by running.
+`client/bootstrap/`, convert them to `Assets` by running:
 
 ```bash
-make bootstrap
+$> make bootstrap
 ```
 
 Then use your asset!
 
 ```go
 shellScriptData, err := Asset("cmd/bootstrap/myshellscript.sh")
-
 if err != nil {
   log.Fatal("No asset with that name")
 }
@@ -136,39 +145,41 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 ### Testing
 
 ```bash
-make test                              # test ubuntu:latest
-make test VPS_OS=ubuntu VERSION=14:04  # test ubuntu:14.04
+$> make test                              # test against ubuntu:latest
+$> make test VPS_OS=ubuntu VERSION=14:04  # test against ubuntu:14.04
 ```
 
-## Motivation
+You can also start a container that sets up a mock VPS for testing:
 
-At Launch Pad we are frequently changing hosting providers based on available
-funding and sponsorship. Inertia is a project to develop an in-house continuous
-deployment system to make deploying applications simple and painless, regardless
-of the hosting provider.
+```bash
+$> go install
+$> make testenv-ubuntu
+# note the location of the key that is printed
+```
 
-## Design
+You can treat this container just as you would treat a real VPS:
 
-Inertia will contain two major components:
+```bash
+$> cd /path/to/my/dockercompose/project
+$> inertia init
+$> inertia remote add local
+# PEM file: /test_env/test_key, User: 'root', Address: 0.0.0.0
+$> inertia local init
+$> inertia remote status local
+Remote instance 'local' accepting requests at http://0.0.0.0:8081
+```
+
+### Motivation and Design
+
+At Launch Pad we are frequently changing hosting providers based on available funding and sponsorship. Inertia is a project to develop an in-house continuous deployment system to make deploying applications simple and painless, regardless of the hosting provider.
+
+Inertia contains two major components:
 
 * Deployment daemon
 * Command line interface
 
-The deployment daemon will run persistently in the background, receiving webhook
-events from GitHub whenever new commits are pushed. The CLI will provide an
-interface to adjust settings, add repositories, etc.
+The deployment daemon will run persistently in the background, receiving webhook events from GitHub whenever new commits are pushed. The CLI will provide an interface to adjust settings, add repositories, etc.
 
-This design differs from other similar tools because Inertia runs on the same
-server as the project it is deploying.
+This design differs from other similar tools because Inertia runs on the same server as the project it is deploying.
 
-## Setup
-
-A primary design goal of Inertia is to minimize setup time for new projects. The
-current setup flow is:
-
-* Install and run Inertia on a new server
-* Inertia will generate:
-  * A SSH public key
-  * A webhook URL and secret
-* Add the SSH key to your project's Deploy Keys on GitHub
-* Create a webhook with the URL and secret on your project repository
+Another primary design goal of Inertia is to minimize setup time for new projects and maximize compatibility across different client and VPS platforms.

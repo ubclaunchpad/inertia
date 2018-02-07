@@ -24,12 +24,7 @@ testenv-ubuntu:
 		-t ubuntuvps \
 		--build-arg VERSION=$(VERSION) \
 		./test_env
-	docker run --rm -d \
-		-p $(SSH_PORT):22 -p 8081:8081 \
-		--name testvps \
-		--privileged \
-		ubuntuvps
-	bash ./test_env/info.sh
+	bash ./test_env/startvps.sh $(SSH_PORT) ubuntuvps
 
 clean: inertia
 	rm -f inertia
