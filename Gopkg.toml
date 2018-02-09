@@ -7,13 +7,5 @@
   name = "github.com/google/go-github"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/bramvdbogaerde/go-scp"
-
-[[constraint]]
-  name = "gopkg.in/sourcegraph/go-vcsurl.v1"
-  version = "1.0.0"
-
-[[constraint]]
   name = "github.com/sirupsen/logrus"
   version = "1.0.4"

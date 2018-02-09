@@ -8,12 +8,6 @@
   version = "v0.4.5"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/bramvdbogaerde/go-scp"
-  packages = [".","auth"]
-  revision = "e1fc87afa32536b6f2a58fc9cf937432aeff91e7"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -178,6 +172,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "df59b1fdc3802e6faf82e4a3556a5f2a29631267ac2871e21699741e98fbe348"
+  inputs-digest = "a7816d1a86b7601293d49c436c2708e8d9afc0b19f1e980afa7046c2b7a5eb56"
   solver-name = "gps-cdcl"
   solver-version = 1
