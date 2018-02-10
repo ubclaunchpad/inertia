@@ -27,5 +27,4 @@ echo ""
 echo "Test VPS is online (kill using 'docker kill testvps')"
 echo "SSH port:     " $(docker port testvps 22)
 echo "Daemon port:  " $(docker port testvps 8081)
-echo "Container IP: " $CONTAINER_IP
 echo "Test key:     " $GOPATH/src/github.com/ubclaunchpad/inertia/test_env/test_key
