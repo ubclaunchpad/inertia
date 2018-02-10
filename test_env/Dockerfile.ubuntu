@@ -20,5 +20,5 @@ RUN mkdir $HOME/.ssh/
 COPY . .
 RUN cat test_key.pub >> $HOME/.ssh/authorized_keys
 
-EXPOSE 22 8081
+EXPOSE 0-9000
 CMD ["/usr/sbin/sshd", "-D"]
