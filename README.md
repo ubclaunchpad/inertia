@@ -17,7 +17,13 @@
       alt="Coverage Status" />
   </a>
 
-  <img src="https://img.shields.io/badge/VPS%20platforms-Ubuntu%2014.04%2F16.04%20%7C%20CentOS%207-blue.svg" />
+  <a href="">
+    <img src="https://img.shields.io/badge/Shipping_faster_with-ZenHub-5e60ba.svg?style=flat" alt="We use Zenhub!" />
+  </a>
+</p>
+
+<p align="center"> 
+  <img src="https://img.shields.io/badge/Supported%20VPS%20platforms-Ubuntu%2014.04%2F16.04%20%7C%20CentOS%207-blue.svg" />
 </p>
 
 ----------------
