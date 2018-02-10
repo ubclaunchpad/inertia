@@ -41,7 +41,7 @@ of the VPS. Must run 'inertia init' in your repository before using.
 Example:
 
 inerta remote add gcloud
-inerta remote bootstrap gcloud
+inerta gcloud init
 inerta remote status gcloud`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
@@ -76,6 +76,7 @@ file. Specify a VPS name.`,
 		}
 
 		port, _ := cmd.Flags().GetString("port")
+		sshPort, _ := cmd.Flags().GetString("sshPort")
 
 		homeEnvVar := os.Getenv("HOME")
 		sshDir := filepath.Join(homeEnvVar, ".ssh")
@@ -102,10 +103,13 @@ file. Specify a VPS name.`,
 			log.Fatal("That is not a valid IP address - please try again.")
 		}
 		address := response
-		fmt.Println("Port " + port + " will be used as the daemon port.")
-		fmt.Println("Run this 'inertia remote add' with the -p flag to set a custom port.")
 
-		err = client.AddNewRemote(args[0], address, user, pemLoc, port)
+		fmt.Println("Port " + port + " will be used as the daemon port.")
+		fmt.Println("Port " + sshPort + " will be used as the SSH port.")
+		fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
+		fmt.Println("of the -ssh flag to set a custom SSH port.")
+
+		err = client.AddNewRemote(args[0], address, sshPort, user, pemLoc, port)
 		if err != nil {
 			log.WithError(err)
 		}
@@ -205,4 +209,5 @@ func init() {
 	// is called directly, e.g.:
 	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("port", "p", daemon.DefaultPort, "Daemon port")
+	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }
