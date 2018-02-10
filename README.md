@@ -17,6 +17,10 @@
       alt="Coverage Status" />
   </a>
 
+  <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
+    <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
+  </a>
+
   <a href="">
     <img src="https://img.shields.io/badge/Shipping_faster_with-ZenHub-5e60ba.svg?style=flat" alt="We use Zenhub!" />
   </a>
@@ -173,6 +177,21 @@ $> inertia remote add local
 $> inertia local init
 $> inertia remote status local
 Remote instance 'local' accepting requests at http://0.0.0.0:8081
+```
+
+If you run into this error when deploying onto the `testvps`:
+
+```bash
+docker: Error response from daemon: error creating aufs mount to /var/lib/docker/aufs/mnt/fed036790dfcc73da5f7c74a7264e617a2889ccf06f61dc4d426cf606de2f374-init: invalid argument.
+```
+
+You probably need to go into your Docker settings and add this line to the Docker daemon configuration file:
+
+```js
+{
+  ...
+  "storage-driver" : "aufs"
+}
 ```
 
 ### Motivation and Design
