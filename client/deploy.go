@@ -34,7 +34,7 @@ type Deployment struct {
 
 // DaemonRequester can make HTTP requests to the daemon.
 type DaemonRequester interface {
-	Up() (*http.Response, error)
+	Up(bool) (*http.Response, error)
 	Down() (*http.Response, error)
 	Status() (*http.Response, error)
 	Reset() (*http.Response, error)
