@@ -156,7 +156,7 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 
 ```bash
 $> make test                              # test against ubuntu:latest
-$> make test VPS_OS=ubuntu VERSION=14:04  # test against ubuntu:14.04
+$> make test VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 ```
 
 You can also start a container that sets up a mock VPS for testing:

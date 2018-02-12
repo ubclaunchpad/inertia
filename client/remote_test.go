@@ -130,30 +130,3 @@ func TestInstrumentedBootstrap(t *testing.T) {
 	_, err = ioutil.ReadAll(resp.Body)
 	assert.Nil(t, err)
 }
-
-func TestInstrumentedKeyGen(t *testing.T) {
-	remote := getInstrumentedTestRemote()
-	session := NewSSHRunner(remote)
-	pub, err := remote.KeyGen(session)
-	assert.Nil(t, err)
-	assert.True(t, len(pub.String()) > 0)
-}
-
-func TestInstrumententedToken(t *testing.T) {
-	remote := getInstrumentedTestRemote()
-	session := NewSSHRunner(remote)
-	var writer bytes.Buffer
-	err := remote.Bootstrap(session, "testvps", &Config{Writer: &writer})
-	assert.Nil(t, err)
-
-	// Check if daemon is online following bootstrap
-	host := "http://" + remote.GetIPAndPort()
-	resp, err := http.Get(host)
-	assert.Nil(t, err)
-	assert.Equal(t, resp.StatusCode, http.StatusOK)
-
-	// Get daemon token
-	token, err := remote.GetDaemonAPIToken(session)
-	assert.Nil(t, err)
-	assert.True(t, len(token) > 0)
-}
