@@ -184,7 +184,7 @@ func CompareRemotes(localRepo *git.Repository, remoteURL string) error {
 
 // FlushOutput continuously writes everything in given PipeReader
 // to a ResponseWriter. Use this as a goroutine.
-func FlushOutput(w http.ResponseWriter, pipeReader *io.PipeReader) {
+func FlushOutput(w io.Writer, pipeReader *io.PipeReader) {
 	buffer := make([]byte, 100)
 	for {
 		// Read from pipe then write to ResponseWriter and flush it,

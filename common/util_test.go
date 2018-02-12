@@ -1,6 +1,9 @@
 package common
 
 import (
+	"bytes"
+	"io/ioutil"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -45,4 +48,31 @@ func TestCheckForDockerCompose(t *testing.T) {
 	file.Close()
 	assert.Equal(t, nil, CheckForDockerCompose(cwd))
 	os.Remove(cwd + "/docker-compose.yaml")
+}
+
+func TestPipeErr(t *testing.T) {
+	var b bytes.Buffer
+	w := httptest.NewRecorder()
+	PipeErr(&b, "Wee!", 200)
+	PipeErr(w, "Wee!", 200)
+	assert.Equal(t, "[ERROR 200] Wee!", b.String())
+
+	body, err := ioutil.ReadAll(w.Body)
+	assert.Nil(t, err)
+	assert.Equal(t, "Wee!\n", string(body))
+	assert.Equal(t, 200, w.Code)
+}
+
+func TestPipeSuccess(t *testing.T) {
+	var b bytes.Buffer
+	w := httptest.NewRecorder()
+	PipeSuccess(&b, "Wee!", 200)
+	PipeSuccess(w, "Wee!", 200)
+	assert.Equal(t, "Wee!\n", b.String())
+
+	body, err := ioutil.ReadAll(w.Body)
+	assert.Nil(t, err)
+	assert.Equal(t, "Wee!\n", string(body))
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
 }
