@@ -16,16 +16,18 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
@@ -125,14 +127,20 @@ func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 
 // Clone wraps git.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
-func Clone(directory string, remoteURL string, auth ssh.AuthMethod) (*git.Repository, error) {
+func Clone(directory string, remoteURL string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
 	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
-		URL:  remoteURL,
-		Auth: auth,
+		URL:      remoteURL,
+		Auth:     auth,
+		Depth:    2,
+		Progress: out,
 	})
-	if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthenticationRequired || err == transport.ErrAuthorizationFailed {
-		return nil, errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + auth.String())
-	} else if err != nil {
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return nil, err
+	}
+
+	// Use this to confirm if pull has completed.
+	_, err = repo.Head()
+	if err != nil {
 		return nil, err
 	}
 	return repo, nil
@@ -140,7 +148,7 @@ func Clone(directory string, remoteURL string, auth ssh.AuthMethod) (*git.Reposi
 
 // ForcePull deletes the project directory and makes a fresh clone of given repo
 // git.Worktree.Pull() only supports merges that can be resolved as a fast-forward
-func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod) (*git.Repository, error) {
+func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
 	remotes, err := repo.Remotes()
 	if err != nil {
 		return nil, err
@@ -150,7 +158,7 @@ func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod) (*gi
 	if err != nil {
 		return nil, err
 	}
-	repo, err = Clone(directory, remoteURL, auth)
+	repo, err = Clone(directory, remoteURL, auth, out)
 	if err != nil {
 		e := RemoveContents(directory)
 		if e != nil {
@@ -172,4 +180,51 @@ func CompareRemotes(localRepo *git.Repository, remoteURL string) error {
 		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
 	return nil
+}
+
+// FlushOutput continuously writes everything in given PipeReader
+// to a ResponseWriter. Use this as a goroutine.
+func FlushOutput(w http.ResponseWriter, pipeReader *io.PipeReader) {
+	buffer := make([]byte, 100)
+	for {
+		// Read from pipe then write to ResponseWriter and flush it,
+		// sending the copied content to the client.
+		n, err := pipeReader.Read(buffer)
+		if err != nil {
+			pipeReader.Close()
+			break
+		}
+		data := buffer[0:n]
+		w.Write(data)
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		}
+
+		// Clear the buffer.
+		for i := 0; i < n; i++ {
+			buffer[i] = 0
+		}
+	}
+}
+
+// PipeErr directs message and status to http.Error when appropriate,
+// otherwise pipes to the given io.Writer using fmt.Print
+func PipeErr(w io.Writer, msg string, status int) {
+	responseWriter, ok := w.(http.ResponseWriter)
+	if ok {
+		http.Error(responseWriter, msg, status)
+	} else {
+		fmt.Fprintf(w, "[ERROR %s] %s", strconv.Itoa(status), msg)
+	}
+}
+
+// PipeSuccess directs status to Header and sets content type when appropriate
+// and writes message to given io.Writer
+func PipeSuccess(w io.Writer, msg string, status int) {
+	responseWriter, ok := w.(http.ResponseWriter)
+	if ok {
+		responseWriter.Header().Set("Content-Type", "text/html")
+		responseWriter.WriteHeader(status)
+	}
+	fmt.Fprintln(w, msg)
 }
