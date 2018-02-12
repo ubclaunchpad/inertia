@@ -119,7 +119,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	println("http://" + remote.IP + ":" + remote.DaemonPort)
 	println("Github WebHook Secret: " + common.DefaultSecret + "\n")
 
-	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
+	println("Inertia daemon successfully deployed! Add your webhook url and deploy\nkey to enable continuous deployment.")
 	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", name)
 
 	return nil
