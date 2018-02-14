@@ -12,11 +12,6 @@
       alt="Built Status" />
   </a>
 
-  <a href="https://coveralls.io/github/ubclaunchpad/inertia?branch=master">
-    <img src="https://coveralls.io/repos/github/ubclaunchpad/inertia/badge.svg?branch=master"
-      alt="Coverage Status" />
-  </a>
-
   <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
   </a>
@@ -26,7 +21,7 @@
   </a>
 </p>
 
-<p align="center"> 
+<p align="center">
   <img src="https://img.shields.io/badge/Supported%20VPS%20platforms-Ubuntu%2014.04%2F16.04%20%7C%20CentOS%207-blue.svg" />
 </p>
 
