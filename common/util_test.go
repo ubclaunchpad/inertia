@@ -68,13 +68,13 @@ func TestFlushOutput(t *testing.T) {
 		go FlushOutput(w, reader)
 
 		fmt.Println(writer, "Hello!")
-		time.Sleep(1)
+		time.Sleep(time.Millisecond)
 
 		fmt.Println(writer, "Lunch?")
-		time.Sleep(1)
+		time.Sleep(time.Millisecond)
 
 		fmt.Println(writer, "Bye!")
-		time.Sleep(1)
+		time.Sleep(time.Millisecond)
 	}))
 	defer testServer.Close()
 
