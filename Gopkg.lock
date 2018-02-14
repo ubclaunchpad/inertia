@@ -44,10 +44,10 @@
   version = "v0.3.2"
 
 [[projects]]
-  branch = "master"
   name = "github.com/google/go-github"
   packages = ["github"]
-  revision = "0c3b302de2a6de84a2511db47ea1bb2ff8146830"
+  revision = "e48060a28fac52d0f1cb758bc8b87c07bac4a87d"
+  version = "v15.0.0"
 
 [[projects]]
   branch = "master"
@@ -110,10 +110,10 @@
   version = "v1.0.4"
 
 [[projects]]
+  branch = "master"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
-  version = "v0.0.1"
+  revision = "be77323fc05148ef091e83b3866c0d47c8e74a8b"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -184,6 +184,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "102cb1f61d1ab858459637a87b221edb3c75e99e13e447a16171d28265724b63"
+  inputs-digest = "38faeb2a887c3ef20cd3cd23625c524334bd9ec9e715f0e76f1860ab90fc76c8"
   solver-name = "gps-cdcl"
   solver-version = 1
