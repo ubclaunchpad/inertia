@@ -292,7 +292,7 @@ func getSSHConfig(privateKey []byte, user string) (*ssh.ClientConfig, error) {
 		},
 		// TODO: We need to replace this with a callback
 		// to verify the host key. A security vulnerability
-		// comes from the fact that we recieve a public key
+		// comes from the fact that we receive a public key
 		// from the server and we add it to our GitHub.
 		// This gives the server readonly access to our
 		// GitHub account. We need to know who we're

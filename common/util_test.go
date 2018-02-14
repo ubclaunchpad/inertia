@@ -1,12 +1,17 @@
 package common
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -20,6 +25,13 @@ func TestGenerateToken(t *testing.T) {
 	token, err := GenerateToken(testPrivateKey)
 	assert.Nil(t, err, "generateToken must not fail")
 	assert.Equal(t, token, testToken)
+}
+
+func TestGetGithubKey(t *testing.T) {
+	pemFile, err := os.Open(os.Getenv("GOPATH") + "/src/github.com/ubclaunchpad/inertia/test_env/test_key")
+	assert.Nil(t, err)
+	_, err = GetGithubKey(pemFile)
+	assert.Nil(t, err)
 }
 
 func TestGetSSHRemoteURL(t *testing.T) {
@@ -48,6 +60,46 @@ func TestCheckForDockerCompose(t *testing.T) {
 	file.Close()
 	assert.Equal(t, nil, CheckForDockerCompose(cwd))
 	os.Remove(cwd + "/docker-compose.yaml")
+}
+
+func TestFlushOutput(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		reader, writer := io.Pipe()
+		go FlushOutput(w, reader)
+
+		fmt.Println(writer, "Hello!")
+		time.Sleep(1)
+
+		fmt.Println(writer, "Lunch?")
+		time.Sleep(1)
+
+		fmt.Println(writer, "Bye!")
+		time.Sleep(1)
+	}))
+	defer testServer.Close()
+
+	resp, err := http.DefaultClient.Get(testServer.URL)
+	assert.Nil(t, err)
+
+	reader := bufio.NewReader(resp.Body)
+	i := 0
+	for i < 3 {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			break
+		}
+
+		switch i {
+		case 0:
+			assert.Equal(t, "Hello!", string(line))
+		case 1:
+			assert.Equal(t, "Lunch?", string(line))
+		case 2:
+			assert.Equal(t, "Bye!", string(line))
+		}
+
+		i++
+	}
 }
 
 func TestPipeErr(t *testing.T) {
