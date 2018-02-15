@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -37,27 +38,41 @@ var deployUpCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp, err := deployment.Up()
+		stream, err := cmd.Flags().GetBool("stream")
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		resp, err := deployment.Up(stream)
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
+		defer resp.Body.Close()
 
-		switch resp.StatusCode {
-		case http.StatusCreated:
-			fmt.Printf("(Status code %d) Project up\n", resp.StatusCode)
-		case http.StatusForbidden:
-			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-		case http.StatusPreconditionFailed:
-			fmt.Printf("(Status code %d) Problem with deployment setup: %s\n", resp.StatusCode, body)
-		default:
-			fmt.Printf("(Status code %d) Unknown response from daemon: %s",
-				resp.StatusCode, body)
+		if !stream {
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.WithError(err)
+			}
+			switch resp.StatusCode {
+			case http.StatusCreated:
+				fmt.Printf("(Status code %d) Project build started!\n", resp.StatusCode)
+			case http.StatusForbidden:
+				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
+			case http.StatusPreconditionFailed:
+				fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
+			default:
+				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
+					resp.StatusCode, body)
+			}
+		} else {
+			reader := bufio.NewReader(resp.Body)
+			for {
+				line, err := reader.ReadBytes('\n')
+				if err != nil {
+					break
+				}
+				fmt.Print(string(line))
+			}
 		}
 	},
 }
@@ -196,8 +211,8 @@ func init() {
 		return
 	}
 
-	newCmd := deployCmd
-	newCmd.AddCommand()
+	newCmd := &cobra.Command{}
+	*newCmd = *deployCmd
 
 	addRemoteCommand(config.CurrentRemoteName, newCmd)
 }
@@ -210,5 +225,7 @@ func addRemoteCommand(remoteName string, cmd *cobra.Command) {
 	cmd.AddCommand(deployStatusCmd)
 	cmd.AddCommand(deployResetCmd)
 	cmd.AddCommand(deployInitCmd)
-	RootCmd.AddCommand(deployCmd)
+	RootCmd.AddCommand(cmd)
+
+	cmd.PersistentFlags().Bool("stream", false, "Stream output from daemon")
 }

@@ -24,5 +24,6 @@ const (
 
 // UpRequest is the body of a up request to the daemon.
 type UpRequest struct {
-	Repo string `json:"repo"`
+	Stream bool   `json:"stream"`
+	Repo   string `json:"repo"`
 }

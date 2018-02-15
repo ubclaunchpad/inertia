@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/docker/docker/api/types"
@@ -49,20 +48,20 @@ func Run(port string) {
 	cli, err := docker.NewEnvClient()
 	if err != nil {
 		log.WithError(err)
-		println("Failed to pull docker-compose image - shutting down daemon.")
+		log.Println("Failed to start Docker client - shutting down daemon.")
 		return
 	}
 	_, err = cli.ImagePull(context.Background(), dockerCompose, types.ImagePullOptions{})
 	if err != nil {
 		log.WithError(err)
-		println("Failed to pull docker-compose image - shutting down daemon.")
+		log.Println("Failed to pull docker-compose image - shutting down daemon.")
 		cli.Close()
 		return
 	}
 	cli.Close()
 
 	// Run daemon on port
-	println("Serving daemon on port " + port)
+	log.Println("Serving daemon on port " + port)
 	mux := http.NewServeMux()
 	// Example usage of `authorized' decorator.
 	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
@@ -82,7 +81,8 @@ func processPushEvent(event *github.PushEvent) {
 	log.Println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
 	log.Println(fmt.Sprintf("Ref: %s", event.GetRef()))
 
-	// Clone repository if not available
+	// Clone repository if not available, otherwise skip this step and
+	// let deploy() handle the pull.
 	err := common.CheckForGit(projectDirectory)
 	if err != nil {
 		log.Println("No git repository present - cloning from push event...")
@@ -96,7 +96,7 @@ func processPushEvent(event *github.PushEvent) {
 			log.Println("Github key couldn't be read: " + err.Error())
 			return
 		}
-		_, err = common.Clone(projectDirectory, common.GetSSHRemoteURL(*repo.GitURL), auth)
+		_, err = common.Clone(projectDirectory, common.GetSSHRemoteURL(*repo.GitURL), auth, os.Stdout)
 		if err != nil {
 			log.Println("Clone failed: " + err.Error())
 			err = common.RemoveContents(projectDirectory)
@@ -105,10 +105,6 @@ func processPushEvent(event *github.PushEvent) {
 			}
 			return
 		}
-
-		// Wait arbitrary amount of time for clone to complete
-		// TODO: find a better way to do this
-		time.Sleep(2 * time.Second)
 	}
 
 	localRepo, err := git.PlainOpen(projectDirectory)
@@ -131,7 +127,7 @@ func processPushEvent(event *github.PushEvent) {
 		return
 	}
 	defer cli.Close()
-	err = deploy(localRepo, cli)
+	err = deploy(localRepo, cli, os.Stdout)
 	if err != nil {
 		log.WithError(err)
 	}

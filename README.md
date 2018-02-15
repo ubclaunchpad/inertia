@@ -1,5 +1,5 @@
-<p>
-  <h1 align="center"> 👩‍🚀 Inertia </h1>
+<p align="center">
+  <img src="/.static/inertia-with-name.png" width="50%"/>
 </p>
 
 <p align="center">
@@ -12,17 +12,16 @@
       alt="Built Status" />
   </a>
 
-  <a href="https://coveralls.io/github/ubclaunchpad/inertia?branch=master">
-    <img src="https://coveralls.io/repos/github/ubclaunchpad/inertia/badge.svg?branch=master"
-      alt="Coverage Status" />
+  <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
+    <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
   </a>
 
-  <a href="">
+  <a href="https://www.zenhub.com">
     <img src="https://img.shields.io/badge/Shipping_faster_with-ZenHub-5e60ba.svg?style=flat" alt="We use Zenhub!" />
   </a>
 </p>
 
-<p align="center"> 
+<p align="center">
   <img src="https://img.shields.io/badge/Supported%20VPS%20platforms-Ubuntu%2014.04%2F16.04%20%7C%20CentOS%207-blue.svg" />
 </p>
 
@@ -152,7 +151,7 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 
 ```bash
 $> make test                              # test against ubuntu:latest
-$> make test VPS_OS=ubuntu VERSION=14:04  # test against ubuntu:14.04
+$> make test VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 ```
 
 You can also start a container that sets up a mock VPS for testing:
@@ -174,6 +173,23 @@ $> inertia local init
 $> inertia remote status local
 Remote instance 'local' accepting requests at http://0.0.0.0:8081
 ```
+
+If you run into this error when deploying onto the `testvps`:
+
+```bash
+docker: Error response from daemon: error creating aufs mount to /var/lib/docker/aufs/mnt/fed036790dfcc73da5f7c74a7264e617a2889ccf06f61dc4d426cf606de2f374-init: invalid argument.
+```
+
+You probably need to go into your Docker settings and add this line to the Docker daemon configuration file:
+
+```js
+{
+  ...
+  "storage-driver" : "aufs"
+}
+```
+
+This sneaky configuration file can be found under `Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
 
 ### Motivation and Design
 

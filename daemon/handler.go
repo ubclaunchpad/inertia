@@ -17,17 +17,18 @@ package daemon
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 
 	"github.com/ubclaunchpad/inertia/common"
 )
@@ -98,67 +99,86 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	remoteURL := upReq.Repo
 
+	// Stream responses to client if requested to do so, otherwise
+	// just print to os.Stdout
+	var reader *io.PipeReader
+	var writer io.Writer
+	var errWriter io.Writer
+	if upReq.Stream {
+		reader, writer = io.Pipe()
+		errWriter = writer
+		go common.FlushOutput(w, reader)
+	} else {
+		writer = os.Stdout
+		errWriter = w
+	}
+
 	// Check for existing git repository, clone if no git repository exists.
 	err = common.CheckForGit(projectDirectory)
 	if err != nil {
-		log.Println("No git repository present - cloning from POST event...")
+		fmt.Fprintln(writer, "No git repository present - retrieving remote...")
 		pemFile, err := os.Open(daemonGithubKeyLocation)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusPreconditionFailed)
+			common.PipeErr(errWriter, err.Error(), http.StatusPreconditionFailed)
 			return
 		}
 		auth, err := common.GetGithubKey(pemFile)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			common.PipeErr(errWriter, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		// Clone project
-		log.Println("Attempting to clone " + remoteURL)
-		_, err = common.Clone(projectDirectory, remoteURL, auth)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusPreconditionFailed)
-			err = common.RemoveContents(projectDirectory)
-			if err != nil {
-				log.WithError(err)
+		fmt.Fprintln(writer, "Cloning "+remoteURL+"...")
+		_, err = common.Clone(projectDirectory, remoteURL, auth, writer)
+		if err != nil && err != git.NoErrAlreadyUpToDate {
+			if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
+				bytes, err := ioutil.ReadFile(daemonGithubKeyLocation + ".pub")
+				if err != nil {
+					bytes = []byte("Error reading key - try running 'inertia [REMOTE] init' again.")
+				}
+				alert := "Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:])
+				common.PipeErr(errWriter, alert, http.StatusPreconditionFailed)
+			} else {
+				common.PipeErr(errWriter, err.Error(), http.StatusPreconditionFailed)
+				err = common.RemoveContents(projectDirectory)
+				if err != nil {
+					log.WithError(err)
+				}
 			}
 			return
 		}
-
-		// Wait arbitrary amount of time for clone to complete
-		// TODO: find a better way to do this
-		time.Sleep(2 * time.Second)
 	}
 
 	repo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		common.PipeErr(errWriter, err.Error(), http.StatusPreconditionFailed)
 		return
 	}
 
 	// Check for matching remotes
 	err = common.CompareRemotes(repo, remoteURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		common.PipeErr(errWriter, err.Error(), http.StatusPreconditionFailed)
 		return
 	}
 
 	// Update and deploy project
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		common.PipeErr(errWriter, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
-	err = deploy(repo, cli)
+	err = deploy(repo, cli, writer)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		common.PipeErr(errWriter, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, "Project up and running!")
+	fmt.Fprintln(w, "Project build started!")
 }
 
 // downHandler tries to take the deployment offline
