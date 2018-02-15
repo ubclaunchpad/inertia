@@ -189,6 +189,8 @@ You probably need to go into your Docker settings and add this line to the Docke
 }
 ```
 
+This sneaky configuration file can be found under `Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
+
 ### Motivation and Design
 
 At Launch Pad we are frequently changing hosting providers based on available funding and sponsorship. Inertia is a project to develop an in-house continuous deployment system to make deploying applications simple and painless, regardless of the hosting provider.
