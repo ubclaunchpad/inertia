@@ -1,5 +1,5 @@
-<p>
-  <h1 align="center"> 👩‍🚀 Inertia </h1>
+<p align="center">
+  <img src="/.static/inertia-with-name.png" width="50%"/>
 </p>
 
 <p align="center">
@@ -16,7 +16,7 @@
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
   </a>
 
-  <a href="">
+  <a href="https://www.zenhub.com">
     <img src="https://img.shields.io/badge/Shipping_faster_with-ZenHub-5e60ba.svg?style=flat" alt="We use Zenhub!" />
   </a>
 </p>
