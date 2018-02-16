@@ -15,13 +15,10 @@
 package daemon
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"os"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
@@ -40,38 +37,6 @@ var (
 
 	daemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"
 )
-
-// Run starts the daemon
-func Run(port string) {
-	// Download docker-compose image
-	println("Downloading docker-compose...")
-	cli, err := docker.NewEnvClient()
-	if err != nil {
-		log.WithError(err)
-		log.Println("Failed to start Docker client - shutting down daemon.")
-		return
-	}
-	_, err = cli.ImagePull(context.Background(), dockerCompose, types.ImagePullOptions{})
-	if err != nil {
-		log.WithError(err)
-		log.Println("Failed to pull docker-compose image - shutting down daemon.")
-		cli.Close()
-		return
-	}
-	cli.Close()
-
-	// Run daemon on port
-	log.Println("Serving daemon on port " + port)
-	mux := http.NewServeMux()
-	// Example usage of `authorized' decorator.
-	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/", gitHubWebHookHandler)
-	mux.HandleFunc("/up", authorized(upHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/down", authorized(downHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/status", authorized(statusHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/reset", authorized(resetHandler, GetAPIPrivateKey))
-	log.Fatal(http.ListenAndServe(":"+port, mux))
-}
 
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(event *github.PushEvent) {

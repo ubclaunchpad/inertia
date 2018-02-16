@@ -102,7 +102,7 @@ func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
 		ctx, &container.Config{
 			Image:      dockerCompose,
 			WorkingDir: "/build/project",
-			Env:        []string{"HOME:/build"},
+			Env:        []string{"HOME=/build"},
 			Cmd:        []string{"up", "--build"},
 		},
 		&container.HostConfig{
@@ -180,6 +180,8 @@ func killActiveContainers(cli *docker.Client) error {
 	if err != nil {
 		return err
 	}
-	log.Println("Removed " + strings.Join(report.ContainersDeleted, ", "))
+	if len(report.ContainersDeleted) > 0 {
+		log.Println("Removed " + strings.Join(report.ContainersDeleted, ", "))
+	}
 	return nil
 }

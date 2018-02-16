@@ -190,6 +190,61 @@ var deployResetCmd = &cobra.Command{
 	},
 }
 
+var deployLogsCmd = &cobra.Command{
+	Use:   "logs",
+	Short: "",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Start the deployment
+		deployment, err := client.GetDeployment()
+		if err != nil {
+			log.Fatal(err)
+		}
+		stream, err := cmd.Flags().GetBool("stream")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		container := "/inertia-daemon"
+		if len(args) > 0 {
+			container = args[0]
+		}
+
+		resp, err := deployment.Logs(stream, container)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		if !stream {
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.WithError(err)
+			}
+			switch resp.StatusCode {
+			case http.StatusOK:
+				fmt.Printf("(Status code %d) Project build started!\n", resp.StatusCode)
+			case http.StatusForbidden:
+				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
+			case http.StatusPreconditionFailed:
+				fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
+			default:
+				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
+					resp.StatusCode, body)
+			}
+		} else {
+			reader := bufio.NewReader(resp.Body)
+			for {
+				line, err := reader.ReadBytes('\n')
+				if err != nil {
+					break
+				}
+				fmt.Print(string(line))
+			}
+		}
+	},
+}
+
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
 	Hidden: true,
@@ -225,6 +280,7 @@ func addRemoteCommand(remoteName string, cmd *cobra.Command) {
 	cmd.AddCommand(deployStatusCmd)
 	cmd.AddCommand(deployResetCmd)
 	cmd.AddCommand(deployInitCmd)
+	cmd.AddCommand(deployLogsCmd)
 	RootCmd.AddCommand(cmd)
 
 	cmd.PersistentFlags().Bool("stream", false, "Stream output from daemon")

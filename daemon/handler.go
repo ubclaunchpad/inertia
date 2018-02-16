@@ -15,6 +15,8 @@
 package daemon
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,6 +26,7 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
@@ -47,6 +50,39 @@ const (
 
 	defaultSecret = "inertia"
 )
+
+// Run starts the daemon
+func Run(port string) {
+	// Download docker-compose image
+	println("Downloading docker-compose...")
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		log.WithError(err)
+		log.Println("Failed to start Docker client - shutting down daemon.")
+		return
+	}
+	_, err = cli.ImagePull(context.Background(), dockerCompose, types.ImagePullOptions{})
+	if err != nil {
+		log.WithError(err)
+		log.Println("Failed to pull docker-compose image - shutting down daemon.")
+		cli.Close()
+		return
+	}
+	cli.Close()
+
+	// Run daemon on port
+	log.Println("Serving daemon on port " + port)
+	mux := http.NewServeMux()
+	// Example usage of `authorized' decorator.
+	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/", gitHubWebHookHandler)
+	mux.HandleFunc("/up", authorized(upHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/down", authorized(downHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/status", authorized(statusHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/reset", authorized(resetHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/logs", authorized(logHandler, GetAPIPrivateKey))
+	log.Fatal(http.ListenAndServe(":"+port, mux))
+}
 
 // healthCheckHandler returns a 200 if the daemon is happy.
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +127,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	var upReq common.UpRequest
+	var upReq common.DaemonRequest
 	err = json.Unmarshal(body, &upReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -312,6 +348,53 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, "Project removed from remote.")
+}
+
+// logHandler handles requests for container logs
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	// Get container name from request
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusLengthRequired)
+		return
+	}
+	defer r.Body.Close()
+	var upReq common.DaemonRequest
+	err = json.Unmarshal(body, &upReq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	container := upReq.Container
+
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cli.Close()
+	ctx := context.Background()
+	logs, err := cli.ContainerLogs(ctx, container, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     upReq.Stream,
+		Timestamps: true,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if upReq.Stream {
+		common.FlushOutput(w, logs)
+	} else {
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(logs)
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, buf.String())
+	}
+	logs.Close()
 }
 
 // authorized is a function decorator for authorizing RESTful
