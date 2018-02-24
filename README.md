@@ -27,7 +27,7 @@
 
 ----------------
 
-Inertia is a cross-platform command line tool that aims to simplify setup and management of automated deployment for docker-compose projects on any virtual private server.
+Inertia is a cross-platform command line tool that aims to simplify setup and management of automated deployment of docker-compose projects on any virtual private server. It aims to provide the ease and flexibility of services like Heroku without the complexity of Kubernetes while still giving users full control over their projects.
 
 ## Installation
 
