@@ -20,6 +20,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -83,13 +84,23 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 	// second container to require access to the docker socket.
 	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
 	log.Println("Bringing project online.")
+
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return err
+	}
+
 	ctx := context.Background()
+	url := remotes[0].Config().URLs[0]
+	r, _ := regexp.Compile("(?:/)([^/]+)(?:.git)$")
+	repoName := r.FindStringSubmatch(url)[1]
+
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      dockerCompose,
 			WorkingDir: "/build/project",
 			Env:        []string{"HOME:/build"},
-			Cmd:        []string{"up", "--build"},
+			Cmd:        []string{"-p", repoName, "up", "--build"},
 		},
 		&container.HostConfig{
 			Binds: []string{
