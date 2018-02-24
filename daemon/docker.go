@@ -102,8 +102,11 @@ func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
 		ctx, &container.Config{
 			Image:      dockerCompose,
 			WorkingDir: "/build/project",
-			Env:        []string{"HOME=/build"},
-			Cmd:        []string{"up", "--build"},
+			Cmd: []string{
+				"up",
+				"--build",
+				"-e HOME=/build",
+			},
 		},
 		&container.HostConfig{
 			Binds: []string{
