@@ -65,7 +65,7 @@ GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new
 ssh-rsa <...>
 ```
 
-The Inertia daemon requires readonly access to your GitHub repository. Add it to your GitHub repository settings at the URL provided in the output.
+The Inertia daemon requires readonly access to your GitHub repository. Add the deploy key to your GitHub repository settings at the URL provided in the output - this will grant the daemon access to clone your repository.
 
 2. A GitHub webhook URL:
 
@@ -75,7 +75,7 @@ http://myhost.com:8081
 Github WebHook Secret: inertia
 ``` 
 
-The daemon will accept POST requests from GitHub at the URL provided. Add this webhook URL in your GitHub settings area (at the URL provided).
+The daemon will accept POST requests from GitHub at the URL provided. Add this webhook URL in your GitHub settings area (at the URL provided) so that the daemon will receive updates from GitHub when your repository is updated.
 
 After adding these pieces of information to your GitHub settings, the Inertia daemon will automatically deploy any changes you make to your repository's default branch. You can also manually manage your project's deployment through the CLI:
 
@@ -84,7 +84,8 @@ $> inertia my-remote-vps up
 # Clones your project into your VPS and deploys your containers
 
 $> inertia my-remote-vps status
-# Reports detailed information about 
+# Reports detailed information about the state of your deployment, 
+# such as active containers and current commit.
 
 $> inertia my-remote-vps down
 # Shuts down project containers
