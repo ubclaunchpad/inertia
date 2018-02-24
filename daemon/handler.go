@@ -212,9 +212,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintln(w, "Project build started!")
+	common.PipeSuccess(writer, "Project build started!", http.StatusCreated)
 }
 
 // downHandler tries to take the deployment offline
