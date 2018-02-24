@@ -192,8 +192,11 @@ var deployResetCmd = &cobra.Command{
 
 var deployLogsCmd = &cobra.Command{
 	Use:   "logs",
-	Short: "",
-	Long:  ``,
+	Short: "Access logs of your VPS",
+	Long: `Access logs of containers of your VPS. Argument 'docker-compose'
+	will retrieve logs of the docker-compose build. The additional argument can 
+	also be used to access logs of specific containers - use  'inertia [REMOTE] 
+	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Start the deployment
 		deployment, err := client.GetDeployment()
@@ -223,7 +226,7 @@ var deployLogsCmd = &cobra.Command{
 			}
 			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("(Status code %d) Project build started!\n", resp.StatusCode)
+				fmt.Printf("(Status code %d) Logs: \n%s\n", resp.StatusCode, body)
 			case http.StatusForbidden:
 				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 			case http.StatusPreconditionFailed:
