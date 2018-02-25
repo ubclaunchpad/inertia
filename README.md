@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/.static/inertia-with-name.png" width="50%"/>
+  <img src="/.static/inertia-with-name.png" width="40%"/>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 ----------------
 
-Inertia is a cross-platform command line tool that aims to simplify setup and management of automated deployment for docker-compose projects on any virtual private server.
+Inertia is a cross-platform command line tool that aims to simplify setup and management of automated deployment of docker-compose projects on any virtual private server. It aims to provide the ease and flexibility of services like Heroku without the complexity of Kubernetes while still giving users full control over their projects.
 
 ## Installation
 
@@ -39,74 +39,56 @@ Alternatively, you can download Inertia executables from the [Releases](https://
 
 ## Usage
 
-Inside of a git repository, simply running the following commands to initialize Inertia and add a remote VPS:
+Initializing a project for use with Inertia only takes a few simple steps:
 
 ```bash
 $> inertia init
-
-$> inertia remote add gcloud
-Enter location of PEM file (leave blank to use '/Users/yourspecialname/.ssh/id_rsa'):
-/path/to/my/.ssh/id_rsa
-Enter user:
-root
-Enter IP address of remote:
-35.227.171.49
-Port 8081 will be used as the daemon port.
-Run this 'inertia remote add' with the -p flag to set a custom port.
-
-Remote 'gcloud' has been added!
-You can now run 'inertia gcloud init' to set this remote up
-for continuous deployment.
+$> inertia remote add my-remote-vps
 ```
 
-After adding a remote, you can now bring the Inertia daemon online:
+After adding a remote, you can bring the Inertia daemon online on your VPS:
 
 ```bash
-$> inertia gcloud init
-Bootstrapping remote
-Installing docker
-Starting daemon
-Building deploy key
-
-Fetching daemon API token
-Daemon running on instance
-GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new):
-ssh-rsa <...>
-
-GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
-http://myhost.com:8081
-Github WebHook Secret: inertia
-
-Inertia daemon successfully deployed, add webhook url and deploy key to enable it.
-Then run 'inertia gcloud up' to deploy your application.
-
-$> inertia remote status gcloud
-Remote instance 'gcloud' accepting requests at http://myhost.com:8081
+$> inertia my-remote-vps init
+$> inertia remote status my-remote-vps
+# Confirms that the daemon is online and accepting requests
 ```
 
 A daemon is now running on your remote instance - but your application is not yet continuously deployed.
 
 The output of `inertia [REMOTE] init` has given you two important pieces of information:
 
-1. A deploy key. The Inertia daemon requires readonly access to your GitHub repository. Add it to your GitHub repository settings at the URL provided in the output.
-2. A GitHub webhook URL. The daemon will accept POST requests from GitHub at the URL provided. Again, add this webhook URL in your GitHub settings area (at the URL provided).
+1. A deploy key:
+
+```bash
+GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new):
+ssh-rsa <...>
+```
+
+The Inertia daemon requires readonly access to your GitHub repository. Add the deploy key to your GitHub repository settings at the URL provided in the output - this will grant the daemon access to clone your repository.
+
+2. A GitHub webhook URL:
+
+```bash
+GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
+http://myhost.com:8081
+Github WebHook Secret: inertia
+``` 
+
+The daemon will accept POST requests from GitHub at the URL provided. Add this webhook URL in your GitHub settings area (at the URL provided) so that the daemon will receive updates from GitHub when your repository is updated.
 
 After adding these pieces of information to your GitHub settings, the Inertia daemon will automatically deploy any changes you make to your repository's default branch. You can also manually manage your project's deployment through the CLI:
 
 ```bash
-$> inertia gcloud up
-(Status code 201) Project up
+$> inertia my-remote-vps up
+# Clones your project into your VPS and deploys your containers
 
-$> inertia gcloud status
-(Status code 200) 7b7be0b7097a26169e17037f4220fd0ce039bde1 refs/heads/master
-Active containers:
-project_frontend (/project_frontend_1)
-project_web (/project_web_1)
-project_solr (/project_solr_1)
-postgres (/project_db_1)
+$> inertia my-remote-vps status
+# Reports detailed information about the state of your deployment, 
+# such as active containers and current commit.
 
-$> inertia gcloud down
-(Status code 200) Project down
+$> inertia my-remote-vps down
+# Shuts down project containers
 ```
 
 ## Development
@@ -118,33 +100,6 @@ We use [dep](https://github.com/golang/dep) for managing dependencies.
 ```bash
 $> brew install dep
 $> dep ensure
-```
-
-### Compiling Bash Scripts
-
-To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary. So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our go executables.
-
-```bash
-$> go get -u github.com/jteeuwen/go-bindata/...
-```
-
-If you make changes to the bootstrapping shell scripts in
-`client/bootstrap/`, convert them to `Assets` by running:
-
-```bash
-$> make bootstrap
-```
-
-Then use your asset!
-
-```go
-shellScriptData, err := Asset("cmd/bootstrap/myshellscript.sh")
-if err != nil {
-  log.Fatal("No asset with that name")
-}
-
-// Optionally run shell script over SSH.
-result, _ := remote.RunSSHCommand(string(shellScriptData))
 ```
 
 ### Testing
@@ -190,6 +145,33 @@ You probably need to go into your Docker settings and add this line to the Docke
 ```
 
 This sneaky configuration file can be found under `Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
+
+### Compiling Bash Scripts
+
+To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary. So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our go executables.
+
+```bash
+$> go get -u github.com/jteeuwen/go-bindata/...
+```
+
+If you make changes to the bootstrapping shell scripts in
+`client/bootstrap/`, convert them to `Assets` by running:
+
+```bash
+$> make bootstrap
+```
+
+Then use your asset!
+
+```go
+shellScriptData, err := Asset("cmd/bootstrap/myshellscript.sh")
+if err != nil {
+  log.Fatal("No asset with that name")
+}
+
+// Optionally run shell script over SSH.
+result, _ := remote.RunSSHCommand(string(shellScriptData))
+```
 
 ### Motivation and Design
 
