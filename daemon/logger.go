@@ -38,7 +38,6 @@ type logger interface {
 // by the Inertia daemon
 type daemonLogger struct {
 	stream     bool
-	stop       chan struct{}
 	writer     io.Writer
 	reader     *io.PipeReader
 	httpWriter http.ResponseWriter
