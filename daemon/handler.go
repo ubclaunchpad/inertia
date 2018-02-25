@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -29,7 +28,6 @@ import (
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
-	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 
@@ -57,23 +55,22 @@ func Run(port string) {
 	println("Downloading docker-compose...")
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		log.WithError(err)
-		log.Println("Failed to start Docker client - shutting down daemon.")
+		println(err)
+		println("Failed to start Docker client - shutting down daemon.")
 		return
 	}
 	_, err = cli.ImagePull(context.Background(), dockerCompose, types.ImagePullOptions{})
 	if err != nil {
-		log.WithError(err)
-		log.Println("Failed to pull docker-compose image - shutting down daemon.")
+		println(err)
+		println("Failed to pull docker-compose image - shutting down daemon.")
 		cli.Close()
 		return
 	}
 	cli.Close()
 
 	// Run daemon on port
-	log.Println("Serving daemon on port " + port)
+	println("Serving daemon on port " + port)
 	mux := http.NewServeMux()
-	// Example usage of `authorized' decorator.
 	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/", gitHubWebHookHandler)
 	mux.HandleFunc("/up", authorized(upHandler, GetAPIPrivateKey))
@@ -81,7 +78,7 @@ func Run(port string) {
 	mux.HandleFunc("/status", authorized(statusHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/reset", authorized(resetHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/logs", authorized(logHandler, GetAPIPrivateKey))
-	log.Fatal(http.ListenAndServe(":"+port, mux))
+	print(http.ListenAndServe(":"+port, mux))
 }
 
 // healthCheckHandler returns a 200 if the daemon is happy.
@@ -96,13 +93,13 @@ func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
 	if err != nil {
-		log.Println(err)
+		println(err)
 		return
 	}
 
 	event, err := github.ParseWebHook(github.WebHookType(r), payload)
 	if err != nil {
-		log.Println(err)
+		println(err)
 		return
 	}
 
@@ -112,13 +109,13 @@ func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 	case *github.PullRequestEvent:
 		processPullRequestEvent(event)
 	default:
-		log.Println("Unrecognized event type")
+		println("Unrecognized event type")
 	}
 }
 
 // upHandler tries to bring the deployment online
 func upHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("UP request received")
+	println("UP request received")
 
 	// Get github URL from up request
 	body, err := ioutil.ReadAll(r.Body)
@@ -134,39 +131,27 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	remoteURL := upReq.Repo
-
-	// Stream responses to client if requested to do so, otherwise
-	// just print to os.Stdout
-	var reader *io.PipeReader
-	var writer io.Writer
-	var errWriter io.Writer
-	if upReq.Stream {
-		reader, writer = io.Pipe()
-		errWriter = writer
-		go common.FlushOutput(w, reader)
-	} else {
-		writer = os.Stdout
-		errWriter = w
-	}
+	logger := newLogger(upReq.Stream, w)
+	defer logger.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
 	err = common.CheckForGit(projectDirectory)
 	if err != nil {
-		fmt.Fprintln(writer, "No git repository present - retrieving remote...")
+		logger.Println("No git repository present - retrieving remote...")
 		pemFile, err := os.Open(daemonGithubKeyLocation)
 		if err != nil {
-			common.PipeErr(errWriter, err.Error(), http.StatusPreconditionFailed)
+			logger.Err(err.Error(), http.StatusPreconditionFailed)
 			return
 		}
 		auth, err := common.GetGithubKey(pemFile)
 		if err != nil {
-			common.PipeErr(errWriter, err.Error(), http.StatusInternalServerError)
+			logger.Err(err.Error(), http.StatusPreconditionFailed)
 			return
 		}
 
 		// Clone project
-		fmt.Fprintln(writer, "Cloning "+remoteURL+"...")
-		_, err = common.Clone(projectDirectory, remoteURL, auth, writer)
+		logger.Println("Cloning " + remoteURL + "...")
+		_, err = common.Clone(projectDirectory, remoteURL, auth, logger.GetWriter())
 		if err != nil && err != git.NoErrAlreadyUpToDate {
 			if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
 				bytes, err := ioutil.ReadFile(daemonGithubKeyLocation + ".pub")
@@ -174,12 +159,12 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 					bytes = []byte("Error reading key - try running 'inertia [REMOTE] init' again.")
 				}
 				alert := "Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:])
-				common.PipeErr(errWriter, alert, http.StatusPreconditionFailed)
+				logger.Err(alert, http.StatusPreconditionFailed)
 			} else {
-				common.PipeErr(errWriter, err.Error(), http.StatusPreconditionFailed)
+				logger.Err(err.Error(), http.StatusPreconditionFailed)
 				err = common.RemoveContents(projectDirectory)
 				if err != nil {
-					log.WithError(err)
+					fmt.Fprint(logger.GetWriter(), err)
 				}
 			}
 			return
@@ -188,36 +173,39 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 	repo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
-		common.PipeErr(errWriter, err.Error(), http.StatusPreconditionFailed)
+		logger.Err(err.Error(), http.StatusPreconditionFailed)
 		return
 	}
 
 	// Check for matching remotes
 	err = common.CompareRemotes(repo, remoteURL)
 	if err != nil {
-		common.PipeErr(errWriter, err.Error(), http.StatusPreconditionFailed)
+		logger.Err(err.Error(), http.StatusPreconditionFailed)
 		return
 	}
 
 	// Update and deploy project
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		common.PipeErr(errWriter, err.Error(), http.StatusInternalServerError)
+		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
-	err = deploy(repo, cli, writer)
+	err = deploy(repo, cli, logger.GetWriter())
 	if err != nil {
-		common.PipeErr(errWriter, err.Error(), http.StatusInternalServerError)
+		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	common.PipeSuccess(writer, "Project build started!", http.StatusCreated)
+	logger.Success("Project startup initiated!", http.StatusCreated)
 }
 
 // downHandler tries to take the deployment offline
 func downHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("DOWN request received")
+	println("DOWN request received")
+
+	logger := newLogger(false, w)
+	defer logger.Close()
 
 	cli, err := docker.NewEnvClient()
 	if err != nil {
@@ -232,14 +220,14 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = getActiveContainers(cli)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusPreconditionFailed)
-		err = killActiveContainers(cli)
+		err = killActiveContainers(cli, logger.GetWriter())
 		if err != nil {
-			log.WithError(err)
+			println(err)
 		}
 		return
 	}
 
-	err = killActiveContainers(cli)
+	err = killActiveContainers(cli, logger.GetWriter())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -252,7 +240,7 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 
 // statusHandler lists currently active project containers
 func statusHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("STATUS request received")
+	println("STATUS request received")
 
 	// Get status of repository
 	repo, err := git.PlainOpen(projectDirectory)
@@ -323,7 +311,10 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 
 // resetHandler shuts down and wipes the project directory
 func resetHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("RESET request received")
+	println("RESET request received")
+
+	logger := newLogger(false, w)
+	defer logger.Close()
 
 	cli, err := docker.NewEnvClient()
 	if err != nil {
@@ -331,7 +322,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = killActiveContainers(cli)
+	err = killActiveContainers(cli, logger.GetWriter())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -350,6 +341,8 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
+	println("LOG request received")
+
 	// Get container name from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -364,10 +357,12 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	container := upReq.Container
+	logger := newLogger(upReq.Stream, w)
+	defer logger.Close()
 
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
@@ -379,12 +374,13 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamps: true,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer logs.Close()
 
 	if upReq.Stream {
-		common.FlushOutput(w, logs)
+		common.FlushRoutine(w, logs)
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)
@@ -392,7 +388,6 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, buf.String())
 	}
-	logs.Close()
 }
 
 // authorized is a function decorator for authorizing RESTful

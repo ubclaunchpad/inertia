@@ -16,13 +16,11 @@ package common
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -182,49 +180,36 @@ func CompareRemotes(localRepo *git.Repository, remoteURL string) error {
 	return nil
 }
 
-// FlushOutput continuously writes everything in given PipeReader
+// FlushRoutine continuously writes everything in given ReadCloser
 // to a ResponseWriter. Use this as a goroutine.
-func FlushOutput(w io.Writer, pipeReader io.ReadCloser) {
+func FlushRoutine(w io.Writer, rc io.ReadCloser) {
 	buffer := make([]byte, 100)
 	for {
 		// Read from pipe then write to ResponseWriter and flush it,
 		// sending the copied content to the client.
-		n, err := pipeReader.Read(buffer)
+		err := Flush(w, rc, buffer)
 		if err != nil {
-			pipeReader.Close()
 			break
 		}
-		data := buffer[0:n]
-		w.Write(data)
-		if f, ok := w.(http.Flusher); ok {
-			f.Flush()
-		}
-
-		// Clear the buffer.
-		for i := 0; i < n; i++ {
-			buffer[i] = 0
-		}
 	}
 }
 
-// PipeErr directs message and status to http.Error when appropriate,
-// otherwise pipes to the given io.Writer using fmt.Print
-func PipeErr(w io.Writer, msg string, status int) {
-	responseWriter, ok := w.(http.ResponseWriter)
-	if ok {
-		http.Error(responseWriter, msg, status)
-	} else {
-		fmt.Fprintf(w, "[ERROR %s] %s", strconv.Itoa(status), msg)
+// Flush emptires reader into buffer and flushes it to writer
+func Flush(w io.Writer, rc io.ReadCloser, buffer []byte) error {
+	n, err := rc.Read(buffer)
+	if err != nil {
+		rc.Close()
+		return err
 	}
-}
+	data := buffer[0:n]
+	w.Write(data)
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
 
-// PipeSuccess directs status to Header and sets content type when appropriate
-// and writes message to given io.Writer
-func PipeSuccess(w io.Writer, msg string, status int) {
-	responseWriter, ok := w.(http.ResponseWriter)
-	if ok {
-		responseWriter.Header().Set("Content-Type", "text/html")
-		responseWriter.WriteHeader(status)
+	// Clear the buffer.
+	for i := 0; i < n; i++ {
+		buffer[i] = 0
 	}
-	fmt.Fprintln(w, msg)
+	return nil
 }
