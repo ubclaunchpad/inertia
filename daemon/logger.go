@@ -68,7 +68,7 @@ func (l *daemonLogger) Println(a interface{}) {
 
 // Err directs message and status to http.Error when appropriate
 func (l *daemonLogger) Err(msg string, status int) {
-	fmt.Fprintf(l.writer, "[ERROR %s] %s", strconv.Itoa(status), msg)
+	fmt.Fprintf(l.writer, "[ERROR %s] %s\n", strconv.Itoa(status), msg)
 	if !l.stream {
 		http.Error(l.httpWriter, msg, status)
 	}
@@ -76,7 +76,7 @@ func (l *daemonLogger) Err(msg string, status int) {
 
 // Success directs status to Header and sets content type when appropriate
 func (l *daemonLogger) Success(msg string, status int) {
-	fmt.Fprintf(l.writer, "[SUCCESS %s] %s", strconv.Itoa(status), msg)
+	fmt.Fprintf(l.writer, "[SUCCESS %s] %s\n", strconv.Itoa(status), msg)
 	if !l.stream {
 		l.httpWriter.Header().Set("Content-Type", "text/html")
 		l.httpWriter.WriteHeader(status)
@@ -92,7 +92,6 @@ func (l *daemonLogger) GetWriter() io.Writer {
 // Close shuts down the logger
 func (l *daemonLogger) Close() {
 	if l.stream {
-		common.Flush(l.httpWriter, l.reader, make([]byte, 100))
 		l.reader.Close()
 	}
 }

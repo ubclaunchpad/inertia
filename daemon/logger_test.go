@@ -46,7 +46,7 @@ func TestErr(t *testing.T) {
 		httpWriter: w,
 	}
 	logger.Err("Wee!", 200)
-	assert.Equal(t, "[ERROR 200] Wee!", b.String())
+	assert.Equal(t, "[ERROR 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.stream = false
@@ -68,7 +68,7 @@ func TestSuccess(t *testing.T) {
 		httpWriter: w,
 	}
 	logger.Success("Wee!", 200)
-	assert.Equal(t, "[SUCCESS 200] Wee!", b.String())
+	assert.Equal(t, "[SUCCESS 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.stream = false

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -29,7 +28,6 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 
 	"github.com/ubclaunchpad/inertia/common"
 )
@@ -137,36 +135,9 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	// Check for existing git repository, clone if no git repository exists.
 	err = common.CheckForGit(projectDirectory)
 	if err != nil {
-		logger.Println("No git repository present - retrieving remote...")
-		pemFile, err := os.Open(daemonGithubKeyLocation)
+		err = setUpProject(remoteURL, logger.GetWriter())
 		if err != nil {
 			logger.Err(err.Error(), http.StatusPreconditionFailed)
-			return
-		}
-		auth, err := common.GetGithubKey(pemFile)
-		if err != nil {
-			logger.Err(err.Error(), http.StatusPreconditionFailed)
-			return
-		}
-
-		// Clone project
-		logger.Println("Cloning " + remoteURL + "...")
-		_, err = common.Clone(projectDirectory, remoteURL, auth, logger.GetWriter())
-		if err != nil && err != git.NoErrAlreadyUpToDate {
-			if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
-				bytes, err := ioutil.ReadFile(daemonGithubKeyLocation + ".pub")
-				if err != nil {
-					bytes = []byte("Error reading key - try running 'inertia [REMOTE] init' again.")
-				}
-				alert := "Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:])
-				logger.Err(alert, http.StatusPreconditionFailed)
-			} else {
-				logger.Err(err.Error(), http.StatusPreconditionFailed)
-				err = common.RemoveContents(projectDirectory)
-				if err != nil {
-					fmt.Fprint(logger.GetWriter(), err)
-				}
-			}
 			return
 		}
 	}

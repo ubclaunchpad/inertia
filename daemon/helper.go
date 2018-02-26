@@ -15,13 +15,18 @@
 package daemon
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 
 	"github.com/ubclaunchpad/inertia/common"
 )
@@ -49,24 +54,8 @@ func processPushEvent(event *github.PushEvent) {
 	// let deploy() handle the pull.
 	err := common.CheckForGit(projectDirectory)
 	if err != nil {
-		println("No git repository present - cloning from push event...")
-		pemFile, err := os.Open(daemonGithubKeyLocation)
+		err = setUpProject(common.GetSSHRemoteURL(*repo.GitURL), os.Stdout)
 		if err != nil {
-			println("No GitHub key found: " + err.Error())
-			return
-		}
-		auth, err := common.GetGithubKey(pemFile)
-		if err != nil {
-			println("Github key couldn't be read: " + err.Error())
-			return
-		}
-		_, err = common.Clone(projectDirectory, common.GetSSHRemoteURL(*repo.GitURL), auth, os.Stdout)
-		if err != nil {
-			println("Clone failed: " + err.Error())
-			err = common.RemoveContents(projectDirectory)
-			if err != nil {
-				println(err)
-			}
 			return
 		}
 	}
@@ -128,4 +117,37 @@ func GetAPIPrivateKey(*jwt.Token) (interface{}, error) {
 		return nil, err
 	}
 	return []byte(key.String()), nil
+}
+
+func setUpProject(remoteURL string, w io.Writer) error {
+	fmt.Fprintln(w, "No git repository present.")
+	pemFile, err := os.Open(daemonGithubKeyLocation)
+	if err != nil {
+		return err
+	}
+	auth, err := common.GetGithubKey(pemFile)
+	if err != nil {
+		return err
+	}
+
+	// Clone project
+	fmt.Fprintln(w, "Cloning "+remoteURL+"...")
+	_, err = common.Clone(projectDirectory, remoteURL, auth, w)
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
+			bytes, err := ioutil.ReadFile(daemonGithubKeyLocation + ".pub")
+			if err != nil {
+				bytes = []byte("Error reading key - try running 'inertia [REMOTE] init' again.")
+			}
+			alert := "access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:])
+			return errors.New(alert)
+		}
+		dirClearErr := common.RemoveContents(projectDirectory)
+		if dirClearErr != nil {
+			fmt.Fprint(w, dirClearErr.Error())
+		}
+		return err
+	}
+
+	return nil
 }
