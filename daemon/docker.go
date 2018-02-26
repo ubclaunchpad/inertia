@@ -28,7 +28,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
-	log "github.com/sirupsen/logrus"
 	"github.com/ubclaunchpad/inertia/common"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
@@ -77,7 +76,7 @@ func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
 
 	// Kill active project containers if there are any
 	fmt.Fprintln(out, "Shutting down active containers...")
-	err = killActiveContainers(cli)
+	err = killActiveContainers(cli, out)
 	if err != nil {
 		return err
 	}
@@ -102,8 +101,11 @@ func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
 		ctx, &container.Config{
 			Image:      dockerCompose,
 			WorkingDir: "/build/project",
-			Env:        []string{"HOME:/build"},
-			Cmd:        []string{"up", "--build"},
+			Cmd: []string{
+				"up",
+				"--build",
+				"-e HOME=/build",
+			},
 		},
 		&container.HostConfig{
 			Binds: []string{
@@ -129,9 +131,9 @@ func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
 	time.Sleep(3 * time.Second)
 	_, err = getActiveContainers(cli)
 	if err != nil {
-		killErr := killActiveContainers(cli)
+		killErr := killActiveContainers(cli, out)
 		if killErr != nil {
-			log.WithError(err)
+			fmt.Fprintln(out, err)
 		}
 		return errors.New("Docker-compose failed: " + err.Error())
 	}
@@ -159,7 +161,7 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 }
 
 // killActiveContainers kills all active project containers (ie not including daemon)
-func killActiveContainers(cli *docker.Client) error {
+func killActiveContainers(cli *docker.Client, out io.Writer) error {
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
@@ -168,7 +170,7 @@ func killActiveContainers(cli *docker.Client) error {
 
 	for _, container := range containers {
 		if container.Names[0] != "/inertia-daemon" {
-			log.Println("Killing " + container.Image + " (" + container.Names[0] + ")...")
+			fmt.Fprintln(out, "Killing "+container.Image+" ("+container.Names[0]+")...")
 			err := cli.ContainerKill(ctx, container.ID, "SIGKILL")
 			if err != nil {
 				return err
@@ -180,6 +182,8 @@ func killActiveContainers(cli *docker.Client) error {
 	if err != nil {
 		return err
 	}
-	log.Println("Removed " + strings.Join(report.ContainersDeleted, ", "))
+	if len(report.ContainersDeleted) > 0 {
+		fmt.Fprintln(out, "Removed "+strings.Join(report.ContainersDeleted, ", "))
+	}
 	return nil
 }

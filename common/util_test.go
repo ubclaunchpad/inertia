@@ -2,10 +2,8 @@ package common
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -62,10 +60,10 @@ func TestCheckForDockerCompose(t *testing.T) {
 	os.Remove(cwd + "/docker-compose.yaml")
 }
 
-func TestFlushOutput(t *testing.T) {
+func TestFlushRoutine(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		reader, writer := io.Pipe()
-		go FlushOutput(w, reader)
+		go FlushRoutine(w, reader)
 
 		fmt.Println(writer, "Hello!")
 		time.Sleep(time.Millisecond)
@@ -100,31 +98,4 @@ func TestFlushOutput(t *testing.T) {
 
 		i++
 	}
-}
-
-func TestPipeErr(t *testing.T) {
-	var b bytes.Buffer
-	w := httptest.NewRecorder()
-	PipeErr(&b, "Wee!", 200)
-	PipeErr(w, "Wee!", 200)
-	assert.Equal(t, "[ERROR 200] Wee!", b.String())
-
-	body, err := ioutil.ReadAll(w.Body)
-	assert.Nil(t, err)
-	assert.Equal(t, "Wee!\n", string(body))
-	assert.Equal(t, 200, w.Code)
-}
-
-func TestPipeSuccess(t *testing.T) {
-	var b bytes.Buffer
-	w := httptest.NewRecorder()
-	PipeSuccess(&b, "Wee!", 200)
-	PipeSuccess(w, "Wee!", 200)
-	assert.Equal(t, "Wee!\n", b.String())
-
-	body, err := ioutil.ReadAll(w.Body)
-	assert.Nil(t, err)
-	assert.Equal(t, "Wee!\n", string(body))
-	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
 }

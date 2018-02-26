@@ -22,8 +22,9 @@ const (
 	DaemonOkResp = "I'm a little Webhook, short and stout!"
 )
 
-// UpRequest is the body of a up request to the daemon.
-type UpRequest struct {
-	Stream bool   `json:"stream"`
-	Repo   string `json:"repo"`
+// DaemonRequest is the configurable body of a request to the daemon.
+type DaemonRequest struct {
+	Stream    bool   `json:"stream"`
+	Repo      string `json:"repo,omitempty"`
+	Container string `json:"container,omitempty"`
 }
