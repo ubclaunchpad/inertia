@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package main
 
 // initCmd represents the init command
 import (
@@ -41,7 +41,7 @@ to succeed.`,
 }
 
 func init() {
-	RootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(initCmd)
 
 	// Here you will define your flags and configuration settings.
 

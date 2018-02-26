@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package main
 
 import (
 	"bufio"
@@ -284,7 +284,7 @@ func addRemoteCommand(remoteName string, cmd *cobra.Command) {
 	cmd.AddCommand(deployResetCmd)
 	cmd.AddCommand(deployInitCmd)
 	cmd.AddCommand(deployLogsCmd)
-	RootCmd.AddCommand(cmd)
+	rootCmd.AddCommand(cmd)
 
 	cmd.PersistentFlags().Bool("stream", false, "Stream output from daemon")
 }

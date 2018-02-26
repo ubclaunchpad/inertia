@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package main
 
 import (
 	"fmt"
@@ -74,20 +74,18 @@ var tokenCmd = &cobra.Command{
 }
 
 func init() {
-	if os.Getenv("DAEMON") != "true" {
-		daemonCmd.Hidden = true
+	if os.Getenv("INERTIA_DAEMON") == "true" {
+		rootCmd.AddCommand(daemonCmd)
+		daemonCmd.AddCommand(runCmd)
+		daemonCmd.AddCommand(tokenCmd)
+		// Here you will define your flags and configuration settings.
+
+		// Cobra supports Persistent Flags which will work for this command
+		// and all subcommands, e.g.:
+		// daemonCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+		// Cobra supports local flags which will only run when this command
+		// is called directly, e.g.:
+		runCmd.Flags().StringP("port", "p", "8081", "Set port for daemon to run on")
 	}
-	RootCmd.AddCommand(daemonCmd)
-	daemonCmd.AddCommand(runCmd)
-	daemonCmd.AddCommand(tokenCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// daemonCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	runCmd.Flags().StringP("port", "p", "8081", "Set port for daemon to run on")
 }
