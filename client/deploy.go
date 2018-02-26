@@ -38,6 +38,7 @@ type DaemonRequester interface {
 	Down() (*http.Response, error)
 	Status() (*http.Response, error)
 	Reset() (*http.Response, error)
+	Logs(bool, string) (*http.Response, error)
 }
 
 // GetDeployment returns the local deployment setup
@@ -74,7 +75,7 @@ func (d *Deployment) Up(stream bool) (*http.Response, error) {
 		return nil, err
 	}
 
-	reqContent := common.UpRequest{
+	reqContent := common.DaemonRequest{
 		Stream: stream,
 		Repo:   common.GetSSHRemoteURL(origin.Config().URLs[0]),
 	}
@@ -146,5 +147,31 @@ func (d *Deployment) Reset() (*http.Response, error) {
 		return nil, errors.New("Error when reseting project on deployment")
 	}
 
+	return resp, nil
+}
+
+// Logs get logs
+func (d *Deployment) Logs(stream bool, container string) (*http.Response, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/logs"
+
+	reqContent := common.DaemonRequest{
+		Stream:    stream,
+		Container: container,
+	}
+	body, err := json.Marshal(reqContent)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", host, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+d.Auth)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.New("Error when deploying project: " + err.Error())
+	}
 	return resp, nil
 }
