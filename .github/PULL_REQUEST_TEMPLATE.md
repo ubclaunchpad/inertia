@@ -1,6 +1,4 @@
-:hourglass: **Status**: WIP
-
-:tickets: **Ticket(s)**: #42
+:tickets: **Ticket(s)**: Closes #
 
 ---
 

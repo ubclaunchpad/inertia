@@ -22,7 +22,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Supported%20VPS%20platforms-Ubuntu%2014.04%2F16.04%20%7C%20CentOS%207-blue.svg" />
+  <img src="https://img.shields.io/badge/VPS%20Platforms-Ubuntu%2016.04%2F14.04%20%7C%20Debian%209.3%2F8%20%7C%20CentOS%207-blue.svg" />
 </p>
 
 ----------------
@@ -113,7 +113,8 @@ You can also start a container that sets up a mock VPS for testing:
 
 ```bash
 $> go install
-$> make testenv-ubuntu
+$> make testenv VPS_OS=ubuntu VERSION=16.04
+# defaults to ubuntu:lastest without args
 # note the location of the key that is printed
 ```
 

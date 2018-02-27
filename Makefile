@@ -1,4 +1,4 @@
-.PHONY: test test-verbose test-profile testenv-ubuntu clean docker bootstrap
+.PHONY: test test-verbose test-profile testenv clean docker bootstrap
 
 PACKAGES = `go list ./... | grep -v vendor/`
 SSH_PORT = 22
@@ -11,28 +11,20 @@ inertia:
 	go build
 
 test:
-	make testenv-$(VPS_OS) VERSION=$(VERSION)
+	make testenv VPS_OS=$(VPS_OS) VERSION=$(VERSION)
 	go test $(PACKAGES) --cover
 
 test-verbose:
-	make testenv-$(VPS_OS) VERSION=$(VERSION)	
+	make testenv VPS_OS=$(VPS_OS) VERSION=$(VERSION)	
 	go test $(PACKAGES) -v --cover
 
-testenv-ubuntu:
+testenv:
 	docker stop testvps || true && docker rm testvps || true
-	docker build -f ./test_env/Dockerfile.ubuntu \
-		-t ubuntuvps \
+	docker build -f ./test_env/Dockerfile.$(VPS_OS) \
+		-t $(VPS_OS)vps \
 		--build-arg VERSION=$(VERSION) \
 		./test_env
-	bash ./test_env/startvps.sh $(SSH_PORT) ubuntuvps
-
-testenv-centos:
-	docker stop testvps || true && docker rm testvps || true
-	docker build -f ./test_env/Dockerfile.centos \
-		-t centosvps \
-		--build-arg VERSION=$(VERSION) \
-		./test_env
-	bash ./test_env/startvps.sh $(SSH_PORT) centosvps
+	bash ./test_env/startvps.sh $(SSH_PORT) $(VPS_OS)vps
 
 clean: inertia
 	rm -f inertia
