@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -14,6 +15,11 @@ import (
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon"
+)
+
+var (
+	errInvalidUser    = errors.New("invalid user")
+	errInvalidAddress = errors.New("invalid IP address")
 )
 
 // remoteCmd represents the remote command
@@ -68,46 +74,51 @@ file. Specify a VPS name.`,
 		port, _ := cmd.Flags().GetString("port")
 		sshPort, _ := cmd.Flags().GetString("sshPort")
 
-		homeEnvVar := os.Getenv("HOME")
-		sshDir := filepath.Join(homeEnvVar, ".ssh")
-		defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
-
-		var response string
-		fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'):")
-		_, err = fmt.Scanln(&response)
+		err = addRemoteWalkthrough(os.Stdin, args[0], port, sshPort, client.AddNewRemote)
 		if err != nil {
-			response = defaultSSHLoc
-		}
-		pemLoc := response
-
-		fmt.Println("Enter user:")
-		_, err = fmt.Scanln(&response)
-		if err != nil {
-			log.Fatal("That is not a valid user - please try again.")
-		}
-		user := response
-
-		fmt.Println("Enter IP address of remote:")
-		_, err = fmt.Scanln(&response)
-		if err != nil {
-			log.Fatal("That is not a valid IP address - please try again.")
-		}
-		address := response
-
-		fmt.Println("Port " + port + " will be used as the daemon port.")
-		fmt.Println("Port " + sshPort + " will be used as the SSH port.")
-		fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
-		fmt.Println("of the -ssh flag to set a custom SSH port.")
-
-		err = client.AddNewRemote(args[0], address, sshPort, user, pemLoc, port)
-		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		fmt.Println("\nRemote '" + args[0] + "' has been added!")
 		fmt.Println("You can now run 'inertia " + args[0] + " init' to set this remote up")
 		fmt.Println("for continuous deployment.")
 	},
+}
+
+// addRemoteWalkthough is the walkthrough that asks users for RemoteVPS details
+func addRemoteWalkthrough(in io.Reader, name, port, sshPort string, addRemote func(string, string, string, string, string, string) error) error {
+	homeEnvVar := os.Getenv("HOME")
+	sshDir := filepath.Join(homeEnvVar, ".ssh")
+	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
+
+	var response string
+	fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'):")
+	_, err := fmt.Fscanln(in, &response)
+	if err != nil {
+		response = defaultSSHLoc
+	}
+	pemLoc := response
+
+	fmt.Println("Enter user:")
+	n, err := fmt.Fscanln(in, &response)
+	if err != nil || n == 0 {
+		return errInvalidUser
+	}
+	user := response
+
+	fmt.Println("Enter IP address of remote:")
+	n, err = fmt.Fscanln(in, &response)
+	if err != nil || n == 0 {
+		return errInvalidAddress
+	}
+	address := response
+
+	fmt.Println("Port " + port + " will be used as the daemon port.")
+	fmt.Println("Port " + sshPort + " will be used as the SSH port.")
+	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
+	fmt.Println("of the -ssh flag to set a custom SSH port.")
+
+	return addRemote(name, address, sshPort, user, pemLoc, port)
 }
 
 // deployInitCmd represents the inertia [REMOTE] init command
