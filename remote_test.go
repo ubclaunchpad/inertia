@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,7 +24,7 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 	fmt.Fprintln(in, "user")
 	fmt.Fprintln(in, "0.0.0.0")
 
-	_, err = in.Seek(0, os.SEEK_SET)
+	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
 	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", mockCallback)
