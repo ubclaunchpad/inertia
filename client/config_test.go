@@ -2,14 +2,13 @@ package client
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := createConfigDirectory()
+	err := createConfigFile()
 	assert.Nil(t, err)
 	config, err := GetProjectConfigFromDisk()
 	assert.Nil(t, err)
@@ -29,6 +28,9 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, config.Remotes["test"], readConfig.Remotes["test"])
 
-	cwd, _ := os.Getwd()
-	os.Remove(filepath.Join(cwd, configFileName))
+	path, err := getConfigFilePath()
+	assert.Nil(t, err)
+	println(path)
+	err = os.Remove(path)
+	assert.Nil(t, err)
 }

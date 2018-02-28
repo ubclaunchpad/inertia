@@ -41,12 +41,12 @@ func InitializeInertiaProject() error {
 		return err
 	}
 
-	return createConfigDirectory()
+	return createConfigFile()
 }
 
-// createConfigDirectory returns an error if the config directory
+// createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func createConfigDirectory() error {
+func createConfigFile() error {
 	configFilePath, err := getConfigFilePath()
 	if err != nil {
 		return err
@@ -93,11 +93,15 @@ func createConfigDirectory() error {
 
 // Write writes configuration to Inertia config file.
 func (config *Config) Write() error {
-	configFilePath, err := getConfigFilePath()
+	path, err := getConfigFilePath()
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(configFilePath, []byte(""), 0644)
+	// Overwrite file if file exists
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		ioutil.WriteFile(path, []byte(""), 0644)
+	}
+	// Write configuration to file
 	encoder := toml.NewEncoder(config.Writer)
 	encoder.Indent = "    "
 	return encoder.Encode(config)
