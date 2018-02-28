@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ import (
 type Config struct {
 	Project string                `toml:"project"`
 	Remotes map[string]*RemoteVPS `toml:"remotes"`
-	Writer  *os.File              `toml:"-"`
+	Writer  io.Writer             `toml:"-"`
 }
 
 var (
