@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -30,19 +31,25 @@ inerta remote add gcloud
 inerta gcloud init
 inerta remote status gcloud`,
 	Run: func(cmd *cobra.Command, args []string) {
-		verbose, _ := cmd.Flags().GetBool("verbose")
-		config, err := client.GetProjectConfigFromDisk()
-		if err != nil {
-			log.Fatal(err)
-		}
-		if config.CurrentRemoteName == client.NoInertiaRemote {
-			println("No remote currently set.")
-		} else if verbose {
-			fmt.Printf("%s\n", config.CurrentRemoteName)
-			fmt.Printf("%+v\n", config.CurrentRemoteVPS)
-		} else {
-			println(config.CurrentRemoteName)
-		}
+		/*
+			verbose, _ := cmd.Flags().GetBool("verbose")
+			config, err := client.GetProjectConfigFromDisk()
+			if err != nil {
+				log.Fatal(err)
+			}
+			remote, found := config.Remotes['']
+			if !found {
+				handler = b.help
+			}
+			if config.CurrentRemoteName == client.NoInertiaRemote {
+				println("No remote currently set.")
+			} else if verbose {
+				fmt.Printf("%s\n", config.CurrentRemoteName)
+				fmt.Printf("%+v\n", config.CurrentRemoteVPS)
+			} else {
+				println(config.CurrentRemoteName)
+			}
+		*/
 	},
 }
 
@@ -56,9 +63,15 @@ file. Specify a VPS name.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		_, err := client.GetProjectConfigFromDisk()
+		config, err := client.GetProjectConfigFromDisk()
 		if err != nil {
 			log.WithError(err)
+		}
+
+		_, found := config.Remotes[args[0]]
+		if found {
+			log.WithError(errors.New("Remote " + args[0] + " already exists."))
+			return
 		}
 
 		port, _ := cmd.Flags().GetString("port")
@@ -108,7 +121,7 @@ file. Specify a VPS name.`,
 
 // deployInitCmd represents the inertia [REMOTE] init command
 var deployInitCmd = &cobra.Command{
-	Use:   "init",
+	Use:   "init [REMOTE]",
 	Short: "Initialize the VPS for continuous deployment",
 	Long: `Initialize the VPS for continuous deployment.
 This sets up everything you might need and brings the Inertia daemon
@@ -116,6 +129,7 @@ online on your remote.
 A URL will be provided to direct GitHub webhooks to, the daemon will
 request access to the repository via a public key, and will listen
 for updates to this repository's remote master branch.`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: support correct remote based on which
 		// cmd is calling this init, see "deploy.go"
@@ -126,10 +140,13 @@ for updates to this repository's remote master branch.`,
 			log.Fatal(err)
 		}
 
-		session := client.NewSSHRunner(config.CurrentRemoteVPS)
-		err = config.CurrentRemoteVPS.Bootstrap(session, "", config)
-		if err != nil {
-			log.Fatal(err)
+		remote, found := config.Remotes[args[0]]
+		if found {
+			session := client.NewSSHRunner(remote)
+			err = remote.Bootstrap(session, "", config)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	},
 }
@@ -147,14 +164,15 @@ behaviour, and other information.`,
 			log.WithError(err)
 		}
 
-		if args[0] != config.CurrentRemoteName {
+		remote, found := config.Remotes[args[0]]
+		if !found {
 			println("No such remote " + args[0])
 			println("Inertia currently supports one remote per repository")
 			println("Run `inertia remote -v' to see what remote is available")
 			os.Exit(1)
 		}
 
-		host := "http://" + config.CurrentRemoteVPS.GetIPAndPort()
+		host := "http://" + remote.GetIPAndPort()
 		resp, err := http.Get(host)
 		if err != nil {
 			println("Could not connect to daemon")
@@ -176,7 +194,7 @@ behaviour, and other information.`,
 		}
 
 		fmt.Printf("Remote instance '%s' accepting requests at %s\n",
-			config.CurrentRemoteName, host)
+			args[0], host)
 	},
 }
 

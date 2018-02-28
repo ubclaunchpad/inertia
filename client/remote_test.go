@@ -13,25 +13,29 @@ import (
 
 func getTestRemote() *RemoteVPS {
 	return &RemoteVPS{
-		IP:         "127.0.0.1",
-		PEM:        "/Users/me/and/my/pem",
-		User:       "me",
-		DaemonPort: "5555",
+		IP:   "127.0.0.1",
+		PEM:  "/Users/me/and/my/pem",
+		User: "me",
+		Daemon: &DaemonConfig{
+			Port: "5555",
+		},
 	}
 }
 
 func getInstrumentedTestRemote() *RemoteVPS {
 	remote := &RemoteVPS{
-		IP:         "0.0.0.0",
-		PEM:        "../test_env/test_key",
-		User:       "root",
-		DaemonPort: "8081",
+		IP:   "0.0.0.0",
+		PEM:  "../test_env/test_key",
+		User: "root",
+		Daemon: &DaemonConfig{
+			Port: "8081",
+		},
 	}
 	travis := os.Getenv("TRAVIS")
 	if travis != "" {
-		remote.SSHPort = "69"
+		remote.Daemon.SSHPort = "69"
 	} else {
-		remote.SSHPort = "22"
+		remote.Daemon.SSHPort = "22"
 	}
 	return remote
 }

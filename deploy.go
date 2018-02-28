@@ -255,10 +255,11 @@ func init() {
 		return
 	}
 
-	newCmd := &cobra.Command{}
-	*newCmd = *deployCmd
-
-	addRemoteCommand(config.CurrentRemoteName, newCmd)
+	for name := range config.Remotes {
+		newCmd := &cobra.Command{}
+		*newCmd = *deployCmd
+		addRemoteCommand(name, newCmd)
+	}
 }
 
 func addRemoteCommand(remoteName string, cmd *cobra.Command) {

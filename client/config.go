@@ -1,29 +1,28 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	"github.com/BurntSushi/toml"
+
 	"github.com/ubclaunchpad/inertia/common"
 )
 
 // Config represents the current projects configuration.
 type Config struct {
-	CurrentRemoteName string     `json:"name"`
-	CurrentRemoteVPS  *RemoteVPS `json:"remote"`
-	DaemonAPIToken    string     `json:"token"`
-	io.Writer         `json:"-"`
+	Project   string                `toml:"project"`
+	Remotes   map[string]*RemoteVPS `toml:"remotes"`
+	io.Writer `toml:"-"`
 }
 
-const (
+var (
 	// NoInertiaRemote is used to warn about missing inertia remote
-	NoInertiaRemote  = "No inertia remote"
-	configFolderName = ".inertia"
-	configFileName   = "config.json"
+	NoInertiaRemote = "No inertia remote"
+	configFileName  = ".inertia.toml"
 )
 
 // InitializeInertiaProject creates the inertia config folder and
@@ -48,17 +47,11 @@ func InitializeInertiaProject() error {
 // createConfigDirectory returns an error if the config directory
 // already exists (the project is already initialized).
 func createConfigDirectory() error {
-	configDirPath, err := getProjectConfigFolderPath()
-	if err != nil {
-		return err
-	}
-
 	configFilePath, err := getConfigFilePath()
 	if err != nil {
 		return err
 	}
 
-	_, dirErr := os.Stat(configDirPath)
 	s, fileErr := os.Stat(configFilePath)
 
 	// Check if everything already exists.
@@ -66,17 +59,16 @@ func createConfigDirectory() error {
 		return errors.New("inertia already properly configured in this folder")
 	}
 
-	// Something doesn't exist.
-	if os.IsNotExist(dirErr) {
-		os.Mkdir(configDirPath, os.ModePerm)
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
 	}
 
 	// Directory exists. Make sure JSON exists.
 	if os.IsNotExist(fileErr) {
 		config := Config{
-			CurrentRemoteName: NoInertiaRemote,
-			CurrentRemoteVPS:  &RemoteVPS{},
-			DaemonAPIToken:    "",
+			Project: filepath.Base(cwd),
+			Remotes: make(map[string]*RemoteVPS),
 		}
 
 		path, err := getConfigFilePath()
@@ -99,14 +91,10 @@ func createConfigDirectory() error {
 	return nil
 }
 
-// Write writes configuration to JSON file in .inertia folder.
-func (config *Config) Write() (int, error) {
-	inertiaJSON, err := json.Marshal(config)
-	if err != nil {
-		return -1, err
-	}
-
-	return config.Writer.Write(inertiaJSON)
+// Write writes configuration to Inertia config file.
+func (config *Config) Write() error {
+	encoder := toml.NewEncoder(config.Writer)
+	return encoder.Encode(config)
 }
 
 // GetProjectConfigFromDisk returns the current project's configuration.
@@ -127,7 +115,7 @@ func GetProjectConfigFromDisk() (*Config, error) {
 	}
 
 	var result Config
-	err = json.Unmarshal(raw, &result)
+	err = toml.Unmarshal(raw, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -141,21 +129,9 @@ func GetProjectConfigFromDisk() (*Config, error) {
 	return &result, err
 }
 
-// getProjectConfigFolderPath gets the absolute location of the project
-// configuration folder.
-func getProjectConfigFolderPath() (string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(cwd, configFolderName), nil
-}
-
-// getConfigFilePath returns the absolute path of the config JSON
-// file.
+// getConfigFilePath returns the absolute path of the config file.
 func getConfigFilePath() (string, error) {
-	path, err := getProjectConfigFolderPath()
+	path, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
