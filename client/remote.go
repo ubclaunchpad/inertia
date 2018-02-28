@@ -13,6 +13,7 @@ import (
 
 // RemoteVPS contains parameters for the VPS
 type RemoteVPS struct {
+	Name   string        `toml:"name"`
 	IP     string        `toml:"IP"`
 	User   string        `toml:"user"`
 	PEM    string        `toml:"pemfile"`
@@ -235,7 +236,8 @@ func AddNewRemote(name, IP, sshPort, user, pemLoc, port string) error {
 		return err
 	}
 
-	config.Remotes[name] = &RemoteVPS{
+	config.AddRemote(&RemoteVPS{
+		Name: name,
 		IP:   IP,
 		User: user,
 		PEM:  pemLoc,
@@ -243,7 +245,7 @@ func AddNewRemote(name, IP, sshPort, user, pemLoc, port string) error {
 			Port:    port,
 			SSHPort: sshPort,
 		},
-	}
+	})
 
 	return config.Write()
 }

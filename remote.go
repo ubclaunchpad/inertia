@@ -44,9 +44,9 @@ inerta remote status gcloud`,
 			log.Fatal(err)
 		}
 
-		remote, found := config.Remotes[args[0]]
+		remote, found := config.GetRemote(args[0])
 		if found {
-			printRemoteDetails(args[0], remote)
+			printRemoteDetails(remote)
 		}
 	},
 }
@@ -66,7 +66,7 @@ file. Specify a VPS name.`,
 			log.Fatal(err)
 		}
 
-		_, found := config.Remotes[args[0]]
+		_, found := config.GetRemote(args[0])
 		if found {
 			log.Fatal(errors.New("Remote " + args[0] + " already exists."))
 		}
@@ -139,7 +139,7 @@ for updates to this repository's remote master branch.`,
 		}
 
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		remote, found := config.Remotes[remoteName]
+		remote, found := config.GetRemote(remoteName)
 		if found {
 			session := client.NewSSHRunner(remote)
 			err = remote.Bootstrap(session, "", config)
@@ -165,7 +165,7 @@ behaviour, and other information.`,
 			log.WithError(err)
 		}
 
-		remote, found := config.Remotes[args[0]]
+		remote, found := config.GetRemote(args[0])
 		if !found {
 			println("No such remote " + args[0])
 			println("Inertia currently supports one remote per repository")
@@ -211,11 +211,11 @@ var listCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		for name, remote := range config.Remotes {
+		for _, remote := range config.Remotes {
 			if verbose {
-				printRemoteDetails(name, remote)
+				printRemoteDetails(remote)
 			} else {
-				fmt.Println(name)
+				fmt.Println(remote.Name)
 			}
 		}
 	},
@@ -233,10 +233,9 @@ var removeCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		_, found := config.Remotes[args[0]]
+		_, found := config.GetRemote(args[0])
 		if found {
-			config.Remotes[args[0]] = nil
-			delete(config.Remotes, args[0])
+			config.RemoveRemote(args[0])
 			err = config.Write()
 			if err != nil {
 				log.Fatal("Failed to remove remote: " + err.Error())
@@ -248,8 +247,8 @@ var removeCmd = &cobra.Command{
 	},
 }
 
-func printRemoteDetails(name string, remote *client.RemoteVPS) {
-	fmt.Printf("Remote %s: \n", name)
+func printRemoteDetails(remote *client.RemoteVPS) {
+	fmt.Printf("Remote %s: \n", remote.Name)
 	fmt.Printf(" - IP Address:  %s\n", remote.IP)
 	fmt.Printf(" - Daemon Port: %s\n", remote.Daemon.Port)
 	fmt.Printf(" - VPS User:    %s\n", remote.User)

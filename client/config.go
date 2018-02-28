@@ -12,18 +12,61 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-// Config represents the current projects configuration.
-type Config struct {
-	Project string                `toml:"project"`
-	Remotes map[string]*RemoteVPS `toml:"remotes"`
-	Writer  io.Writer             `toml:"-"`
-}
-
 var (
 	// NoInertiaRemote is used to warn about missing inertia remote
 	NoInertiaRemote = "No inertia remote"
 	configFileName  = ".inertia.toml"
 )
+
+// Config represents the current projects configuration.
+type Config struct {
+	Project string       `toml:"project"`
+	Remotes []*RemoteVPS `toml:"remotes"`
+	Writer  io.Writer    `toml:"-"`
+}
+
+// Write writes configuration to Inertia config file.
+func (config *Config) Write() error {
+	path, err := getConfigFilePath()
+	if err != nil {
+		return err
+	}
+	// Overwrite file if file exists
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		ioutil.WriteFile(path, []byte(""), 0644)
+	}
+	// Write configuration to file
+	encoder := toml.NewEncoder(config.Writer)
+	encoder.Indent = "    "
+	return encoder.Encode(config)
+}
+
+// GetRemote retrieves a remote by name
+func (config *Config) GetRemote(name string) (*RemoteVPS, bool) {
+	for _, remote := range config.Remotes {
+		if remote.Name == name {
+			return remote, true
+		}
+	}
+	return nil, false
+}
+
+// AddRemote adds a remote to configuration
+func (config *Config) AddRemote(remote *RemoteVPS) {
+	config.Remotes = append(config.Remotes, remote)
+}
+
+// RemoveRemote removes remote at with given name
+func (config *Config) RemoveRemote(name string) bool {
+	for index, remote := range config.Remotes {
+		if remote.Name == name {
+			remote = nil
+			config.Remotes = append(config.Remotes[:index], config.Remotes[index+1:]...)
+			return true
+		}
+	}
+	return false
+}
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
@@ -68,7 +111,7 @@ func createConfigFile() error {
 	if os.IsNotExist(fileErr) {
 		config := Config{
 			Project: filepath.Base(cwd),
-			Remotes: make(map[string]*RemoteVPS),
+			Remotes: make([]*RemoteVPS, 0),
 		}
 
 		path, err := getConfigFilePath()
@@ -89,22 +132,6 @@ func createConfigFile() error {
 	}
 
 	return nil
-}
-
-// Write writes configuration to Inertia config file.
-func (config *Config) Write() error {
-	path, err := getConfigFilePath()
-	if err != nil {
-		return err
-	}
-	// Overwrite file if file exists
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		ioutil.WriteFile(path, []byte(""), 0644)
-	}
-	// Write configuration to file
-	encoder := toml.NewEncoder(config.Writer)
-	encoder.Indent = "    "
-	return encoder.Encode(config)
 }
 
 // GetProjectConfigFromDisk returns the current project's configuration.

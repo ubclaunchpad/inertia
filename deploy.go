@@ -255,10 +255,10 @@ func init() {
 		return
 	}
 
-	for name := range config.Remotes {
+	for _, remote := range config.Remotes {
 		newCmd := &cobra.Command{}
 		*newCmd = *deployCmd
-		addRemoteCommand(name, newCmd)
+		addRemoteCommand(remote.Name, newCmd)
 	}
 }
 

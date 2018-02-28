@@ -41,10 +41,15 @@ func GetDeployment() (*Deployment, error) {
 		return nil, err
 	}
 
-	auth := config.Remotes["local"].Daemon.Token
+	// @TODO
+	remote, found := config.GetRemote("local")
+	if !found {
+		return nil, errors.New("Remote not found")
+	}
+	auth := remote.Daemon.Token
 
 	return &Deployment{
-		RemoteVPS:  config.Remotes["local"],
+		RemoteVPS:  remote,
 		Repository: repo,
 		Auth:       auth,
 	}, nil
