@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -42,14 +43,14 @@ func TestRemoteAddWalkthroughFailure(t *testing.T) {
 	fmt.Fprintln(in, "pemfile")
 	fmt.Fprintln(in, "")
 
-	_, err = in.Seek(0, os.SEEK_SET)
+	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
 	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", mockCallback)
 	assert.Equal(t, errInvalidUser, err)
 
 	in.WriteAt([]byte("pemfile\nuser\n\n"), 0)
-	_, err = in.Seek(0, os.SEEK_SET)
+	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
 	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", mockCallback)
