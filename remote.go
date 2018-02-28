@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -26,30 +27,21 @@ installing docker, starting the Inertia daemon and other low level configuration
 of the VPS. Must run 'inertia init' in your repository before using.
 
 Example:
-
 inerta remote add gcloud
 inerta gcloud init
 inerta remote status gcloud`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		/*
-			verbose, _ := cmd.Flags().GetBool("verbose")
-			config, err := client.GetProjectConfigFromDisk()
-			if err != nil {
-				log.Fatal(err)
-			}
-			remote, found := config.Remotes['']
-			if !found {
-				handler = b.help
-			}
-			if config.CurrentRemoteName == client.NoInertiaRemote {
-				println("No remote currently set.")
-			} else if verbose {
-				fmt.Printf("%s\n", config.CurrentRemoteName)
-				fmt.Printf("%+v\n", config.CurrentRemoteVPS)
-			} else {
-				println(config.CurrentRemoteName)
-			}
-		*/
+		// Ensure project initialized.
+		config, err := client.GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		remote, found := config.Remotes[args[0]]
+		if found {
+			printRemoteDetails(args[0], remote)
+		}
 	},
 }
 
@@ -65,13 +57,12 @@ file. Specify a VPS name.`,
 		// Ensure project initialized.
 		config, err := client.GetProjectConfigFromDisk()
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		_, found := config.Remotes[args[0]]
 		if found {
-			log.WithError(errors.New("Remote " + args[0] + " already exists."))
-			return
+			log.Fatal(errors.New("Remote " + args[0] + " already exists."))
 		}
 
 		port, _ := cmd.Flags().GetString("port")
@@ -121,7 +112,7 @@ file. Specify a VPS name.`,
 
 // deployInitCmd represents the inertia [REMOTE] init command
 var deployInitCmd = &cobra.Command{
-	Use:   "init [REMOTE]",
+	Use:   "init",
 	Short: "Initialize the VPS for continuous deployment",
 	Long: `Initialize the VPS for continuous deployment.
 This sets up everything you might need and brings the Inertia daemon
@@ -129,24 +120,23 @@ online on your remote.
 A URL will be provided to direct GitHub webhooks to, the daemon will
 request access to the repository via a public key, and will listen
 for updates to this repository's remote master branch.`,
-	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: support correct remote based on which
-		// cmd is calling this init, see "deploy.go"
-
 		// Ensure project initialized.
 		config, err := client.GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		remote, found := config.Remotes[args[0]]
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		remote, found := config.Remotes[remoteName]
 		if found {
 			session := client.NewSSHRunner(remote)
 			err = remote.Bootstrap(session, "", config)
 			if err != nil {
 				log.Fatal(err)
 			}
+		} else {
+			log.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
 		}
 	},
 }
@@ -198,10 +188,69 @@ behaviour, and other information.`,
 	},
 }
 
+// listCmd represents the inertia list command
+var listCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "List currently configured remotes",
+	Long:  `Lists all currently configured remotes.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		verbose, _ := cmd.Flags().GetBool("verbose")
+		config, err := client.GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for name, remote := range config.Remotes {
+			if verbose {
+				printRemoteDetails(name, remote)
+			} else {
+				fmt.Println(name)
+			}
+		}
+	},
+}
+
+// removeCmd represents the inertia list command
+var removeCmd = &cobra.Command{
+	Use:   "rm [REMOTE]",
+	Short: "Remove a remote.",
+	Long:  `Remove a remote from Inertia's configuration file.`,
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		config, err := client.GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, found := config.Remotes[args[0]]
+		if found {
+			config.Remotes[args[0]] = nil
+			delete(config.Remotes, args[0])
+			err = config.Write()
+			if err != nil {
+				log.Fatal("Failed to remove remote: " + err.Error())
+			}
+			fmt.Println("Remote " + args[0] + " removed.")
+		} else {
+			log.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
+		}
+	},
+}
+
+func printRemoteDetails(name string, remote *client.RemoteVPS) {
+	fmt.Printf("Remote %s: \n", name)
+	fmt.Printf(" - IP Address:  %s\n", remote.IP)
+	fmt.Printf(" - Daemon Port: %s\n", remote.Daemon.Port)
+	fmt.Printf(" - VPS User:    %s\n", remote.User)
+	fmt.Printf(" - PEM File:    %s\n", remote.PEM)
+}
+
 func init() {
 	rootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
 	remoteCmd.AddCommand(statusCmd)
+	remoteCmd.AddCommand(listCmd)
+	remoteCmd.AddCommand(removeCmd)
 
 	// Here you will define your flags and configuration settings.
 
@@ -211,7 +260,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	remoteCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
+	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("port", "p", daemon.DefaultPort, "Daemon port")
 	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }

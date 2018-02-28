@@ -2,7 +2,6 @@ package client
 
 import (
 	"errors"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,9 +13,9 @@ import (
 
 // Config represents the current projects configuration.
 type Config struct {
-	Project   string                `toml:"project"`
-	Remotes   map[string]*RemoteVPS `toml:"remotes"`
-	io.Writer `toml:"-"`
+	Project string                `toml:"project"`
+	Remotes map[string]*RemoteVPS `toml:"remotes"`
+	Writer  *os.File              `toml:"-"`
 }
 
 var (
@@ -93,7 +92,13 @@ func createConfigDirectory() error {
 
 // Write writes configuration to Inertia config file.
 func (config *Config) Write() error {
+	configFilePath, err := getConfigFilePath()
+	if err != nil {
+		return err
+	}
+	ioutil.WriteFile(configFilePath, []byte(""), 0644)
 	encoder := toml.NewEncoder(config.Writer)
+	encoder.Indent = "    "
 	return encoder.Encode(config)
 }
 
