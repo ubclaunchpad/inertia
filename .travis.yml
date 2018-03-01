@@ -43,7 +43,7 @@ before_install:
   - go get honnef.co/go/tools/cmd/megacheck                     # Static analysis
   - go get github.com/fzipp/gocyclo                             # Look for complexity
   - go get github.com/mattn/goveralls                           # Coveralls coverage reports
-  - go get -u github.com/mitchellh/gox                             # Release binary builder
+  - go get -u github.com/mitchellh/gox                          # Release binary builder
   - go get -u github.com/golang/dep/cmd/dep                     # Dependency management
   - dep ensure
 

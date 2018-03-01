@@ -7,4 +7,6 @@ echo "Building release $RELEASE"
 make docker RELEASE=$RELEASE
 
 # Build Inertia Go binaries for specified platforms
-gox -output="inertia_$(git describe --tags).{{.OS}}.{{.Arch}}" -osarch="$PLATFORMS"
+gox -output="inertia_$(git describe --tags).{{.OS}}.{{.Arch}}" \
+    -ldflags "-X main.Version=$RELEASE" \
+    -osarch="$PLATFORMS" \

@@ -7,6 +7,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version is the current build of Inertia
+var Version string
+
 var rootCmd = &cobra.Command{
 	Use:   "inertia",
 	Short: "Inertia is a continuous-deployment scaffold",
