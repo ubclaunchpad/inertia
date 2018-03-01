@@ -20,6 +20,7 @@ var (
 
 // Config represents the current projects configuration.
 type Config struct {
+	Version string       `toml:"inertia"`
 	Project string       `toml:"project"`
 	Remotes []*RemoteVPS `toml:"remote"`
 	Writer  io.Writer    `toml:"-"`
@@ -27,7 +28,7 @@ type Config struct {
 
 // Write writes configuration to Inertia config file.
 func (config *Config) Write() error {
-	path, err := getConfigFilePath()
+	path, err := GetConfigFilePath()
 	if err != nil {
 		return err
 	}
@@ -37,7 +38,6 @@ func (config *Config) Write() error {
 	}
 	// Write configuration to file
 	encoder := toml.NewEncoder(config.Writer)
-	encoder.Indent = "    "
 	return encoder.Encode(config)
 }
 
@@ -70,7 +70,7 @@ func (config *Config) RemoveRemote(name string) bool {
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func InitializeInertiaProject() error {
+func InitializeInertiaProject(version string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -84,13 +84,13 @@ func InitializeInertiaProject() error {
 		return err
 	}
 
-	return createConfigFile()
+	return createConfigFile(version)
 }
 
 // createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func createConfigFile() error {
-	configFilePath, err := getConfigFilePath()
+func createConfigFile(version string) error {
+	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return err
 	}
@@ -111,10 +111,11 @@ func createConfigFile() error {
 	if os.IsNotExist(fileErr) {
 		config := Config{
 			Project: filepath.Base(cwd),
+			Version: version,
 			Remotes: make([]*RemoteVPS, 0),
 		}
 
-		path, err := getConfigFilePath()
+		path, err := GetConfigFilePath()
 		if err != nil {
 			return err
 		}
@@ -137,7 +138,7 @@ func createConfigFile() error {
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
 func GetProjectConfigFromDisk() (*Config, error) {
-	configFilePath, err := getConfigFilePath()
+	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +167,8 @@ func GetProjectConfigFromDisk() (*Config, error) {
 	return &result, err
 }
 
-// getConfigFilePath returns the absolute path of the config file.
-func getConfigFilePath() (string, error) {
+// GetConfigFilePath returns the absolute path of the config file.
+func GetConfigFilePath() (string, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		return "", err

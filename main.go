@@ -7,9 +7,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version is the current build of Inertia
+var Version string
+
 var rootCmd = &cobra.Command{
-	Use:   "inertia",
-	Short: "Inertia is a continuous-deployment scaffold",
+	Use:     "inertia",
+	Short:   "Inertia is a continuous-deployment scaffold",
+	Version: Version,
 	Long: `Inertia provides a continuous-deployment scaffold for applications.
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continously update the production server

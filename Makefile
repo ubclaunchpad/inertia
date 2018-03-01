@@ -1,5 +1,6 @@
 .PHONY: test test-verbose test-profile testenv clean docker bootstrap
 
+BUILD = `git describe --tags`
 PACKAGES = `go list ./... | grep -v vendor/`
 SSH_PORT = 22
 VERSION = latest
@@ -8,7 +9,7 @@ VPS_OS = ubuntu
 all: inertia
 
 inertia:
-	go build
+	go install -ldflags "-X main.Version=$(BUILD)"
 
 test:
 	make testenv VPS_OS=$(VPS_OS) VERSION=$(VERSION)

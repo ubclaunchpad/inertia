@@ -47,6 +47,8 @@ inerta remote status gcloud`,
 		remote, found := config.GetRemote(args[0])
 		if found {
 			printRemoteDetails(remote)
+		} else {
+			println("No remote '" + args[0] + "' currently set up.")
 		}
 	},
 }

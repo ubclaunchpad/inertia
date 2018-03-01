@@ -8,7 +8,7 @@ import (
 )
 
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := createConfigFile()
+	err := createConfigFile("")
 	assert.Nil(t, err)
 	config, err := GetProjectConfigFromDisk()
 	assert.Nil(t, err)
@@ -40,7 +40,7 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	assert.Equal(t, config.Remotes[0], readConfig.Remotes[0])
 	assert.Equal(t, config.Remotes[1], readConfig.Remotes[1])
 
-	path, err := getConfigFilePath()
+	path, err := GetConfigFilePath()
 	assert.Nil(t, err)
 	println(path)
 	err = os.Remove(path)
