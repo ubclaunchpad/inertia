@@ -27,8 +27,9 @@ testenv:
 		./test_env
 	bash ./test_env/startvps.sh $(SSH_PORT) $(VPS_OS)vps
 
-clean: inertia
-	rm -f inertia
+clean:
+	rm -f inertia 
+	find . -type f -name inertia_\* -exec rm {} \;
 
 docker:
 	docker build -t ubclaunchpad/inertia:$(RELEASE) .
