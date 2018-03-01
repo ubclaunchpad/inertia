@@ -7,13 +7,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/client"
 )
 
 func TestRemoteAddWalkthrough(t *testing.T) {
-	mockCallback := func(name, address, sshPort, user, pemLoc, port string) error {
-		assert.Equal(t, "pemfile", pemLoc)
-		assert.Equal(t, "user", user)
-		assert.Equal(t, "0.0.0.0", address)
+	mockCallback := func(r *client.RemoteVPS) error {
+		assert.Equal(t, "pemfile", r.PEM)
+		assert.Equal(t, "user", r.User)
+		assert.Equal(t, "0.0.0.0", r.IP)
 		return nil
 	}
 	in, err := ioutil.TempFile("", "")
@@ -32,7 +33,7 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 }
 
 func TestRemoteAddWalkthroughFailure(t *testing.T) {
-	mockCallback := func(name, address, sshPort, user, pemLoc, port string) error {
+	mockCallback := func(r *client.RemoteVPS) error {
 		return nil
 	}
 	in, err := ioutil.TempFile("", "")

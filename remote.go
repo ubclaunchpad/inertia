@@ -88,7 +88,7 @@ file. Specify a VPS name.`,
 }
 
 // addRemoteWalkthough is the walkthrough that asks users for RemoteVPS details
-func addRemoteWalkthrough(in io.Reader, name, port, sshPort string, addRemote func(string, string, string, string, string, string) error) error {
+func addRemoteWalkthrough(in io.Reader, name, port, sshPort string, addRemote func(*client.RemoteVPS) error) error {
 	homeEnvVar := os.Getenv("HOME")
 	sshDir := filepath.Join(homeEnvVar, ".ssh")
 	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
@@ -115,12 +115,31 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort string, addRemote fu
 	}
 	address := response
 
-	fmt.Println("Port " + port + " will be used as the daemon port.")
+	var branch string
+	fmt.Println("Enter project branch to deploy (leave blank for default):")
+	n, err = fmt.Fscanln(in, &response)
+	if err != nil || n == 0 {
+		branch = common.DefaultBranch
+	} else {
+		branch = response
+	}
+
+	fmt.Println("\nPort " + port + " will be used as the daemon port.")
 	fmt.Println("Port " + sshPort + " will be used as the SSH port.")
 	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
-	return addRemote(name, address, sshPort, user, pemLoc, port)
+	return addRemote(&client.RemoteVPS{
+		Name:   name,
+		IP:     address,
+		User:   user,
+		PEM:    pemLoc,
+		Branch: branch,
+		Daemon: &client.DaemonConfig{
+			Port:    port,
+			SSHPort: sshPort,
+		},
+	})
 }
 
 // deployInitCmd represents the inertia [REMOTE] init command

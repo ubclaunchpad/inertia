@@ -6,6 +6,9 @@ const (
 
 	// DaemonOkResp is the OK response upon successfully reaching daemon
 	DaemonOkResp = "I'm a little Webhook, short and stout!"
+
+	// DefaultBranch is the branch deployed by default
+	DefaultBranch = "default"
 )
 
 // DaemonRequest is the configurable body of a request to the daemon.
@@ -13,4 +16,5 @@ type DaemonRequest struct {
 	Stream    bool   `json:"stream"`
 	Repo      string `json:"repo,omitempty"`
 	Container string `json:"container,omitempty"`
+	Branch    string `json:"branch"`
 }
