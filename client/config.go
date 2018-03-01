@@ -21,7 +21,7 @@ var (
 // Config represents the current projects configuration.
 type Config struct {
 	Project string       `toml:"project"`
-	Remotes []*RemoteVPS `toml:"remotes"`
+	Remotes []*RemoteVPS `toml:"remote"`
 	Writer  io.Writer    `toml:"-"`
 }
 
