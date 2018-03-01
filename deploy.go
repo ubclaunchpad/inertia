@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -20,7 +21,7 @@ var deployUpCmd = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Start the deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -71,7 +72,7 @@ var deployDownCmd = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Shut down the deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -108,7 +109,7 @@ var deployStatusCmd = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get status of the deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -149,7 +150,7 @@ var deployResetCmd = &cobra.Command{
 	running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Remove project from deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -185,7 +186,7 @@ var deployLogsCmd = &cobra.Command{
 	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Start the deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -248,8 +249,6 @@ Run 'inertia [REMOTE] init' to collect these.`,
 }
 
 func init() {
-	// TODO: multiple remotes - loop through and add each one as a
-	// new copy of a command using addRemoteCommand
 	config, err := client.GetProjectConfigFromDisk()
 	if err != nil {
 		return
