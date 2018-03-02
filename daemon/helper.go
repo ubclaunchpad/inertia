@@ -123,7 +123,6 @@ func setUpProject(remoteURL, branch string, w io.Writer) error {
 	}
 
 	// Clone project
-	fmt.Fprintln(w, "Cloning "+remoteURL+"...")
 	_, err = common.Clone(projectDirectory, remoteURL, branch, auth, w)
 	if err != nil {
 		if err == common.ErrInvalidGitAuthentication {

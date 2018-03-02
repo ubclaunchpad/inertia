@@ -120,6 +120,7 @@ func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 // Clone wraps git.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
 func Clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+	fmt.Fprintf(out, "Cloning branch %s from %s...\n", branch, remoteURL)
 	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
 	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
 		URL:           remoteURL,
@@ -177,21 +178,19 @@ func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out 
 	return repo, nil
 }
 
-// UpdateRepository updates the given git repository
+// UpdateRepository pulls and checkouts given branch from repository
 func UpdateRepository(directory string, repo *git.Repository, branch string, auth ssh.AuthMethod, out io.Writer) error {
 	tree, err := repo.Worktree()
 	if err != nil {
 		return err
 	}
+	fmt.Fprintf(out, "Checking out and updating branch %s...\n", branch)
 	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
-	err = tree.Checkout(&git.CheckoutOptions{Branch: ref})
-	if err != nil {
-		return err
-	}
 	err = tree.Pull(&git.PullOptions{
-		Auth:     auth,
-		Depth:    2,
-		Progress: out,
+		Auth:          auth,
+		Depth:         2,
+		Progress:      out,
+		ReferenceName: ref,
 	})
 	err = CheckGitRemoteErr(err)
 	if err != nil {
@@ -206,7 +205,9 @@ func UpdateRepository(directory string, repo *git.Repository, branch string, aut
 			return err
 		}
 	}
-	return nil
+
+	// Checkout the pulled branch
+	return tree.Checkout(&git.CheckoutOptions{Branch: ref})
 }
 
 // CompareRemotes checks if the given remote matches the remote of the given repository

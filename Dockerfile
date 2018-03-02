@@ -14,7 +14,7 @@ RUN go get -u github.com/golang/dep/cmd/dep
 ADD . ${INERTIA_BUILD_HOME}
 WORKDIR ${INERTIA_BUILD_HOME}
 RUN dep ensure
-RUN go build -o /bin/inertia
+RUN go build -o /bin/inertia -ldflags "-X main.Version=$(git describe --tags)"
 
 # Copy the binary into a smaller image.
 FROM alpine
