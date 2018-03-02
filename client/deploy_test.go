@@ -64,7 +64,7 @@ func TestUp(t *testing.T) {
 		var upReq common.DaemonRequest
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "www.myremote.com", upReq.Repo)
+		assert.Equal(t, "www.myremote.com", upReq.GitOptions.RemoteURL)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path

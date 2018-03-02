@@ -24,11 +24,12 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 	fmt.Fprintln(in, "pemfile")
 	fmt.Fprintln(in, "user")
 	fmt.Fprintln(in, "0.0.0.0")
+	fmt.Fprintln(in, "master")
 
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", mockCallback)
+	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", mockCallback)
 	assert.Nil(t, err)
 }
 
@@ -46,13 +47,13 @@ func TestRemoteAddWalkthroughFailure(t *testing.T) {
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", mockCallback)
+	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", mockCallback)
 	assert.Equal(t, errInvalidUser, err)
 
 	in.WriteAt([]byte("pemfile\nuser\n\n"), 0)
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", mockCallback)
+	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", mockCallback)
 	assert.Equal(t, errInvalidAddress, err)
 }

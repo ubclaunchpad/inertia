@@ -76,7 +76,17 @@ file. Specify a VPS name.`,
 		port, _ := cmd.Flags().GetString("port")
 		sshPort, _ := cmd.Flags().GetString("sshPort")
 
-		err = addRemoteWalkthrough(os.Stdin, args[0], port, sshPort, client.AddNewRemote)
+		repo, err := common.GetLocalRepo()
+		if err != nil {
+			log.Fatal(err)
+		}
+		head, err := repo.Head()
+		if err != nil {
+			log.Fatal(err)
+		}
+		branch := head.Name().Short()
+
+		err = addRemoteWalkthrough(os.Stdin, args[0], port, sshPort, branch, client.AddNewRemote)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -88,7 +98,7 @@ file. Specify a VPS name.`,
 }
 
 // addRemoteWalkthough is the walkthrough that asks users for RemoteVPS details
-func addRemoteWalkthrough(in io.Reader, name, port, sshPort string, addRemote func(*client.RemoteVPS) error) error {
+func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, addRemote func(*client.RemoteVPS) error) error {
 	homeEnvVar := os.Getenv("HOME")
 	sshDir := filepath.Join(homeEnvVar, ".ssh")
 	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
@@ -115,12 +125,10 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort string, addRemote fu
 	}
 	address := response
 
-	var branch string
-	fmt.Println("Enter project branch to deploy (leave blank for default):")
+	branch := currBranch
+	fmt.Println("Enter project branch to deploy (leave blank for current branch):")
 	n, err = fmt.Fscanln(in, &response)
-	if err != nil || n == 0 {
-		branch = common.DefaultBranch
-	} else {
+	if err == nil && n != 0 {
 		branch = response
 	}
 
@@ -270,10 +278,10 @@ var removeCmd = &cobra.Command{
 
 func printRemoteDetails(remote *client.RemoteVPS) {
 	fmt.Printf("Remote %s: \n", remote.Name)
-	fmt.Printf(" - IP Address:  %s\n", remote.IP)
-	fmt.Printf(" - Daemon Port: %s\n", remote.Daemon.Port)
-	fmt.Printf(" - VPS User:    %s\n", remote.User)
-	fmt.Printf(" - PEM File:    %s\n", remote.PEM)
+	fmt.Printf(" - Deployed Branch:   %s\n", remote.Branch)
+	fmt.Printf(" - IP Address:        %s\n", remote.IP)
+	fmt.Printf(" - VPS User:          %s\n", remote.User)
+	fmt.Printf(" - PEM File Location: %s\n", remote.PEM)
 }
 
 func init() {

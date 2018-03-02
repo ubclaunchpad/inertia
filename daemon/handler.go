@@ -114,14 +114,15 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	remoteURL := upReq.Repo
 	logger := newLogger(upReq.Stream, w)
+	gitOpts := upReq.GitOptions
 	defer logger.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
 	err = common.CheckForGit(projectDirectory)
 	if err != nil {
-		err = setUpProject(remoteURL, logger.GetWriter())
+		fmt.Fprintln(w, "No git repository present.")
+		err = setUpProject(gitOpts.RemoteURL, gitOpts.Branch, logger.GetWriter())
 		if err != nil {
 			logger.Err(err.Error(), http.StatusPreconditionFailed)
 			return
@@ -135,7 +136,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for matching remotes
-	err = common.CompareRemotes(repo, remoteURL)
+	err = common.CompareRemotes(repo, gitOpts.RemoteURL)
 	if err != nil {
 		logger.Err(err.Error(), http.StatusPreconditionFailed)
 		return
@@ -148,7 +149,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = deploy(repo, cli, logger.GetWriter())
+	err = deploy(repo, gitOpts.Branch, cli, logger.GetWriter())
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return

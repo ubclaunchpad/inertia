@@ -6,13 +6,14 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"strings"
+
+	"gopkg.in/src-d/go-git.v4/plumbing"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 
 	"github.com/ubclaunchpad/inertia/common"
 )
@@ -40,7 +41,8 @@ func processPushEvent(event *github.PushEvent) {
 	// let deploy() handle the pull.
 	err := common.CheckForGit(projectDirectory)
 	if err != nil {
-		err = setUpProject(common.GetSSHRemoteURL(*repo.GitURL), os.Stdout)
+		println("No git repository present.")
+		err = setUpProject(common.GetSSHRemoteURL(*repo.GitURL), event.GetBaseRef(), os.Stdout)
 		if err != nil {
 			return
 		}
@@ -66,7 +68,7 @@ func processPushEvent(event *github.PushEvent) {
 		return
 	}
 	defer cli.Close()
-	err = deploy(localRepo, cli, os.Stdout)
+	err = deploy(localRepo, event.GetBaseRef(), cli, os.Stdout)
 	if err != nil {
 		println(err)
 	}
@@ -105,8 +107,8 @@ func GetAPIPrivateKey(*jwt.Token) (interface{}, error) {
 	return []byte(key.String()), nil
 }
 
-func setUpProject(remoteURL string, w io.Writer) error {
-	fmt.Fprintln(w, "No git repository present.")
+// setUpProject sets up a project for the first time
+func setUpProject(remoteURL, branch string, w io.Writer) error {
 	pemFile, err := os.Open(daemonGithubKeyLocation)
 	if err != nil {
 		return err
@@ -118,22 +120,54 @@ func setUpProject(remoteURL string, w io.Writer) error {
 
 	// Clone project
 	fmt.Fprintln(w, "Cloning "+remoteURL+"...")
-	_, err = common.Clone(projectDirectory, remoteURL, auth, w)
-	if err != nil && err != git.NoErrAlreadyUpToDate {
-		if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
-			bytes, err := ioutil.ReadFile(daemonGithubKeyLocation + ".pub")
-			if err != nil {
-				bytes = []byte("Error reading key - try running 'inertia [REMOTE] init' again.")
-			}
-			alert := "access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:])
-			return errors.New(alert)
-		}
-		dirClearErr := common.RemoveContents(projectDirectory)
-		if dirClearErr != nil {
-			fmt.Fprint(w, dirClearErr.Error())
+	_, err = common.Clone(projectDirectory, remoteURL, branch, auth, w)
+	if err != nil {
+		if err == common.ErrInvalidGitAuthentication {
+			return gitAuthFailedErr(daemonGithubKeyLocation)
 		}
 		return err
 	}
-
 	return nil
+}
+
+// updateRepository updates the given git repository
+func updateRepository(repo *git.Repository, branch string, auth ssh.AuthMethod, out io.Writer) error {
+	tree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = tree.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.ReferenceName(branch),
+	})
+	err = tree.Pull(&git.PullOptions{
+		Auth:     auth,
+		Depth:    2,
+		Progress: out,
+	})
+	err = common.CheckGitRemoteErr(err)
+	if err != nil {
+		if err == common.ErrInvalidGitAuthentication {
+			return gitAuthFailedErr(daemonGithubKeyLocation)
+		} else if err == git.ErrForceNeeded {
+			// If pull fails, attempt a force pull before returning error
+			fmt.Fprint(out, "Force pull required - making a fresh clone...")
+			_, err := common.ForcePull(projectDirectory, repo, auth, out)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+// gitAuthFailedErr includes the daemon key in the error message
+func gitAuthFailedErr(keyloc string) error {
+	bytes, err := ioutil.ReadFile(keyloc + ".pub")
+	if err != nil {
+		bytes = []byte("Error reading key - try running 'inertia [REMOTE] init' again.")
+	}
+	return errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:]))
 }
