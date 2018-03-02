@@ -24,6 +24,9 @@ use 'inertia [REMOTE] --help' to see what you can do with your remote.`,
 }
 
 func main() {
+	if Version == "" {
+		Version = "unknown"
+	}
 	cobra.EnableCommandSorting = false
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
