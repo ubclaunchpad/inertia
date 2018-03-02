@@ -121,7 +121,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	// Check for existing git repository, clone if no git repository exists.
 	err = common.CheckForGit(projectDirectory)
 	if err != nil {
-		fmt.Fprintln(w, "No git repository present.")
+		logger.Println("No git repository present.")
 		err = setUpProject(gitOpts.RemoteURL, gitOpts.Branch, logger.GetWriter())
 		if err != nil {
 			logger.Err(err.Error(), http.StatusPreconditionFailed)

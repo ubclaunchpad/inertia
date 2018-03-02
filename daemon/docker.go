@@ -55,16 +55,16 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 	// separate from the daemon and the user's project, and is the
 	// second container to require access to the docker socket.
 	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
-	fmt.Fprintln(out, "Building project...")
+	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      dockerCompose,
 			WorkingDir: "/build/project",
+			Env:        []string{"HOME=/build"},
 			Cmd: []string{
 				"up",
 				"--build",
-				"-e HOME=/build",
 			},
 		},
 		&container.HostConfig{
@@ -82,10 +82,8 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 		return errors.New(warnings)
 	}
 
-	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return err
-	}
+	fmt.Fprintln(out, "Building project...")
+	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 
 	// Check if build failed abruptly
 	// This is disabled until a more consistent way of detecting build
@@ -100,9 +98,9 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 			}
 			return errors.New("Docker-compose failed: " + err.Error())
 		}
+		return nil
 	*/
 
-	return nil
 }
 
 // getActiveContainers returns all active containers and returns and error

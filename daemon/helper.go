@@ -113,6 +113,7 @@ func GetAPIPrivateKey(*jwt.Token) (interface{}, error) {
 
 // setUpProject sets up a project for the first time
 func setUpProject(remoteURL, branch string, w io.Writer) error {
+	fmt.Fprintln(w, "Setting up project...")
 	pemFile, err := os.Open(daemonGithubKeyLocation)
 	if err != nil {
 		return err
@@ -137,7 +138,7 @@ func setUpProject(remoteURL, branch string, w io.Writer) error {
 func gitAuthFailedErr(keyloc string) error {
 	bytes, err := ioutil.ReadFile(keyloc + ".pub")
 	if err != nil {
-		bytes = []byte("Error reading key - try running 'inertia [REMOTE] init' again.")
+		bytes = []byte(err.Error() + "\nError reading key - try running 'inertia [REMOTE] init' again: ")
 	}
 	return errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:]))
 }
