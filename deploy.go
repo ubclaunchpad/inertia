@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -231,6 +232,37 @@ var deployLogsCmd = &cobra.Command{
 				}
 				fmt.Print(string(line))
 			}
+		}
+	},
+}
+
+// deployInitCmd represents the inertia [REMOTE] init command
+var deployInitCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize the VPS for continuous deployment",
+	Long: `Initialize the VPS for continuous deployment.
+This sets up everything you might need and brings the Inertia daemon
+online on your remote.
+A URL will be provided to direct GitHub webhooks to, the daemon will
+request access to the repository via a public key, and will listen
+for updates to this repository's remote master branch.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		config, err := client.GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		remote, found := config.GetRemote(remoteName)
+		if found {
+			session := client.NewSSHRunner(remote)
+			err = remote.Bootstrap(session, remoteName, config)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			log.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
 		}
 	},
 }

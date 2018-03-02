@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -121,37 +120,6 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort string, addRemote fu
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
 	return addRemote(name, address, sshPort, user, pemLoc, port)
-}
-
-// deployInitCmd represents the inertia [REMOTE] init command
-var deployInitCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initialize the VPS for continuous deployment",
-	Long: `Initialize the VPS for continuous deployment.
-This sets up everything you might need and brings the Inertia daemon
-online on your remote.
-A URL will be provided to direct GitHub webhooks to, the daemon will
-request access to the repository via a public key, and will listen
-for updates to this repository's remote master branch.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// Ensure project initialized.
-		config, err := client.GetProjectConfigFromDisk()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		remote, found := config.GetRemote(remoteName)
-		if found {
-			session := client.NewSSHRunner(remote)
-			err = remote.Bootstrap(session, "", config)
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			log.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
-		}
-	},
 }
 
 // statusCmd represents the remote status command
