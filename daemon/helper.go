@@ -7,13 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"gopkg.in/src-d/go-git.v4/plumbing"
-
 	jwt "github.com/dgrijalva/jwt-go"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 
 	"github.com/ubclaunchpad/inertia/common"
 )
@@ -61,16 +58,23 @@ func processPushEvent(event *github.PushEvent) {
 		return
 	}
 
-	// Deploy project
-	cli, err := docker.NewEnvClient()
+	// If branches match, deploy
+	head, err := localRepo.Head()
 	if err != nil {
 		println(err)
 		return
 	}
-	defer cli.Close()
-	err = deploy(localRepo, event.GetBaseRef(), cli, os.Stdout)
-	if err != nil {
-		println(err)
+	if head.Name().Short() == event.GetBaseRef() {
+		cli, err := docker.NewEnvClient()
+		if err != nil {
+			println(err)
+			return
+		}
+		defer cli.Close()
+		err = deploy(localRepo, event.GetBaseRef(), cli, os.Stdout)
+		if err != nil {
+			println(err)
+		}
 	}
 }
 
@@ -126,39 +130,6 @@ func setUpProject(remoteURL, branch string, w io.Writer) error {
 			return gitAuthFailedErr(daemonGithubKeyLocation)
 		}
 		return err
-	}
-	return nil
-}
-
-// updateRepository updates the given git repository
-func updateRepository(repo *git.Repository, branch string, auth ssh.AuthMethod, out io.Writer) error {
-	tree, err := repo.Worktree()
-	if err != nil {
-		return err
-	}
-
-	err = tree.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.ReferenceName(branch),
-	})
-	err = tree.Pull(&git.PullOptions{
-		Auth:     auth,
-		Depth:    2,
-		Progress: out,
-	})
-	err = common.CheckGitRemoteErr(err)
-	if err != nil {
-		if err == common.ErrInvalidGitAuthentication {
-			return gitAuthFailedErr(daemonGithubKeyLocation)
-		} else if err == git.ErrForceNeeded {
-			// If pull fails, attempt a force pull before returning error
-			fmt.Fprint(out, "Force pull required - making a fresh clone...")
-			_, err := common.ForcePull(projectDirectory, repo, auth, out)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
 	}
 	return nil
 }

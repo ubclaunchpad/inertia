@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -119,12 +120,13 @@ func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 // Clone wraps git.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
 func Clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
 	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
 		URL:           remoteURL,
 		Auth:          auth,
 		Depth:         2,
 		Progress:      out,
-		ReferenceName: plumbing.ReferenceName(branch),
+		ReferenceName: ref,
 	})
 	err = CheckGitRemoteErr(err)
 	if err != nil {
@@ -173,6 +175,38 @@ func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out 
 		return nil, err
 	}
 	return repo, nil
+}
+
+// UpdateRepository updates the given git repository
+func UpdateRepository(directory string, repo *git.Repository, branch string, auth ssh.AuthMethod, out io.Writer) error {
+	tree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
+	err = tree.Checkout(&git.CheckoutOptions{Branch: ref})
+	if err != nil {
+		return err
+	}
+	err = tree.Pull(&git.PullOptions{
+		Auth:     auth,
+		Depth:    2,
+		Progress: out,
+	})
+	err = CheckGitRemoteErr(err)
+	if err != nil {
+		if err == git.ErrForceNeeded {
+			// If pull fails, attempt a force pull before returning error
+			fmt.Fprint(out, "Force pull required - making a fresh clone...")
+			_, err := ForcePull(directory, repo, auth, out)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
 }
 
 // CompareRemotes checks if the given remote matches the remote of the given repository

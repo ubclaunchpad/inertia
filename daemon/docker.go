@@ -30,7 +30,7 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 
 	fmt.Fprintln(out, "Updating repository...")
 	// Pull from working branch
-	err = updateRepository(repo, branch, auth, out)
+	err = common.UpdateRepository(projectDirectory, repo, branch, auth, out)
 	if err != nil {
 		return err
 	}
