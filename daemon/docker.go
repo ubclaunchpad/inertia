@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -89,15 +88,19 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 	}
 
 	// Check if build failed abruptly
-	time.Sleep(3 * time.Second)
-	_, err = getActiveContainers(cli)
-	if err != nil {
-		killErr := killActiveContainers(cli, out)
-		if killErr != nil {
-			fmt.Fprintln(out, err)
+	// This is disabled until a more consistent way of detecting build
+	// failures is implemented.
+	/*
+		time.Sleep(3 * time.Second)
+		_, err = getActiveContainers(cli)
+		if err != nil {
+			killErr := killActiveContainers(cli, out)
+			if killErr != nil {
+				fmt.Fprintln(out, err)
+			}
+			return errors.New("Docker-compose failed: " + err.Error())
 		}
-		return errors.New("Docker-compose failed: " + err.Error())
-	}
+	*/
 
 	return nil
 }
