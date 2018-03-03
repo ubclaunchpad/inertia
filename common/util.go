@@ -27,6 +27,7 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+	"regexp"
 )
 
 // CheckForGit returns an error if we're not in a git repository.
@@ -172,4 +173,18 @@ func CompareRemotes(localRepo *git.Repository, remoteURL string) error {
 		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
 	return nil
+}
+
+// GetProjectName returns the project name from the github repo URL
+func GetProjectName(localRepo *git.Repository) (string, error) {
+	remotes, err := localRepo.Remotes()
+	if err != nil {
+		return "", err
+	}
+
+	urls:= remotes[0].Config().URLs
+
+	r, _ := regexp.Compile("(?:/)([^/]+)(?:.git)$")
+	repoName := r.FindStringSubmatch(urls[0])[1]
+	return repoName, nil
 }
