@@ -56,7 +56,7 @@ func (config *Config) AddRemote(remote *RemoteVPS) {
 	config.Remotes = append(config.Remotes, remote)
 }
 
-// RemoveRemote removes remote at with given name
+// RemoveRemote removes remote with given name
 func (config *Config) RemoveRemote(name string) bool {
 	for index, remote := range config.Remotes {
 		if remote.Name == name {
