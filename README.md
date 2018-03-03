@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/.static/inertia-with-name.png" width="40%"/>
+  <img src="/.static/inertia-with-name.png" width="30%"/>
 </p>
 
 <p align="center">
@@ -98,7 +98,7 @@ $> inertia my-remote-vps down
 We use [dep](https://github.com/golang/dep) for managing dependencies.
 
 ```bash
-$> brew install dep
+$> go get -u github.com/golang/dep/cmd/dep
 $> dep ensure
 ```
 
