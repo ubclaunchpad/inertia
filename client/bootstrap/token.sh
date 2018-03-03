@@ -7,6 +7,7 @@ set -e
 sudo docker run --rm \
     -v $HOME:/app/host \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
+    -e INERTIA_DAEMON='true' \
     -e HOME=$HOME \
     --entrypoint=inertia \
     ubclaunchpad/inertia daemon token

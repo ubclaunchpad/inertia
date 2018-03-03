@@ -1,23 +1,10 @@
-// Copyright © 2017 UBC Launch Pad team@ubclaunchpad.com
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package common
 
 import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +12,6 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"regexp"
 )
@@ -126,14 +112,20 @@ func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 
 // Clone wraps git.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
-func Clone(directory string, remoteURL string, auth ssh.AuthMethod) (*git.Repository, error) {
+func Clone(directory string, remoteURL string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
 	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
-		URL:  remoteURL,
-		Auth: auth,
+		URL:      remoteURL,
+		Auth:     auth,
+		Depth:    2,
+		Progress: out,
 	})
-	if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthenticationRequired || err == transport.ErrAuthorizationFailed {
-		return nil, errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + auth.String())
-	} else if err != nil {
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return nil, err
+	}
+
+	// Use this to confirm if pull has completed.
+	_, err = repo.Head()
+	if err != nil {
 		return nil, err
 	}
 	return repo, nil
@@ -141,7 +133,7 @@ func Clone(directory string, remoteURL string, auth ssh.AuthMethod) (*git.Reposi
 
 // ForcePull deletes the project directory and makes a fresh clone of given repo
 // git.Worktree.Pull() only supports merges that can be resolved as a fast-forward
-func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod) (*git.Repository, error) {
+func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
 	remotes, err := repo.Remotes()
 	if err != nil {
 		return nil, err
@@ -151,7 +143,7 @@ func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod) (*gi
 	if err != nil {
 		return nil, err
 	}
-	repo, err = Clone(directory, remoteURL, auth)
+	repo, err = Clone(directory, remoteURL, auth, out)
 	if err != nil {
 		e := RemoveContents(directory)
 		if e != nil {
@@ -175,6 +167,40 @@ func CompareRemotes(localRepo *git.Repository, remoteURL string) error {
 	return nil
 }
 
+// FlushRoutine continuously writes everything in given ReadCloser
+// to a ResponseWriter. Use this as a goroutine.
+func FlushRoutine(w io.Writer, rc io.ReadCloser) {
+	buffer := make([]byte, 100)
+	for {
+		// Read from pipe then write to ResponseWriter and flush it,
+		// sending the copied content to the client.
+		err := Flush(w, rc, buffer)
+		if err != nil {
+			break
+		}
+	}
+}
+
+// Flush emptires reader into buffer and flushes it to writer
+func Flush(w io.Writer, rc io.ReadCloser, buffer []byte) error {
+	n, err := rc.Read(buffer)
+	if err != nil {
+		rc.Close()
+		return err
+	}
+	data := buffer[0:n]
+	w.Write(data)
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
+
+	// Clear the buffer.
+	for i := 0; i < n; i++ {
+		buffer[i] = 0
+	}
+	return nil
+}
+
 // GetProjectName returns the project name from the github repo URL
 func GetProjectName(localRepo *git.Repository) (string, error) {
 	remotes, err := localRepo.Remotes()
@@ -182,7 +208,7 @@ func GetProjectName(localRepo *git.Repository) (string, error) {
 		return "", err
 	}
 
-	urls:= remotes[0].Config().URLs
+	urls := remotes[0].Config().URLs
 
 	r, _ := regexp.Compile("(?:/)([^/]+)(?:.git)$")
 	repoName := r.FindStringSubmatch(urls[0])[1]

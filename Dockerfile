@@ -3,7 +3,8 @@
 # Build the source in a preliminary container.
 FROM golang:alpine AS build-env
 
-ENV INERTIA_BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia
+ENV INERTIA_BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia \
+    INERTIA_DAEMON='true'
 
 # Dependencies
 RUN apk add --update --no-cache git
