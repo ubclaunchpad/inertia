@@ -20,7 +20,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	"regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -85,15 +84,12 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
 	log.Println("Bringing project online.")
 
-	remotes, err := repo.Remotes()
+	ctx := context.Background()
+
+	repoName, err := common.GetProjectName(repo)
 	if err != nil {
 		return err
 	}
-
-	ctx := context.Background()
-	url := remotes[0].Config().URLs[0]
-	r, _ := regexp.Compile("(?:/)([^/]+)(?:.git)$")
-	repoName := r.FindStringSubmatch(url)[1]
 
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
