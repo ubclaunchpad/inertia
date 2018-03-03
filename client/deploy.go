@@ -30,7 +30,7 @@ type DaemonRequester interface {
 // GetDeployment returns the local deployment setup
 // TODO: add args to support getting the appropriate deployment
 // based on the command (aka remote) that calls it
-func GetDeployment() (*Deployment, error) {
+func GetDeployment(name string) (*Deployment, error) {
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return nil, err
@@ -41,10 +41,14 @@ func GetDeployment() (*Deployment, error) {
 		return nil, err
 	}
 
-	auth := config.DaemonAPIToken
+	remote, found := config.GetRemote(name)
+	if !found {
+		return nil, errors.New("Remote not found")
+	}
+	auth := remote.Daemon.Token
 
 	return &Deployment{
-		RemoteVPS:  config.CurrentRemoteVPS,
+		RemoteVPS:  remote,
 		Repository: repo,
 		Auth:       auth,
 	}, nil

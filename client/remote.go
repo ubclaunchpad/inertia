@@ -13,11 +13,18 @@ import (
 
 // RemoteVPS contains parameters for the VPS
 type RemoteVPS struct {
-	User       string
-	IP         string
-	SSHPort    string
-	PEM        string
-	DaemonPort string
+	Name   string        `toml:"name"`
+	IP     string        `toml:"IP"`
+	User   string        `toml:"user"`
+	PEM    string        `toml:"pemfile"`
+	Daemon *DaemonConfig `toml:"daemon"`
+}
+
+// DaemonConfig contains parameters for the Daemon
+type DaemonConfig struct {
+	Port    string `toml:"port"`
+	SSHPort string `toml:"ssh_port"`
+	Token   string `toml:"token"`
 }
 
 // SSHSession can run remote commands over SSH
@@ -37,7 +44,7 @@ func NewSSHRunner(r *RemoteVPS) *SSHRunner {
 
 // Run runs a command remotely.
 func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
-	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.SSHPort, runner.r.User)
+	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -68,7 +75,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	if err != nil {
 		return err
 	}
-	err = remote.DaemonUp(runner, remote.DaemonPort)
+	err = remote.DaemonUp(runner, remote.Daemon.Port)
 	if err != nil {
 		return err
 	}
@@ -88,8 +95,8 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 		return err
 	}
 
-	config.DaemonAPIToken = token
-	_, err = config.Write()
+	remote.Daemon.Token = token
+	err = config.Write()
 	if err != nil {
 		return err
 	}
@@ -102,7 +109,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println("http://" + remote.IP + ":" + remote.DaemonPort)
+	println("http://" + remote.IP + ":" + remote.Daemon.Port)
 	println("Github WebHook Secret: " + common.DefaultSecret + "\n")
 
 	println("Inertia daemon successfully deployed! Add your webhook url and deploy\nkey to enable continuous deployment.")
@@ -118,7 +125,7 @@ func (remote *RemoteVPS) GetHost() string {
 
 // GetIPAndPort creates the IP:Port string.
 func (remote *RemoteVPS) GetIPAndPort() string {
-	return remote.IP + ":" + remote.DaemonPort
+	return remote.IP + ":" + remote.Daemon.Port
 }
 
 // RunSSHCommand runs a command remotely.
@@ -229,17 +236,18 @@ func AddNewRemote(name, IP, sshPort, user, pemLoc, port string) error {
 		return err
 	}
 
-	config.CurrentRemoteName = name
-	config.CurrentRemoteVPS = &RemoteVPS{
-		IP:         IP,
-		SSHPort:    sshPort,
-		User:       user,
-		PEM:        pemLoc,
-		DaemonPort: port,
-	}
+	config.AddRemote(&RemoteVPS{
+		Name: name,
+		IP:   IP,
+		User: user,
+		PEM:  pemLoc,
+		Daemon: &DaemonConfig{
+			Port:    port,
+			SSHPort: sshPort,
+		},
+	})
 
-	_, err = config.Write()
-	return err
+	return config.Write()
 }
 
 // Stubbed out for testing.
