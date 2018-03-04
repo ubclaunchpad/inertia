@@ -38,16 +38,15 @@ matrix:
   fast_finish: true
 
 before_install:
-  - docker login -u $DOCKER_USER -p $DOCKER_KEY
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
   - go get honnef.co/go/tools/cmd/megacheck                     # Static analysis
   - go get github.com/fzipp/gocyclo                             # Look for complexity
   - go get github.com/mattn/goveralls                           # Coveralls coverage reports
-  - go get -u github.com/mitchellh/gox                          # Release binary builder
   - go get -u github.com/golang/dep/cmd/dep                     # Dependency management
   - dep ensure
 
 before_script:
+  - docker login -u $DOCKER_USER -p $DOCKER_KEY  
   - make docker # TODO: specific tag!
   - make testenv VPS_OS="$VPS_OS" VERSION="$VERSION" SSH_PORT=69
 
@@ -62,24 +61,16 @@ script:
 after_success:
   - if [ $TRAVIS_BRANCH == "master" ] ; then make docker RELEASE=latest
 
+before_deploy:
+  - bash .scripts/release.sh
+
 deploy:
-  - provider: script
-    skip_cleanup: true
-    script: bash .scripts/release.sh
-    on:
-      tags: true
-      all_branches: true
-  - provider: releases
-    skip_cleanup: true
-    api_key:
-      secure: eHe5lL6mVp6XQM5sdUQHWcugROAjZC5Gf81flIjM/4K1ceUQfblIQ3/suXOHBXl+jGro0DTlI/a8S9zKb3NDdlTiXjABQD8KkWNMfEqajUInRwSFE7vSvydzJDuwO00KZOuFKdp2hZwpO2jbODZvHEnYONTClle5pV6bzhp4JaY1P0CjAl6/E67WVjpNQmHNIlzcZ7PRLe7KcjEl5N7DIg/B4R19EiBTjaPsCh8xP/T68cqVVa+4cwUAxN6Xd0ca81T9dkhppRL9tiJRn6iP/x64paIeWV0pF80V2PKTwbI9Ox0mcd7TWkHFD4taV+UwQUeOeN3OR7NHfzyPtWUcCVOp3wxFKvWySPYNeh8x8OrFh7HzIMl+20SQ/rdEsJJ6cfMx+qp+RBJmSj+Btm/ZxfEZgjRTg2jiCeUNnNpBL+46U49TVPTuw7+K97x/cGRF9k0JAfkq75tQTPCoQwmkCqTeJ6KGwFwlDx5+OUCJz3WS0XfQ6k88eYQygmBBdWqoHXUS75vOa96GVN1JSp8tBpSp0lUp+U2QQJkIy9VN9NpMlsbn3r5Ssk/AtEhal1fpT5tncPvzphwSKDH3WtCJ+FJjMajBIlZA2yop1VdsVJzKFBo2DH+yn8qd1tIsp5C+HDPvulCYMFCg7zJk0ksXZVERTGnrnRBSENW+Ut1avJ0=
-    file:
-    - inertia_darwin_386
-    - inertia_darwin_amd64
-    - inertia_linux_386
-    - inertia_linux_amd64
-    - inertia_windows_386.exe
-    - inertia_windows_amd64.exe
-    on:
-      tags: true
-      all_branches: true
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: eHe5lL6mVp6XQM5sdUQHWcugROAjZC5Gf81flIjM/4K1ceUQfblIQ3/suXOHBXl+jGro0DTlI/a8S9zKb3NDdlTiXjABQD8KkWNMfEqajUInRwSFE7vSvydzJDuwO00KZOuFKdp2hZwpO2jbODZvHEnYONTClle5pV6bzhp4JaY1P0CjAl6/E67WVjpNQmHNIlzcZ7PRLe7KcjEl5N7DIg/B4R19EiBTjaPsCh8xP/T68cqVVa+4cwUAxN6Xd0ca81T9dkhppRL9tiJRn6iP/x64paIeWV0pF80V2PKTwbI9Ox0mcd7TWkHFD4taV+UwQUeOeN3OR7NHfzyPtWUcCVOp3wxFKvWySPYNeh8x8OrFh7HzIMl+20SQ/rdEsJJ6cfMx+qp+RBJmSj+Btm/ZxfEZgjRTg2jiCeUNnNpBL+46U49TVPTuw7+K97x/cGRF9k0JAfkq75tQTPCoQwmkCqTeJ6KGwFwlDx5+OUCJz3WS0XfQ6k88eYQygmBBdWqoHXUS75vOa96GVN1JSp8tBpSp0lUp+U2QQJkIy9VN9NpMlsbn3r5Ssk/AtEhal1fpT5tncPvzphwSKDH3WtCJ+FJjMajBIlZA2yop1VdsVJzKFBo2DH+yn8qd1tIsp5C+HDPvulCYMFCg7zJk0ksXZVERTGnrnRBSENW+Ut1avJ0=
+  file_glob: true
+  file: inertia.*
+  on:
+    tags: true
+    all_branches: true
