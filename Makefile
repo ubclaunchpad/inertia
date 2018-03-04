@@ -30,7 +30,7 @@ testenv:
 
 clean:
 	rm -f inertia 
-	find . -type f -name inertia_\* -exec rm {} \;
+	find . -type f -name inertia.\* -exec rm {} \;
 
 docker:
 	docker build -t ubclaunchpad/inertia:$(RELEASE) .
