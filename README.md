@@ -31,11 +31,9 @@ Inertia is a cross-platform command line tool that aims to simplify setup and ma
 
 ## Installation
 
-```bash
-go get -u github.com/ubclaunchpad/inertia
-```
+Inertia executables can be downloaded from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page. You can then add the binary to your PATH or run it directly.
 
-Alternatively, you can download Inertia executables from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page.
+Alternatively, you can [build Inertia from source](https://github.com/ubclaunchpad/inertia#building-from-source).
 
 ## Usage
 
@@ -43,20 +41,18 @@ Initializing a project for use with Inertia only takes a few simple steps:
 
 ```bash
 $> inertia init
-$> inertia remote add my-remote-vps
+$> inertia remote add $VPS_NAME
 ```
 
 After adding a remote, you can bring the Inertia daemon online on your VPS:
 
 ```bash
-$> inertia my-remote-vps init
-$> inertia remote status my-remote-vps
+$> inertia $VPS_NAME init
+$> inertia remote status $VPS_NAME
 # Confirms that the daemon is online and accepting requests
 ```
 
-A daemon is now running on your remote instance - but your application is not yet continuously deployed.
-
-The output of `inertia [REMOTE] init` has given you two important pieces of information:
+A daemon is now running on your remote instance - but your application is not yet continuously deployed. The output of `inertia [REMOTE] init` has given you two important pieces of information:
 
 1. A deploy key:
 
@@ -77,21 +73,38 @@ Github WebHook Secret: inertia
 
 The daemon will accept POST requests from GitHub at the URL provided. Add this webhook URL in your GitHub settings area (at the URL provided) so that the daemon will receive updates from GitHub when your repository is updated.
 
-After adding these pieces of information to your GitHub settings, the Inertia daemon will automatically deploy any changes you make to your repository's default branch. You can also manually manage your project's deployment through the CLI:
+After adding these pieces of information to your GitHub settings, the Inertia daemon will automatically deploy any changes you make to your repository's default branch!
+
+You can also manually manage your deployment through a variety of commands:
 
 ```bash
-$> inertia my-remote-vps up
-# Clones your project into your VPS and deploys your containers
+$> inertia $VPS_NAME --help
+```
 
-$> inertia my-remote-vps status
-# Reports detailed information about the state of your deployment, 
-# such as active containers and current commit.
+😎 [![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia) 😎 
 
-$> inertia my-remote-vps down
-# Shuts down project containers
+
+```
+[![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 ```
 
 ## Development
+
+### Building from Source
+
+```bash
+$ go get -u github.com/ubclaunchpad/inertia
+```
+
+It is highly recommended that you use a [tagged build](https://github.com/ubclaunchpad/inertia/releases) to ensure compatibility between the CLI and your Inertia daemon.
+
+```bash
+$ git checkout v0.1.0
+$ make inertia-tagged
+$ inertia --version
+```
+
+Alternatively, you can manually edit `.inertia.toml` to use your desired version.
 
 ### Dependencies
 
