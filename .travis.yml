@@ -47,11 +47,10 @@ before_install:
 
 before_script:
   - docker login -u $DOCKER_USER -p $DOCKER_KEY  
-  - make docker # TODO: specific tag!
-  - make testenv VPS_OS="$VPS_OS" VERSION="$VERSION" SSH_PORT=69
-
+  - make docker RELEASE=travis
+  - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
 script:
-  - go test -v -race -cover ./...   # Run all the tests with the race detector enabled
+  - go test -v -race -ldflags "-X main.Version=travis" -cover ./...
   - go vet ./...
   - megacheck ./...
   - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions

@@ -2,6 +2,8 @@
 
 set -e
 
+RELEASE=%s
+
 # Generates an SSH token for use with API requests.
 # Generate a daemon token using CLI.
 sudo docker run --rm \
@@ -10,4 +12,4 @@ sudo docker run --rm \
     -e INERTIA_DAEMON='true' \
     -e HOME=$HOME \
     --entrypoint=inertia \
-    ubclaunchpad/inertia daemon token
+    ubclaunchpad/inertia:$RELEASE daemon token

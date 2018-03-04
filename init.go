@@ -17,6 +17,12 @@ var initCmd = &cobra.Command{
 There must be a local git repository in order for initialization
 to succeed.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		version := cmd.Parent().Version
+		givenVersion, _ := cmd.Flags().GetString("version")
+		if givenVersion != version {
+			version = givenVersion
+		}
+
 		err := client.InitializeInertiaProject(cmd.Parent().Version)
 		if err != nil {
 			log.Fatal(err)
@@ -68,4 +74,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	addCmd.Flags().String("version", "default", "Inertia daemon version")
 }
