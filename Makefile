@@ -5,6 +5,7 @@ PACKAGES = `go list ./... | grep -v vendor/`
 SSH_PORT = 22
 VERSION = latest
 VPS_OS = ubuntu
+RELEASE = latest # TODO: rename to canary by default
 
 all: inertia
 
@@ -16,7 +17,7 @@ test:
 	go test $(PACKAGES) --cover
 
 test-verbose:
-	make testenv VPS_OS=$(VPS_OS) VERSION=$(VERSION)	
+	make testenv VPS_OS=$(VPS_OS) VERSION=$(VERSION)
 	go test $(PACKAGES) -v --cover
 
 testenv:
@@ -27,12 +28,13 @@ testenv:
 		./test_env
 	bash ./test_env/startvps.sh $(SSH_PORT) $(VPS_OS)vps
 
-clean: inertia
-	rm -f inertia
+clean:
+	rm -f inertia 
+	find . -type f -name inertia_\* -exec rm {} \;
 
 docker:
-	docker build -t ubclaunchpad/inertia .
-	docker push ubclaunchpad/inertia
+	docker build -t ubclaunchpad/inertia:$(RELEASE) .
+	docker push ubclaunchpad/inertia:$(RELEASE)
 
 bootstrap:
 	go-bindata -o client/bootstrap.go -pkg client client/bootstrap/...
