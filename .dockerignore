@@ -1,0 +1,16 @@
+# Misc
+.github/*
+.scripts/*
+.static/*
+Makefile
+
+# Documentation
+README.md
+
+# Repository config files
+.coveralls.yml
+.travis.yml
+
+# Docker config files
+Dockerfile
+.dockerignore
