@@ -29,13 +29,22 @@
 
 Inertia is a cross-platform command line tool that aims to simplify setup and management of automated deployment of docker-compose projects on any virtual private server. It aims to provide the ease and flexibility of services like Heroku without the complexity of Kubernetes while still giving users full control over their projects.
 
-## Installation
+- [Installation](#package-installation)
+- [Usage](#rocket-usage)
+  - [Setup](#setup)
+  - [Continuous Deployment](#continuous-deployment)
+  - [Deployment Management](#deployment-management)
+- [Development](#construction-development)
 
-Inertia executables can be downloaded from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page. You can then add the binary to your PATH or run it directly.
+## :package: Installation
 
-Alternatively, you can [build Inertia from source](https://github.com/ubclaunchpad/inertia#building-from-source).
+All you need is an Inertia binary. The binaries can be downloaded from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page for various platforms. The binary to your PATH or run it directly.
 
-## Usage
+Alternatively, you can [build Inertia from source](#building-from-source).
+
+## :rocket: Usage
+
+### Setup
 
 Initializing a project for use with Inertia only takes a few simple steps:
 
@@ -48,13 +57,15 @@ After adding a remote, you can bring the Inertia daemon online on your VPS:
 
 ```bash
 $> inertia $VPS_NAME init
-$> inertia remote status $VPS_NAME
+$> inertia $VPS_NAME status
 # Confirms that the daemon is online and accepting requests
 ```
 
-A daemon is now running on your remote instance - but your application is not yet continuously deployed. The output of `inertia [REMOTE] init` has given you two important pieces of information:
+An Inertia daemon is now running on your remote instance. This daemon will be used to manage your deployment.
 
-1. A deploy key:
+### Continuous Deployment
+
+You can now set up continuous deployment using the output of `inertia $VPS_NAME init`:
 
 ```bash
 GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new):
@@ -62,8 +73,6 @@ ssh-rsa <...>
 ```
 
 The Inertia daemon requires readonly access to your GitHub repository. Add the deploy key to your GitHub repository settings at the URL provided in the output - this will grant the daemon access to clone your repository.
-
-2. A GitHub webhook URL:
 
 ```bash
 GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
@@ -73,22 +82,44 @@ Github WebHook Secret: inertia
 
 The daemon will accept POST requests from GitHub at the URL provided. Add this webhook URL in your GitHub settings area (at the URL provided) so that the daemon will receive updates from GitHub when your repository is updated.
 
-After adding these pieces of information to your GitHub settings, the Inertia daemon will automatically deploy any changes you make to your repository's default branch!
+### Deployment Management
 
-You can also manually manage your deployment through a variety of commands:
+To manually deploy your project:
+
+```bash
+$> inertia $VPS_NAME up --stream
+```
+
+There are a variety of other commands available for managing your project deployment. See the CLI documentation for more details:
 
 ```bash
 $> inertia $VPS_NAME --help
 ```
 
-😎 [![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia) 😎 
+### Release Streams
+
+The version of Inertia you are using can be seen in Inertia's `.inertia.toml` configuration file, or by running `inertia --version`.
+
+You can manually change the daemon version pulled by editing the Inertia configuration file. If you are building from source, you can also check out the desired version and run `make inertia-tagged`.
+
+- `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
+
+- `latest` denotes the newest builds on `master`.
+
+- `canary` denotes experimental builds used for testing and development - do not use this.
+
+- `travis` denotes builds used by Travis to run our continuous integration tests.
+
+### Swag
+
+[![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 
 
 ```
 [![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 ```
 
-## Development
+## :construction: Development
 
 ### Building from Source
 
