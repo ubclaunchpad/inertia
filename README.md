@@ -108,8 +108,6 @@ You can manually change the daemon version pulled by editing the Inertia configu
 
 - `canary` denotes experimental builds used for testing and development - do not use this.
 
-- `travis` denotes builds used by Travis to run our continuous integration tests.
-
 ### Swag
 
 [![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
@@ -156,7 +154,8 @@ $> make test VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 You can also start a container that sets up a mock VPS for testing:
 
 ```bash
-$> go install
+$> make
+# installs current Inertia build and mark as "test"
 $> make testenv VPS_OS=ubuntu VERSION=16.04
 # defaults to ubuntu:lastest without args
 # note the location of the key that is printed

@@ -12,18 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getVersion() string {
-	travis := os.Getenv("TRAVIS")
-	if travis != "" {
-		return "travis"
-	}
-	return "canary"
-}
-
 func getTestConfig(writer io.Writer) *Config {
 	config := &Config{
 		Writer:  writer,
-		Version: getVersion(),
+		Version: "test",
 	}
 	return config
 }
@@ -99,13 +91,13 @@ func TestKeyGen(t *testing.T) {
 	remote := getInstrumentedTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/token.sh")
 	assert.Nil(t, err)
-	tokenScript := fmt.Sprintf(string(script), getVersion())
+	tokenScript := fmt.Sprintf(string(script), "test")
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
 
 	// Make sure the right command is run.
-	_, err = remote.GetDaemonAPIToken(&session, getVersion())
+	_, err = remote.GetDaemonAPIToken(&session, "test")
 	assert.Nil(t, err)
 	assert.Equal(t, session.Calls[0], tokenScript)
 }
@@ -117,14 +109,14 @@ func TestBootstrap(t *testing.T) {
 
 	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
-	daemonScript := fmt.Sprintf(string(script), getVersion(), "8081")
+	daemonScript := fmt.Sprintf(string(script), "test", "8081")
 
 	keyScript, err := ioutil.ReadFile("bootstrap/keygen.sh")
 	assert.Nil(t, err)
 
 	script, err = ioutil.ReadFile("bootstrap/token.sh")
 	assert.Nil(t, err)
-	tokenScript := fmt.Sprintf(string(script), getVersion())
+	tokenScript := fmt.Sprintf(string(script), "test")
 
 	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}

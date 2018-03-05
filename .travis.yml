@@ -45,10 +45,9 @@ before_install:
   - go get -u github.com/golang/dep/cmd/dep                     # Dependency management
   - dep ensure
 
-before_script:
-  - docker login -u $DOCKER_USER -p $DOCKER_KEY  
-  - make docker RELEASE=travis
+before_script: 
   - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
+  - make testdaemon
 script:
   - go test -v -race -ldflags "-X main.Version=travis" -cover ./...
   - go vet ./...
@@ -58,9 +57,10 @@ script:
 
 # Push Inertia Docker image tagged as "latest" on master builds
 after_success:
-  - if [ $TRAVIS_BRANCH == "master" ] ; then make docker RELEASE=latest
+  - if [ $TRAVIS_BRANCH == "master" ] ; then docker login -u $DOCKER_USER -p $DOCKER_KEY ; make daemon RELEASE=latest ; fi
 
 before_deploy:
+  - docker login -u $DOCKER_USER -p $DOCKER_KEY 
   - bash .scripts/release.sh
 
 deploy:

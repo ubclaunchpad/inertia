@@ -18,8 +18,12 @@ if [ ! -z "$ALREADY_RUNNING" ]; then
     sudo docker rm -f $ALREADY_RUNNING
 fi;
 
-# Pull the inertia daemon.
-sudo docker pull $IMAGE
+if [ "$DAEMON_RELEASE" != "test" ]; then
+    # Pull the inertia daemon.
+    sudo docker pull $IMAGE
+else
+    sudo docker load -i /daemon-image
+fi
 
 # Make Project directory
 mkdir -p $HOME/project
