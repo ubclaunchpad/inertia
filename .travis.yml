@@ -47,7 +47,8 @@ before_install:
 
 before_script: 
   - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
-  - make testdaemon
+  - yes yes | make testdaemon
+
 script:
   - go test -v -race -ldflags "-X main.Version=travis" -cover ./...
   - go vet ./...

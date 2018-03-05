@@ -38,6 +38,7 @@ clean:
 	find . -type f -name inertia.\* -exec rm {} \;
 
 testdaemon:
+	rm -f ./inertia-daemon-image
 	docker build -t ubclaunchpad/inertia:test .
 	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
 	chmod 700 ./test_env/test_key
@@ -52,4 +53,3 @@ daemon:
 
 bootstrap:
 	go-bindata -o client/bootstrap.go -pkg client client/bootstrap/...
-
