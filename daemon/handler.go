@@ -33,12 +33,12 @@ const (
 	defaultSecret = "inertia"
 )
 
-// version indicates the daemon's corresponding Inertia version
-var version string
+// daemonVersion indicates the daemon's corresponding Inertia daemonVersion
+var daemonVersion string
 
 // Run starts the daemon
 func Run(port, version string) {
-	version = version
+	daemonVersion = version
 
 	// Download docker-compose image
 	println("Downloading docker-compose...")
@@ -205,7 +205,7 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	println("STATUS request received")
 
-	inertiaStatus := "Inertia daemon " + version + "\n"
+	inertiaStatus := "Inertia daemon " + daemonVersion + "\n"
 
 	// Get status of repository
 	repo, err := git.PlainOpen(projectDirectory)
