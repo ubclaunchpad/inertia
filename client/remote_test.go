@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -11,15 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestRemote() *RemoteVPS {
-	return &RemoteVPS{
-		IP:   "127.0.0.1",
-		PEM:  "/Users/me/and/my/pem",
-		User: "me",
-		Daemon: &DaemonConfig{
-			Port: "5555",
-		},
+func getTestConfig(writer io.Writer) *Config {
+	config := &Config{
+		Writer:  writer,
+		Version: "test",
 	}
+	return config
 }
 
 func getInstrumentedTestRemote() *RemoteVPS {
@@ -42,87 +40,101 @@ func getInstrumentedTestRemote() *RemoteVPS {
 
 // SSHRunner runs commands over SSH and captures results.
 type mockSSHRunner struct {
-	r        *RemoteVPS
-	LastCall string
+	r     *RemoteVPS
+	Calls []string
 }
 
 // Run runs a command remotely.
 func (runner *mockSSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
-	runner.LastCall = cmd
+	runner.Calls = append(runner.Calls, cmd)
 	return nil, nil, nil
 }
 
 func TestRunSSHCommand(t *testing.T) {
-	remote := getTestRemote()
+	remote := getInstrumentedTestRemote()
 	session := mockSSHRunner{r: remote}
 	cmd := "ls -lsa"
 	_, _, err := remote.RunSSHCommand(&session, cmd)
 
 	assert.Nil(t, err)
-	assert.Equal(t, session.LastCall, cmd)
+	assert.Equal(t, cmd, session.Calls[0])
 }
 
 func TestInstallDocker(t *testing.T) {
-	remote := getTestRemote()
+	remote := getInstrumentedTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/docker.sh")
 	assert.Nil(t, err)
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
 	remote.InstallDocker(&session)
-	assert.Equal(t, session.LastCall, string(script))
+	assert.Equal(t, string(script), session.Calls[0])
 }
 
-func TestDaemonDown(t *testing.T) {
-	remote := getTestRemote()
+func TestDaemonUp(t *testing.T) {
+	remote := getInstrumentedTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
-	actualCommand := fmt.Sprintf(string(script), "8081")
+	actualCommand := fmt.Sprintf(string(script), "latest", "8081")
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
 
 	// Make sure the right command is run.
-	err = remote.DaemonUp(&session, "8081")
+	err = remote.DaemonUp(&session, "latest", "8081")
 	assert.Nil(t, err)
-	assert.Equal(t, session.LastCall, actualCommand)
+	println(actualCommand)
+	assert.Equal(t, actualCommand, session.Calls[0])
 }
 
 func TestKeyGen(t *testing.T) {
-	remote := getTestRemote()
+	remote := getInstrumentedTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/token.sh")
 	assert.Nil(t, err)
+	tokenScript := fmt.Sprintf(string(script), "test")
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
 
 	// Make sure the right command is run.
-	_, err = remote.GetDaemonAPIToken(&session)
+	_, err = remote.GetDaemonAPIToken(&session, "test")
 	assert.Nil(t, err)
-	assert.Equal(t, session.LastCall, string(script))
+	assert.Equal(t, session.Calls[0], tokenScript)
 }
 
 func TestBootstrap(t *testing.T) {
-	remote := getTestRemote()
-	script, err := ioutil.ReadFile("bootstrap/token.sh")
+	remote := getInstrumentedTestRemote()
+	dockerScript, err := ioutil.ReadFile("bootstrap/docker.sh")
 	assert.Nil(t, err)
 
-	// Make sure the right command is run.
+	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
+	assert.Nil(t, err)
+	daemonScript := fmt.Sprintf(string(script), "test", "8081")
+
+	keyScript, err := ioutil.ReadFile("bootstrap/keygen.sh")
+	assert.Nil(t, err)
+
+	script, err = ioutil.ReadFile("bootstrap/token.sh")
+	assert.Nil(t, err)
+	tokenScript := fmt.Sprintf(string(script), "test")
+
 	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}
-	err = remote.Bootstrap(&session, "gcloud", &Config{Writer: &writer})
+	err = remote.Bootstrap(&session, "gcloud", getTestConfig(&writer))
 	assert.Nil(t, err)
 
-	// Just check last call.
-	assert.Nil(t, err)
-	assert.Equal(t, session.LastCall, string(script))
+	// Make sure all commands are formatted correctly
+	assert.Equal(t, string(dockerScript), session.Calls[0])
+	assert.Equal(t, daemonScript, session.Calls[1])
+	assert.Equal(t, string(keyScript), session.Calls[2])
+	assert.Equal(t, tokenScript, session.Calls[3])
 }
 
 func TestInstrumentedBootstrap(t *testing.T) {
 	remote := getInstrumentedTestRemote()
 	session := NewSSHRunner(remote)
 	var writer bytes.Buffer
-	err := remote.Bootstrap(session, "testvps", &Config{Writer: &writer})
+	err := remote.Bootstrap(session, "testvps", getTestConfig(&writer))
 	assert.Nil(t, err)
 
 	// Check if daemon is online following bootstrap
