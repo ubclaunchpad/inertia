@@ -33,8 +33,13 @@ const (
 	defaultSecret = "inertia"
 )
 
+// version indicates the daemon's corresponding Inertia version
+var version string
+
 // Run starts the daemon
-func Run(port string) {
+func Run(port, version string) {
+	version = version
+
 	// Download docker-compose image
 	println("Downloading docker-compose...")
 	cli, err := docker.NewEnvClient()
@@ -200,6 +205,8 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	println("STATUS request received")
 
+	inertiaStatus := "Inertia daemon " + version + "\n"
+
 	// Get status of repository
 	repo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
@@ -264,7 +271,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, repoStatus+activeContainers)
+	fmt.Fprint(w, inertiaStatus+repoStatus+activeContainers)
 }
 
 // resetHandler shuts down and wipes the project directory

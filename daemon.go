@@ -34,7 +34,7 @@ inertia daemon run -p 8081`,
 		if err != nil {
 			log.WithError(err)
 		}
-		daemon.Run(port)
+		daemon.Run(port, Version)
 	},
 }
 
