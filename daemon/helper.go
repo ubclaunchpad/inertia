@@ -34,15 +34,12 @@ func processPushEvent(event *github.PushEvent) {
 	println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
 	println(fmt.Sprintf("Ref: %s", event.GetRef()))
 
-	// Clone repository if not available, otherwise skip this step and
-	// let deploy() handle the pull.
+	// Ignore event if repository not set up yet, otherwise
+	// let deploy() handle the update.
 	err := common.CheckForGit(projectDirectory)
 	if err != nil {
-		println("No git repository present.")
-		err = setUpProject(common.GetSSHRemoteURL(*repo.GitURL), event.GetBaseRef(), os.Stdout)
-		if err != nil {
-			return
-		}
+		println("No git repository present - try running 'inertia $REMOTE up'")
+		return
 	}
 
 	localRepo, err := git.PlainOpen(projectDirectory)
@@ -58,7 +55,7 @@ func processPushEvent(event *github.PushEvent) {
 		return
 	}
 
-	// If branches match, deploy
+	// If branches match, deploy, otherwise ignore the event.
 	head, err := localRepo.Head()
 	if err != nil {
 		println(err)
@@ -75,6 +72,12 @@ func processPushEvent(event *github.PushEvent) {
 		if err != nil {
 			println(err)
 		}
+	} else {
+		println(
+			"Event branch " + head.Name().Short() +
+				" does not match deployed branch " +
+				event.GetBaseRef() + " - ignoring event.",
+		)
 	}
 }
 
