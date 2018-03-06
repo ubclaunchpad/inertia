@@ -76,7 +76,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	if err != nil {
 		return err
 	}
-	err = remote.DaemonUp(runner, remote.Daemon.Port)
+	err = remote.DaemonUp(runner, config.Version, remote.Daemon.Port)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	}
 
 	println("Fetching daemon API token")
-	token, err := remote.GetDaemonAPIToken(runner)
+	token, err := remote.GetDaemonAPIToken(runner, config.Version)
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func (remote *RemoteVPS) InstallDocker(session SSHSession) error {
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonPort string) error {
+func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonVersion, daemonPort string) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("client/bootstrap/daemon-up.sh")
 	if err != nil {
@@ -163,7 +163,7 @@ func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonPort string) error {
 	}
 
 	// Run inertia daemon.
-	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion, daemonPort)
 	_, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
 	if err != nil {
 		println(stderr.String())
@@ -212,14 +212,15 @@ func (remote *RemoteVPS) DaemonDown(session SSHSession) error {
 
 // GetDaemonAPIToken returns the daemon API token for RESTful access
 // to the daemon.
-func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
+func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
 	// Collect asset (token.sh script)
 	daemonCmd, err := Asset("client/bootstrap/token.sh")
 	if err != nil {
 		return "", err
 	}
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion)
 
-	stdout, stderr, err := remote.RunSSHCommand(session, string(daemonCmd))
+	stdout, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
 	if err != nil {
 		log.Println(stderr.String())
 		return "", err

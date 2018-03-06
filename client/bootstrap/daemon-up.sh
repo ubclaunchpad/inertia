@@ -2,10 +2,12 @@
 
 set -e
 
-PORT=%s
+DAEMON_RELEASE=%[1]s
+DAEMON_PORT=%[2]s
+
 DAEMON_NAME=inertia-daemon
+IMAGE=ubclaunchpad/inertia:$DAEMON_RELEASE
 CONTAINER_PORT=8081
-IMAGE_REPOSITORY=ubclaunchpad/inertia
 
 # Check if already running.
 ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`
@@ -16,8 +18,12 @@ if [ ! -z "$ALREADY_RUNNING" ]; then
     sudo docker rm -f $ALREADY_RUNNING
 fi;
 
-# Pull the latest inertia daemon.
-sudo docker pull $IMAGE_REPOSITORY
+if [ "$DAEMON_RELEASE" != "test" ]; then
+    # Pull the inertia daemon.
+    sudo docker pull $IMAGE
+else
+    sudo docker load -i /daemon-image
+fi
 
 # Make Project directory
 mkdir -p $HOME/project
@@ -30,13 +36,13 @@ mkdir -p $HOME/project
 # https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
 # As a result, this container has root access on the remote vps.
 sudo docker run -d --rm \
-    -p "$PORT":8081 \
+    -p "$DAEMON_PORT":"$CONTAINER_PORT" \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v $HOME:/app/host \
+    -v "$HOME":/app/host \
     -e INERTIA_DAEMON='true' \
-    -e HOME=$HOME \
+    -e HOME="$HOME" \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     --name "$DAEMON_NAME" \
-    "$IMAGE_REPOSITORY"
+    "$IMAGE"
 
 # -v $HOME:/app/host mounts host directory so the daemon can access it

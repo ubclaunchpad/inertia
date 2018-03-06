@@ -41,32 +41,31 @@ matrix:
 
 before_install:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
-  - go get honnef.co/go/tools/cmd/megacheck                     # Static analysis
-  - go get github.com/fzipp/gocyclo                             # Look for complexity
-  - go get github.com/mattn/goveralls                           # Coveralls coverage reports
+  - go get -u honnef.co/go/tools/cmd/megacheck                     # Static analysis
+  - go get -u github.com/fzipp/gocyclo                             # Look for complexity
+  - go get -u github.com/mattn/goveralls                           # Coveralls coverage reports
   - go get -u github.com/golang/dep/cmd/dep                     # Dependency management
   - dep ensure
 
 # Log in to Docker and set up test environment
 before_script:
-  - docker login -u $DOCKER_USER -p $DOCKER_KEY  
-  - make docker # TODO: specific tag!
-  - make testenv VPS_OS="$VPS_OS" VERSION="$VERSION" SSH_PORT=69
+  - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
+  - make testdaemon SSH_PORT=69
 
 # Run tests and various code quality checks
 script:
-  - go test -v -race -cover ./...   # Run all the tests with the race detector enabled
   - go vet ./...
   - megacheck ./...
-  - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
-  - goveralls -service=travis-ci    # Send tests results to Coveralls
+  - gocyclo -over 19 $GO_FILES        # Forbid code with huge functions
+  - goveralls -v -service=travis-ci   # Run and send tests results to Coveralls
 
 # Push Inertia Docker image tagged as "latest" on master builds
 after_success:
-  - if [ $TRAVIS_BRANCH == "master" ] ; then make docker RELEASE=latest ; fi
+  - if [ $TRAVIS_BRANCH == "master" ] ; then docker login -u $DOCKER_USER -p $DOCKER_KEY ; make daemon RELEASE=latest ; fi
 
 # Push version-tagged Docker image and build platform binaries
 before_deploy:
+  - docker login -u $DOCKER_USER -p $DOCKER_KEY 
   - bash .scripts/release.sh
 
 # Upload compiled binaries to corresponding GitHub release
