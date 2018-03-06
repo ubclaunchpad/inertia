@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -9,10 +10,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/src-d/go-git.v4/plumbing"
+
 	jwt "github.com/dgrijalva/jwt-go"
-	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+)
+
+var (
+	// ErrInvalidGitAuthentication is returned when handshake with a git remote fails
+	ErrInvalidGitAuthentication = errors.New("git authentication failed")
 )
 
 // CheckForGit returns an error if we're not in a git repository.
@@ -111,14 +119,18 @@ func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 
 // Clone wraps git.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
-func Clone(directory string, remoteURL string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+func Clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+	fmt.Fprintf(out, "Cloning branch %s from %s...\n", branch, remoteURL)
+	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
 	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
-		URL:      remoteURL,
-		Auth:     auth,
-		Depth:    2,
-		Progress: out,
+		URL:           remoteURL,
+		Auth:          auth,
+		Depth:         2,
+		Progress:      out,
+		ReferenceName: ref,
 	})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
+	err = CheckGitRemoteErr(err)
+	if err != nil {
 		return nil, err
 	}
 
@@ -128,6 +140,18 @@ func Clone(directory string, remoteURL string, auth ssh.AuthMethod, out io.Write
 		return nil, err
 	}
 	return repo, nil
+}
+
+// CheckGitRemoteErr checks errors that involve git remote operations and simplifies them
+// to ErrInvalidGitAuthentication if possible
+func CheckGitRemoteErr(err error) error {
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
+			return ErrInvalidGitAuthentication
+		}
+		return err
+	}
+	return nil
 }
 
 // ForcePull deletes the project directory and makes a fresh clone of given repo
@@ -142,15 +166,48 @@ func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out 
 	if err != nil {
 		return nil, err
 	}
-	repo, err = Clone(directory, remoteURL, auth, out)
+	head, err := repo.Head()
 	if err != nil {
-		e := RemoveContents(directory)
-		if e != nil {
-			log.WithError(e)
-		}
+		return nil, err
+	}
+
+	repo, err = Clone(directory, remoteURL, head.Name().Short(), auth, out)
+	if err != nil {
 		return nil, err
 	}
 	return repo, nil
+}
+
+// UpdateRepository pulls and checkouts given branch from repository
+func UpdateRepository(directory string, repo *git.Repository, branch string, auth ssh.AuthMethod, out io.Writer) error {
+	tree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "Checking out and updating branch %s...\n", branch)
+	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
+	err = tree.Pull(&git.PullOptions{
+		Auth:          auth,
+		Depth:         2,
+		Progress:      out,
+		ReferenceName: ref,
+	})
+	err = CheckGitRemoteErr(err)
+	if err != nil {
+		if err == git.ErrForceNeeded {
+			// If pull fails, attempt a force pull before returning error
+			fmt.Fprint(out, "Force pull required - making a fresh clone...")
+			_, err := ForcePull(directory, repo, auth, out)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	// Checkout the pulled branch
+	return tree.Checkout(&git.CheckoutOptions{Branch: ref})
 }
 
 // CompareRemotes checks if the given remote matches the remote of the given repository

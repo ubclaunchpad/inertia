@@ -10,7 +10,13 @@ const (
 
 // DaemonRequest is the configurable body of a request to the daemon.
 type DaemonRequest struct {
-	Stream    bool   `json:"stream"`
-	Repo      string `json:"repo,omitempty"`
-	Container string `json:"container,omitempty"`
+	Stream     bool        `json:"stream"`
+	Container  string      `json:"container,omitempty"`
+	GitOptions *GitOptions `json:"git_options"`
+}
+
+// GitOptions represents GitHub-related deployment options
+type GitOptions struct {
+	RemoteURL string `json:"remote"`
+	Branch    string `json:"branch"`
 }

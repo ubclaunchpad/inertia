@@ -67,7 +67,10 @@ func (d *Deployment) Up(stream bool) (*http.Response, error) {
 
 	reqContent := common.DaemonRequest{
 		Stream: stream,
-		Repo:   common.GetSSHRemoteURL(origin.Config().URLs[0]),
+		GitOptions: &common.GitOptions{
+			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
+			Branch:    d.Branch,
+		},
 	}
 	body, err := json.Marshal(reqContent)
 	if err != nil {

@@ -17,6 +17,7 @@ type RemoteVPS struct {
 	IP     string        `toml:"IP"`
 	User   string        `toml:"user"`
 	PEM    string        `toml:"pemfile"`
+	Branch string        `toml:"branch"`
 	Daemon *DaemonConfig `toml:"daemon"`
 }
 
@@ -229,24 +230,13 @@ func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
 }
 
 // AddNewRemote adds a new remote to the project config file.
-func AddNewRemote(name, IP, sshPort, user, pemLoc, port string) error {
-	// Just wipe configuration for MVP.
+func AddNewRemote(remote *RemoteVPS) error {
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return err
 	}
 
-	config.AddRemote(&RemoteVPS{
-		Name: name,
-		IP:   IP,
-		User: user,
-		PEM:  pemLoc,
-		Daemon: &DaemonConfig{
-			Port:    port,
-			SSHPort: sshPort,
-		},
-	})
-
+	config.AddRemote(remote)
 	return config.Write()
 }
 
