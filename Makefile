@@ -44,6 +44,7 @@ testdaemon:
 	chmod 400 ./test_env/test_key
 	scp -i ./test_env/test_key \
 		-o StrictHostKeyChecking=no \
+		-P $(SSH_PORT) \
 		./inertia-daemon-image \
 		root@0.0.0.0:/daemon-image
 	rm -f ./inertia-daemon-image
