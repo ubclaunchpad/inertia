@@ -45,9 +45,9 @@ before_install:
   - go get -u github.com/golang/dep/cmd/dep                     # Dependency management
   - dep ensure
 
-before_script: 
+before_script:
   - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
-  - yes yes | make testdaemon
+  - make testdaemon
 
 script:
   - go test -v -race -ldflags "-X main.Version=travis" -cover ./...

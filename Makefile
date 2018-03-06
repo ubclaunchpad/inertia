@@ -15,6 +15,10 @@ inertia:
 inertia-tagged:
 	go install -ldflags "-X main.Version=$(TAG)"
 
+clean:
+	rm -f inertia 
+	find . -type f -name inertia.\* -exec rm {} \;
+
 test:
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
@@ -33,16 +37,13 @@ testenv:
 		./test_env
 	bash ./test_env/startvps.sh $(SSH_PORT) $(VPS_OS)vps
 
-clean:
-	rm -f inertia 
-	find . -type f -name inertia.\* -exec rm {} \;
-
 testdaemon:
 	rm -f ./inertia-daemon-image
 	docker build -t ubclaunchpad/inertia:test .
 	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
-	chmod 700 ./test_env/test_key
+	chmod 400 ./test_env/test_key
 	scp -i ./test_env/test_key \
+		-o StrictHostKeyChecking=no \
 		./inertia-daemon-image \
 		root@0.0.0.0:/daemon-image
 	rm -f ./inertia-daemon-image
