@@ -39,9 +39,9 @@ matrix:
 
 before_install:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
-  - go get honnef.co/go/tools/cmd/megacheck                     # Static analysis
-  - go get github.com/fzipp/gocyclo                             # Look for complexity
-  - go get github.com/mattn/goveralls                           # Coveralls coverage reports
+  - go get -u honnef.co/go/tools/cmd/megacheck                     # Static analysis
+  - go get -u github.com/fzipp/gocyclo                             # Look for complexity
+  - go get -u github.com/mattn/goveralls                           # Coveralls coverage reports
   - go get -u github.com/golang/dep/cmd/dep                     # Dependency management
   - dep ensure
 
@@ -52,9 +52,8 @@ before_script:
 script:
   - go vet ./...
   - megacheck ./...
-  - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
-  - go test -v -race -cover ./...
-  - goveralls -service=travis-ci    # Send tests results to Coveralls
+  - gocyclo -over 19 $GO_FILES        # Forbid code with huge functions
+  - goveralls -v -service=travis-ci   # Run and send tests results to Coveralls
 
 # Push Inertia Docker image tagged as "latest" on master builds
 after_success:
