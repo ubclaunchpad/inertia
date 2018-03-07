@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
 	git "gopkg.in/src-d/go-git.v4"
@@ -73,7 +74,7 @@ func Clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writ
 		Progress:      out,
 		ReferenceName: ref,
 	})
-	err = CheckGitRemoteErr(err)
+	err = SimplifyGitErr(err)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +90,7 @@ func Clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writ
 // ForcePull deletes the project directory and makes a fresh clone of given repo
 // git.Worktree.Pull() only supports merges that can be resolved as a fast-forward
 func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+	fmt.Fprintln(out, "Making a force pull...")
 	remotes, err := repo.Remotes()
 	if err != nil {
 		return nil, err
@@ -116,19 +118,38 @@ func UpdateRepository(directory string, repo *git.Repository, branch string, aut
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(out, "Checking out and updating branch %s...\n", branch)
-	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
-	err = tree.Pull(&git.PullOptions{
-		Auth:          auth,
-		Depth:         2,
-		Progress:      out,
-		ReferenceName: ref,
+
+	fmt.Fprintln(out, "Fetching repository...")
+	err = repo.Fetch(&git.FetchOptions{
+		Auth:     auth,
+		RefSpecs: []config.RefSpec{"refs/*:refs/*", "HEAD:refs/heads/HEAD"},
+		Progress: out,
 	})
-	err = CheckGitRemoteErr(err)
-	if err != nil {
+	err = SimplifyGitErr(err)
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return err
+	}
+
+	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
+	fmt.Fprintf(out, "Checking out %s...\n", ref)
+	err = tree.Checkout(&git.CheckoutOptions{
+		Branch: ref,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return err
+	}
+
+	fmt.Fprintln(out, "Pulling from origin...")
+	err = tree.Pull(&git.PullOptions{
+		RemoteName:    "origin",
+		ReferenceName: ref,
+		Auth:          auth,
+		Progress:      out,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
 		if err == git.ErrForceNeeded {
 			// If pull fails, attempt a force pull before returning error
-			fmt.Fprint(out, "Force pull required - making a fresh clone...")
+			fmt.Fprintln(out, "Fast-forward failed - a force pull is required.")
 			_, err := ForcePull(directory, repo, auth, out)
 			if err != nil {
 				return err
@@ -137,9 +158,7 @@ func UpdateRepository(directory string, repo *git.Repository, branch string, aut
 			return err
 		}
 	}
-
-	// Checkout the pulled branch
-	return tree.Checkout(&git.CheckoutOptions{Branch: ref})
+	return nil
 }
 
 // CompareRemotes checks if the given remote matches the remote of the given repository
@@ -155,9 +174,9 @@ func CompareRemotes(localRepo *git.Repository, remoteURL string) error {
 	return nil
 }
 
-// CheckGitRemoteErr checks errors that involve git remote operations and simplifies them
+// SimplifyGitErr checks errors that involve git remote operations and simplifies them
 // to ErrInvalidGitAuthentication if possible
-func CheckGitRemoteErr(err error) error {
+func SimplifyGitErr(err error) error {
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
 			return ErrInvalidGitAuthentication
