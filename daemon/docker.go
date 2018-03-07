@@ -18,24 +18,23 @@ import (
 
 // deploy does git pull, docker-compose build, docker-compose up
 func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
+	fmt.Println(out, "Deploying repository...")
 	pemFile, err := os.Open(daemonGithubKeyLocation)
 	if err != nil {
 		return err
 	}
-	auth, err := common.GetGithubKey(pemFile)
+	auth, err := getGithubKey(pemFile)
 	if err != nil {
 		return err
 	}
 
 	// Pull from given branch
-	fmt.Fprintln(out, "Updating repository...")
 	err = common.UpdateRepository(projectDirectory, repo, branch, auth, out)
 	if err != nil {
 		return err
 	}
 
 	// Kill active project containers if there are any
-	fmt.Fprintln(out, "Shutting down active containers...")
 	err = killActiveContainers(cli, out)
 	if err != nil {
 		return err
@@ -100,7 +99,6 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 		}
 		return nil
 	*/
-
 }
 
 // getActiveContainers returns all active containers and returns and error
@@ -124,6 +122,7 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 
 // killActiveContainers kills all active project containers (ie not including daemon)
 func killActiveContainers(cli *docker.Client, out io.Writer) error {
+	fmt.Fprintln(out, "Shutting down active containers...")
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {

@@ -1,29 +1,16 @@
 package daemon
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
-	git "gopkg.in/src-d/go-git.v4"
-
 	"github.com/ubclaunchpad/inertia/common"
-)
-
-var (
-	// DefaultPort defines the standard daemon port
-	// TODO: Reference daemon pkg for this information?
-	// We only want the package dependencies to go in one
-	// direction, so best to think about how to do this.
-	// Clearly cannot ask for this information over HTTP.
-	DefaultPort = "8081"
-
-	daemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"
+	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 // processPushEvent prints information about the given PushEvent.
@@ -32,7 +19,7 @@ func processPushEvent(event *github.PushEvent) {
 	println("Received PushEvent")
 	println(fmt.Sprintf("Repository Name: %s", *repo.Name))
 	println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
-	println(fmt.Sprintf("Ref: %s", event.GetRef()))
+	println(fmt.Sprintf("Branch: %s", event.GetBaseRef()))
 
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
@@ -62,6 +49,7 @@ func processPushEvent(event *github.PushEvent) {
 		return
 	}
 	if head.Name().Short() == event.GetBaseRef() {
+		println("Event branch matches deployed branch " + head.Name().Short())
 		cli, err := docker.NewEnvClient()
 		if err != nil {
 			println(err)
@@ -99,21 +87,6 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 	println(fmt.Sprintf("Merge status: %v", merged))
 }
 
-// GetAPIPrivateKey returns the private RSA key to authenticate HTTP
-// requests sent to the daemon. For now, we simply use the GitHub
-// deploy key.
-func GetAPIPrivateKey(*jwt.Token) (interface{}, error) {
-	pemFile, err := os.Open(daemonGithubKeyLocation)
-	if err != nil {
-		return nil, err
-	}
-	key, err := common.GetGithubKey(pemFile)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(key.String()), nil
-}
-
 // setUpProject sets up a project for the first time
 func setUpProject(remoteURL, branch string, w io.Writer) error {
 	fmt.Fprintln(w, "Setting up project...")
@@ -121,7 +94,7 @@ func setUpProject(remoteURL, branch string, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	auth, err := common.GetGithubKey(pemFile)
+	auth, err := getGithubKey(pemFile)
 	if err != nil {
 		return err
 	}
@@ -137,11 +110,12 @@ func setUpProject(remoteURL, branch string, w io.Writer) error {
 	return nil
 }
 
-// gitAuthFailedErr includes the daemon key in the error message
-func gitAuthFailedErr(keyloc string) error {
-	bytes, err := ioutil.ReadFile(keyloc + ".pub")
+// GetGithubKey returns an ssh.AuthMethod from the given io.Reader
+// for use with the go-git library
+func getGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
+	bytes, err := ioutil.ReadAll(pemFile)
 	if err != nil {
-		bytes = []byte(err.Error() + "\nError reading key - try running 'inertia [REMOTE] init' again: ")
+		return nil, err
 	}
-	return errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:]))
+	return ssh.NewPublicKeys("git", bytes, "")
 }
