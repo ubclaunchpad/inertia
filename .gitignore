@@ -19,6 +19,9 @@ vendor
 # Development
 .vscode
 
-#binary
+# Binaries
 inertia
 inertia.*
+
+# Docker images
+inertia-daemon-image

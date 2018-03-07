@@ -1,4 +1,5 @@
-# Script for neatly outputting information about the test VPS
+# Script for starting up testvps and neatly outputting 
+# information about the testvps
 
 set -e
 

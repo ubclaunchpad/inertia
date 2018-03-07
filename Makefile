@@ -41,9 +41,9 @@ testdaemon:
 	rm -f ./inertia-daemon-image
 	docker build -t ubclaunchpad/inertia:test .
 	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
-	chmod 400 ./test_env/test_key
 	scp -i ./test_env/test_key \
 		-o StrictHostKeyChecking=no \
+		-o UserKnownHostsFile=/dev/null \
 		-P $(SSH_PORT) \
 		./inertia-daemon-image \
 		root@0.0.0.0:/daemon-image

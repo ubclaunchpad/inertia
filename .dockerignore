@@ -4,6 +4,9 @@
 .static/*
 Makefile
 
+# Test environment
+test_env/
+
 # Documentation
 README.md
 
