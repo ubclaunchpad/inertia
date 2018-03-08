@@ -22,3 +22,8 @@ func TestGetSSHRemoteURL(t *testing.T) {
 	assert.Equal(t, sshURL, GetSSHRemoteURL(httpsURL))
 	assert.Equal(t, sshURL, GetSSHRemoteURL(sshURL))
 }
+
+func TestGetBranchFromRef(t *testing.T) {
+	branch := GetBranchFromRef("refs/heads/master")
+	assert.Equal(t, "master", branch)
+}

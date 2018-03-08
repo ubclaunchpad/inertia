@@ -16,10 +16,11 @@ import (
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(event *github.PushEvent) {
 	repo := event.GetRepo()
+	branch := common.GetBranchFromRef(event.GetRef())
 	println("Received PushEvent")
 	println(fmt.Sprintf("Repository Name: %s", *repo.Name))
 	println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
-	println(fmt.Sprintf("Branch: %s", event.GetBaseRef()))
+	println(fmt.Sprintf("Branch: %s", branch))
 
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
@@ -48,7 +49,7 @@ func processPushEvent(event *github.PushEvent) {
 		println(err)
 		return
 	}
-	if head.Name().Short() == event.GetBaseRef() {
+	if head.Name().Short() == branch {
 		println("Event branch matches deployed branch " + head.Name().Short())
 		cli, err := docker.NewEnvClient()
 		if err != nil {
@@ -56,15 +57,14 @@ func processPushEvent(event *github.PushEvent) {
 			return
 		}
 		defer cli.Close()
-		err = deploy(localRepo, event.GetBaseRef(), cli, os.Stdout)
+		err = deploy(localRepo, branch, cli, os.Stdout)
 		if err != nil {
 			println(err)
 		}
 	} else {
 		println(
-			"Event branch " + head.Name().Short() +
-				" does not match deployed branch " +
-				event.GetBaseRef() + " - ignoring event.",
+			"Event branch " + head.Name().Short() + " does not match deployed branch " +
+				branch + " - ignoring event.",
 		)
 	}
 }

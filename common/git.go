@@ -185,3 +185,9 @@ func SimplifyGitErr(err error) error {
 	}
 	return nil
 }
+
+// GetBranchFromRef gets the branch name from a git ref of form refs/...
+func GetBranchFromRef(ref string) string {
+	parts := strings.Split(ref, "/")
+	return parts[len(parts)-1]
+}
