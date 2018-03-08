@@ -78,6 +78,7 @@ jobs:
       if: branch = master
       script: docker login -u $DOCKER_USER -p $DOCKER_KEY ; make daemon RELEASE=latest
     - stage: Release
+      if: tag IS present
       deploy:
         provider: releases
         skip_cleanup: true
@@ -86,6 +87,3 @@ jobs:
         file_glob: true
         file: inertia.*
         go: "1.10"
-        on:
-          tags: true
-          all_branches: true
