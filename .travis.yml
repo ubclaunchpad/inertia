@@ -15,9 +15,7 @@ env:
   # Test against different VPS platforms we want to support
   matrix:
     - VPS_OS=ubuntu VERSION=16.04
-    - VPS_OS=ubuntu VERSION=14.04
     - VPS_OS=debian VERSION=9.3
-    - VPS_OS=debian VERSION=8
     - VPS_OS=centos VERSION=7
     - VPS_OS=amazon VERSION=latest   
     - VPS_OS=ubuntu VERSION=latest
