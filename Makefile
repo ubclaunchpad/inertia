@@ -1,4 +1,4 @@
-.PHONY: test test-verbose test-profile testenv clean daemon testdaemon bootstrap
+.PHONY: inertia test test-verbose testenv clean daemon testdaemon bootstrap
 
 TAG = `git describe --tags`
 PACKAGES = `go list ./... | grep -v vendor/`

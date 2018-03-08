@@ -3,9 +3,9 @@ FROM centos:${VERSION}
 
 ENV container docker
 
-RUN yum install -y initscripts && yum clean all
-# This next RUN gets systemd working properly to start docker
-RUN yum -y install systemd; yum clean all; \
+# Get systemd working properly to start docker
+RUN yum -y install initscripts ; yum clean all
+RUN yum -y install initscripts ; yum -y install systemd; yum clean all; \
     (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done); \
     rm -f /lib/systemd/system/multi-user.target.wants/*;\
     rm -f /etc/systemd/system/*.wants/*;\
@@ -17,10 +17,11 @@ RUN yum -y install systemd; yum clean all; \
 RUN yum install -y sudo; \
     yum install -y openssh-server; \
     yum install -y openssh-clients;
+
+# Set up ssh
 RUN mkdir /var/run/sshd
 RUN echo 'root:inertia' | chpasswd
-
-RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config; \
     echo "AuthorizedKeysFile     %h/.ssh/authorized_keys" >> /etc/ssh/sshd_config;
 
 # SSH login fix. Otherwise user is kicked off after login

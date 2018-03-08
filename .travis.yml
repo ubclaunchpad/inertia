@@ -19,11 +19,10 @@ env:
     - VPS_OS=debian VERSION=9.3
     - VPS_OS=debian VERSION=8
     - VPS_OS=centos VERSION=7
-    - VPS_OS=amazon VERSION=2   
+    - VPS_OS=amazon VERSION=latest   
     - VPS_OS=ubuntu VERSION=latest
     - VPS_OS=debian VERSION=latest
     - VPS_OS=centos VERSION=latest
-    - VPS_OS=amazon VERSION=latest
   # DOCKER_USER and DOCKER_KEY for Docker repository access
   global:
     - secure: "Wmv2HWUKWM0S5Kh1IgX/VKhQ21Oi85LZgHZVYXqGppa3wHO5hKYOSoWnBBR3uNgHsYPi3RL7kRNDDuKWyDAWU+2hV2xjXfqfSwsH9Sj8pFn/60KcIoMJU8EkxydJks6+H4sf04Fei1zSXc2ySTIsvCUSUKDOi8ZJCqkDxV0hIK0TmXn7isDcRWnHTvpNqLarQ4LyN9Qi8qU/NR28cNHIdkZaWxT0gciNwT9ep/vrG32aaIsNB/Ikn43A38mx5B9iSmG7YtZzDYldMEyOhCDqZIxwOjA1J1nHYqeYq/RrF6JJYpprBfEjEDa73cUBy8JVZqb3ur5uL0FeBFfToNBdK/Qbj93pkOS8pQSgyxCCpACJBeSrzuolVKLxMLbfc6YoFXaEeu7oCE5T3P4hws6yP2MD1opAMnTCLUyWRWecH6PwVwgrlur6EvrEpimGOWk4TmmomvQMRVbDF1JYuY+4QD2M2tTkmts+pwpvEkBF+aOatSE1xUWYAtwsjnAjBSL7mhWSUeBT6MlTeaO1UqNb5qW2Fbz5KSYDh71T3DslWiCxad6x48/eXBAtApQ1mHbHtCrAALHz3h1Ioe7GA/7CWigakPayfMOYuavPDE7Ghrt8m9RlvTVoV5HgWHM9Ophrv+OnAb0RYDpPKU8+ejgqqI+kV9dy10SK6LAnXoM+kd0="
@@ -37,7 +36,6 @@ matrix:
     - env: VPS_OS=ubuntu VERSION=latest
     - env: VPS_OS=debian VERSION=latest
     - env: VPS_OS=centos VERSION=latest
-    - env: VPS_OS=amazon VERSION=latest
   # Don't wait for tip tests to finish. Mark the test run green if the
   # tests pass on the stable versions of Go and VPS platforms.
   fast_finish: true
