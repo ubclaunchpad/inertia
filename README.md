@@ -21,12 +21,6 @@
   </a>
 </p>
 
-<p align="center">
-  <a href="https://travis-ci.org/ubclaunchpad/inertia">
-  <img src="https://img.shields.io/badge/Tested%20VPS%20Platforms-Ubuntu%2016.04%2F14.04%20%7C%20Debian%209.3%2F8%20%7C%20CentOS%207-blue.svg" />
-  </a>
-</p>
-
 ----------------
 
 Inertia is a cross-platform command line tool that aims to simplify setup and management of automated deployment of docker-compose projects on any virtual private server. It aims to provide the ease and flexibility of services like Heroku without the complexity of Kubernetes while still giving users full control over their projects.
@@ -36,6 +30,7 @@ Inertia is a cross-platform command line tool that aims to simplify setup and ma
   - [Setup](#setup)
   - [Continuous Deployment](#continuous-deployment)
   - [Deployment Management](#deployment-management)
+  - [Release Streams](#release-streams)
 - [Motivation and Design](#bulb-motivation-and-design)
 - [Development](#construction-development)
 
