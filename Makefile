@@ -5,7 +5,7 @@ PACKAGES = `go list ./... | grep -v vendor/`
 SSH_PORT = 22
 VPS_VERSION = latest
 VPS_OS = ubuntu
-RELEASE = test
+RELEASE = canary
 
 all: inertia
 
