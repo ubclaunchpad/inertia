@@ -30,36 +30,35 @@ func processPushEvent(event *github.PushEvent) {
 		return
 	}
 
+	// Check for matching remotes
 	localRepo, err := git.PlainOpen(projectDirectory)
 	if err != nil {
-		println(err)
+		println(err.Error())
 		return
 	}
-
-	// Check for matching remotes
-	err = common.CompareRemotes(localRepo, common.GetSSHRemoteURL(*repo.GitURL))
+	err = common.CompareRemotes(localRepo, common.GetSSHRemoteURL(repo.GetGitURL()))
 	if err != nil {
-		println(err)
+		println(err.Error())
 		return
 	}
 
 	// If branches match, deploy, otherwise ignore the event.
 	head, err := localRepo.Head()
 	if err != nil {
-		println(err)
+		println(err.Error())
 		return
 	}
 	if head.Name().Short() == branch {
 		println("Event branch matches deployed branch " + head.Name().Short())
 		cli, err := docker.NewEnvClient()
 		if err != nil {
-			println(err)
+			println(err.Error())
 			return
 		}
 		defer cli.Close()
 		err = deploy(localRepo, branch, cli, os.Stdout)
 		if err != nil {
-			println(err)
+			println(err.Error())
 		}
 	} else {
 		println(
