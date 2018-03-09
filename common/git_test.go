@@ -83,6 +83,7 @@ func TestUpdateRepository(t *testing.T) {
 		URL: inertiaDeployTest,
 	})
 	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
 
 	// Try switching branches
 	err = UpdateRepository(dir, repo, "master", nil, os.Stdout)
