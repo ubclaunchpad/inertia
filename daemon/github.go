@@ -49,7 +49,7 @@ func processPushEvent(event *github.PushEvent) {
 		return
 	}
 	if head.Name().Short() == branch {
-		println("Event branch matches deployed branch " + head.Name().Short())
+		println("Event branch matches deployed branch " + branch)
 		cli, err := docker.NewEnvClient()
 		if err != nil {
 			println(err.Error())
@@ -62,8 +62,8 @@ func processPushEvent(event *github.PushEvent) {
 		}
 	} else {
 		println(
-			"Event branch " + head.Name().Short() + " does not match deployed branch " +
-				branch + " - ignoring event.",
+			"Event branch " + branch + " does not match deployed branch " +
+				head.Name().Short() + " - ignoring event.",
 		)
 	}
 }

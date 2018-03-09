@@ -28,7 +28,7 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 		return err
 	}
 
-	// Pull from given branch
+	// Pull from given branch and check out if needed
 	err = common.UpdateRepository(projectDirectory, repo, branch, auth, out)
 	if err != nil {
 		return err

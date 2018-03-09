@@ -12,10 +12,6 @@ import (
 
 var (
 	// DefaultPort defines the standard daemon port
-	// TODO: Reference daemon pkg for this information?
-	// We only want the package dependencies to go in one
-	// direction, so best to think about how to do this.
-	// Clearly cannot ask for this information over HTTP.
 	DefaultPort = "8081"
 
 	daemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"

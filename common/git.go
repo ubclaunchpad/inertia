@@ -63,6 +63,9 @@ func GetSSHRemoteURL(url string) string {
 	if sshURL == url {
 		sshURL = strings.Replace(url, "git://github.com/", "git@github.com:", -1)
 	}
+	if !strings.HasSuffix(sshURL, ".git") {
+		sshURL = sshURL + ".git"
+	}
 	return sshURL
 }
 
@@ -99,17 +102,18 @@ func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out 
 	if err != nil {
 		return nil, err
 	}
-	remoteURL := GetSSHRemoteURL(remotes[0].Config().URLs[0])
-	err = RemoveContents(directory)
-	if err != nil {
-		return nil, err
-	}
 	head, err := repo.Head()
 	if err != nil {
 		return nil, err
 	}
+	remoteURL := GetSSHRemoteURL(remotes[0].Config().URLs[0])
+	branch := head.Name().Short()
 
-	repo, err = Clone(directory, remoteURL, head.Name().Short(), auth, out)
+	err = RemoveContents(directory)
+	if err != nil {
+		return nil, err
+	}
+	repo, err = Clone(directory, remoteURL, branch, auth, out)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +134,7 @@ func UpdateRepository(directory string, repo *git.Repository, branch string, aut
 		Progress: out,
 	})
 	err = SimplifyGitErr(err)
-	if err != nil && err != git.NoErrAlreadyUpToDate {
+	if err != nil {
 		return err
 	}
 
@@ -139,7 +143,8 @@ func UpdateRepository(directory string, repo *git.Repository, branch string, aut
 	err = tree.Checkout(&git.CheckoutOptions{
 		Branch: ref,
 	})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
+	err = SimplifyGitErr(err)
+	if err != nil {
 		return err
 	}
 
@@ -150,7 +155,8 @@ func UpdateRepository(directory string, repo *git.Repository, branch string, aut
 		Auth:          auth,
 		Progress:      out,
 	})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
+	err = SimplifyGitErr(err)
+	if err != nil {
 		if err == git.ErrForceNeeded {
 			// If pull fails, attempt a force pull before returning error
 			fmt.Fprintln(out, "Fast-forward failed - a force pull is required.")
@@ -172,7 +178,7 @@ func CompareRemotes(localRepo *git.Repository, remoteURL string) error {
 		return err
 	}
 	localRemoteURL := GetSSHRemoteURL(remotes[0].Config().URLs[0])
-	if localRemoteURL != remoteURL {
+	if localRemoteURL != GetSSHRemoteURL(remoteURL) {
 		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
 	return nil

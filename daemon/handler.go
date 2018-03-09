@@ -42,13 +42,13 @@ func Run(port, version string) {
 	println("Downloading docker-compose...")
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		println(err)
+		println(err.Error())
 		println("Failed to start Docker client - shutting down daemon.")
 		return
 	}
 	_, err = cli.ImagePull(context.Background(), dockerCompose, types.ImagePullOptions{})
 	if err != nil {
-		println(err)
+		println(err.Error())
 		println("Failed to pull docker-compose image - shutting down daemon.")
 		cli.Close()
 		return
@@ -80,13 +80,13 @@ func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
 	if err != nil {
-		println(err)
+		println(err.Error())
 		return
 	}
 
 	event, err := github.ParseWebHook(github.WebHookType(r), payload)
 	if err != nil {
-		println(err)
+		println(err.Error())
 		return
 	}
 
