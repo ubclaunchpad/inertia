@@ -36,14 +36,14 @@ Inertia is a cross-platform command line tool that aims to simplify setup and ma
 
 ## :package: Installation
 
-All you need is an Inertia binary. The binaries can be downloaded from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page for various platforms. The binary can be added to your PATH or run directly.
+To get started, just download an Inertia CLI binary for your platform from the [Releases](https://github.com/ubclaunchpad/inertia/releases) page. You can add this binary to your PATH or execute it directly to use the CLI:
 
 ```bash
 $> mv $INERTIA_IMAGE ./inertia
 $> ./inertia
 ```
 
-Alternatively, you can also [install Inertia from source](#installing-from-source).
+You can also [install Inertia from source](#installing-from-source).
 
 ## :rocket: Usage
 
@@ -65,6 +65,8 @@ $> inertia $VPS_NAME status
 ```
 
 An Inertia daemon is now running on your remote instance. This daemon will be used to manage your deployment.
+
+See our [wiki](https://github.com/ubclaunchpad/inertia/wiki/Daemon-Releases) for more details on platform compatibility.
 
 ### Continuous Deployment
 
@@ -108,6 +110,8 @@ You can manually change the daemon version pulled by editing the Inertia configu
 - `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
 - `latest` denotes the newest builds on `master`.
 - `canary` denotes experimental builds used for testing and development - do not use this.
+
+The daemon component of an Inertia release can be patched separately from the CLI component - see our [wiki](https://github.com/ubclaunchpad/inertia/wiki/Daemon-Releases) for more details.
 
 ### Swag
 
@@ -156,7 +160,7 @@ $> make inertia-tagged
 $> inertia --version
 ```
 
-Alternatively, you can manually edit `.inertia.toml` to use your desired version.
+Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
 
 ### Dependencies
 
@@ -169,12 +173,14 @@ $> dep ensure
 
 ### Testing
 
+To run the Inertia test suite:
+
 ```bash
 $> make test                              # test against ubuntu:latest
 $> make test VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 ```
 
-You can also start a container that sets up a mock VPS for testing, and build a daemon image from source to use on it:
+You can also start a container that sets up a mock VPS for testing.
 
 ```bash
 $> make
@@ -182,10 +188,6 @@ $> make
 $> make testenv VPS_OS=ubuntu VERSION=16.04
 # defaults to ubuntu:lastest without args
 # note the location of the key that is printed
-$> make testdaemon
-# builds a daemon image from source and sends it to
-# the testvps - this will be used by Inertia if the
-# version in .inertia.toml is "test"
 ```
 
 You can [SSH into this container](https://bobheadxi.github.io/dockerception/#ssh-services-in-docker) and treat it just as you would treat a real VPS:
@@ -199,6 +201,14 @@ $> inertia local init
 $> inertia remote status local
 Remote instance 'local' accepting requests at http://0.0.0.0:8081
 ```
+
+The above steps will pull a daemon image from Docker Hub based on the version in your `.inertia.toml`. To use a daemon compiled from source, set your version to `test` and run:
+
+```bash
+$> make testdaemon
+```
+
+Setting up a `testvps` using `inertia local init` will now use the custom daemon.
 
 If you run into this error when deploying onto the `testvps`:
 
