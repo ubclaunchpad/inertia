@@ -59,7 +59,11 @@ func GetLocalRepo() (*git.Repository, error) {
 // GetSSHRemoteURL gets the URL of the given remote in the form
 // "git@github.com:[USER]/[REPOSITORY].git"
 func GetSSHRemoteURL(url string) string {
-	return strings.Replace(url, "https://github.com/", "git@github.com:", -1)
+	sshURL := strings.Replace(url, "https://github.com/", "git@github.com:", -1)
+	if sshURL == url {
+		sshURL = strings.Replace(url, "git://github.com/", "git@github.com:", -1)
+	}
+	return sshURL
 }
 
 // Clone wraps git.PlainClone() and returns a more helpful error message

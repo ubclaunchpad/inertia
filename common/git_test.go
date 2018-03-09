@@ -16,11 +16,13 @@ func TestCheckForGit(t *testing.T) {
 }
 
 func TestGetSSHRemoteURL(t *testing.T) {
-	httpsURL := "https://github.com/ubclaunchpad/inertia.git"
 	sshURL := "git@github.com:ubclaunchpad/inertia.git"
+	httpsURL := "https://github.com/ubclaunchpad/inertia.git"
+	webhookURL := "git://github.com/ubclaunchpad/inertia.git"
 
 	assert.Equal(t, sshURL, GetSSHRemoteURL(httpsURL))
 	assert.Equal(t, sshURL, GetSSHRemoteURL(sshURL))
+	assert.Equal(t, sshURL, GetSSHRemoteURL(webhookURL))
 }
 
 func TestGetBranchFromRef(t *testing.T) {
