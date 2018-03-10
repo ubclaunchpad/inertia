@@ -36,20 +36,6 @@ inerta remote add gcloud
 inerta gcloud init
 inerta remote status gcloud`,
 	Args: cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		// Ensure project initialized.
-		config, err := client.GetProjectConfigFromDisk()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		remote, found := config.GetRemote(args[0])
-		if found {
-			printRemoteDetails(remote)
-		} else {
-			println("No remote '" + args[0] + "' currently set up.")
-		}
-	},
 }
 
 // addCmd represents the remote add command
@@ -244,12 +230,34 @@ var removeCmd = &cobra.Command{
 	},
 }
 
+var showCmd = &cobra.Command{
+	Use:   "show [REMOTE]",
+	Short: "Show details about remote.",
+	Long:  `Show details about the given remote.`,
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		config, err := client.GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		remote, found := config.GetRemote(args[0])
+		if found {
+			printRemoteDetails(remote)
+		} else {
+			println("No remote '" + args[0] + "' currently set up.")
+		}
+	},
+}
+
 func printRemoteDetails(remote *client.RemoteVPS) {
 	fmt.Printf("Remote %s: \n", remote.Name)
 	fmt.Printf(" - Deployed Branch:   %s\n", remote.Branch)
 	fmt.Printf(" - IP Address:        %s\n", remote.IP)
 	fmt.Printf(" - VPS User:          %s\n", remote.User)
 	fmt.Printf(" - PEM File Location: %s\n", remote.PEM)
+	fmt.Printf("Run 'inertia %s status' for more details.\n", remote.Name)
 }
 
 func init() {
@@ -258,6 +266,7 @@ func init() {
 	remoteCmd.AddCommand(statusCmd)
 	remoteCmd.AddCommand(listCmd)
 	remoteCmd.AddCommand(removeCmd)
+	remoteCmd.AddCommand(showCmd)
 
 	// Here you will define your flags and configuration settings.
 

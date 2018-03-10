@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	docker "github.com/docker/docker/client"
@@ -12,6 +13,32 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
+
+// gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
+func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, common.DaemonOkResp)
+
+	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	event, err := github.ParseWebHook(github.WebHookType(r), payload)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	switch event := event.(type) {
+	case *github.PushEvent:
+		processPushEvent(event)
+	case *github.PullRequestEvent:
+		processPullRequestEvent(event)
+	default:
+		println("Unrecognized event type")
+	}
+}
 
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(event *github.PushEvent) {

@@ -14,7 +14,7 @@ import (
 	"github.com/ubclaunchpad/inertia/client"
 )
 
-var deployUpCmd = &cobra.Command{
+var deploymentUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Bring project online on remote",
 	Long: `Bring project online on remote.
@@ -65,7 +65,7 @@ var deployUpCmd = &cobra.Command{
 	},
 }
 
-var deployDownCmd = &cobra.Command{
+var deploymentDownCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Bring project offline on remote",
 	Long: `Bring project offline on remote.
@@ -102,7 +102,7 @@ var deployDownCmd = &cobra.Command{
 	},
 }
 
-var deployStatusCmd = &cobra.Command{
+var deploymentStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Print the status of deployment on remote",
 	Long: `Print the status of deployment on remote.
@@ -141,7 +141,7 @@ var deployStatusCmd = &cobra.Command{
 	},
 }
 
-var deployResetCmd = &cobra.Command{
+var deploymentResetCmd = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset the project on your remote",
 	Long: `Reset the project on your remote.
@@ -178,7 +178,7 @@ var deployResetCmd = &cobra.Command{
 	},
 }
 
-var deployLogsCmd = &cobra.Command{
+var deploymentLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Access logs of your VPS",
 	Long: `Access logs of containers of your VPS. Argument 'docker-compose'
@@ -236,8 +236,8 @@ var deployLogsCmd = &cobra.Command{
 	},
 }
 
-// deployInitCmd represents the inertia [REMOTE] init command
-var deployInitCmd = &cobra.Command{
+// deploymentInitCmd represents the inertia [REMOTE] init command
+var deploymentInitCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize the VPS for continuous deployment",
 	Long: `Initialize the VPS for continuous deployment.
@@ -267,8 +267,8 @@ for updates to this repository's remote master branch.`,
 	},
 }
 
-// deployCmd represents the deploy command
-var deployCmd = &cobra.Command{
+// deploymentCmd represents the deploy command
+var deploymentCmd = &cobra.Command{
 	Hidden: true,
 	Long: `Start or stop continuous deployment to the remote VPS instance specified.
 Run 'inertia remote status' beforehand to ensure your daemon is running.
@@ -288,20 +288,20 @@ func init() {
 
 	for _, remote := range config.Remotes {
 		newCmd := &cobra.Command{}
-		*newCmd = *deployCmd
-		addRemoteCommand(remote.Name, newCmd)
+		*newCmd = *deploymentCmd
+		addDeploymentCommand(remote.Name, newCmd)
 	}
 }
 
-func addRemoteCommand(remoteName string, cmd *cobra.Command) {
+func addDeploymentCommand(remoteName string, cmd *cobra.Command) {
 	cmd.Use = remoteName + " [COMMAND]"
 	cmd.Short = "Configure continuous deployment to " + remoteName
-	cmd.AddCommand(deployUpCmd)
-	cmd.AddCommand(deployDownCmd)
-	cmd.AddCommand(deployStatusCmd)
-	cmd.AddCommand(deployResetCmd)
-	cmd.AddCommand(deployInitCmd)
-	cmd.AddCommand(deployLogsCmd)
+	cmd.AddCommand(deploymentUpCmd)
+	cmd.AddCommand(deploymentDownCmd)
+	cmd.AddCommand(deploymentStatusCmd)
+	cmd.AddCommand(deploymentResetCmd)
+	cmd.AddCommand(deploymentInitCmd)
+	cmd.AddCommand(deploymentLogsCmd)
 	rootCmd.AddCommand(cmd)
 
 	cmd.PersistentFlags().Bool("stream", false, "Stream output from daemon")
