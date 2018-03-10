@@ -77,7 +77,6 @@ func Clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writ
 	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
 		URL:           remoteURL,
 		Auth:          auth,
-		Depth:         2,
 		Progress:      out,
 		ReferenceName: ref,
 	})
