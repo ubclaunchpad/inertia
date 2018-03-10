@@ -130,7 +130,7 @@ func UpdateRepository(directory string, repo *git.Repository, branch string, aut
 	fmt.Fprintln(out, "Fetching repository...")
 	err = repo.Fetch(&git.FetchOptions{
 		Auth:     auth,
-		RefSpecs: []config.RefSpec{"refs/*:refs/*", "HEAD:refs/heads/HEAD"},
+		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
 		Progress: out,
 	})
 	err = SimplifyGitErr(err)
