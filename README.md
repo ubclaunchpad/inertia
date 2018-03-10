@@ -66,7 +66,7 @@ $> inertia $VPS_NAME status
 
 An Inertia daemon is now running on your remote instance. This daemon will be used to manage your deployment.
 
-See our [wiki](https://github.com/ubclaunchpad/inertia/wiki/Daemon-Releases) for more details on platform compatibility.
+See our [wiki](https://github.com/ubclaunchpad/inertia/wiki/VPS-Compatibility) for more details on platform compatibility.
 
 ### Continuous Deployment
 
