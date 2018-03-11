@@ -15,10 +15,9 @@ env:
   # Test against different VPS platforms we want to support
   matrix:
     - VPS_OS=ubuntu VERSION=16.04
-    - VPS_OS=ubuntu VERSION=14.04
     - VPS_OS=debian VERSION=9.3
-    - VPS_OS=debian VERSION=8
     - VPS_OS=centos VERSION=7
+    - VPS_OS=amazon VERSION=latest   
     - VPS_OS=ubuntu VERSION=latest
     - VPS_OS=debian VERSION=latest
     - VPS_OS=centos VERSION=latest
@@ -28,22 +27,15 @@ env:
     - secure: "jloKHZ9QfPnER+X34GnQQ+GIf5d+ZHiC8Nu4mNVR0QiqK4EH2BnJExOpSUtkDCLZqPdzIAD3efTs/vgm0Od+GKbOGW/s83oy605OR13Bop6fDNoMWTf6fBlZ4JxfVmJSVbv6jKhx627HTC4U1aFDxRfgmN+113YLYCodQlB3F98m5ldD1xA+uuOeLp1FXCS9p9L+1/GWninyYEjrDVZz37c6kYsQJPhPvWAr3VcnnEE0vX0RmyKIOgM3/7gYf57HMlUo6Ri0cF4+WDUV+6R8RGbInZPErTSGR3qwyGwq1RbHkqFYCU4gVSEih2uo4pflKqoiXsDkrKg5FKxE3X0YG/rKnlZ3ElX4VYg3Pn4sGvXp45QW6tb4syVGXNgmIhtmYHoTvh48DDtvsbpVc7VwLv6E/dI53BvIv5/AKGDNWafsBRo0OZfr5V/XH6JLr2eWO+PXBiqhvUsP+r29iKVywKL5hjEJ+sKkm1O0ZXJPhGJNgajG5UHr1N+s61QmZGMKas2hO0p2ZjGxje/Fmdt+DiJ6UsPhEk5uLYWjcGFnbKYZlo2WUzO6bo1P5VQDXlr6mGRwIwOf8j/QidT+pz4cYdX63BMJw40OfKB87UcegZsncJpLK7hzJpcxZ//WCqmU/EPNfeIB4JRFlzRCxzMwKe7HOTmKwz2+tbO1GyWDuw8="
 
 matrix:
-  # It's ok if our code fails on unstable development versions of Go
-  # and/or VPS platforms (VERSION=latest)
-  allow_failures:
-    - go: master
-    - env: VPS_OS=ubuntu VERSION=latest
-    - env: VPS_OS=debian VERSION=latest    
-    - env: VPS_OS=centos VERSION=latest
   # Don't wait for tip tests to finish. Mark the test run green if the
   # tests pass on the stable versions of Go and VPS platforms.
   fast_finish: true
 
 before_install:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
-  - go get -u honnef.co/go/tools/cmd/megacheck                     # Static analysis
-  - go get -u github.com/fzipp/gocyclo                             # Look for complexity
-  - go get -u github.com/mattn/goveralls                           # Coveralls coverage reports
+  - go get -u honnef.co/go/tools/cmd/megacheck                  # Static analysis
+  - go get -u github.com/fzipp/gocyclo                          # Look for complexity
+  - go get -u github.com/mattn/goveralls                        # Coveralls coverage reports
   - go get -u github.com/golang/dep/cmd/dep                     # Dependency management
   - dep ensure
 
@@ -69,13 +61,25 @@ before_deploy:
   - bash .scripts/release.sh
 
 # Upload compiled binaries to corresponding GitHub release
-deploy:
-  provider: releases
-  skip_cleanup: true
-  api_key:
-    secure: eHe5lL6mVp6XQM5sdUQHWcugROAjZC5Gf81flIjM/4K1ceUQfblIQ3/suXOHBXl+jGro0DTlI/a8S9zKb3NDdlTiXjABQD8KkWNMfEqajUInRwSFE7vSvydzJDuwO00KZOuFKdp2hZwpO2jbODZvHEnYONTClle5pV6bzhp4JaY1P0CjAl6/E67WVjpNQmHNIlzcZ7PRLe7KcjEl5N7DIg/B4R19EiBTjaPsCh8xP/T68cqVVa+4cwUAxN6Xd0ca81T9dkhppRL9tiJRn6iP/x64paIeWV0pF80V2PKTwbI9Ox0mcd7TWkHFD4taV+UwQUeOeN3OR7NHfzyPtWUcCVOp3wxFKvWySPYNeh8x8OrFh7HzIMl+20SQ/rdEsJJ6cfMx+qp+RBJmSj+Btm/ZxfEZgjRTg2jiCeUNnNpBL+46U49TVPTuw7+K97x/cGRF9k0JAfkq75tQTPCoQwmkCqTeJ6KGwFwlDx5+OUCJz3WS0XfQ6k88eYQygmBBdWqoHXUS75vOa96GVN1JSp8tBpSp0lUp+U2QQJkIy9VN9NpMlsbn3r5Ssk/AtEhal1fpT5tncPvzphwSKDH3WtCJ+FJjMajBIlZA2yop1VdsVJzKFBo2DH+yn8qd1tIsp5C+HDPvulCYMFCg7zJk0ksXZVERTGnrnRBSENW+Ut1avJ0=
-  file_glob: true
-  file: inertia.*
-  on:
-    tags: true
-    all_branches: true
+jobs:
+  # It's ok if our code fails on unstable development versions of Go
+  # and/or VPS platforms (VERSION=latest)
+  allow_failures:
+    - go: master
+    - env: VPS_OS=ubuntu VERSION=latest
+    - env: VPS_OS=debian VERSION=latest
+    - env: VPS_OS=centos VERSION=latest
+  include:
+    - stage: Daemon build for "latest"
+      if: (branch = master) AND (type = push)
+      script: docker login -u $DOCKER_USER -p $DOCKER_KEY ; make daemon RELEASE=latest
+    - stage: Release
+      if: tag IS present
+      deploy:
+        provider: releases
+        skip_cleanup: true
+        api_key:
+          secure: eHe5lL6mVp6XQM5sdUQHWcugROAjZC5Gf81flIjM/4K1ceUQfblIQ3/suXOHBXl+jGro0DTlI/a8S9zKb3NDdlTiXjABQD8KkWNMfEqajUInRwSFE7vSvydzJDuwO00KZOuFKdp2hZwpO2jbODZvHEnYONTClle5pV6bzhp4JaY1P0CjAl6/E67WVjpNQmHNIlzcZ7PRLe7KcjEl5N7DIg/B4R19EiBTjaPsCh8xP/T68cqVVa+4cwUAxN6Xd0ca81T9dkhppRL9tiJRn6iP/x64paIeWV0pF80V2PKTwbI9Ox0mcd7TWkHFD4taV+UwQUeOeN3OR7NHfzyPtWUcCVOp3wxFKvWySPYNeh8x8OrFh7HzIMl+20SQ/rdEsJJ6cfMx+qp+RBJmSj+Btm/ZxfEZgjRTg2jiCeUNnNpBL+46U49TVPTuw7+K97x/cGRF9k0JAfkq75tQTPCoQwmkCqTeJ6KGwFwlDx5+OUCJz3WS0XfQ6k88eYQygmBBdWqoHXUS75vOa96GVN1JSp8tBpSp0lUp+U2QQJkIy9VN9NpMlsbn3r5Ssk/AtEhal1fpT5tncPvzphwSKDH3WtCJ+FJjMajBIlZA2yop1VdsVJzKFBo2DH+yn8qd1tIsp5C+HDPvulCYMFCg7zJk0ksXZVERTGnrnRBSENW+Ut1avJ0=
+        file_glob: true
+        file: inertia.*
+        go: "1.10"

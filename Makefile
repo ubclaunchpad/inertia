@@ -1,11 +1,11 @@
-.PHONY: test test-verbose test-profile testenv clean daemon testdaemon bootstrap
+.PHONY: inertia test test-verbose testenv clean daemon testdaemon bootstrap
 
 TAG = `git describe --tags`
 PACKAGES = `go list ./... | grep -v vendor/`
 SSH_PORT = 22
 VPS_VERSION = latest
 VPS_OS = ubuntu
-RELEASE = test
+RELEASE = canary
 
 all: inertia
 
@@ -44,6 +44,7 @@ testdaemon:
 	chmod 400 ./test_env/test_key
 	scp -i ./test_env/test_key \
 		-o StrictHostKeyChecking=no \
+		-o UserKnownHostsFile=/dev/null \
 		-P $(SSH_PORT) \
 		./inertia-daemon-image \
 		root@0.0.0.0:/daemon-image
