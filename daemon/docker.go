@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -132,7 +133,8 @@ func killActiveContainers(cli *docker.Client, out io.Writer) error {
 	for _, container := range containers {
 		if container.Names[0] != "/inertia-daemon" {
 			fmt.Fprintln(out, "Killing "+container.Image+" ("+container.Names[0]+")...")
-			err := cli.ContainerKill(ctx, container.ID, "SIGKILL")
+			timeout := 10 * time.Second
+			err := cli.ContainerStop(ctx, container.ID, &timeout)
 			if err != nil {
 				return err
 			}
