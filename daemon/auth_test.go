@@ -19,6 +19,11 @@ var (
 func getFakeAPIKey(tok *jwt.Token) (interface{}, error) {
 	return testPrivateKey, nil
 }
+func TestGenerateToken(t *testing.T) {
+	token, err := GenerateToken(testPrivateKey)
+	assert.Nil(t, err, "generateToken must not fail")
+	assert.Equal(t, token, testToken)
+}
 
 func TestAuthorizationOK(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/health-check", nil)

@@ -1,17 +1,3 @@
-// Copyright © 2017 UBC Launch Pad team@ubclaunchpad.com
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package client
 
 import (
@@ -34,16 +20,17 @@ type Deployment struct {
 
 // DaemonRequester can make HTTP requests to the daemon.
 type DaemonRequester interface {
-	Up() (*http.Response, error)
+	Up(bool) (*http.Response, error)
 	Down() (*http.Response, error)
 	Status() (*http.Response, error)
 	Reset() (*http.Response, error)
+	Logs(bool, string) (*http.Response, error)
 }
 
 // GetDeployment returns the local deployment setup
 // TODO: add args to support getting the appropriate deployment
 // based on the command (aka remote) that calls it
-func GetDeployment() (*Deployment, error) {
+func GetDeployment(name string) (*Deployment, error) {
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return nil, err
@@ -54,10 +41,14 @@ func GetDeployment() (*Deployment, error) {
 		return nil, err
 	}
 
-	auth := config.DaemonAPIToken
+	remote, found := config.GetRemote(name)
+	if !found {
+		return nil, errors.New("Remote not found")
+	}
+	auth := remote.Daemon.Token
 
 	return &Deployment{
-		RemoteVPS:  config.CurrentRemoteVPS,
+		RemoteVPS:  remote,
 		Repository: repo,
 		Auth:       auth,
 	}, nil
@@ -65,7 +56,7 @@ func GetDeployment() (*Deployment, error) {
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (d *Deployment) Up() (*http.Response, error) {
+func (d *Deployment) Up(stream bool) (*http.Response, error) {
 	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/up"
 
 	// TODO: Support other repo names.
@@ -74,22 +65,27 @@ func (d *Deployment) Up() (*http.Response, error) {
 		return nil, err
 	}
 
-	reqContent := common.UpRequest{
-		Repo: common.GetSSHRemoteURL(origin.Config().URLs[0]),
+	reqContent := common.DaemonRequest{
+		Stream: stream,
+		GitOptions: &common.GitOptions{
+			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
+			Branch:    d.Branch,
+		},
 	}
 	body, err := json.Marshal(reqContent)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", host, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", host, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+d.Auth)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, errors.New("Error when deploying project")
+		return nil, errors.New("Error when deploying project: " + err.Error())
 	}
 	return resp, nil
 }
@@ -144,5 +140,31 @@ func (d *Deployment) Reset() (*http.Response, error) {
 		return nil, errors.New("Error when reseting project on deployment")
 	}
 
+	return resp, nil
+}
+
+// Logs get logs
+func (d *Deployment) Logs(stream bool, container string) (*http.Response, error) {
+	host := "http://" + d.RemoteVPS.GetIPAndPort() + "/logs"
+
+	reqContent := common.DaemonRequest{
+		Stream:    stream,
+		Container: container,
+	}
+	body, err := json.Marshal(reqContent)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", host, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+d.Auth)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.New("Error when deploying project: " + err.Error())
+	}
 	return resp, nil
 }

@@ -1,27 +1,58 @@
-.PHONY: test test-verbose test-profile test-race clean docker bootstrap
+.PHONY: inertia test test-verbose testenv clean daemon testdaemon bootstrap
 
+TAG = `git describe --tags`
 PACKAGES = `go list ./... | grep -v vendor/`
+SSH_PORT = 22
+VPS_VERSION = latest
+VPS_OS = ubuntu
+RELEASE = canary
 
 all: inertia
 
 inertia:
-	go build
+	go install -ldflags "-X main.Version=$(RELEASE)"
+
+inertia-tagged:
+	go install -ldflags "-X main.Version=$(TAG)"
+
+clean:
+	rm -f inertia 
+	find . -type f -name inertia.\* -exec rm {} \;
 
 test:
-	go test $(PACKAGES) --cover
+	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
+	make testdaemon
+	go test $(PACKAGES) -ldflags "-X main.Version=$(RELEASE)" --cover
 
 test-verbose:
-	go test $(PACKAGES) -v --cover
+	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
+	make testdaemon	
+	go test $(PACKAGES) -ldflags "-X main.Version=$(RELEASE)" -v --cover
 
-test-race:
-	go test $(PACKAGES) -race --cover
+testenv:
+	docker stop testvps || true && docker rm testvps || true
+	docker build -f ./test_env/Dockerfile.$(VPS_OS) \
+		-t $(VPS_OS)vps \
+		--build-arg VERSION=$(VPS_VERSION) \
+		./test_env
+	bash ./test_env/startvps.sh $(SSH_PORT) $(VPS_OS)vps
 
-clean: inertia
-	rm -f inertia
+testdaemon:
+	rm -f ./inertia-daemon-image
+	docker build -t ubclaunchpad/inertia:test .
+	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
+	chmod 400 ./test_env/test_key
+	scp -i ./test_env/test_key \
+		-o StrictHostKeyChecking=no \
+		-o UserKnownHostsFile=/dev/null \
+		-P $(SSH_PORT) \
+		./inertia-daemon-image \
+		root@0.0.0.0:/daemon-image
+	rm -f ./inertia-daemon-image
 
-docker:
-	docker build -t ubclaunchpad/inertia .
-	docker push ubclaunchpad/inertia
+daemon:
+	docker build -t ubclaunchpad/inertia:$(RELEASE) .
+	docker push ubclaunchpad/inertia:$(RELEASE)
 
 bootstrap:
 	go-bindata -o client/bootstrap.go -pkg client client/bootstrap/...

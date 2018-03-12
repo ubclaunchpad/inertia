@@ -3,17 +3,22 @@
 # Build the source in a preliminary container.
 FROM golang:alpine AS build-env
 
-ENV INERTIA_BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia
+ENV INERTIA_BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia \
+    INERTIA_DAEMON='true'
 
-# Dependencies
-RUN apk add --update --no-cache git
-RUN go get -u github.com/golang/dep/cmd/dep
-
-# Build the binary.
+# Mount source code.
 ADD . ${INERTIA_BUILD_HOME}
 WORKDIR ${INERTIA_BUILD_HOME}
-RUN dep ensure
-RUN go build -o /bin/inertia
+
+# Install dependencies if not already available.
+RUN apk add --update --no-cache git
+RUN if [ ! -d "vendor" ]; then \
+    go get -u github.com/golang/dep/cmd/dep; \
+    dep ensure; \
+    fi
+
+# Build Inertia.
+RUN go build -o /bin/inertia -ldflags "-X main.Version=$(git describe --tags)"
 
 # Copy the binary into a smaller image.
 FROM alpine

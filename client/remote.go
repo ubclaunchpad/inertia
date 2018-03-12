@@ -1,17 +1,3 @@
-// Copyright © 2017 UBC Launch Pad team@ubclaunchpad.com
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package client
 
 import (
@@ -25,12 +11,21 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-//
+// RemoteVPS contains parameters for the VPS
 type RemoteVPS struct {
-	User string
-	IP   string
-	PEM  string
-	Port string
+	Name   string        `toml:"name"`
+	IP     string        `toml:"IP"`
+	User   string        `toml:"user"`
+	PEM    string        `toml:"pemfile"`
+	Branch string        `toml:"branch"`
+	Daemon *DaemonConfig `toml:"daemon"`
+}
+
+// DaemonConfig contains parameters for the Daemon
+type DaemonConfig struct {
+	Port    string `toml:"port"`
+	SSHPort string `toml:"ssh_port"`
+	Token   string `toml:"token"`
 }
 
 // SSHSession can run remote commands over SSH
@@ -50,7 +45,7 @@ func NewSSHRunner(r *RemoteVPS) *SSHRunner {
 
 // Run runs a command remotely.
 func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
-	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.User)
+	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -81,7 +76,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	if err != nil {
 		return err
 	}
-	err = remote.DaemonUp(runner, remote.Port)
+	err = remote.DaemonUp(runner, config.Version, remote.Daemon.Port)
 	if err != nil {
 		return err
 	}
@@ -96,13 +91,13 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	}
 
 	println("Fetching daemon API token")
-	token, err := remote.GetDaemonAPIToken(runner)
+	token, err := remote.GetDaemonAPIToken(runner, config.Version)
 	if err != nil {
 		return err
 	}
 
-	config.DaemonAPIToken = token
-	_, err = config.Write()
+	remote.Daemon.Token = token
+	err = config.Write()
 	if err != nil {
 		return err
 	}
@@ -115,10 +110,10 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println("http://" + remote.IP + ":" + remote.Port)
+	println("http://" + remote.IP + ":" + remote.Daemon.Port)
 	println("Github WebHook Secret: " + common.DefaultSecret + "\n")
 
-	println("Inertia daemon successfully deployed, add webhook url and deploy key to enable it.")
+	println("Inertia daemon successfully deployed! Add your webhook url and deploy\nkey to enable continuous deployment.")
 	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", name)
 
 	return nil
@@ -131,7 +126,7 @@ func (remote *RemoteVPS) GetHost() string {
 
 // GetIPAndPort creates the IP:Port string.
 func (remote *RemoteVPS) GetIPAndPort() string {
-	return remote.IP + ":" + remote.Port
+	return remote.IP + ":" + remote.Daemon.Port
 }
 
 // RunSSHCommand runs a command remotely.
@@ -152,7 +147,7 @@ func (remote *RemoteVPS) InstallDocker(session SSHSession) error {
 	cmdStr := string(installDockerSh)
 	_, stderr, err := remote.RunSSHCommand(session, cmdStr)
 	if err != nil {
-		println(stderr)
+		println(stderr.String())
 		return err
 	}
 
@@ -160,7 +155,7 @@ func (remote *RemoteVPS) InstallDocker(session SSHSession) error {
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonPort string) error {
+func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonVersion, daemonPort string) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("client/bootstrap/daemon-up.sh")
 	if err != nil {
@@ -168,7 +163,7 @@ func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonPort string) error {
 	}
 
 	// Run inertia daemon.
-	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion, daemonPort)
 	_, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
 	if err != nil {
 		println(stderr.String())
@@ -217,14 +212,15 @@ func (remote *RemoteVPS) DaemonDown(session SSHSession) error {
 
 // GetDaemonAPIToken returns the daemon API token for RESTful access
 // to the daemon.
-func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
+func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
 	// Collect asset (token.sh script)
 	daemonCmd, err := Asset("client/bootstrap/token.sh")
 	if err != nil {
 		return "", err
 	}
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion)
 
-	stdout, stderr, err := remote.RunSSHCommand(session, string(daemonCmd))
+	stdout, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
 	if err != nil {
 		log.Println(stderr.String())
 		return "", err
@@ -235,35 +231,18 @@ func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
 }
 
 // AddNewRemote adds a new remote to the project config file.
-func AddNewRemote(name, IP, user, pemLoc, port string) error {
-	// Just wipe configuration for MVP.
+func AddNewRemote(remote *RemoteVPS) error {
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return err
 	}
 
-	config.CurrentRemoteName = name
-	config.CurrentRemoteVPS = &RemoteVPS{
-		IP:   IP,
-		User: user,
-		PEM:  pemLoc,
-		Port: port,
-	}
-
-	_, err = config.Write()
-	if err != nil {
-		return err
-	}
-
-	println("Remote '" + name + "' added.")
-	println("You can now run 'inertia " + name + " init' to set this remote")
-	println("up for continuous deployment.")
-
-	return nil
+	config.AddRemote(remote)
+	return config.Write()
 }
 
 // Stubbed out for testing.
-func getSSHSession(PEM, IP, user string) (*ssh.Session, error) {
+func getSSHSession(PEM, IP, sshPort, user string) (*ssh.Session, error) {
 	privateKey, err := ioutil.ReadFile(PEM)
 	if err != nil {
 		return nil, err
@@ -274,7 +253,7 @@ func getSSHSession(PEM, IP, user string) (*ssh.Session, error) {
 		return nil, err
 	}
 
-	client, err := ssh.Dial("tcp", IP+":22", cfg)
+	client, err := ssh.Dial("tcp", IP+":"+sshPort, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +277,7 @@ func getSSHConfig(privateKey []byte, user string) (*ssh.ClientConfig, error) {
 		},
 		// TODO: We need to replace this with a callback
 		// to verify the host key. A security vulnerability
-		// comes from the fact that we recieve a public key
+		// comes from the fact that we receive a public key
 		// from the server and we add it to our GitHub.
 		// This gives the server readonly access to our
 		// GitHub account. We need to know who we're

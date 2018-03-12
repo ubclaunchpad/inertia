@@ -1,22 +1,10 @@
-// Copyright © 2017 UBC Launch Pad team@ubclaunchpad.com
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package daemon
 
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -25,51 +13,36 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
-	log "github.com/sirupsen/logrus"
 	"github.com/ubclaunchpad/inertia/common"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
 // deploy does git pull, docker-compose build, docker-compose up
-func deploy(repo *git.Repository, cli *docker.Client) error {
+func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
+	fmt.Println(out, "Deploying repository...")
 	pemFile, err := os.Open(daemonGithubKeyLocation)
 	if err != nil {
 		return err
 	}
-	auth, err := common.GetGithubKey(pemFile)
+	auth, err := getGithubKey(pemFile)
 	if err != nil {
 		return err
 	}
 
-	// Pull from working branch
-	tree, err := repo.Worktree()
+	// Pull from given branch and check out if needed
+	err = common.UpdateRepository(projectDirectory, repo, branch, auth, out)
 	if err != nil {
 		return err
-	}
-	err = tree.Pull(&git.PullOptions{
-		Auth: auth,
-	})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
-		// If pull fails, attempt a force pull before returning error
-		log.Println("Pull failed - attempting a fresh clone...")
-		_, err = common.ForcePull(projectDirectory, repo, auth)
-		if err != nil {
-			return err
-		}
-
-		// Wait arbitrary amount of time for clone to complete
-		// TODO: find a better way to do this
-		time.Sleep(2 * time.Second)
 	}
 
 	// Kill active project containers if there are any
-	err = killActiveContainers(cli)
+	err = killActiveContainers(cli, out)
 	if err != nil {
 		return err
 	}
 
-	// Build and run project - the following code performs the
-	// shell equivalent of:
+	// Build and run project - the following code performs the bash
+	// equivalent of:
 	//
 	//    docker run -d \
 	// 	    -v /var/run/docker.sock:/var/run/docker.sock \
@@ -82,14 +55,17 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 	// separate from the daemon and the user's project, and is the
 	// second container to require access to the docker socket.
 	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
-	log.Println("Bringing project online.")
+	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      dockerCompose,
 			WorkingDir: "/build/project",
-			Env:        []string{"HOME:/build"},
-			Cmd:        []string{"up", "--build"},
+			Env:        []string{"HOME=/build"},
+			Cmd: []string{
+				"up",
+				"--build",
+			},
 		},
 		&container.HostConfig{
 			Binds: []string{
@@ -106,23 +82,24 @@ func deploy(repo *git.Repository, cli *docker.Client) error {
 		return errors.New(warnings)
 	}
 
-	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return err
-	}
+	fmt.Fprintln(out, "Building project...")
+	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 
 	// Check if build failed abruptly
-	time.Sleep(3 * time.Second)
-	_, err = getActiveContainers(cli)
-	if err != nil {
-		killErr := killActiveContainers(cli)
-		if killErr != nil {
-			log.WithError(err)
+	// This is disabled until a more consistent way of detecting build
+	// failures is implemented.
+	/*
+		time.Sleep(3 * time.Second)
+		_, err = getActiveContainers(cli)
+		if err != nil {
+			killErr := killActiveContainers(cli, out)
+			if killErr != nil {
+				fmt.Fprintln(out, err)
+			}
+			return errors.New("Docker-compose failed: " + err.Error())
 		}
-		return errors.New("Docker-compose failed: " + err.Error())
-	}
-
-	return nil
+		return nil
+	*/
 }
 
 // getActiveContainers returns all active containers and returns and error
@@ -145,7 +122,8 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 }
 
 // killActiveContainers kills all active project containers (ie not including daemon)
-func killActiveContainers(cli *docker.Client) error {
+func killActiveContainers(cli *docker.Client, out io.Writer) error {
+	fmt.Fprintln(out, "Shutting down active containers...")
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
@@ -154,8 +132,9 @@ func killActiveContainers(cli *docker.Client) error {
 
 	for _, container := range containers {
 		if container.Names[0] != "/inertia-daemon" {
-			log.Println("Killing " + container.Image + " (" + container.Names[0] + ")...")
-			err := cli.ContainerKill(ctx, container.ID, "SIGKILL")
+			fmt.Fprintln(out, "Killing "+container.Image+" ("+container.Names[0]+")...")
+			timeout := 10 * time.Second
+			err := cli.ContainerStop(ctx, container.ID, &timeout)
 			if err != nil {
 				return err
 			}
@@ -166,6 +145,8 @@ func killActiveContainers(cli *docker.Client) error {
 	if err != nil {
 		return err
 	}
-	log.Println("Removed " + strings.Join(report.ContainersDeleted, ", "))
+	if len(report.ContainersDeleted) > 0 {
+		fmt.Fprintln(out, "Removed "+strings.Join(report.ContainersDeleted, ", "))
+	}
 	return nil
 }

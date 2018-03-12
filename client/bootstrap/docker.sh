@@ -29,13 +29,20 @@ fetchfile() {
 
 # Get docker if it doesn't exist.
 if !(hash docker 2>/dev/null); then
-    # Try to download using curl or wget,
-    # before resorting to installing curl.
-    if fetchfile $DOCKER_SOURCE $DOCKER_DEST; then
-        sh $DOCKER_DEST
+    # Amazon ECS instances require custom install
+    if grep -q Amazon /etc/system-release; then
+        sudo yum install -y docker
     else
-        apt-get update && apt-get -y install curl
-        fetchfile $DOCKER_SOURCE $DOCKER_DEST
-        sh $DOCKER_DEST
+        # Try to download using curl or wget,
+        # before resorting to installing curl.
+        if fetchfile $DOCKER_SOURCE $DOCKER_DEST; then
+            sh $DOCKER_DEST
+        else
+            apt-get update && apt-get -y install curl
+            fetchfile $DOCKER_SOURCE $DOCKER_DEST
+            sh $DOCKER_DEST
+        fi
     fi
 fi
+
+sudo service docker start
