@@ -28,8 +28,6 @@ type DaemonRequester interface {
 }
 
 // GetDeployment returns the local deployment setup
-// TODO: add args to support getting the appropriate deployment
-// based on the command (aka remote) that calls it
 func GetDeployment(name string) (*Deployment, error) {
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {

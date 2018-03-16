@@ -38,28 +38,6 @@ func getInstrumentedTestRemote() *RemoteVPS {
 	return remote
 }
 
-// SSHRunner runs commands over SSH and captures results.
-type mockSSHRunner struct {
-	r     *RemoteVPS
-	Calls []string
-}
-
-// Run runs a command remotely.
-func (runner *mockSSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
-	runner.Calls = append(runner.Calls, cmd)
-	return nil, nil, nil
-}
-
-func TestRunSSHCommand(t *testing.T) {
-	remote := getInstrumentedTestRemote()
-	session := mockSSHRunner{r: remote}
-	cmd := "ls -lsa"
-	_, _, err := remote.RunSSHCommand(&session, cmd)
-
-	assert.Nil(t, err)
-	assert.Equal(t, cmd, session.Calls[0])
-}
-
 func TestInstallDocker(t *testing.T) {
 	remote := getInstrumentedTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/docker.sh")
@@ -67,7 +45,7 @@ func TestInstallDocker(t *testing.T) {
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
-	remote.InstallDocker(&session)
+	remote.installDocker(&session)
 	assert.Equal(t, string(script), session.Calls[0])
 }
 
@@ -97,7 +75,7 @@ func TestKeyGen(t *testing.T) {
 	session := mockSSHRunner{r: remote}
 
 	// Make sure the right command is run.
-	_, err = remote.GetDaemonAPIToken(&session, "test")
+	_, err = remote.getDaemonAPIToken(&session, "test")
 	assert.Nil(t, err)
 	assert.Equal(t, session.Calls[0], tokenScript)
 }
@@ -132,7 +110,7 @@ func TestBootstrap(t *testing.T) {
 
 func TestInstrumentedBootstrap(t *testing.T) {
 	remote := getInstrumentedTestRemote()
-	session := NewSSHRunner(remote)
+	session := &SSHRunner{r: remote}
 	var writer bytes.Buffer
 	err := remote.Bootstrap(session, "testvps", getTestConfig(&writer))
 	assert.Nil(t, err)

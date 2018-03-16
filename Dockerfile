@@ -11,8 +11,8 @@ ADD . ${INERTIA_BUILD_HOME}
 WORKDIR ${INERTIA_BUILD_HOME}
 
 # Install dependencies if not already available.
-RUN apk add --update --no-cache git
 RUN if [ ! -d "vendor" ]; then \
+    apk add --update --no-cache git; \
     go get -u github.com/golang/dep/cmd/dep; \
     dep ensure; \
     fi
@@ -25,6 +25,10 @@ FROM alpine
 LABEL maintainer "UBC Launchpad team@ubclaunchpad.com"
 WORKDIR /app
 COPY --from=build-env /bin/inertia /usr/local/bin
+
+# Allow daemon container to generate SSL certificates instead of
+# installing it on the host
+RUN apk add --update --no-cache openssl
 
 # Container serves daemon by default.
 ENTRYPOINT ["inertia", "daemon", "run"]
