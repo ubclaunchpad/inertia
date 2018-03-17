@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -12,7 +14,7 @@ import (
 	"github.com/ubclaunchpad/inertia/client"
 )
 
-var deployUpCmd = &cobra.Command{
+var deploymentUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Bring project online on remote",
 	Long: `Bring project online on remote.
@@ -20,7 +22,7 @@ var deployUpCmd = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Start the deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -63,7 +65,7 @@ var deployUpCmd = &cobra.Command{
 	},
 }
 
-var deployDownCmd = &cobra.Command{
+var deploymentDownCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Bring project offline on remote",
 	Long: `Bring project offline on remote.
@@ -71,7 +73,7 @@ var deployDownCmd = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Shut down the deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -100,7 +102,7 @@ var deployDownCmd = &cobra.Command{
 	},
 }
 
-var deployStatusCmd = &cobra.Command{
+var deploymentStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Print the status of deployment on remote",
 	Long: `Print the status of deployment on remote.
@@ -108,7 +110,7 @@ var deployStatusCmd = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get status of the deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -139,7 +141,7 @@ var deployStatusCmd = &cobra.Command{
 	},
 }
 
-var deployResetCmd = &cobra.Command{
+var deploymentResetCmd = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset the project on your remote",
 	Long: `Reset the project on your remote.
@@ -149,7 +151,7 @@ var deployResetCmd = &cobra.Command{
 	running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Remove project from deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -176,7 +178,7 @@ var deployResetCmd = &cobra.Command{
 	},
 }
 
-var deployLogsCmd = &cobra.Command{
+var deploymentLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Access logs of your VPS",
 	Long: `Access logs of containers of your VPS. Argument 'docker-compose'
@@ -185,7 +187,7 @@ var deployLogsCmd = &cobra.Command{
 	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Start the deployment
-		deployment, err := client.GetDeployment()
+		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -234,8 +236,39 @@ var deployLogsCmd = &cobra.Command{
 	},
 }
 
-// deployCmd represents the deploy command
-var deployCmd = &cobra.Command{
+// deploymentInitCmd represents the inertia [REMOTE] init command
+var deploymentInitCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize the VPS for continuous deployment",
+	Long: `Initialize the VPS for continuous deployment.
+This sets up everything you might need and brings the Inertia daemon
+online on your remote.
+A URL will be provided to direct GitHub webhooks to, the daemon will
+request access to the repository via a public key, and will listen
+for updates to this repository's remote master branch.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		config, err := client.GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		remote, found := config.GetRemote(remoteName)
+		if found {
+			session := client.NewSSHRunner(remote)
+			err = remote.Bootstrap(session, remoteName, config)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			log.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
+		}
+	},
+}
+
+// deploymentCmd represents the deploy command
+var deploymentCmd = &cobra.Command{
 	Hidden: true,
 	Long: `Start or stop continuous deployment to the remote VPS instance specified.
 Run 'inertia remote status' beforehand to ensure your daemon is running.
@@ -248,28 +281,27 @@ Run 'inertia [REMOTE] init' to collect these.`,
 }
 
 func init() {
-	// TODO: multiple remotes - loop through and add each one as a
-	// new copy of a command using addRemoteCommand
 	config, err := client.GetProjectConfigFromDisk()
 	if err != nil {
 		return
 	}
 
-	newCmd := &cobra.Command{}
-	*newCmd = *deployCmd
-
-	addRemoteCommand(config.CurrentRemoteName, newCmd)
+	for _, remote := range config.Remotes {
+		newCmd := &cobra.Command{}
+		*newCmd = *deploymentCmd
+		addDeploymentCommand(remote.Name, newCmd)
+	}
 }
 
-func addRemoteCommand(remoteName string, cmd *cobra.Command) {
+func addDeploymentCommand(remoteName string, cmd *cobra.Command) {
 	cmd.Use = remoteName + " [COMMAND]"
 	cmd.Short = "Configure continuous deployment to " + remoteName
-	cmd.AddCommand(deployUpCmd)
-	cmd.AddCommand(deployDownCmd)
-	cmd.AddCommand(deployStatusCmd)
-	cmd.AddCommand(deployResetCmd)
-	cmd.AddCommand(deployInitCmd)
-	cmd.AddCommand(deployLogsCmd)
+	cmd.AddCommand(deploymentUpCmd)
+	cmd.AddCommand(deploymentDownCmd)
+	cmd.AddCommand(deploymentStatusCmd)
+	cmd.AddCommand(deploymentResetCmd)
+	cmd.AddCommand(deploymentInitCmd)
+	cmd.AddCommand(deploymentLogsCmd)
 	rootCmd.AddCommand(cmd)
 
 	cmd.PersistentFlags().Bool("stream", false, "Stream output from daemon")

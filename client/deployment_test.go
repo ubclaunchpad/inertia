@@ -24,10 +24,12 @@ func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, err
 	url := strings.Trim(wholeURL[1], "/")
 	port := wholeURL[2]
 	mockRemote := &RemoteVPS{
-		User:       "",
-		IP:         url,
-		PEM:        "",
-		DaemonPort: port,
+		User: "",
+		IP:   url,
+		PEM:  "",
+		Daemon: &DaemonConfig{
+			Port: port,
+		},
 	}
 	mockRepo, err := git.Init(s, nil)
 	if err != nil {
@@ -35,7 +37,7 @@ func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, err
 	}
 	_, err = mockRepo.CreateRemote(&config.RemoteConfig{
 		Name: "origin",
-		URLs: []string{"www.myremote.com"},
+		URLs: []string{"myremote"},
 	})
 	if err != nil {
 		return nil, err
@@ -62,7 +64,7 @@ func TestUp(t *testing.T) {
 		var upReq common.DaemonRequest
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "www.myremote.com", upReq.Repo)
+		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
@@ -161,6 +163,43 @@ func TestReset(t *testing.T) {
 	assert.Nil(t, err)
 
 	resp, err := d.Reset()
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestLogs(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/logs", endpoint)
+
+		// Check body
+		body, err := ioutil.ReadAll(req.Body)
+		assert.Nil(t, err)
+		defer req.Body.Close()
+		var upReq common.DaemonRequest
+		err = json.Unmarshal(body, &upReq)
+		assert.Nil(t, err)
+		assert.Equal(t, "docker-compose", upReq.Container)
+		assert.Equal(t, true, upReq.Stream)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	memory := memory.NewStorage()
+	defer func() { memory = nil }()
+
+	d, err := getMockDeployment(testServer, memory)
+	assert.Nil(t, err)
+
+	resp, err := d.Logs(true, "docker-compose")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -16,52 +15,27 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 )
 
 // deploy does git pull, docker-compose build, docker-compose up
-func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
+func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
+	fmt.Println(out, "Deploying repository...")
 	pemFile, err := os.Open(daemonGithubKeyLocation)
 	if err != nil {
 		return err
 	}
-	auth, err := common.GetGithubKey(pemFile)
+	auth, err := getGithubKey(pemFile)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintln(out, "Updating repository...")
-	// Pull from working branch
-	tree, err := repo.Worktree()
+	// Pull from given branch and check out if needed
+	err = common.UpdateRepository(projectDirectory, repo, branch, auth, out)
 	if err != nil {
 		return err
-	}
-	err = tree.Pull(&git.PullOptions{
-		Auth:     auth,
-		Depth:    2,
-		Progress: out,
-	})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
-		if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
-			bytes, err := ioutil.ReadFile(daemonGithubKeyLocation + ".pub")
-			if err != nil {
-				bytes = []byte("Error reading key - try running 'inertia [REMOTE] init' again.")
-			}
-			return errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:]))
-		} else if err == git.ErrForceNeeded {
-			// If pull fails, attempt a force pull before returning error
-			fmt.Fprint(out, "Force pull required - making a fresh clone...")
-			_, err := common.ForcePull(projectDirectory, repo, auth, out)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
 	}
 
 	// Kill active project containers if there are any
-	fmt.Fprintln(out, "Shutting down active containers...")
 	err = killActiveContainers(cli, out)
 	if err != nil {
 		return err
@@ -81,7 +55,7 @@ func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
 	// separate from the daemon and the user's project, and is the
 	// second container to require access to the docker socket.
 	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
-	fmt.Fprintln(out, "Building project...")
+	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
 
 	repoName, err := common.GetProjectName(repo)
@@ -94,11 +68,11 @@ func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
 		ctx, &container.Config{
 			Image:      dockerCompose,
 			WorkingDir: "/build/project",
+			Env:        []string{"HOME=/build"},
 			Cmd: []string{
 				"-p", repoName,
 				"up",
 				"--build",
-				"-e HOME=/build",
 			},
 		},
 		&container.HostConfig{
@@ -116,23 +90,24 @@ func deploy(repo *git.Repository, cli *docker.Client, out io.Writer) error {
 		return errors.New(warnings)
 	}
 
-	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return err
-	}
+	fmt.Fprintln(out, "Building project...")
+	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 
 	// Check if build failed abruptly
-	time.Sleep(3 * time.Second)
-	_, err = getActiveContainers(cli)
-	if err != nil {
-		killErr := killActiveContainers(cli, out)
-		if killErr != nil {
-			fmt.Fprintln(out, err)
+	// This is disabled until a more consistent way of detecting build
+	// failures is implemented.
+	/*
+		time.Sleep(3 * time.Second)
+		_, err = getActiveContainers(cli)
+		if err != nil {
+			killErr := killActiveContainers(cli, out)
+			if killErr != nil {
+				fmt.Fprintln(out, err)
+			}
+			return errors.New("Docker-compose failed: " + err.Error())
 		}
-		return errors.New("Docker-compose failed: " + err.Error())
-	}
-
-	return nil
+		return nil
+	*/
 }
 
 // getActiveContainers returns all active containers and returns and error
@@ -156,6 +131,7 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 
 // killActiveContainers kills all active project containers (ie not including daemon)
 func killActiveContainers(cli *docker.Client, out io.Writer) error {
+	fmt.Fprintln(out, "Shutting down active containers...")
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
@@ -165,7 +141,8 @@ func killActiveContainers(cli *docker.Client, out io.Writer) error {
 	for _, container := range containers {
 		if container.Names[0] != "/inertia-daemon" {
 			fmt.Fprintln(out, "Killing "+container.Image+" ("+container.Names[0]+")...")
-			err := cli.ContainerKill(ctx, container.ID, "SIGKILL")
+			timeout := 10 * time.Second
+			err := cli.ContainerStop(ctx, container.ID, &timeout)
 			if err != nil {
 				return err
 			}

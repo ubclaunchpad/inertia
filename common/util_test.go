@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
+	"path"
 	"testing"
 	"time"
 
@@ -43,45 +43,25 @@ func getMockRepo(url string) (*git.Repository, error){
 	return mockRepo, nil
 }
 
-func TestGenerateToken(t *testing.T) {
-	token, err := GenerateToken(testPrivateKey)
-	assert.Nil(t, err, "generateToken must not fail")
-	assert.Equal(t, token, testToken)
-}
-
-func TestGetGithubKey(t *testing.T) {
-	pemFile, err := os.Open(os.Getenv("GOPATH") + "/src/github.com/ubclaunchpad/inertia/test_env/test_key")
-	assert.Nil(t, err)
-	_, err = GetGithubKey(pemFile)
-	assert.Nil(t, err)
-}
-
-func TestGetSSHRemoteURL(t *testing.T) {
-	httpsURL := "https://github.com/ubclaunchpad/inertia.git"
-	sshURL := "git@github.com:ubclaunchpad/inertia.git"
-
-	assert.Equal(t, sshURL, GetSSHRemoteURL(httpsURL))
-	assert.Equal(t, sshURL, GetSSHRemoteURL(sshURL))
-}
-
-func TestCheckForGit(t *testing.T) {
-	cwd, _ := os.Getwd()
-	assert.NotEqual(t, nil, CheckForGit(cwd))
-	inertia := strings.TrimSuffix(cwd, "/common")
-	assert.Equal(t, nil, CheckForGit(inertia))
-}
-
 func TestCheckForDockerCompose(t *testing.T) {
-	cwd, _ := os.Getwd()
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+
+	yamlPath := path.Join(cwd, "/docker-compose.yml")
+
 	assert.NotEqual(t, nil, CheckForDockerCompose(cwd))
-	file, _ := os.Create(cwd + "/docker-compose.yml")
+	file, err := os.Create(yamlPath)
+	assert.Nil(t, err)
+
 	file.Close()
 	assert.Equal(t, nil, CheckForDockerCompose(cwd))
-	os.Remove(cwd + "/docker-compose.yml")
-	file, _ = os.Create(cwd + "/docker-compose.yaml")
+	os.Remove(yamlPath)
+	file, err = os.Create(yamlPath)
+	assert.Nil(t, err)
 	file.Close()
+
 	assert.Equal(t, nil, CheckForDockerCompose(cwd))
-	os.Remove(cwd + "/docker-compose.yaml")
+	os.Remove(yamlPath)
 }
 
 func TestFlushRoutine(t *testing.T) {

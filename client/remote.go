@@ -13,11 +13,19 @@ import (
 
 // RemoteVPS contains parameters for the VPS
 type RemoteVPS struct {
-	User       string
-	IP         string
-	SSHPort    string
-	PEM        string
-	DaemonPort string
+	Name   string        `toml:"name"`
+	IP     string        `toml:"IP"`
+	User   string        `toml:"user"`
+	PEM    string        `toml:"pemfile"`
+	Branch string        `toml:"branch"`
+	Daemon *DaemonConfig `toml:"daemon"`
+}
+
+// DaemonConfig contains parameters for the Daemon
+type DaemonConfig struct {
+	Port    string `toml:"port"`
+	SSHPort string `toml:"ssh_port"`
+	Token   string `toml:"token"`
 }
 
 // SSHSession can run remote commands over SSH
@@ -37,7 +45,7 @@ func NewSSHRunner(r *RemoteVPS) *SSHRunner {
 
 // Run runs a command remotely.
 func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
-	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.SSHPort, runner.r.User)
+	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -68,7 +76,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	if err != nil {
 		return err
 	}
-	err = remote.DaemonUp(runner, remote.DaemonPort)
+	err = remote.DaemonUp(runner, config.Version, remote.Daemon.Port)
 	if err != nil {
 		return err
 	}
@@ -83,13 +91,13 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	}
 
 	println("Fetching daemon API token")
-	token, err := remote.GetDaemonAPIToken(runner)
+	token, err := remote.GetDaemonAPIToken(runner, config.Version)
 	if err != nil {
 		return err
 	}
 
-	config.DaemonAPIToken = token
-	_, err = config.Write()
+	remote.Daemon.Token = token
+	err = config.Write()
 	if err != nil {
 		return err
 	}
@@ -102,7 +110,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println("http://" + remote.IP + ":" + remote.DaemonPort)
+	println("http://" + remote.IP + ":" + remote.Daemon.Port)
 	println("Github WebHook Secret: " + common.DefaultSecret + "\n")
 
 	println("Inertia daemon successfully deployed! Add your webhook url and deploy\nkey to enable continuous deployment.")
@@ -118,7 +126,7 @@ func (remote *RemoteVPS) GetHost() string {
 
 // GetIPAndPort creates the IP:Port string.
 func (remote *RemoteVPS) GetIPAndPort() string {
-	return remote.IP + ":" + remote.DaemonPort
+	return remote.IP + ":" + remote.Daemon.Port
 }
 
 // RunSSHCommand runs a command remotely.
@@ -147,7 +155,7 @@ func (remote *RemoteVPS) InstallDocker(session SSHSession) error {
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonPort string) error {
+func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonVersion, daemonPort string) error {
 	// Collect assets (deamon-up shell script)
 	daemonCmd, err := Asset("client/bootstrap/daemon-up.sh")
 	if err != nil {
@@ -155,7 +163,7 @@ func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonPort string) error {
 	}
 
 	// Run inertia daemon.
-	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonPort)
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion, daemonPort)
 	_, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
 	if err != nil {
 		println(stderr.String())
@@ -204,14 +212,15 @@ func (remote *RemoteVPS) DaemonDown(session SSHSession) error {
 
 // GetDaemonAPIToken returns the daemon API token for RESTful access
 // to the daemon.
-func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
+func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
 	// Collect asset (token.sh script)
 	daemonCmd, err := Asset("client/bootstrap/token.sh")
 	if err != nil {
 		return "", err
 	}
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion)
 
-	stdout, stderr, err := remote.RunSSHCommand(session, string(daemonCmd))
+	stdout, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
 	if err != nil {
 		log.Println(stderr.String())
 		return "", err
@@ -222,24 +231,14 @@ func (remote *RemoteVPS) GetDaemonAPIToken(session SSHSession) (string, error) {
 }
 
 // AddNewRemote adds a new remote to the project config file.
-func AddNewRemote(name, IP, sshPort, user, pemLoc, port string) error {
-	// Just wipe configuration for MVP.
+func AddNewRemote(remote *RemoteVPS) error {
 	config, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return err
 	}
 
-	config.CurrentRemoteName = name
-	config.CurrentRemoteVPS = &RemoteVPS{
-		IP:         IP,
-		SSHPort:    sshPort,
-		User:       user,
-		PEM:        pemLoc,
-		DaemonPort: port,
-	}
-
-	_, err = config.Write()
-	return err
+	config.AddRemote(remote)
+	return config.Write()
 }
 
 // Stubbed out for testing.

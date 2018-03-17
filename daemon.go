@@ -6,7 +6,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon"
 )
 
@@ -34,7 +33,7 @@ inertia daemon run -p 8081`,
 		if err != nil {
 			log.WithError(err)
 		}
-		daemon.Run(port)
+		daemon.Run(port, Version)
 	},
 }
 
@@ -50,7 +49,7 @@ var tokenCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		token, err := common.GenerateToken(keyBytes.([]byte))
+		token, err := daemon.GenerateToken(keyBytes.([]byte))
 		if err != nil {
 			log.Fatal(err)
 		}
