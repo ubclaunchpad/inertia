@@ -85,16 +85,16 @@ func TestBootstrap(t *testing.T) {
 	dockerScript, err := ioutil.ReadFile("bootstrap/docker.sh")
 	assert.Nil(t, err)
 
-	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
-	assert.Nil(t, err)
-	daemonScript := fmt.Sprintf(string(script), "test", "8081")
-
 	keyScript, err := ioutil.ReadFile("bootstrap/keygen.sh")
 	assert.Nil(t, err)
 
-	script, err = ioutil.ReadFile("bootstrap/token.sh")
+	script, err := ioutil.ReadFile("bootstrap/token.sh")
 	assert.Nil(t, err)
 	tokenScript := fmt.Sprintf(string(script), "test")
+
+	script, err = ioutil.ReadFile("bootstrap/daemon-up.sh")
+	assert.Nil(t, err)
+	daemonScript := fmt.Sprintf(string(script), "test", "8081")
 
 	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}

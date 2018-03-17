@@ -3,7 +3,6 @@
 set -e
 
 RELEASE=%s
-RELEASE='ssl'
 
 KEY='daemon.key'
 CERT='daemon.cert'

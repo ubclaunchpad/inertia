@@ -36,13 +36,6 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 	return remote.IP + ":" + remote.Daemon.Port
 }
 
-// RunSSHCommand runs a command remotely.
-func (remote *RemoteVPS) RunSSHCommand(runner SSHSession, remoteCmd string) (
-	*bytes.Buffer, *bytes.Buffer, error,
-) {
-	return runner.Run(remoteCmd)
-}
-
 // Bootstrap configures a remote vps for continuous deployment
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
@@ -79,7 +72,10 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	}
 
 	println("Setting up SSL certificate...")
-	// TODO
+	err = remote.createSSLCertificate(runner, config.Version)
+	if err != nil {
+		return err
+	}
 
 	println("Starting daemon...")
 	if err != nil {
@@ -109,14 +105,14 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 // DaemonUp brings the daemon up on the remote instance.
 func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonVersion, daemonPort string) error {
-	daemonCmd, err := Asset("client/bootstrap/daemon-up.sh")
+	scriptBytes, err := Asset("client/bootstrap/daemon-up.sh")
 	if err != nil {
 		return err
 	}
 
 	// Run inertia daemon.
-	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion, daemonPort)
-	_, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
+	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion, daemonPort)
+	_, stderr, err := session.Run(daemonCmdStr)
 	if err != nil {
 		println(stderr.String())
 		return err
@@ -127,12 +123,12 @@ func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonVersion, daemonPort 
 
 // DaemonDown brings the daemon down on the remote instance
 func (remote *RemoteVPS) DaemonDown(session SSHSession) error {
-	daemonCmd, err := Asset("client/bootstrap/daemon-down.sh")
+	scriptBytes, err := Asset("client/bootstrap/daemon-down.sh")
 	if err != nil {
 		return err
 	}
 
-	_, stderr, err := remote.RunSSHCommand(session, string(daemonCmd))
+	_, stderr, err := session.Run(string(scriptBytes))
 	if err != nil {
 		println(stderr.String())
 		return err
@@ -143,7 +139,6 @@ func (remote *RemoteVPS) DaemonDown(session SSHSession) error {
 
 // installDocker installs docker on a remote vps.
 func (remote *RemoteVPS) installDocker(session SSHSession) error {
-	// Collect assets (docker shell script)
 	installDockerSh, err := Asset("client/bootstrap/docker.sh")
 	if err != nil {
 		return err
@@ -151,7 +146,7 @@ func (remote *RemoteVPS) installDocker(session SSHSession) error {
 
 	// Install docker.
 	cmdStr := string(installDockerSh)
-	_, stderr, err := remote.RunSSHCommand(session, cmdStr)
+	_, stderr, err := session.Run(cmdStr)
 	if err != nil {
 		println(stderr.String())
 		return err
@@ -163,17 +158,16 @@ func (remote *RemoteVPS) installDocker(session SSHSession) error {
 // keyGen creates a public-private key-pair on the remote vps
 // and returns the public key.
 func (remote *RemoteVPS) keyGen(session SSHSession) (*bytes.Buffer, error) {
-	// Collect assets (keygen shell script)
-	keygenSh, err := Asset("client/bootstrap/keygen.sh")
+	scriptBytes, err := Asset("client/bootstrap/keygen.sh")
 	if err != nil {
 		return nil, err
 	}
 
 	// Create deploy key.
-	result, stderr, err := remote.RunSSHCommand(session, string(keygenSh))
+	result, stderr, err := session.Run(string(scriptBytes))
 
 	if err != nil {
-		log.Println(stderr)
+		log.Println(stderr.String())
 		return nil, err
 	}
 
@@ -183,14 +177,13 @@ func (remote *RemoteVPS) keyGen(session SSHSession) (*bytes.Buffer, error) {
 // getDaemonAPIToken returns the daemon API token for RESTful access
 // to the daemon.
 func (remote *RemoteVPS) getDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
-	// Collect asset (token.sh script)
-	daemonCmd, err := Asset("client/bootstrap/token.sh")
+	scriptBytes, err := Asset("client/bootstrap/token.sh")
 	if err != nil {
 		return "", err
 	}
-	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion)
+	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion)
 
-	stdout, stderr, err := remote.RunSSHCommand(session, daemonCmdStr)
+	stdout, stderr, err := session.Run(daemonCmdStr)
 	if err != nil {
 		log.Println(stderr.String())
 		return "", err
@@ -198,4 +191,14 @@ func (remote *RemoteVPS) getDaemonAPIToken(session SSHSession, daemonVersion str
 
 	// There may be a newline, remove it.
 	return strings.TrimSuffix(stdout.String(), "\n"), nil
+}
+
+func (remote *RemoteVPS) createSSLCertificate(session SSHSession, daemonVersion string) error {
+	daemonCmd, err := Asset("client/bootstrap/cert.sh")
+	if err != nil {
+		return err
+	}
+	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion)
+
+	return session.RunInteractive(daemonCmdStr)
 }

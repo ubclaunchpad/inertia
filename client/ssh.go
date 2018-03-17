@@ -47,7 +47,18 @@ func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
 // RunInteractive remotely executes given command and opens
 // up an interactive session
 func (runner *SSHRunner) RunInteractive(cmd string) error {
-	return nil
+	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
+	if err != nil {
+		return err
+	}
+
+	// Pipe input and outputs.
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
+	session.Stdin = os.Stdin
+
+	// Execute command.
+	return session.Run(cmd)
 }
 
 // RunSession sets up a SSH shell to the remote
