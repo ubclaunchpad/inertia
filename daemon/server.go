@@ -16,7 +16,9 @@ const (
 	projectDirectory = "/app/host/project"
 
 	// specify location of SSL certificate
-	sslDirectory = "/app/ssl/"
+	sslDirectory  = "/app/ssl/"
+	daemonSSLCert = sslDirectory + "daemon.cert"
+	daemonSSLKey  = sslDirectory + "daemon.key"
 
 	// specify docker-compose version
 	dockerCompose = "docker/compose:1.18.0"
@@ -65,8 +67,8 @@ func Run(port, version string) {
 	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
 	print(http.ListenAndServeTLS(
 		":"+port,
-		"./server.cert",
-		"./server.key",
+		daemonSSLCert,
+		daemonSSLKey,
 		mux,
 	))
 }
