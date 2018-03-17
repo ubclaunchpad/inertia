@@ -13,7 +13,7 @@ import (
 // SSHSession can run remote commands over SSH
 type SSHSession interface {
 	Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error)
-	RunInteractive(cmd string) error
+	RunStream(cmd string, interactive bool) error
 	RunSession() error
 }
 
@@ -44,9 +44,9 @@ func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
 	return &stdout, &stderr, err
 }
 
-// RunInteractive remotely executes given command and opens
-// up an interactive session
-func (runner *SSHRunner) RunInteractive(cmd string) error {
+// RunStream remotely executes given command, streaming its output
+// and opening up an optionally interactive session
+func (runner *SSHRunner) RunStream(cmd string, interactive bool) error {
 	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
 	if err != nil {
 		return err
@@ -55,7 +55,9 @@ func (runner *SSHRunner) RunInteractive(cmd string) error {
 	// Pipe input and outputs.
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
-	session.Stdin = os.Stdin
+	if interactive {
+		session.Stdin = os.Stdin
+	}
 
 	// Execute command.
 	return session.Run(cmd)

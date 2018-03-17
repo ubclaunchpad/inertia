@@ -41,16 +41,16 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // public-private key-pair. It outputs configuration information
 // for the user.
 func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Config) error {
-	println("Setting up remote " + name)
+	println("Setting up remote " + name + " at " + remote.IP)
 
 	// Generate a session for each command.
-	println("Installing docker...")
+	println(">> Step 1/4: Installing docker...")
 	err := remote.installDocker(runner)
 	if err != nil {
 		return err
 	}
 
-	println("Building deploy key...")
+	println("\n>> Step 2/4: Building deploy key...")
 	if err != nil {
 		return err
 	}
@@ -59,41 +59,36 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 		return err
 	}
 
-	println("Fetching daemon API token...")
-	token, err := remote.getDaemonAPIToken(runner, config.Version)
+	println("\n>> Step 3/4: Starting daemon...")
+	if err != nil {
+		return err
+	}
+	err = remote.DaemonUp(runner, config.Version, remote.IP, remote.Daemon.Port)
 	if err != nil {
 		return err
 	}
 
+	println("\n>> Step 4/4: Fetching daemon API token...")
+	token, err := remote.getDaemonAPIToken(runner, config.Version)
+	if err != nil {
+		return err
+	}
 	remote.Daemon.Token = token
 	err = config.Write()
 	if err != nil {
 		return err
 	}
 
-	println("Setting up SSL certificate...")
-	err = remote.createSSLCertificate(runner, config.Version)
-	if err != nil {
-		return err
-	}
+	println("Inertia has been set up and daemon is running on remote!\n")
 
-	println("Starting daemon...")
-	if err != nil {
-		return err
-	}
-	err = remote.DaemonUp(runner, config.Version, remote.Daemon.Port)
-	if err != nil {
-		return err
-	}
-
-	println("Daemon running on instance!")
+	println("=============================\n")
 
 	// Output deploy key to user.
-	println("GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new): ")
+	println("GitHub Deploy Key (add to https://www.github.com/<your_repo>/settings/keys/new): ")
 	println(pub.String())
 
 	// Output Webhook url to user.
-	println("GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println("GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
 	println("http://" + remote.IP + ":" + remote.Daemon.Port)
 	println("Github WebHook Secret: " + common.DefaultSecret + "\n")
 
@@ -104,17 +99,16 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonVersion, daemonPort string) error {
+func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonVersion, host, daemonPort string) error {
 	scriptBytes, err := Asset("client/bootstrap/daemon-up.sh")
 	if err != nil {
 		return err
 	}
 
 	// Run inertia daemon.
-	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion, daemonPort)
-	_, stderr, err := session.Run(daemonCmdStr)
+	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion, daemonPort, host)
+	err = session.RunStream(daemonCmdStr, false)
 	if err != nil {
-		println(stderr.String())
 		return err
 	}
 
@@ -191,14 +185,4 @@ func (remote *RemoteVPS) getDaemonAPIToken(session SSHSession, daemonVersion str
 
 	// There may be a newline, remove it.
 	return strings.TrimSuffix(stdout.String(), "\n"), nil
-}
-
-func (remote *RemoteVPS) createSSLCertificate(session SSHSession, daemonVersion string) error {
-	daemonCmd, err := Asset("client/bootstrap/cert.sh")
-	if err != nil {
-		return err
-	}
-	daemonCmdStr := fmt.Sprintf(string(daemonCmd), daemonVersion)
-
-	return session.RunInteractive(daemonCmdStr)
 }

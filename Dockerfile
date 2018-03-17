@@ -26,9 +26,5 @@ LABEL maintainer "UBC Launchpad team@ubclaunchpad.com"
 WORKDIR /app
 COPY --from=build-env /bin/inertia /usr/local/bin
 
-# Allow daemon container to generate SSL certificates instead of
-# installing it on the host
-RUN apk add --update --no-cache openssl
-
 # Container serves daemon by default.
 ENTRYPOINT ["inertia", "daemon", "run"]

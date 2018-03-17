@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
@@ -11,12 +12,15 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
+// daemonVersion indicates the daemon's corresponding Inertia daemonVersion
+var daemonVersion string
+
 const (
 	// specify location of deployed project
 	projectDirectory = "/app/host/project"
 
 	// specify location of SSL certificate
-	sslDirectory  = "/app/ssl/"
+	sslDirectory  = "/app/host/ssl/"
 	daemonSSLCert = sslDirectory + "daemon.cert"
 	daemonSSLKey  = sslDirectory + "daemon.key"
 
@@ -31,11 +35,8 @@ const (
 	defaultSecret = "inertia"
 )
 
-// daemonVersion indicates the daemon's corresponding Inertia daemonVersion
-var daemonVersion string
-
 // Run starts the daemon
-func Run(port, version string) {
+func Run(host, port, version string) {
 	daemonVersion = version
 
 	// Download docker-compose image
@@ -55,6 +56,24 @@ func Run(port, version string) {
 	}
 	cli.Close()
 
+	// Check if the cert files are available.
+	println("Checking for existing SSL certificates in " + sslDirectory + "...")
+	_, err = os.Stat(daemonSSLCert)
+	certNotPresent := os.IsNotExist(err)
+	_, err = os.Stat(daemonSSLKey)
+	keyNotPresent := os.IsNotExist(err)
+	sslRequirementsPresent := !(keyNotPresent && certNotPresent)
+
+	// If they are not available, generate new ones.
+	if !sslRequirementsPresent {
+		println("No certificates found - generating new ones...")
+		err = generate(daemonSSLCert, daemonSSLKey, host+":"+port)
+		if err != nil {
+			println(err.Error())
+			return
+		}
+	}
+
 	// Run daemon on port
 	println("Serving daemon on port " + port)
 	mux := http.NewServeMux()
@@ -65,7 +84,7 @@ func Run(port, version string) {
 	mux.HandleFunc("/reset", authorized(resetHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/logs", authorized(logHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
-	print(http.ListenAndServeTLS(
+	println(http.ListenAndServeTLS(
 		":"+port,
 		daemonSSLCert,
 		daemonSSLKey,

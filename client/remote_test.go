@@ -53,13 +53,13 @@ func TestDaemonUp(t *testing.T) {
 	remote := getInstrumentedTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
-	actualCommand := fmt.Sprintf(string(script), "latest", "8081")
+	actualCommand := fmt.Sprintf(string(script), "latest", "8081", "0.0.0.0")
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
 
 	// Make sure the right command is run.
-	err = remote.DaemonUp(&session, "latest", "8081")
+	err = remote.DaemonUp(&session, "latest", "0.0.0.0", "8081")
 	assert.Nil(t, err)
 	println(actualCommand)
 	assert.Equal(t, actualCommand, session.Calls[0])
@@ -94,7 +94,7 @@ func TestBootstrap(t *testing.T) {
 
 	script, err = ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
-	daemonScript := fmt.Sprintf(string(script), "test", "8081")
+	daemonScript := fmt.Sprintf(string(script), "test", "8081", "0.0.0.0")
 
 	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}
@@ -103,9 +103,9 @@ func TestBootstrap(t *testing.T) {
 
 	// Make sure all commands are formatted correctly
 	assert.Equal(t, string(dockerScript), session.Calls[0])
-	assert.Equal(t, daemonScript, session.Calls[1])
-	assert.Equal(t, string(keyScript), session.Calls[2])
-	assert.Equal(t, tokenScript, session.Calls[3])
+	assert.Equal(t, string(keyScript), session.Calls[1])
+	assert.Equal(t, tokenScript, session.Calls[2])
+	assert.Equal(t, daemonScript, session.Calls[3])
 }
 
 func TestInstrumentedBootstrap(t *testing.T) {

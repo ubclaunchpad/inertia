@@ -28,12 +28,13 @@ var runCmd = &cobra.Command{
 Example:
 
 inertia daemon run -p 8081`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetString("port")
 		if err != nil {
 			log.WithError(err)
 		}
-		daemon.Run(port, Version)
+		daemon.Run(args[0], port, Version)
 	},
 }
 

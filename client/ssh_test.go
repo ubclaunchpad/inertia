@@ -18,7 +18,7 @@ func (runner *mockSSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, erro
 	return nil, nil, nil
 }
 
-func (runner *mockSSHRunner) RunInteractive(cmd string) error {
+func (runner *mockSSHRunner) RunStream(cmd string, interactive bool) error {
 	runner.Calls = append(runner.Calls, cmd)
 	return nil
 }
@@ -42,7 +42,7 @@ func TestRunInteractive(t *testing.T) {
 	session := mockSSHRunner{r: remote}
 	cmd := "ls -lsa"
 
-	err := session.RunInteractive(cmd)
+	err := session.RunStream(cmd, true)
 	assert.Nil(t, err)
 	assert.Equal(t, cmd, session.Calls[0])
 }
