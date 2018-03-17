@@ -2,12 +2,14 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -104,8 +106,8 @@ func TestBootstrap(t *testing.T) {
 	// Make sure all commands are formatted correctly
 	assert.Equal(t, string(dockerScript), session.Calls[0])
 	assert.Equal(t, string(keyScript), session.Calls[1])
-	assert.Equal(t, tokenScript, session.Calls[2])
-	assert.Equal(t, daemonScript, session.Calls[3])
+	assert.Equal(t, daemonScript, session.Calls[2])
+	assert.Equal(t, tokenScript, session.Calls[3])
 }
 
 func TestInstrumentedBootstrap(t *testing.T) {
@@ -115,9 +117,16 @@ func TestInstrumentedBootstrap(t *testing.T) {
 	err := remote.Bootstrap(session, "testvps", getTestConfig(&writer))
 	assert.Nil(t, err)
 
+	// Daemon setup takes a bit of time - do a crude wait
+	time.Sleep(3 * time.Second)
+
 	// Check if daemon is online following bootstrap
-	host := "http://" + remote.GetIPAndPort()
-	resp, err := http.Get(host)
+	host := "https://" + remote.GetIPAndPort()
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	resp, err := client.Get(host)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 	defer resp.Body.Close()

@@ -130,6 +130,9 @@ func (d *Deployment) post(endpoint string, requestBody *common.DaemonRequest) (*
 
 	// Make HTTPS request
 	tr := &http.Transport{
+		// Our certificates are self-signed, so will raise
+		// a warning - currently, we ask our client to ignore
+		// this warning.
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
