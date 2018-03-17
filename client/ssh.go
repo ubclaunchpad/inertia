@@ -1,12 +1,11 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
-	"io"
+	"fmt"
 	"io/ioutil"
 	"os"
-
-	"github.com/ubclaunchpad/inertia/common"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -14,6 +13,8 @@ import (
 // SSHSession can run remote commands over SSH
 type SSHSession interface {
 	Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error)
+	RunInteractive(cmd string) error
+	RunSession() error
 }
 
 // SSHRunner runs commands over SSH and captures results.
@@ -46,21 +47,44 @@ func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
 // RunInteractive remotely executes given command and opens
 // up an interactive session
 func (runner *SSHRunner) RunInteractive(cmd string) error {
+	return nil
+}
+
+// RunSession sets up a SSH shell to the remote
+func (runner *SSHRunner) RunSession() error {
 	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
 	if err != nil {
 		return err
 	}
 
-	// Set up IO.
-	reader, writer := io.Pipe()
-	session.Stdout = writer
-	session.Stderr = writer
-	session.Stdin = os.Stdin
+	// Set IO
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
+	in, _ := session.StdinPipe()
 
-	// Execute command and pipe results to client.
-	err = session.Run(cmd)
-	common.FlushRoutine(os.Stdout, reader)
-	return err
+	// Set up terminal modes
+	modes := ssh.TerminalModes{
+		ssh.ECHO:          0,     // disable echoing
+		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
+		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+	}
+
+	// Request pseudo terminal
+	if err := session.RequestPty("xterm", 80, 40, modes); err != nil {
+		return err
+	}
+
+	// Start remote shell
+	if err := session.Shell(); err != nil {
+		return err
+	}
+
+	// Accepting commands
+	for {
+		reader := bufio.NewReader(os.Stdin)
+		str, _ := reader.ReadString('\n')
+		fmt.Fprint(in, str)
+	}
 }
 
 // Stubbed out for testing.
