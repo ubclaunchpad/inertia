@@ -301,15 +301,18 @@ func init() {
 		cmd := &cobra.Command{
 			Use:    remote.Name + " [COMMAND]",
 			Hidden: true,
-			Short:  "Configure continuous deployment to " + remote.Name,
-			Long: `Start or stop continuous deployment to the remote VPS instance specified.
-		Run 'inertia remote status' beforehand to ensure your daemon is running.
-		Requires:
-		
-		1. A deploy key to be registered for the daemon with your GitHub repository.
-		2. A webhook url to registered for the daemon with your GitHub repository.
-		
-		Run 'inertia [REMOTE] init' to collect these.`,
+			Short:  "Configure deployment to " + remote.Name,
+			Long: `Manage deployment on specified remote.
+
+Requires:
+1. an Inertia daemon running on your remote - use 'inertia [REMOTE] init'
+   to set one up.
+2. a deploy key to be registered for the daemon with your GitHub repository.
+
+Continuous deployment requires a webhook url to registered for the daemon
+with your GitHub repository.
+
+Run 'inertia [REMOTE] init' to gather this information.`,
 		}
 
 		up := &cobra.Command{}
