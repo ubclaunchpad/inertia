@@ -51,7 +51,7 @@ func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, err
 }
 
 func TestUp(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
@@ -87,7 +87,7 @@ func TestUp(t *testing.T) {
 }
 
 func TestDown(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
@@ -114,7 +114,7 @@ func TestDown(t *testing.T) {
 }
 
 func TestStatus(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
@@ -141,7 +141,7 @@ func TestStatus(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
@@ -168,7 +168,7 @@ func TestReset(t *testing.T) {
 }
 
 func TestLogs(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method

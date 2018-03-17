@@ -15,6 +15,9 @@ const (
 	// specify location of deployed project
 	projectDirectory = "/app/host/project"
 
+	// specify location of SSL certificate
+	sslDirectory = "/app/ssl/"
+
 	// specify docker-compose version
 	dockerCompose = "docker/compose:1.18.0"
 
@@ -53,14 +56,19 @@ func Run(port, version string) {
 	// Run daemon on port
 	println("Serving daemon on port " + port)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/", gitHubWebHookHandler)
 	mux.HandleFunc("/up", authorized(upHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/down", authorized(downHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/status", authorized(statusHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/reset", authorized(resetHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/logs", authorized(logHandler, GetAPIPrivateKey))
-	print(http.ListenAndServe(":"+port, mux))
+	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
+	print(http.ListenAndServeTLS(
+		":"+port,
+		"./server.cert",
+		"./server.key",
+		mux,
+	))
 }
 
 // healthCheckHandler returns a 200 if the daemon is happy.
