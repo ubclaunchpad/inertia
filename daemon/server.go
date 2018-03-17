@@ -67,7 +67,7 @@ func Run(host, port, version string) {
 	// If they are not available, generate new ones.
 	if !sslRequirementsPresent {
 		println("No certificates found - generating new ones...")
-		err = generate(daemonSSLCert, daemonSSLKey, host+":"+port)
+		err = generateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port)
 		if err != nil {
 			println(err.Error())
 			return

@@ -60,7 +60,7 @@ func pemBlockForKey(priv interface{}) *pem.Block {
 	}
 }
 
-func generate(certPath string, keyPath string, host string) error {
+func generateCertificate(certPath string, keyPath string, host string) error {
 	var priv interface{}
 	var err error
 	switch ecdsaCurve {
