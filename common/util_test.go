@@ -17,11 +17,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/config"
 )
 
-var (
-	testPrivateKey = []byte("very_sekrit_key")
-	testToken      = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.AqFWnFeY9B8jj7-l3z0a9iaZdwIca7xhUF3fuaJjU90"
-)
-
 func getMockRepo(url string) (*git.Repository, error){
 	memory := memory.NewStorage()
 
