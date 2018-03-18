@@ -12,7 +12,7 @@ const (
 type DaemonRequest struct {
 	Stream     bool        `json:"stream"`
 	Container  string      `json:"container,omitempty"`
-	Project    string 	   `json:"project"`
+	Project    string      `json:"project"`
 	GitOptions *GitOptions `json:"git_options"`
 }
 

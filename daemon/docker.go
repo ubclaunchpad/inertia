@@ -56,7 +56,6 @@ func deploy(repo *git.Repository, branch string, project string, cli *docker.Cli
 	// second container to require access to the docker socket.
 	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
 	fmt.Fprintln(out, "Setting up docker-compose...")
-
 	ctx := context.Background()
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
@@ -64,7 +63,7 @@ func deploy(repo *git.Repository, branch string, project string, cli *docker.Cli
 			WorkingDir: "/build/project",
 			Env:        []string{"HOME=/build"},
 			Cmd: []string{
-				 "-p", project,
+				"-p", project,
 				"up",
 				"--build",
 			},
