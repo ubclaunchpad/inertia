@@ -78,3 +78,6 @@ jobs:
         file_glob: true
         file: inertia.*
         go: "1.10"
+        on:
+          tags: true
+          branch: master

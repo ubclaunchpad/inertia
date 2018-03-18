@@ -236,6 +236,30 @@ var deploymentLogsCmd = &cobra.Command{
 	},
 }
 
+// deploymentSSHCmd represents the inertia [REMOTE] ssh command
+var deploymentSSHCmd = &cobra.Command{
+	Use:   "ssh",
+	Short: "Start an interactive SSH session",
+	Long:  `Starts up an interact SSH session with your remote.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		config, err := client.GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		remote, found := config.GetRemote(remoteName)
+		if found {
+			session := client.NewSSHRunner(remote)
+			if err = session.RunSession(); err != nil {
+				log.Fatal(err.Error())
+			}
+		} else {
+			log.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
+		}
+	},
+}
+
 // deploymentInitCmd represents the inertia [REMOTE] init command
 var deploymentInitCmd = &cobra.Command{
 	Use:   "init",
@@ -267,19 +291,6 @@ for updates to this repository's remote master branch.`,
 	},
 }
 
-// deploymentCmd represents the deploy command
-var deploymentCmd = &cobra.Command{
-	Hidden: true,
-	Long: `Start or stop continuous deployment to the remote VPS instance specified.
-Run 'inertia remote status' beforehand to ensure your daemon is running.
-Requires:
-
-1. A deploy key to be registered for the daemon with your GitHub repository.
-2. A webhook url to registered for the daemon with your GitHub repository.
-
-Run 'inertia [REMOTE] init' to collect these.`,
-}
-
 func init() {
 	config, err := client.GetProjectConfigFromDisk()
 	if err != nil {
@@ -287,22 +298,52 @@ func init() {
 	}
 
 	for _, remote := range config.Remotes {
-		newCmd := &cobra.Command{}
-		*newCmd = *deploymentCmd
-		addDeploymentCommand(remote.Name, newCmd)
+		cmd := &cobra.Command{
+			Use:    remote.Name + " [COMMAND]",
+			Hidden: true,
+			Short:  "Configure deployment to " + remote.Name,
+			Long: `Manage deployment on specified remote.
+
+Requires:
+1. an Inertia daemon running on your remote - use 'inertia [REMOTE] init'
+   to set one up.
+2. a deploy key to be registered for the daemon with your GitHub repository.
+
+Continuous deployment requires a webhook url to registered for the daemon
+with your GitHub repository.
+
+Run 'inertia [REMOTE] init' to gather this information.`,
+		}
+
+		up := &cobra.Command{}
+		*up = *deploymentUpCmd
+		cmd.AddCommand(up)
+
+		down := &cobra.Command{}
+		*down = *deploymentDownCmd
+		cmd.AddCommand(down)
+
+		status := &cobra.Command{}
+		*status = *deploymentStatusCmd
+		cmd.AddCommand(status)
+
+		reset := &cobra.Command{}
+		*reset = *deploymentResetCmd
+		cmd.AddCommand(reset)
+
+		logs := &cobra.Command{}
+		*logs = *deploymentLogsCmd
+		cmd.AddCommand(logs)
+
+		ssh := &cobra.Command{}
+		*ssh = *deploymentSSHCmd
+		cmd.AddCommand(ssh)
+
+		init := &cobra.Command{}
+		*init = *deploymentInitCmd
+		cmd.AddCommand(init)
+
+		cmd.PersistentFlags().Bool("stream", false, "Stream output from daemon")
+		rootCmd.AddCommand(cmd)
 	}
-}
-
-func addDeploymentCommand(remoteName string, cmd *cobra.Command) {
-	cmd.Use = remoteName + " [COMMAND]"
-	cmd.Short = "Configure continuous deployment to " + remoteName
-	cmd.AddCommand(deploymentUpCmd)
-	cmd.AddCommand(deploymentDownCmd)
-	cmd.AddCommand(deploymentStatusCmd)
-	cmd.AddCommand(deploymentResetCmd)
-	cmd.AddCommand(deploymentInitCmd)
-	cmd.AddCommand(deploymentLogsCmd)
-	rootCmd.AddCommand(cmd)
-
-	cmd.PersistentFlags().Bool("stream", false, "Stream output from daemon")
 }

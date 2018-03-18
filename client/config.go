@@ -28,6 +28,9 @@ type Config struct {
 
 // Write writes configuration to Inertia config file.
 func (config *Config) Write() error {
+	if config.Writer == nil {
+		return nil
+	}
 	path, err := GetConfigFilePath()
 	if err != nil {
 		return err

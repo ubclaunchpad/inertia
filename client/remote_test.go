@@ -2,12 +2,14 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -38,28 +40,6 @@ func getInstrumentedTestRemote() *RemoteVPS {
 	return remote
 }
 
-// SSHRunner runs commands over SSH and captures results.
-type mockSSHRunner struct {
-	r     *RemoteVPS
-	Calls []string
-}
-
-// Run runs a command remotely.
-func (runner *mockSSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
-	runner.Calls = append(runner.Calls, cmd)
-	return nil, nil, nil
-}
-
-func TestRunSSHCommand(t *testing.T) {
-	remote := getInstrumentedTestRemote()
-	session := mockSSHRunner{r: remote}
-	cmd := "ls -lsa"
-	_, _, err := remote.RunSSHCommand(&session, cmd)
-
-	assert.Nil(t, err)
-	assert.Equal(t, cmd, session.Calls[0])
-}
-
 func TestInstallDocker(t *testing.T) {
 	remote := getInstrumentedTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/docker.sh")
@@ -67,7 +47,7 @@ func TestInstallDocker(t *testing.T) {
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
-	remote.InstallDocker(&session)
+	remote.installDocker(&session)
 	assert.Equal(t, string(script), session.Calls[0])
 }
 
@@ -75,13 +55,13 @@ func TestDaemonUp(t *testing.T) {
 	remote := getInstrumentedTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
-	actualCommand := fmt.Sprintf(string(script), "latest", "8081")
+	actualCommand := fmt.Sprintf(string(script), "latest", "8081", "0.0.0.0")
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
 
 	// Make sure the right command is run.
-	err = remote.DaemonUp(&session, "latest", "8081")
+	err = remote.DaemonUp(&session, "latest", "0.0.0.0", "8081")
 	assert.Nil(t, err)
 	println(actualCommand)
 	assert.Equal(t, actualCommand, session.Calls[0])
@@ -97,7 +77,7 @@ func TestKeyGen(t *testing.T) {
 	session := mockSSHRunner{r: remote}
 
 	// Make sure the right command is run.
-	_, err = remote.GetDaemonAPIToken(&session, "test")
+	_, err = remote.getDaemonAPIToken(&session, "test")
 	assert.Nil(t, err)
 	assert.Equal(t, session.Calls[0], tokenScript)
 }
@@ -107,16 +87,16 @@ func TestBootstrap(t *testing.T) {
 	dockerScript, err := ioutil.ReadFile("bootstrap/docker.sh")
 	assert.Nil(t, err)
 
-	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
-	assert.Nil(t, err)
-	daemonScript := fmt.Sprintf(string(script), "test", "8081")
-
 	keyScript, err := ioutil.ReadFile("bootstrap/keygen.sh")
 	assert.Nil(t, err)
 
-	script, err = ioutil.ReadFile("bootstrap/token.sh")
+	script, err := ioutil.ReadFile("bootstrap/token.sh")
 	assert.Nil(t, err)
 	tokenScript := fmt.Sprintf(string(script), "test")
+
+	script, err = ioutil.ReadFile("bootstrap/daemon-up.sh")
+	assert.Nil(t, err)
+	daemonScript := fmt.Sprintf(string(script), "test", "8081", "0.0.0.0")
 
 	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}
@@ -125,21 +105,28 @@ func TestBootstrap(t *testing.T) {
 
 	// Make sure all commands are formatted correctly
 	assert.Equal(t, string(dockerScript), session.Calls[0])
-	assert.Equal(t, daemonScript, session.Calls[1])
-	assert.Equal(t, string(keyScript), session.Calls[2])
+	assert.Equal(t, string(keyScript), session.Calls[1])
+	assert.Equal(t, daemonScript, session.Calls[2])
 	assert.Equal(t, tokenScript, session.Calls[3])
 }
 
 func TestInstrumentedBootstrap(t *testing.T) {
 	remote := getInstrumentedTestRemote()
-	session := NewSSHRunner(remote)
+	session := &SSHRunner{r: remote}
 	var writer bytes.Buffer
 	err := remote.Bootstrap(session, "testvps", getTestConfig(&writer))
 	assert.Nil(t, err)
 
+	// Daemon setup takes a bit of time - do a crude wait
+	time.Sleep(3 * time.Second)
+
 	// Check if daemon is online following bootstrap
-	host := "http://" + remote.GetIPAndPort()
-	resp, err := http.Get(host)
+	host := "https://" + remote.GetIPAndPort()
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	resp, err := client.Get(host)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 	defer resp.Body.Close()
