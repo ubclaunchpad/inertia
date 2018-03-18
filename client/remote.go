@@ -107,12 +107,7 @@ func (remote *RemoteVPS) DaemonUp(session SSHSession, daemonVersion, host, daemo
 
 	// Run inertia daemon.
 	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion, daemonPort, host)
-	err = session.RunStream(daemonCmdStr, false)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return session.RunStream(daemonCmdStr, false)
 }
 
 // DaemonDown brings the daemon down on the remote instance

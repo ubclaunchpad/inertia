@@ -122,17 +122,17 @@ func generateCertificate(certPath string, keyPath string, host string) error {
 	}
 
 	certOut, err := os.Create(certPath)
-	defer certOut.Close()
 	if err != nil {
 		return err
 	}
+	defer certOut.Close()
 	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
 
 	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	defer keyOut.Close()
 	if err != nil {
 		return err
 	}
+	defer keyOut.Close()
 	block, err := pemBlockForKey(priv)
 	if err != nil {
 		return err
