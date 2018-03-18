@@ -26,7 +26,6 @@ import (
 )
 
 var (
-	validFrom  = ""
 	validFor   = 365 * 24 * time.Hour
 	isCA       = true
 	rsaBits    = 2048
@@ -44,19 +43,18 @@ func publicKey(priv interface{}) interface{} {
 	}
 }
 
-func pemBlockForKey(priv interface{}) *pem.Block {
+func pemBlockForKey(priv interface{}) (*pem.Block, error) {
 	switch k := priv.(type) {
 	case *rsa.PrivateKey:
-		return &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}
+		return &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}, nil
 	case *ecdsa.PrivateKey:
 		b, err := x509.MarshalECPrivateKey(k)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to marshal ECDSA private key: %v", err)
-			os.Exit(2)
+			return nil, err
 		}
-		return &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
+		return &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}, nil
 	default:
-		return nil
+		return nil, nil
 	}
 }
 
@@ -82,23 +80,12 @@ func generateCertificate(certPath string, keyPath string, host string) error {
 		return err
 	}
 
-	var notBefore time.Time
-	if len(validFrom) == 0 {
-		notBefore = time.Now()
-	} else {
-		notBefore, err = time.Parse("Jan 2 15:04:05 2006", validFrom)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse creation date: %s\n", err)
-			return err
-		}
-	}
-
+	notBefore := time.Now()
 	notAfter := notBefore.Add(validFor)
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-
 		return err
 	}
 
@@ -135,18 +122,22 @@ func generateCertificate(certPath string, keyPath string, host string) error {
 	}
 
 	certOut, err := os.Create(certPath)
+	defer certOut.Close()
 	if err != nil {
 		return err
 	}
 	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
-	certOut.Close()
 
 	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	defer keyOut.Close()
 	if err != nil {
 		return err
 	}
-	pem.Encode(keyOut, pemBlockForKey(priv))
-	keyOut.Close()
+	block, err := pemBlockForKey(priv)
+	if err != nil {
+		return err
+	}
+	pem.Encode(keyOut, block)
 
 	return nil
 }
