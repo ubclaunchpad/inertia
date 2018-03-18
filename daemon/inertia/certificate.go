@@ -7,7 +7,7 @@
 
 // Small modifications by kabukky
 
-package daemon
+package main
 
 import (
 	"crypto/ecdsa"

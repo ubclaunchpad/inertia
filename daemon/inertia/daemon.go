@@ -1,4 +1,4 @@
-package daemon
+package main
 
 import (
 	"context"
@@ -35,8 +35,8 @@ const (
 	defaultSecret = "inertia"
 )
 
-// Run starts the daemon
-func Run(host, port, version string) {
+// run starts the daemon
+func run(host, port, version string) {
 	daemonVersion = version
 
 	// Download docker-compose image
@@ -78,12 +78,12 @@ func Run(host, port, version string) {
 	println("Serving daemon on port " + port)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", gitHubWebHookHandler)
-	mux.HandleFunc("/up", authorized(upHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/down", authorized(downHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/status", authorized(statusHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/reset", authorized(resetHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/logs", authorized(logHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/up", authorized(upHandler, getAPIPrivateKey))
+	mux.HandleFunc("/down", authorized(downHandler, getAPIPrivateKey))
+	mux.HandleFunc("/status", authorized(statusHandler, getAPIPrivateKey))
+	mux.HandleFunc("/reset", authorized(resetHandler, getAPIPrivateKey))
+	mux.HandleFunc("/logs", authorized(logHandler, getAPIPrivateKey))
+	mux.HandleFunc("/health-check", authorized(healthCheckHandler, getAPIPrivateKey))
 	println(http.ListenAndServeTLS(
 		":"+port,
 		daemonSSLCert,

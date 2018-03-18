@@ -18,7 +18,9 @@ RUN if [ ! -d "vendor" ]; then \
     fi
 
 # Build Inertia.
-RUN go build -o /bin/inertia -ldflags "-X main.Version=$(git describe --tags)"
+RUN go build -o /bin/inertia \
+    -ldflags "-X main.Version=$(git describe --tags)" \
+    ./daemon/inertia 
 
 # Copy the binary into a smaller image.
 FROM alpine
@@ -27,4 +29,4 @@ WORKDIR /app
 COPY --from=build-env /bin/inertia /usr/local/bin
 
 # Container serves daemon by default.
-ENTRYPOINT ["inertia", "daemon", "run"]
+ENTRYPOINT ["inertia", "run"]
