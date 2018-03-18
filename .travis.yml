@@ -6,10 +6,8 @@ notifications:
 services:
   - docker
 
-# Test against different version of Go
 go:
   - "1.10"
-  - master 
 
 env:
   # Test against different VPS platforms we want to support
@@ -54,12 +52,8 @@ before_deploy:
   - docker login -u $DOCKER_USER -p $DOCKER_KEY 
   - bash .scripts/release.sh
 
-# Upload compiled binaries to corresponding GitHub release
 jobs:
-  # It's ok if our code fails on unstable development versions of Go
-  # and/or VPS platforms (VERSION=latest)
   allow_failures:
-    - go: master
     - env: VPS_OS=ubuntu VERSION=latest
     - env: VPS_OS=debian VERSION=latest
     - env: VPS_OS=centos VERSION=latest

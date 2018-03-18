@@ -1,4 +1,4 @@
-package daemon
+package main
 
 import (
 	"errors"
@@ -11,16 +11,13 @@ import (
 )
 
 var (
-	// DefaultPort defines the standard daemon port
-	DefaultPort = "8081"
-
 	daemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"
 )
 
-// GetAPIPrivateKey returns the private RSA key to authenticate HTTP
+// getAPIPrivateKey returns the private RSA key to authenticate HTTP
 // requests sent to the daemon. For now, we simply use the GitHub
 // deploy key.
-func GetAPIPrivateKey(*jwt.Token) (interface{}, error) {
+func getAPIPrivateKey(*jwt.Token) (interface{}, error) {
 	pemFile, err := os.Open(daemonGithubKeyLocation)
 	if err != nil {
 		return nil, err
@@ -32,9 +29,9 @@ func GetAPIPrivateKey(*jwt.Token) (interface{}, error) {
 	return []byte(key.String()), nil
 }
 
-// GenerateToken creates a JSON Web Token (JWT) for a client to use when
+// generateToken creates a JSON Web Token (JWT) for a client to use when
 // sending HTTP requests to the daemon server.
-func GenerateToken(key []byte) (string, error) {
+func generateToken(key []byte) (string, error) {
 	// No claims for now.
 	return jwt.New(jwt.SigningMethodHS256).SignedString(key)
 }

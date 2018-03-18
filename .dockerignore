@@ -17,3 +17,6 @@ README.md
 # Docker config files
 Dockerfile
 .dockerignore
+
+# Non-daemon source code
+client/

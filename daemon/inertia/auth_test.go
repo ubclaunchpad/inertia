@@ -1,4 +1,4 @@
-package daemon
+package main
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ func getFakeAPIKey(tok *jwt.Token) (interface{}, error) {
 	return testPrivateKey, nil
 }
 func TestGenerateToken(t *testing.T) {
-	token, err := GenerateToken(testPrivateKey)
+	token, err := generateToken(testPrivateKey)
 	assert.Nil(t, err, "generateToken must not fail")
 	assert.Equal(t, token, testToken)
 }
