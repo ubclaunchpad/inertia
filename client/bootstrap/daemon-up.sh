@@ -38,7 +38,7 @@ fi
 # It's also recommended,
 # https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
 # As a result, this container has root access on the remote vps.
-sudo docker run --rm \
+sudo docker run -d --rm \
     -p "$DAEMON_PORT":"$CONTAINER_PORT" \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "$HOME":/app/host \
