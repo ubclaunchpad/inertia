@@ -4,29 +4,32 @@ set -e
 
 DAEMON_RELEASE=%[1]s
 DAEMON_PORT=%[2]s
+HOST_ADDRESS=%[3]s
 
 DAEMON_NAME=inertia-daemon
 IMAGE=ubclaunchpad/inertia:$DAEMON_RELEASE
 CONTAINER_PORT=8081
 
-# Check if already running.
-ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`
+# Set up directories
+mkdir -p $HOME/project
+mkdir -p $HOME/ssl
 
-# Take existing down.
+# Check if already running and take down existing daemon.
+ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`
 if [ ! -z "$ALREADY_RUNNING" ]; then
-    echo "Killing existing container"
+    echo "Killing existing container..."
     sudo docker rm -f $ALREADY_RUNNING
 fi;
 
+# Prepare appropriate daemon image.
 if [ "$DAEMON_RELEASE" != "test" ]; then
     # Pull the inertia daemon.
+    echo "Pulling Inertia daemon..."
     sudo docker pull $IMAGE
 else
+    echo "Launching existing Inertia daemon image..."
     sudo docker load -i /daemon-image
 fi
-
-# Make Project directory
-mkdir -p $HOME/project
 
 # Run container with access to the host docker socket and relevant directories -
 # this is necessary because we want the daemon to be able start
@@ -43,6 +46,4 @@ sudo docker run -d --rm \
     -e HOME="$HOME" \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     --name "$DAEMON_NAME" \
-    "$IMAGE"
-
-# -v $HOME:/app/host mounts host directory so the daemon can access it
+    "$IMAGE" "$HOST_ADDRESS"

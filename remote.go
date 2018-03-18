@@ -71,7 +71,7 @@ file. Specify a VPS name.`,
 		}
 		branch := head.Name().Short()
 
-		err = addRemoteWalkthrough(os.Stdin, args[0], port, sshPort, branch, client.AddNewRemote)
+		err = addRemoteWalkthrough(os.Stdin, args[0], port, sshPort, branch, config)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -83,7 +83,7 @@ file. Specify a VPS name.`,
 }
 
 // addRemoteWalkthough is the walkthrough that asks users for RemoteVPS details
-func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, addRemote func(*client.RemoteVPS) error) error {
+func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, config *client.Config) error {
 	homeEnvVar := os.Getenv("HOME")
 	sshDir := filepath.Join(homeEnvVar, ".ssh")
 	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
@@ -122,7 +122,7 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, 
 	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
-	return addRemote(&client.RemoteVPS{
+	config.AddRemote(&client.RemoteVPS{
 		Name:   name,
 		IP:     address,
 		User:   user,
@@ -133,6 +133,7 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, 
 			SSHPort: sshPort,
 		},
 	})
+	return config.Write()
 }
 
 // statusCmd represents the remote status command

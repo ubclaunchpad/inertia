@@ -22,12 +22,12 @@ clean:
 test:
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
-	go test $(PACKAGES) -ldflags "-X main.Version=$(RELEASE)" --cover
+	go test $(PACKAGES) -ldflags "-X main.Version=test" --cover
 
 test-verbose:
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon	
-	go test $(PACKAGES) -ldflags "-X main.Version=$(RELEASE)" -v --cover
+	go test $(PACKAGES) -ldflags "-X main.Version=test" -v --cover
 
 testenv:
 	docker stop testvps || true && docker rm testvps || true
