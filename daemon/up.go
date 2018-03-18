@@ -62,7 +62,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = deploy(repo, gitOpts.Branch, cli, logger.GetWriter())
+	err = deploy(repo, gitOpts.Branch, upReq.Project, cli, logger.GetWriter())
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return

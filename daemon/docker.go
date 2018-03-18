@@ -18,7 +18,7 @@ import (
 )
 
 // deploy does git pull, docker-compose build, docker-compose up
-func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
+func deploy(repo *git.Repository, branch string, project string, cli *docker.Client, out io.Writer) error {
 	fmt.Println(out, "Deploying repository...")
 	pemFile, err := os.Open(daemonGithubKeyLocation)
 	if err != nil {
@@ -55,14 +55,7 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 	// separate from the daemon and the user's project, and is the
 	// second container to require access to the docker socket.
 	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
-	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
-
-	repoName, err := common.GetProjectName(repo)
-	if err != nil {
-		fmt.Println(repoName)
-		return err
-	}
 
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
@@ -70,7 +63,7 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 			WorkingDir: "/build/project",
 			Env:        []string{"HOME=/build"},
 			Cmd: []string{
-				"-p", repoName,
+				 "-p", project,
 				"up",
 				"--build",
 			},
@@ -90,7 +83,6 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 		return errors.New(warnings)
 	}
 
-	fmt.Fprintln(out, "Building project...")
 	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 
 	// Check if build failed abruptly

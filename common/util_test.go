@@ -12,31 +12,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/storage/memory"
-	"gopkg.in/src-d/go-git.v4/config"
 )
-
-func getMockRepo(url string) (*git.Repository, error){
-	memory := memory.NewStorage()
-
-	if url[len(url) - len(".git"):] != ".git" {
-		return nil, fmt.Errorf("the given URL '%s' must end in '.git'", url)
-	}
-
-	mockRepo, err := git.Init(memory, nil)
-	if err != nil {
-		return nil, err
-	}
-	_, err = mockRepo.CreateRemote(&config.RemoteConfig{
-		Name: "origin",
-		URLs: []string{url},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return mockRepo, nil
-}
 
 func TestCheckForDockerCompose(t *testing.T) {
 	cwd, err := os.Getwd()
@@ -96,19 +72,5 @@ func TestFlushRoutine(t *testing.T) {
 		}
 
 		i++
-	}
-}
-
-func TestGetProjectName(t *testing.T) {
-	testRemote1, err := getMockRepo("https://github.com/ubclaunchpad/inertia.git")
-	assert.Nil(t, err)
-	repoName, err := GetProjectName(testRemote1)
-	assert.Equal(t, "inertia", repoName)
-
-	a, err := getMockRepo("https://github.com/ubclaunchpad/inertia")
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(a)
 	}
 }
