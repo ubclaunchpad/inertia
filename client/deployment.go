@@ -12,7 +12,6 @@ import (
 
 	"github.com/ubclaunchpad/inertia/common"
 	git "gopkg.in/src-d/go-git.v4"
-	//"io/ioutil"
 )
 
 // Deployment manages a deployment and implements the
@@ -22,6 +21,15 @@ type Deployment struct {
 	Repository *git.Repository
 	Auth       string
 	Project    string
+}
+
+// DaemonRequester can make HTTP requests to the daemon.
+type DaemonRequester interface {
+	Up(bool) (*http.Response, error)
+	Down() (*http.Response, error)
+	Status() (*http.Response, error)
+	Reset() (*http.Response, error)
+	Logs(bool, string) (*http.Response, error)
 }
 
 // GetDeployment returns the local deployment setup
@@ -53,7 +61,7 @@ func GetDeployment(name string) (*Deployment, error) {
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
 func (d *Deployment) Up(project string, stream bool) (*http.Response, error) {
-	// TODO: Support other repo names.
+	// TODO: Support other Git remotes.
 	origin, err := d.Repository.Remote("origin")
 	if err != nil {
 		return nil, err

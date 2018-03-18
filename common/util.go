@@ -6,9 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
-	git "gopkg.in/src-d/go-git.v4"
-	"regexp"
 )
 
 // CheckForDockerCompose returns error if current directory is a
@@ -79,18 +76,4 @@ func Flush(w io.Writer, rc io.ReadCloser, buffer []byte) error {
 		buffer[i] = 0
 	}
 	return nil
-}
-
-// GetProjectName returns the project name from the github repo URL
-func GetProjectName(localRepo *git.Repository) (string, error) {
-	remotes, err := localRepo.Remotes()
-	if err != nil {
-		return "", err
-	}
-
-	urls := remotes[0].Config().URLs
-
-	r, _ := regexp.Compile("(?:/)([^/]+)(?:.git)$")
-	repoName := r.FindStringSubmatch(urls[0])[1]
-	return repoName, nil
 }
