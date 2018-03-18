@@ -25,3 +25,7 @@ inertia-daemon-image
 
 # mac
 .DS_Store
+
+# Inertia web
+node_modules/
+public/

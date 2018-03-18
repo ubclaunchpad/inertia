@@ -73,3 +73,11 @@ daemon:
 # modified.
 bootstrap:
 	go-bindata -o client/bootstrap.go -pkg client client/bootstrap/...
+
+# Run local development instance of Inertia web.
+web-dev:
+	(cd ./daemon/web; npm install; npm start)
+
+# Build and minify Inertia web.
+web-build:
+	(cd ./daemon/web; npm install --production; npm run build)

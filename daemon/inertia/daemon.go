@@ -74,16 +74,23 @@ func run(host, port, version string) {
 		}
 	}
 
-	// Run daemon on port
-	println("Serving daemon on port " + port)
+	// API endpoints
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", gitHubWebHookHandler)
 	mux.HandleFunc("/up", authorized(upHandler, getAPIPrivateKey))
 	mux.HandleFunc("/down", authorized(downHandler, getAPIPrivateKey))
 	mux.HandleFunc("/status", authorized(statusHandler, getAPIPrivateKey))
 	mux.HandleFunc("/reset", authorized(resetHandler, getAPIPrivateKey))
 	mux.HandleFunc("/logs", authorized(logHandler, getAPIPrivateKey))
 	mux.HandleFunc("/health-check", authorized(healthCheckHandler, getAPIPrivateKey))
+
+	// GitHub webhook endpoint
+	mux.HandleFunc("/", gitHubWebHookHandler)
+
+	// Inertia web
+	mux.Handle("/admin/", http.FileServer(http.Dir("./inertia-web")))
+
+	// Serve daemon on port
+	println("Serving daemon on port " + port)
 	println(http.ListenAndServeTLS(
 		":"+port,
 		daemonSSLCert,
