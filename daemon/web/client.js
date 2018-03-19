@@ -2,7 +2,7 @@ import React from 'react';
 
 export default class InertiaClient {
     constructor(url) {
-        this.url = url;
+        this.url = "https://" + url;
     }
 
     /**
