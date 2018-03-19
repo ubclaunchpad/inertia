@@ -6,8 +6,7 @@ export default class InertiaClient {
     }
 
     /**
-     * Makes a GET request to the given API endpoint with the given params and
-     * returns the response in JSON format, or throws an error.
+     * Makes a GET request to the given API endpoint with the given params.
      * @param {String} endpoint
      * @param {Object} params
      */
@@ -16,8 +15,7 @@ export default class InertiaClient {
     }
 
     /**
-     * Makes a GET request to the given API endpoint with the given params and
-     * returns the response in JSON format, or throws an error.
+     * Makes a POST request to the given API endpoint with the given params.
      * @param {String} endpoint 
      * @param {Object} params 
      */
