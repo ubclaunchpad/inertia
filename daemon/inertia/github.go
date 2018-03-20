@@ -77,13 +77,21 @@ func processPushEvent(event *github.PushEvent) {
 	}
 	if head.Name().Short() == branch {
 		println("Event branch matches deployed branch " + branch)
+		pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
+		if err != nil {
+			return
+		}
+		auth, err := auth.GetGithubKey(pemFile)
+		if err != nil {
+			return
+		}
 		cli, err := docker.NewEnvClient()
 		if err != nil {
 			println(err.Error())
 			return
 		}
 		defer cli.Close()
-		err = project.Deploy(localRepo, branch, cli, os.Stdout)
+		err = project.Deploy(auth, localRepo, branch, cli, os.Stdout)
 		if err != nil {
 			println(err.Error())
 		}

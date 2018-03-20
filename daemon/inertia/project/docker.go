@@ -14,8 +14,8 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 const (
@@ -30,19 +30,11 @@ const (
 )
 
 // Deploy does git pull, docker-compose build, docker-compose up
-func Deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
+func Deploy(auth ssh.AuthMethod, repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
 	fmt.Println(out, "Deploying repository...")
-	pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
-	if err != nil {
-		return err
-	}
-	auth, err := auth.GetGithubKey(pemFile)
-	if err != nil {
-		return err
-	}
 
 	// Pull from given branch and check out if needed
-	err = common.UpdateRepository(Directory, repo, branch, auth, out)
+	err := common.UpdateRepository(Directory, repo, branch, auth, out)
 	if err != nil {
 		return err
 	}

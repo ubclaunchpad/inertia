@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 	git "gopkg.in/src-d/go-git.v4"
 )
@@ -57,13 +59,21 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update and deploy project
+	pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
+	if err != nil {
+		return
+	}
+	auth, err := auth.GetGithubKey(pemFile)
+	if err != nil {
+		return
+	}
 	cli, err := docker.NewEnvClient()
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
-	err = project.Deploy(repo, gitOpts.Branch, cli, logger.GetWriter())
+	err = project.Deploy(auth, repo, gitOpts.Branch, cli, logger.GetWriter())
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
