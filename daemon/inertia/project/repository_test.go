@@ -82,7 +82,11 @@ func TestUpdateRepository(t *testing.T) {
 func TestCompareRemotes(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.Nil(t, err)
-	inertia, _ := path.Split(cwd)
+
+	// Traverse back down to base directory
+	inertia := path.Dir(cwd)
+	inertia = path.Dir(inertia)
+	inertia = path.Dir(inertia)
 
 	repo, err := git.PlainOpen(inertia)
 	assert.Nil(t, err)
