@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"os"
@@ -12,7 +12,7 @@ func TestGenerateCertificate(t *testing.T) {
 	os.Mkdir(dir, os.ModePerm)
 	defer os.RemoveAll(dir)
 
-	err := generateCertificate(dir+"test.cert", dir+"test.key", "0.0.0.0")
+	err := GenerateCertificate(dir+"test.cert", dir+"test.key", "0.0.0.0", "")
 	assert.Nil(t, err)
 	_, err = os.Stat(dir + "test.cert")
 	assert.Nil(t, err)

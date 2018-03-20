@@ -1,9 +1,11 @@
-package main
+package auth
 
 import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
 	"testing"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -20,7 +22,7 @@ func getFakeAPIKey(tok *jwt.Token) (interface{}, error) {
 	return testPrivateKey, nil
 }
 func TestGenerateToken(t *testing.T) {
-	token, err := generateToken(testPrivateKey)
+	token, err := GenerateToken(testPrivateKey)
 	assert.Nil(t, err, "generateToken must not fail")
 	assert.Equal(t, token, testToken)
 }
@@ -35,7 +37,7 @@ func TestAuthorizationOK(t *testing.T) {
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
-	handler := http.HandlerFunc(authorized(healthCheckHandler, getFakeAPIKey))
+	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusOK)
@@ -49,7 +51,7 @@ func TestAuthorizationMalformedBearerString(t *testing.T) {
 	req.Header.Set("Authorization", "Beare")
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(authorized(healthCheckHandler, getFakeAPIKey))
+	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusForbidden)
@@ -63,7 +65,7 @@ func TestAuthorizationTooManySegments(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer a.b.c.d")
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(authorized(healthCheckHandler, getFakeAPIKey))
+	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusForbidden)
@@ -77,8 +79,16 @@ func TestAuthorizationSignatureInvalid(t *testing.T) {
 	req.Header.Set("Authorization", bearerTokenString)
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(authorized(healthCheckHandler, getFakeAPIKey))
+	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusForbidden)
+}
+
+func TestGetGithubKey(t *testing.T) {
+	inertiaKeyPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/ubclaunchpad/inertia/test_env/test_key")
+	pemFile, err := os.Open(inertiaKeyPath)
+	assert.Nil(t, err)
+	_, err = GetGithubKey(pemFile)
+	assert.Nil(t, err)
 }

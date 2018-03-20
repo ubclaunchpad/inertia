@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -38,12 +39,12 @@ var tokenCmd = &cobra.Command{
 	Long: `Produce an API token to use with the daemon,
 	Created using an RSA private key.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		keyBytes, err := getAPIPrivateKey(nil)
+		keyBytes, err := auth.GetAPIPrivateKey(nil)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		token, err := generateToken(keyBytes.([]byte))
+		token, err := auth.GenerateToken(keyBytes.([]byte))
 		if err != nil {
 			log.Fatal(err)
 		}

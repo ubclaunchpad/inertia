@@ -7,7 +7,7 @@
 
 // Small modifications by kabukky
 
-package main
+package auth
 
 import (
 	"crypto/ecdsa"
@@ -17,7 +17,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"fmt"
+	"errors"
 	"math/big"
 	"net"
 	"os"
@@ -26,10 +26,9 @@ import (
 )
 
 var (
-	validFor   = 365 * 24 * time.Hour
-	isCA       = true
-	rsaBits    = 2048
-	ecdsaCurve = ""
+	validFor = 365 * 24 * time.Hour
+	isCA     = true
+	rsaBits  = 2048
 )
 
 func publicKey(priv interface{}) interface{} {
@@ -58,7 +57,8 @@ func pemBlockForKey(priv interface{}) (*pem.Block, error) {
 	}
 }
 
-func generateCertificate(certPath string, keyPath string, host string) error {
+// GenerateCertificate creates an SSL certificate for HTTPS use
+func GenerateCertificate(certPath, keyPath, host, ecdsaCurve string) error {
 	var priv interface{}
 	var err error
 	switch ecdsaCurve {
@@ -73,8 +73,7 @@ func generateCertificate(certPath string, keyPath string, host string) error {
 	case "P521":
 		priv, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
-		fmt.Fprintf(os.Stderr, "Unrecognized elliptic curve: %q", ecdsaCurve)
-		os.Exit(1)
+		return errors.New("Unrecognised ECDSA curve " + ecdsaCurve)
 	}
 	if err != nil {
 		return err

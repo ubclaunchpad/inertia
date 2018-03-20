@@ -7,6 +7,7 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
@@ -32,7 +33,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	defer logger.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
-	err = common.CheckForGit(projectDirectory)
+	err = common.CheckForGit(project.Directory)
 	if err != nil {
 		logger.Println("No git repository present.")
 		err = setUpProject(gitOpts.RemoteURL, gitOpts.Branch, logger.GetWriter())
@@ -42,7 +43,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	repo, err := git.PlainOpen(projectDirectory)
+	repo, err := git.PlainOpen(project.Directory)
 	if err != nil {
 		logger.Err(err.Error(), http.StatusPreconditionFailed)
 		return
@@ -62,7 +63,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = deploy(repo, gitOpts.Branch, cli, logger.GetWriter())
+	err = project.Deploy(repo, gitOpts.Branch, cli, logger.GetWriter())
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return

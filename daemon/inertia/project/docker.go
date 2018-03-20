@@ -1,4 +1,4 @@
-package main
+package project
 
 import (
 	"context"
@@ -14,29 +14,41 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
-// deploy does git pull, docker-compose build, docker-compose up
-func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
+const (
+	// Directory specifies the location of deployed project
+	Directory = "/app/host/project"
+
+	// DockerComposeVersion is the docker-compose version used by the daemon
+	DockerComposeVersion = "docker/compose:1.18.0"
+
+	// NoContainersResp is the response to indicate that no containers are active
+	NoContainersResp = "There are currently no active containers."
+)
+
+// Deploy does git pull, docker-compose build, docker-compose up
+func Deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
 	fmt.Println(out, "Deploying repository...")
-	pemFile, err := os.Open(daemonGithubKeyLocation)
+	pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
 	if err != nil {
 		return err
 	}
-	auth, err := getGithubKey(pemFile)
+	auth, err := auth.GetGithubKey(pemFile)
 	if err != nil {
 		return err
 	}
 
 	// Pull from given branch and check out if needed
-	err = common.UpdateRepository(projectDirectory, repo, branch, auth, out)
+	err = common.UpdateRepository(Directory, repo, branch, auth, out)
 	if err != nil {
 		return err
 	}
 
 	// Kill active project containers if there are any
-	err = killActiveContainers(cli, out)
+	err = KillActiveContainers(cli, out)
 	if err != nil {
 		return err
 	}
@@ -59,7 +71,7 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 	ctx := context.Background()
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
-			Image:      dockerCompose,
+			Image:      DockerComposeVersion,
 			WorkingDir: "/build/project",
 			Env:        []string{"HOME=/build"},
 			Cmd: []string{
@@ -102,9 +114,9 @@ func deploy(repo *git.Repository, branch string, cli *docker.Client, out io.Writ
 	*/
 }
 
-// getActiveContainers returns all active containers and returns and error
+// GetActiveContainers returns all active containers and returns and error
 // if the Daemon is the only active container
-func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
+func GetActiveContainers(cli *docker.Client) ([]types.Container, error) {
 	containers, err := cli.ContainerList(
 		context.Background(),
 		types.ContainerListOptions{},
@@ -115,14 +127,14 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 
 	// Error if only one container (daemon) is active
 	if len(containers) <= 1 {
-		return nil, errors.New(noContainersResp)
+		return nil, errors.New(NoContainersResp)
 	}
 
 	return containers, nil
 }
 
-// killActiveContainers kills all active project containers (ie not including daemon)
-func killActiveContainers(cli *docker.Client, out io.Writer) error {
+// KillActiveContainers kills all active project containers (ie not including daemon)
+func KillActiveContainers(cli *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Shutting down active containers...")
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
