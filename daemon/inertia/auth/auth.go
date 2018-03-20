@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	// DaemonGithubKeyLocation is the default path of the deploy key
 	DaemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"
 
 	malformedAuthStringErrorMsg = "Malformed authentication string"

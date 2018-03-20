@@ -62,7 +62,7 @@ func GenerateCertificate(certPath, keyPath, host, ecdsaCurve string) error {
 	var priv interface{}
 	var err error
 	switch ecdsaCurve {
-	case "":
+	case "RSA":
 		priv, err = rsa.GenerateKey(rand.Reader, rsaBits)
 	case "P224":
 		priv, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
