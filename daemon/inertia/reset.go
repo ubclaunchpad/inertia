@@ -6,6 +6,7 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
 // resetHandler shuts down and wipes the project directory
@@ -21,13 +22,13 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = killActiveContainers(cli, logger.GetWriter())
+	err = project.KillActiveContainers(cli, logger.GetWriter())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = common.RemoveContents(projectDirectory)
+	err = common.RemoveContents(project.Directory)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
