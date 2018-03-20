@@ -23,7 +23,7 @@ var urlVariations = []string{
 }
 
 func getInertiaDeployTestKey() (ssh.AuthMethod, error) {
-	pemFile, err := os.Open("../test_env/test_key")
+	pemFile, err := os.Open("../../../test_env/test_key")
 	if err != nil {
 		return nil, err
 	}
