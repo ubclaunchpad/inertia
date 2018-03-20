@@ -58,10 +58,10 @@ func pemBlockForKey(priv interface{}) (*pem.Block, error) {
 }
 
 // GenerateCertificate creates an SSL certificate for HTTPS use
-func GenerateCertificate(certPath, keyPath, host, ecdsaCurve string) error {
+func GenerateCertificate(certPath, keyPath, host, method string) error {
 	var priv interface{}
 	var err error
-	switch ecdsaCurve {
+	switch method {
 	case "RSA":
 		priv, err = rsa.GenerateKey(rand.Reader, rsaBits)
 	case "P224":
@@ -73,7 +73,7 @@ func GenerateCertificate(certPath, keyPath, host, ecdsaCurve string) error {
 	case "P521":
 		priv, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
-		return errors.New("Unrecognised ECDSA curve " + ecdsaCurve)
+		return errors.New("Unrecognised algorithm " + method)
 	}
 	if err != nil {
 		return err
