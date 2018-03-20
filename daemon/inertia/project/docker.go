@@ -13,7 +13,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/common"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
@@ -34,7 +33,7 @@ func Deploy(auth ssh.AuthMethod, repo *git.Repository, branch string, cli *docke
 	fmt.Println(out, "Deploying repository...")
 
 	// Pull from given branch and check out if needed
-	err := common.UpdateRepository(Directory, repo, branch, auth, out)
+	err := UpdateRepository(Directory, repo, branch, auth, out)
 	if err != nil {
 		return err
 	}

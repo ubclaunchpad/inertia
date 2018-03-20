@@ -38,7 +38,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	err = common.CheckForGit(project.Directory)
 	if err != nil {
 		logger.Println("No git repository present.")
-		err = setUpProject(gitOpts.RemoteURL, gitOpts.Branch, logger.GetWriter())
+		err = project.InitializeRepository(gitOpts.RemoteURL, gitOpts.Branch, logger.GetWriter())
 		if err != nil {
 			logger.Err(err.Error(), http.StatusPreconditionFailed)
 			return
@@ -52,7 +52,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for matching remotes
-	err = common.CompareRemotes(repo, gitOpts.RemoteURL)
+	err = project.CompareRemotes(repo, gitOpts.RemoteURL)
 	if err != nil {
 		logger.Err(err.Error(), http.StatusPreconditionFailed)
 		return
