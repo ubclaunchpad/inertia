@@ -3,7 +3,6 @@ package project
 import (
 	"io/ioutil"
 	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -80,15 +79,8 @@ func TestUpdateRepository(t *testing.T) {
 }
 
 func TestCompareRemotes(t *testing.T) {
-	cwd, err := os.Getwd()
-	assert.Nil(t, err)
-
-	// Traverse back down to base directory
-	inertia := path.Dir(cwd)
-	inertia = path.Dir(inertia)
-	inertia = path.Dir(inertia)
-
-	repo, err := git.PlainOpen(inertia)
+	// Traverse back down to root directory of repository
+	repo, err := git.PlainOpen("../../../")
 	assert.Nil(t, err)
 
 	for _, url := range urlVariations {
