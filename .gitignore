@@ -3,7 +3,8 @@
 *.dll
 *.so
 *.dylib
-inertia.*
+/inertia.*
+/inertia
 
 # Test binary, build with `go test -c`
 *.test
