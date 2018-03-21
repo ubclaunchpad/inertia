@@ -62,20 +62,27 @@ func run(host, port, version string) {
 		}
 	}
 
-	// API endpoints
+	// GitHub webhook endpoint
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", gitHubWebHookHandler)
+
+	// Inertia web - PermissionsHandler is used to authenticate web
+	// app access and manage users
+	permHandler, err := auth.NewPermissionsHandler(auth.UserDatabasePath)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	permHandler.Mux.Handle("/", http.FileServer(http.Dir("/app/inertia-web")))
+	mux.Handle("/web/", http.StripPrefix("/web", permHandler))
+
+	// API endpoints
 	mux.HandleFunc("/up", auth.Authorized(upHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/down", auth.Authorized(downHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/status", auth.Authorized(statusHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/reset", auth.Authorized(resetHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/logs", auth.Authorized(logHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/health-check", auth.Authorized(auth.HealthCheckHandler, auth.GetAPIPrivateKey))
-
-	// GitHub webhook endpoint
-	mux.HandleFunc("/", gitHubWebHookHandler)
-
-	// Inertia web
-	mux.Handle("/admin/", http.StripPrefix("/admin/", http.FileServer(http.Dir("/app/inertia-web"))))
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)

@@ -14,6 +14,12 @@
   version = "v0.4.5"
 
 [[projects]]
+  name = "github.com/boltdb/bolt"
+  packages = ["."]
+  revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
+  version = "v1.3.1"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -175,8 +181,34 @@
   revision = "ba9c9e33906f58169366275e3450db66139a31a9"
 
 [[projects]]
+  name = "github.com/xyproto/cookie"
+  packages = ["."]
+  revision = "8ce3defb0907741a2a8c9b56cce0f716c933ce34"
+  version = "2.0"
+
+[[projects]]
+  name = "github.com/xyproto/permissionbolt"
+  packages = ["."]
+  revision = "657ad1a411098f614a30382e53d4267067b0fa43"
+  version = "2.3"
+
+[[projects]]
+  name = "github.com/xyproto/pinterface"
+  packages = ["."]
+  revision = "05fa0e3080664c781c213d0a890a9d22718f7afb"
+  version = "4.1"
+
+[[projects]]
+  name = "github.com/xyproto/simplebolt"
+  packages = ["."]
+  revision = "3ad76f169f0ede30c60f6b098efd305ad995e417"
+  version = "3.0"
+
+[[projects]]
   name = "golang.org/x/crypto"
   packages = [
+    "bcrypt",
+    "blowfish",
     "cast5",
     "curve25519",
     "ed25519",
@@ -296,6 +328,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5b5d8e6e2a0597fd5a14c0bfc3d0e54dd03347f272439a71d8850f1b6c763a12"
+  inputs-digest = "294a0ae7024c96836ece6ea3bef954904613ea63c41d34dfe0bbb463315dae47"
   solver-name = "gps-cdcl"
   solver-version = 1

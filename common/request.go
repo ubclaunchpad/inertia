@@ -23,3 +23,11 @@ type GitOptions struct {
 	RemoteURL string `json:"remote"`
 	Branch    string `json:"branch"`
 }
+
+// UserRequest is used for logging in or modifying users
+type UserRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	Admin    bool   `json:"admin"`
+}

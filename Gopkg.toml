@@ -29,3 +29,7 @@
 [[constraint]]
   revision = "9de5f2eaf759b4c4550b3db39fed2e9e5f86f45c"
   name = "golang.org/x/crypto"
+
+[[constraint]]
+  name = "github.com/xyproto/permissionbolt"
+  version = "2.3.0"
