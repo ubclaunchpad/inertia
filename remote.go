@@ -218,7 +218,6 @@ func printRemoteDetails(remote *client.RemoteVPS) {
 func init() {
 	rootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
-	//remoteCmd.AddCommand(statusCmd)
 	remoteCmd.AddCommand(listCmd)
 	remoteCmd.AddCommand(removeCmd)
 	remoteCmd.AddCommand(showCmd)
