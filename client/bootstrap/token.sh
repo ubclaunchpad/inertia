@@ -2,10 +2,10 @@
 
 set -e
 
+# User argument.
 RELEASE=%s
 
-# Generates an SSH token for use with API requests.
-# Generate a daemon token using CLI.
+# Generate a daemon token using CLI for API requests.
 sudo docker run --rm \
     -v $HOME:/app/host \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \

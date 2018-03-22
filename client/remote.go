@@ -41,9 +41,8 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // public-private key-pair. It outputs configuration information
 // for the user.
 func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Config) error {
-	println("Setting up remote " + name + " at " + remote.IP)
+	println("Setting up remote \"" + name + "\" at " + remote.IP)
 
-	// Generate a session for each command.
 	println(">> Step 1/4: Installing docker...")
 	err := remote.installDocker(runner)
 	if err != nil {
@@ -59,16 +58,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 		return err
 	}
 
-	println("\n>> Step 3/4: Starting daemon...")
-	if err != nil {
-		return err
-	}
-	err = remote.DaemonUp(runner, config.Version, remote.IP, remote.Daemon.Port)
-	if err != nil {
-		return err
-	}
-
-	println("\n>> Step 4/4: Fetching daemon API token...")
+	println("\n>> Step 3/4: Fetching daemon API token...")
 	token, err := remote.getDaemonAPIToken(runner, config.Version)
 	if err != nil {
 		return err
@@ -79,7 +69,16 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 		return err
 	}
 
-	println("Inertia has been set up and daemon is running on remote!\n")
+	println("\n>> Step 4/4: Starting daemon...")
+	if err != nil {
+		return err
+	}
+	err = remote.DaemonUp(runner, config.Version, remote.IP, remote.Daemon.Port)
+	if err != nil {
+		return err
+	}
+
+	println("\nInertia is now set up and the daemon is running on your remote!\n")
 
 	println("=============================\n")
 
@@ -87,13 +86,13 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	println("GitHub Deploy Key (add to https://www.github.com/<your_repo>/settings/keys/new): ")
 	println(pub.String())
 
-	// Output Webhook url to user.
+	// Output webhook url to user.
 	println("GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
 	println("http://" + remote.IP + ":" + remote.Daemon.Port)
 	println("Github WebHook Secret: " + common.DefaultSecret + "\n")
 
 	println("Inertia daemon successfully deployed! Add your webhook url and deploy\nkey to enable continuous deployment.")
-	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", name)
+	fmt.Printf("Then run 'inertia %s up' to deploy your application!\n", name)
 
 	return nil
 }

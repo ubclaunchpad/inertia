@@ -106,8 +106,8 @@ func TestBootstrap(t *testing.T) {
 	// Make sure all commands are formatted correctly
 	assert.Equal(t, string(dockerScript), session.Calls[0])
 	assert.Equal(t, string(keyScript), session.Calls[1])
-	assert.Equal(t, daemonScript, session.Calls[2])
-	assert.Equal(t, tokenScript, session.Calls[3])
+	assert.Equal(t, tokenScript, session.Calls[2])
+	assert.Equal(t, daemonScript, session.Calls[3])
 }
 
 func TestInstrumentedBootstrap(t *testing.T) {

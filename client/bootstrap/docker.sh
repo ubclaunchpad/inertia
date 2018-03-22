@@ -1,15 +1,13 @@
 #!/bin/sh
 
 # Bootstraps a machine for docker and docker-compose.
-# This is pretty alpha. Installs curl only if it doesn't exist.
-# Tested on Ubuntu 16.04, requires sudo for a few steps.
 
 set -e
 
 DOCKER_SOURCE=get.docker.com
 DOCKER_DEST='/tmp/get-docker.sh'
 
-# Check if docker aready installed.
+# Skip installation if Docker is already installed.
 if hash docker 2>/dev/null; then
     exit 0
 fi;

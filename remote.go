@@ -277,6 +277,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
-	addCmd.Flags().StringP("port", "p", common.DefaultPort, "Daemon port")
+	addCmd.Flags().StringP("port", "p", "8081", "Daemon port")
 	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }
