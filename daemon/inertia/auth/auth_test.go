@@ -18,6 +18,11 @@ var (
 	testToken      = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.AqFWnFeY9B8jj7-l3z0a9iaZdwIca7xhUF3fuaJjU90"
 )
 
+func testHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, common.DaemonOkResp)
+}
+
 func getFakeAPIKey(tok *jwt.Token) (interface{}, error) {
 	return testPrivateKey, nil
 }
@@ -37,7 +42,7 @@ func TestAuthorizationOK(t *testing.T) {
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
-	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
+	handler := http.HandlerFunc(Authorized(testHealthCheckHandler, getFakeAPIKey))
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusOK)
@@ -51,7 +56,7 @@ func TestAuthorizationMalformedBearerString(t *testing.T) {
 	req.Header.Set("Authorization", "Beare")
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
+	handler := http.HandlerFunc(Authorized(testHealthCheckHandler, getFakeAPIKey))
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusForbidden)
@@ -65,7 +70,7 @@ func TestAuthorizationTooManySegments(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer a.b.c.d")
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
+	handler := http.HandlerFunc(Authorized(testHealthCheckHandler, getFakeAPIKey))
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusForbidden)
@@ -79,7 +84,7 @@ func TestAuthorizationSignatureInvalid(t *testing.T) {
 	req.Header.Set("Authorization", bearerTokenString)
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
+	handler := http.HandlerFunc(Authorized(testHealthCheckHandler, getFakeAPIKey))
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusForbidden)

@@ -12,7 +12,7 @@ func TestPermissionsHandlerConstructor(t *testing.T) {
 	err := os.Mkdir(dir, os.ModePerm)
 	assert.Nil(t, err)
 	defer os.RemoveAll(dir)
-	ph, err := NewPermissionsHandler("./test/users.db")
+	ph, err := NewPermissionsHandler("./test/users.db", nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, ph)
 }

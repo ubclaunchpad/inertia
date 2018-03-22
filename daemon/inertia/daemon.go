@@ -68,21 +68,21 @@ func run(host, port, version string) {
 
 	// Inertia web - PermissionsHandler is used to authenticate web
 	// app access and manage users
-	permHandler, err := auth.NewPermissionsHandler(auth.UserDatabasePath)
+	permHandler, err := auth.NewPermissionsHandler(auth.UserDatabasePath, redirectToLogin)
 	if err != nil {
 		println(err.Error())
 		return
 	}
-	permHandler.Mux.Handle("/", http.FileServer(http.Dir("/app/inertia-web")))
+	defer permHandler.Close()
+	permHandler.AttachUserRestrictedHandler("/", http.FileServer(http.Dir("/app/inertia-web")))
 	mux.Handle("/web/", http.StripPrefix("/web", permHandler))
 
-	// API endpoints
+	// CLI API endpoints
 	mux.HandleFunc("/up", auth.Authorized(upHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/down", auth.Authorized(downHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/status", auth.Authorized(statusHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/reset", auth.Authorized(resetHandler, auth.GetAPIPrivateKey))
 	mux.HandleFunc("/logs", auth.Authorized(logHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/health-check", auth.Authorized(auth.HealthCheckHandler, auth.GetAPIPrivateKey))
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)
@@ -92,4 +92,9 @@ func run(host, port, version string) {
 		daemonSSLKey,
 		mux,
 	))
+}
+
+func redirectToLogin(w http.ResponseWriter, r *http.Request) {
+	// @todo: direct to login page
+	http.Error(w, "Permission denied!", http.StatusForbidden)
 }

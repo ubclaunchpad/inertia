@@ -1,12 +1,10 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 // Authorized is a function decorator for authorizing RESTful
@@ -41,10 +39,4 @@ func Authorized(handler http.HandlerFunc, keyLookup func(*jwt.Token) (interface{
 		// We're authorized, run the handler.
 		handler(w, r)
 	}
-}
-
-// HealthCheckHandler returns a 200 if the daemon is happy.
-func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, common.DaemonOkResp)
 }
