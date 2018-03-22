@@ -2,7 +2,7 @@
   "name": "inertia-web",
   "version": "1.0.0",
   "description": "Simple, self-hosted continuous deployment",
-  "repositiory": "github:ubclaunchpad/inertia",
+  "repository": "github:ubclaunchpad/inertia",
   "author": "UBC Launch Pad",
   "license": "MIT",
   "main": "index.js",
