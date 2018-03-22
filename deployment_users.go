@@ -52,7 +52,7 @@ Use the --admin flag to create an admin user.`,
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		switch resp.StatusCode {

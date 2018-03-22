@@ -40,7 +40,7 @@ var deploymentUpCmd = &cobra.Command{
 		if !stream {
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.WithError(err)
+				log.Fatal(err)
 			}
 			switch resp.StatusCode {
 			case http.StatusCreated:
@@ -80,13 +80,13 @@ var deploymentDownCmd = &cobra.Command{
 		}
 		resp, err := deployment.Down()
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		switch resp.StatusCode {
@@ -117,13 +117,13 @@ var deploymentStatusCmd = &cobra.Command{
 		}
 		resp, err := deployment.Status()
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		switch resp.StatusCode {
@@ -174,7 +174,7 @@ var deploymentLogsCmd = &cobra.Command{
 		if !stream {
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.WithError(err)
+				log.Fatal(err)
 			}
 			switch resp.StatusCode {
 			case http.StatusOK:
