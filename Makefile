@@ -1,4 +1,4 @@
-.PHONY: inertia test test-verbose testenv clean daemon testdaemon bootstrap
+.PHONY: commands inertia inertia-tagged clean test testv testenv testdaemon daemon bootstrap web-deps web-run web-build
 
 TAG = `git describe --tags`
 PACKAGES = `go list ./... | grep -v vendor/`
@@ -8,6 +8,9 @@ VPS_OS = ubuntu
 RELEASE = canary
 
 all: inertia
+
+commands:
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
 # Install Inertia with release version
 inertia:
@@ -29,7 +32,7 @@ test:
 	go test $(PACKAGES) -ldflags "-X main.Version=test" --cover
 
 # Run test suite - creates test VPS and test daemon beforehand
-test-verbose:
+testv:
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon	
 	go test $(PACKAGES) -ldflags "-X main.Version=test" -v --cover
@@ -74,10 +77,14 @@ daemon:
 bootstrap:
 	go-bindata -o client/bootstrap.go -pkg client client/bootstrap/...
 
-# Run local development instance of Inertia web.
-web-dev:
-	(cd ./daemon/web; npm install; npm start)
+# Install Inertia Web dependencies.
+web-deps:
+	(cd ./daemon/web; npm install)
 
-# Build and minify Inertia web.
+# Run local development instance of Inertia Web.
+web-run:
+	(cd ./daemon/web; npm start)
+
+# Build and minify Inertia Web.
 web-build:
 	(cd ./daemon/web; npm install --production; npm run build)
