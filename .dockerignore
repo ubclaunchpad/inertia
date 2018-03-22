@@ -20,6 +20,3 @@ Dockerfile
 
 # Non-daemon source code
 client
-
-# Node depedencies
-node_modules
