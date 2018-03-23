@@ -17,7 +17,8 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
-var projectName = ""
+// projectName is appended to the container name of the project being deployed
+var projectName = "project"
 
 // deploy does git pull, docker-compose build, docker-compose up
 func deploy(repo *git.Repository, branch string, project string, cli *docker.Client, out io.Writer) error {
