@@ -58,22 +58,24 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 		return err
 	}
 
-	println("\n>> Step 3/4: Fetching daemon API token...")
+	// This step needs to run before any other commands that rely on
+	// the daemon image, since the daemon is loaded here.
+	println("\n>> Step 3/4: Starting daemon...")
+	if err != nil {
+		return err
+	}
+	err = remote.DaemonUp(runner, config.Version, remote.IP, remote.Daemon.Port)
+	if err != nil {
+		return err
+	}
+
+	println("\n>> Step 4/4: Fetching daemon API token...")
 	token, err := remote.getDaemonAPIToken(runner, config.Version)
 	if err != nil {
 		return err
 	}
 	remote.Daemon.Token = token
 	err = config.Write()
-	if err != nil {
-		return err
-	}
-
-	println("\n>> Step 4/4: Starting daemon...")
-	if err != nil {
-		return err
-	}
-	err = remote.DaemonUp(runner, config.Version, remote.IP, remote.Daemon.Port)
 	if err != nil {
 		return err
 	}
