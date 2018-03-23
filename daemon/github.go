@@ -83,7 +83,7 @@ func processPushEvent(event *github.PushEvent) {
 			return
 		}
 		defer cli.Close()
-		err = deploy(localRepo, branch, *repo.Name, cli, os.Stdout)
+		err = deploy(localRepo, branch, projectName, cli, os.Stdout)
 		if err != nil {
 			println(err.Error())
 		}

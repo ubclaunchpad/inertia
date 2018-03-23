@@ -17,9 +17,15 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
+var projectName = ""
+
 // deploy does git pull, docker-compose build, docker-compose up
 func deploy(repo *git.Repository, branch string, project string, cli *docker.Client, out io.Writer) error {
 	fmt.Println(out, "Deploying repository...")
+
+	// set up global for github.go deploy
+	projectName = project
+
 	pemFile, err := os.Open(daemonGithubKeyLocation)
 	if err != nil {
 		return err
