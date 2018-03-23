@@ -28,9 +28,14 @@ const (
 	NoContainersResp = "There are currently no active containers."
 )
 
+var ProjectName = "project"
+
 // Deploy does git pull, docker-compose build, docker-compose up
-func Deploy(auth ssh.AuthMethod, repo *git.Repository, branch string, cli *docker.Client, out io.Writer) error {
+func Deploy(auth ssh.AuthMethod, repo *git.Repository, branch string, project string, cli *docker.Client, out io.Writer) error {
 	fmt.Println(out, "Deploying repository...")
+
+	// set up global projectName for other calls to Deploy
+	ProjectName = project
 
 	// Pull from given branch and check out if needed
 	err := UpdateRepository(Directory, repo, branch, auth, out)
@@ -66,6 +71,7 @@ func Deploy(auth ssh.AuthMethod, repo *git.Repository, branch string, cli *docke
 			WorkingDir: "/build/project",
 			Env:        []string{"HOME=/build"},
 			Cmd: []string{
+				"-p", project,
 				"up",
 				"--build",
 			},

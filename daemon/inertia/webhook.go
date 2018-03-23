@@ -90,7 +90,8 @@ func processPushEvent(event *github.PushEvent) {
 			return
 		}
 		defer cli.Close()
-		err = project.Deploy(auth, localRepo, branch, cli, os.Stdout)
+
+		err = project.Deploy(auth, localRepo, branch, project.ProjectName, cli, os.Stdout)
 		if err != nil {
 			println(err.Error())
 		}

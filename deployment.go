@@ -30,7 +30,7 @@ var deploymentUpCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp, err := deployment.Up(stream)
+		resp, err := deployment.Up(deployment.Project, stream)
 		if err != nil {
 			log.Fatal(err)
 		}

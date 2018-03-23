@@ -87,7 +87,7 @@ func clientBootstrapDaemonDownSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/daemon-down.sh", size: 233, mode: os.FileMode(420), modTime: time.Unix(1514021421, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/daemon-down.sh", size: 233, mode: os.FileMode(420), modTime: time.Unix(1517083020, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -107,7 +107,7 @@ func clientBootstrapDaemonUpSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/daemon-up.sh", size: 1521, mode: os.FileMode(493), modTime: time.Unix(1521411052, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/daemon-up.sh", size: 1521, mode: os.FileMode(493), modTime: time.Unix(1521770705, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -127,7 +127,7 @@ func clientBootstrapDockerSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/docker.sh", size: 1174, mode: os.FileMode(493), modTime: time.Unix(1521099304, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/docker.sh", size: 1174, mode: os.FileMode(493), modTime: time.Unix(1521306560, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -147,7 +147,7 @@ func clientBootstrapKeygenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1515346036, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1517083020, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -167,7 +167,7 @@ func clientBootstrapTokenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/token.sh", size: 309, mode: os.FileMode(493), modTime: time.Unix(1521409807, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/token.sh", size: 309, mode: os.FileMode(493), modTime: time.Unix(1521770705, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
