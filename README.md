@@ -25,7 +25,7 @@
 
 Inertia is a cross-platform command line tool that simplifies setup and management of automated project deployment on any virtual private server. It aims to provide the ease and flexibility of services like Heroku without the complexity of Kubernetes while still giving users full control over their projects.
 
-- [Usage](#rocket-usage)
+- [Usage](#package-usage)
   - [Setup](#setup)
   - [Continuous Deployment](#continuous-deployment)
   - [Deployment Management](#deployment-management)
@@ -33,7 +33,7 @@ Inertia is a cross-platform command line tool that simplifies setup and manageme
 - [Motivation and Design](#bulb-motivation-and-design)
 - [Development](#construction-development)
 
-# :rocket: Usage
+# :package: Usage
 
 All you need to get started is a docker-compose project, an Inertia CLI binary, and access to a virtual private server.
 
@@ -63,20 +63,30 @@ $> inertia $VPS_NAME status
 # Confirms that the daemon is online and accepting requests
 ```
 
-An Inertia daemon is now running on your remote instance. This daemon will be used to manage your deployment.
+This daemon will be used to manage your deployment.
 
 See our [wiki](https://github.com/ubclaunchpad/inertia/wiki/VPS-Compatibility) for more details on platform compatibility.
 
-## Continuous Deployment
+## Deployment Management
 
-You can now set up continuous deployment using the output of `inertia $VPS_NAME init`:
+To manually deploy your project, you must first grant Inertia permission to clone your repository. This can be done by adding the GitHub Deploy Key that is displayed in the output of `inertia $VPS_NAME init` to your repository settings:
 
 ```bash
 GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new):
 ssh-rsa <...>
 ```
 
-The Inertia daemon requires readonly access to your GitHub repository. Add the deploy key to your GitHub repository settings at the URL provided in the output - this will grant the daemon access to clone your repository.
+Once this is done, you can use Inertia to bring your project online on your remote VPS:
+
+```bash
+$> inertia $VPS_NAME up --stream
+```
+
+Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
+
+## Continuous Deployment
+
+To enable continuous deployment, you need the webhook URL that is printed during `inertia $VPS_NAME init`:
 
 ```bash
 GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
@@ -84,27 +94,13 @@ http://myhost.com:8081
 Github WebHook Secret: inertia
 ``` 
 
-The daemon will accept POST requests from GitHub at the URL provided. Add this webhook URL in your GitHub settings area (at the URL provided) so that the daemon will receive updates from GitHub when your repository is updated.
-
-## Deployment Management
-
-To manually deploy your project:
-
-```bash
-$> inertia $VPS_NAME up --stream
-```
-
-There are a variety of other commands available for managing your project deployment. See the CLI documentation for more details:
-
-```bash
-$> inertia $VPS_NAME --help
-```
+The daemon will accept POST requests from GitHub at the URL provided. Add this webhook URL in your GitHub settings area (at the URL provided) so that the daemon will receive updates from GitHub when your repository is updated. Once this is done, the daemon will automatically build and deploy any changes that are made to the deployed branch.
 
 ## Release Streams
 
-The version of Inertia you are using can be seen in Inertia's `.inertia.toml` configuration file, or by running `inertia --version`.
+The version of Inertia you are using can be seen in Inertia's `.inertia.toml` configuration file, or by running `inertia --version`. The version in `.inertia.toml` is used to determine what version of the Inertia daemon to use when you run `inertia $VPS_NAME init`.
 
-You can manually change the daemon version pulled by editing the Inertia configuration file. If you are building from source, you can also check out the desired version and run `make inertia-tagged`.
+You can manually change the daemon version used by editing the Inertia configuration file. If you are building from source, you can also check out the desired version and run `make inertia-tagged` or `make RELEASE=$STREAM`. Inertia daemon releases are tagged as follows:
 
 - `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
 - `latest` denotes the newest builds on `master`.
@@ -114,12 +110,13 @@ The daemon component of an Inertia release can be patched separately from the CL
 
 ## Swag
 
-[![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
-
+Add some bling to your Inertia-deployed project :sunglasses:
 
 ```
 [![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 ```
+
+[![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 
 # :bulb: Motivation and Design
 
@@ -160,8 +157,8 @@ $> go get -u github.com/ubclaunchpad/inertia
 We use [dep](https://github.com/golang/dep) for managing Golang dependencies, and [npm](https://www.npmjs.com) to manage dependencies for Inertia's React web app. Make sure both are installed before running the following commands.
 
 ```bash
-$> dep ensure     # Golang dependencies
-$> make web-deps  # Web app dependencies
+$> dep ensure     # Inertia CLI and daemon dependencies
+$> make web-deps  # Inertia Web dependencies
 ```
 
 For usage, it is highly recommended that you use a [tagged build](https://github.com/ubclaunchpad/inertia/releases) to ensure compatibility between the CLI and your Inertia daemon.
@@ -174,13 +171,13 @@ $> inertia --version      # check what version you have installed
 
 Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
 
-For development, it is recommended that you make install a build tagged as `test` so that you can make use `make testdaemon` for local development. See the next section for more details.
+For development, you should install a build tagged as `test` so that you can make use `make testdaemon` for local development. See the next section for more details.
 
 ```bash
-$> make RELEASE=test
+$> make RELEASE=test    # installs current Inertia build and mark as "test"
 ```
 
-## Testing
+## Testing and Locally Deploying
 
 You will need Docker installed and running to run the Inertia test suite, which includes a number of integration tests.
 
@@ -192,11 +189,10 @@ $> make test VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 You can also manually start a container that sets up a mock VPS for testing:
 
 ```bash
-$> make RELEASE=test
-# installs current Inertia build and mark as "test"
 $> make testenv VPS_OS=ubuntu VERSION=16.04
-# defaults to ubuntu:lastest without args
-# note the location of the key that is printed
+# This defaults to ubuntu:lastest without args.
+# Note the location of the key that is printed and use that when
+# adding your local remote.
 ```
 
 You can [SSH into this testvps container](https://bobheadxi.github.io/dockerception/#ssh-services-in-docker) and otherwise treat it just as you would treat a real VPS:
@@ -210,9 +206,9 @@ $> inertia local init
 $> inertia local status
 ```
 
-The above steps will pull a daemon image from Docker Hub based on the version in your `.inertia.toml`.
+The above steps will pull and use a daemon image from Docker Hub based on the version in your `.inertia.toml`.
 
-### Inertia Daemon
+### Daemon
 
 To use a daemon compiled from source, set your Inertia version in `.inertia.toml` to `test` and run:
 
@@ -221,7 +217,7 @@ $> make testdaemon
 $> inertia local init
 ```
 
-This will build a daemon image and `scp` it over to the test VPS. Setting up a `testvps` using `inertia local init` will now use this custom daemon.
+This will build a daemon image and `scp` it over to the test VPS, and use that image for the daemon when setting up `testvps` using `inertia local init`
 
 If you run into this error when deploying onto the `testvps`:
 
@@ -240,9 +236,9 @@ You probably need to go into your Docker settings and add this line to the Docke
 
 This sneaky configuration file can be found under `Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
 
-### Inertia Web
+### Web App
 
-To run a local instance of Inertia Web:
+Inertia Web is a React application. To run a local instance of Inertia Web:
 
 ```bash
 $> make web-run

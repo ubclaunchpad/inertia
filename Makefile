@@ -1,4 +1,4 @@
-.PHONY: commands inertia inertia-tagged clean test testv testenv testdaemon daemon bootstrap web-deps web-run web-build
+.PHONY: commands inertia inertia-tagged clean test test-v testenv testdaemon daemon bootstrap web-deps web-run web-build
 
 TAG = `git describe --tags`
 PACKAGES = `go list ./... | grep -v vendor/`
@@ -9,6 +9,7 @@ RELEASE = canary
 
 all: inertia
 
+# List all commands
 commands:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
@@ -32,7 +33,7 @@ test:
 	go test $(PACKAGES) -ldflags "-X main.Version=test" --cover
 
 # Run test suite - creates test VPS and test daemon beforehand
-testv:
+test-v:
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon	
 	go test $(PACKAGES) -ldflags "-X main.Version=test" -v --cover
