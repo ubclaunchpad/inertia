@@ -24,7 +24,7 @@ type PermissionsHandler struct {
 // users and handling user administration
 func NewPermissionsHandler(dbPath string, denyHandler http.HandlerFunc) (*PermissionsHandler, error) {
 	// Set up user manager
-	userManager, err := newUserManager(dbPath)
+	userManager, err := newUserManager(dbPath, 120)
 	if err != nil {
 		return nil, err
 	}
@@ -91,13 +91,10 @@ func (handler *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http
 	}
 
 	// Add user (as admin if specified)
-	err = handler.users.AddUser(userReq.Username, userReq.Password)
+	err = handler.users.AddUser(userReq.Username, userReq.Password, userReq.Admin)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-	if userReq.Admin {
-		handler.users.AssignAdmin(userReq.Username)
 	}
 
 	w.Header().Set("Content-Type", "text/html")
@@ -156,5 +153,5 @@ func (handler *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.R
 	if !correct {
 		http.Error(w, "Login failed", http.StatusForbidden)
 	}
-	handler.users.LogIn(userReq.Username)
+	handler.users.SessionBegin(userReq.Username)
 }

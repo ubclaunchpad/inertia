@@ -19,10 +19,10 @@ func TestCorrectPassowrd(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEqual(t, unhashed, hashed)
 
-	correct := correctPassword([]byte(hashed), unhashed)
+	correct := correctPassword(hashed, unhashed)
 	assert.True(t, correct)
 
-	correct = correctPassword([]byte(hashed), "ummmmm")
+	correct = correctPassword(hashed, "ummmmm")
 	assert.False(t, correct)
 }
 

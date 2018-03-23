@@ -20,8 +20,8 @@ func hashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-func correctPassword(hash []byte, password string) bool {
-	return bcrypt.CompareHashAndPassword(hash, []byte(password)) == nil
+func correctPassword(hash string, password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
 func validateCredentialValues(username, password string) error {
