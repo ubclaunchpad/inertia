@@ -36,6 +36,9 @@ Use the --admin flag to create an admin user.`,
 			log.Fatal(err)
 		}
 		admin, err := cmd.Flags().GetBool("admin")
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Print("Enter a password for user: ")
 		bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
