@@ -1,42 +1,30 @@
-package daemon
+package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
-
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
 // daemonVersion indicates the daemon's corresponding Inertia daemonVersion
 var daemonVersion string
 
 const (
-	// specify location of deployed project
-	projectDirectory = "/app/host/project"
-
 	// specify location of SSL certificate
 	sslDirectory  = "/app/host/ssl/"
 	daemonSSLCert = sslDirectory + "daemon.cert"
 	daemonSSLKey  = sslDirectory + "daemon.key"
 
-	// specify docker-compose version
-	dockerCompose = "docker/compose:1.18.0"
-
-	// specify common responses here
-	noContainersResp            = "There are currently no active containers."
-	malformedAuthStringErrorMsg = "Malformed authentication string"
-	tokenInvalidErrorMsg        = "Token invalid"
-
 	defaultSecret = "inertia"
 )
 
-// Run starts the daemon
-func Run(host, port, version string) {
+// run starts the daemon
+func run(host, port, version string) {
 	daemonVersion = version
 
 	// Download docker-compose image
@@ -47,7 +35,7 @@ func Run(host, port, version string) {
 		println("Failed to start Docker client - shutting down daemon.")
 		return
 	}
-	_, err = cli.ImagePull(context.Background(), dockerCompose, types.ImagePullOptions{})
+	_, err = cli.ImagePull(context.Background(), project.DockerComposeVersion, types.ImagePullOptions{})
 	if err != nil {
 		println(err.Error())
 		println("Failed to pull docker-compose image - shutting down daemon.")
@@ -67,33 +55,34 @@ func Run(host, port, version string) {
 	// If they are not available, generate new ones.
 	if !sslRequirementsPresent {
 		println("No certificates found - generating new ones...")
-		err = generateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port)
+		err = auth.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
 		if err != nil {
 			println(err.Error())
 			return
 		}
 	}
 
-	// Run daemon on port
-	println("Serving daemon on port " + port)
+	// API endpoints
 	mux := http.NewServeMux()
+	mux.HandleFunc("/up", auth.Authorized(upHandler, auth.GetAPIPrivateKey))
+	mux.HandleFunc("/down", auth.Authorized(downHandler, auth.GetAPIPrivateKey))
+	mux.HandleFunc("/status", auth.Authorized(statusHandler, auth.GetAPIPrivateKey))
+	mux.HandleFunc("/reset", auth.Authorized(resetHandler, auth.GetAPIPrivateKey))
+	mux.HandleFunc("/logs", auth.Authorized(logHandler, auth.GetAPIPrivateKey))
+	mux.HandleFunc("/health-check", auth.Authorized(auth.HealthCheckHandler, auth.GetAPIPrivateKey))
+
+	// GitHub webhook endpoint
 	mux.HandleFunc("/", gitHubWebHookHandler)
-	mux.HandleFunc("/up", authorized(upHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/down", authorized(downHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/status", authorized(statusHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/reset", authorized(resetHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/logs", authorized(logHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/health-check", authorized(healthCheckHandler, GetAPIPrivateKey))
+
+	// Inertia web
+	mux.Handle("/admin/", http.StripPrefix("/admin/", http.FileServer(http.Dir("/app/inertia-web"))))
+
+	// Serve daemon on port
+	println("Serving daemon on port " + port)
 	println(http.ListenAndServeTLS(
 		":"+port,
 		daemonSSLCert,
 		daemonSSLKey,
 		mux,
 	))
-}
-
-// healthCheckHandler returns a 200 if the daemon is happy.
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, common.DaemonOkResp)
 }

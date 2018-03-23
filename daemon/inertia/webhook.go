@@ -1,17 +1,16 @@
-package daemon
+package main
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 // gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
@@ -51,19 +50,19 @@ func processPushEvent(event *github.PushEvent) {
 
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
-	err := common.CheckForGit(projectDirectory)
+	err := common.CheckForGit(project.Directory)
 	if err != nil {
 		println("No git repository present - try running 'inertia $REMOTE up'")
 		return
 	}
 
 	// Check for matching remotes
-	localRepo, err := git.PlainOpen(projectDirectory)
+	localRepo, err := git.PlainOpen(project.Directory)
 	if err != nil {
 		println(err.Error())
 		return
 	}
-	err = common.CompareRemotes(localRepo, common.GetSSHRemoteURL(repo.GetGitURL()))
+	err = project.CompareRemotes(localRepo, common.GetSSHRemoteURL(repo.GetGitURL()))
 	if err != nil {
 		println(err.Error())
 		return
@@ -77,13 +76,22 @@ func processPushEvent(event *github.PushEvent) {
 	}
 	if head.Name().Short() == branch {
 		println("Event branch matches deployed branch " + branch)
+		pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
+		if err != nil {
+			return
+		}
+		auth, err := auth.GetGithubKey(pemFile)
+		if err != nil {
+			return
+		}
 		cli, err := docker.NewEnvClient()
 		if err != nil {
 			println(err.Error())
 			return
 		}
 		defer cli.Close()
-		err = deploy(localRepo, branch, projectName, cli, os.Stdout)
+
+		err = project.Deploy(auth, localRepo, branch, project.ProjectName, cli, os.Stdout)
 		if err != nil {
 			println(err.Error())
 		}
@@ -111,37 +119,4 @@ func processPullRequestEvent(event *github.PullRequestEvent) {
 	println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
 	println(fmt.Sprintf("Ref: %s", pr.GetBase().GetRef()))
 	println(fmt.Sprintf("Merge status: %v", merged))
-}
-
-// setUpProject sets up a project for the first time
-func setUpProject(remoteURL, branch string, w io.Writer) error {
-	fmt.Fprintln(w, "Setting up project...")
-	pemFile, err := os.Open(daemonGithubKeyLocation)
-	if err != nil {
-		return err
-	}
-	auth, err := getGithubKey(pemFile)
-	if err != nil {
-		return err
-	}
-
-	// Clone project
-	_, err = common.Clone(projectDirectory, remoteURL, branch, auth, w)
-	if err != nil {
-		if err == common.ErrInvalidGitAuthentication {
-			return gitAuthFailedErr(daemonGithubKeyLocation)
-		}
-		return err
-	}
-	return nil
-}
-
-// GetGithubKey returns an ssh.AuthMethod from the given io.Reader
-// for use with the go-git library
-func getGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
-	bytes, err := ioutil.ReadAll(pemFile)
-	if err != nil {
-		return nil, err
-	}
-	return ssh.NewPublicKeys("git", bytes, "")
 }

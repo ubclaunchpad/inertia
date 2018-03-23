@@ -1,10 +1,11 @@
-package daemon
+package main
 
 import (
 	"fmt"
 	"net/http"
 
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
@@ -15,7 +16,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	inertiaStatus := "inertia daemon " + daemonVersion + "\n"
 
 	// Get status of repository
-	repo, err := git.PlainOpen(projectDirectory)
+	repo, err := git.PlainOpen(project.Directory)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusPreconditionFailed)
 		return
@@ -41,15 +42,15 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	containers, err := getActiveContainers(cli)
+	containers, err := project.GetActiveContainers(cli)
 	if err != nil {
-		if err.Error() == noContainersResp {
+		if err.Error() == project.NoContainersResp {
 			// This is different from having 2 containers active -
 			// noContainersResp means that no attempt to build the project
 			// was made or the project was cleanly shut down.
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, status+noContainersResp)
+			fmt.Fprint(w, status+project.NoContainersResp)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
