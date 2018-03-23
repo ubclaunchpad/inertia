@@ -65,6 +65,7 @@ func TestUp(t *testing.T) {
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
+		assert.Equal(t, "test_project", upReq.Project)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
@@ -81,7 +82,7 @@ func TestUp(t *testing.T) {
 	d, err := getMockDeployment(testServer, memory)
 	assert.Nil(t, err)
 
-	resp, err := d.Up(false)
+	resp, err := d.Up("test_project", false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

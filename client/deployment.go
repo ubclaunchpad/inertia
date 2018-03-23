@@ -14,21 +14,12 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
-// Deployment manages a deployment and implements the
-// DaemonRequester interface.
+// Deployment manages a deployment
 type Deployment struct {
 	*RemoteVPS
 	Repository *git.Repository
 	Auth       string
-}
-
-// DaemonRequester can make HTTP requests to the daemon.
-type DaemonRequester interface {
-	Up(bool) (*http.Response, error)
-	Down() (*http.Response, error)
-	Status() (*http.Response, error)
-	Reset() (*http.Response, error)
-	Logs(bool, string) (*http.Response, error)
+	Project	   string
 }
 
 // GetDeployment returns the local deployment setup
@@ -53,12 +44,14 @@ func GetDeployment(name string) (*Deployment, error) {
 		RemoteVPS:  remote,
 		Repository: repo,
 		Auth:       auth,
+		Project:    config.Project,
 	}, nil
 }
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (d *Deployment) Up(stream bool) (*http.Response, error) {
+func (d *Deployment) Up(project string, stream bool) (*http.Response, error) {
+	// TODO: Support other Git remotes.
 	origin, err := d.Repository.Remote("origin")
 	if err != nil {
 		return nil, err
@@ -66,6 +59,7 @@ func (d *Deployment) Up(stream bool) (*http.Response, error) {
 
 	reqContent := &common.DaemonRequest{
 		Stream: stream,
+		Project: project,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
 			Branch:    d.Branch,

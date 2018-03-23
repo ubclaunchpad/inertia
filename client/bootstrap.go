@@ -147,7 +147,7 @@ func clientBootstrapKeygenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1515346036, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1517083020, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
