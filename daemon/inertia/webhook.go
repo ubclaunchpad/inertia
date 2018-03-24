@@ -13,11 +13,13 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
+var webhookSecret = "inertia"
+
 // gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
 func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.DaemonOkResp)
 
-	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
+	payload, err := github.ValidatePayload(r, []byte(webhookSecret))
 	if err != nil {
 		println(err.Error())
 		return

@@ -17,6 +17,7 @@ type DaemonRequest struct {
 	Container  string      `json:"container,omitempty"`
 	Project    string      `json:"project"`
 	GitOptions *GitOptions `json:"git_options"`
+	Secret     string      `json:"secret"`
 }
 
 // GitOptions represents GitHub-related deployment options

@@ -24,6 +24,7 @@ type DaemonConfig struct {
 	Port    string `toml:"port"`
 	SSHPort string `toml:"ssh_port"`
 	Token   string `toml:"token"`
+	Secret  string `toml:"secret"`
 }
 
 // GetHost creates the user@IP string.
