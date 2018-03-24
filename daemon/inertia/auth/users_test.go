@@ -14,6 +14,7 @@ func TestAddUserAndIsCorrectCredentials(t *testing.T) {
 	defer os.RemoveAll(dir)
 	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
+	defer manager.Close()
 	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
@@ -35,6 +36,7 @@ func TestAddDeleteAndHasUser(t *testing.T) {
 	defer os.RemoveAll(dir)
 	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
+	defer manager.Close()
 	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
@@ -59,6 +61,7 @@ func TestIsAdmin(t *testing.T) {
 	defer os.RemoveAll(dir)
 	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
+	defer manager.Close()
 	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)

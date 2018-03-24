@@ -18,6 +18,7 @@ type PermissionsHandler struct {
 	users       *userManager
 	mux         *http.ServeMux
 	denyHandler http.Handler
+	publicPaths []string
 }
 
 // NewPermissionsHandler returns a new handler for authenticating
@@ -39,6 +40,7 @@ func NewPermissionsHandler(dbPath string, denyHandler http.HandlerFunc) (*Permis
 
 	// The following endpoints are for user administration and must
 	// be used from the CLI and delivered with the daemon token.
+	handler.publicPaths = []string{"/adduser", "/removeuser"}
 	mux.HandleFunc("/adduser", Authorized(handler.addUserHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/removeuser", Authorized(handler.removeUserHandler, GetAPIPrivateKey))
 
@@ -63,6 +65,7 @@ func (handler *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 
 // AttachUserRestrictedHandler attaches and restricts given path and handler to logged in users.
 func (handler *PermissionsHandler) AttachUserRestrictedHandler(path string, h http.Handler) {
+	handler.publicPaths = append(handler.publicPaths, path)
 	// @todo
 	handler.mux.Handle(path, h)
 }
@@ -153,5 +156,13 @@ func (handler *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.R
 	if !correct {
 		http.Error(w, "Login failed", http.StatusForbidden)
 	}
-	handler.users.SessionBegin(userReq.Username)
+	err = handler.users.SessionBegin(userReq.Username, w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "[SUCCESS %d] User %s logged in\n", http.StatusOK, userReq.Username)
 }
