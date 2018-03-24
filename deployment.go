@@ -10,9 +10,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/client"
-	"os"
 )
 
 var deploymentUpCmd = &cobra.Command{
@@ -110,48 +108,13 @@ var deploymentStatusCmd = &cobra.Command{
 	Requires the Inertia daemon to be active on your remote - do this by 
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := client.GetProjectConfigFromDisk()
-		if err != nil {
-			log.WithError(err)
-		}
-		remotename := strings.Split(cmd.Parent().Use, " ")[0]
-		remote, found := config.GetRemote(remotename)
-		if !found {
-			println("No such remote " + remotename)
-			println("Inertia currently supports one remote per repository")
-			println("Run `inertia remote -v' to see what remote is available")
-			os.Exit(1)
-		}
-
-		host := "http://" + remote.GetIPAndPort()
-		remoteResp, err := http.Get(host)
-		if err != nil {
-			println("Could not connect to daemon")
-			println("Try running inertia [REMOTE] init")
-			return
-		}
-		defer remoteResp.Body.Close()
-		remoteBody, err := ioutil.ReadAll(remoteResp.Body)
-		if err != nil {
-			println("Bad response from daemon")
-			println("Try running inertia [REMOTE] init")
-			return
-		}
-
-		if string(remoteBody) != common.DaemonOkResp {
-			println("Could not connect to daemon")
-			println("Try running inertia [REMOTE] init")
-			return
-		}
-
-		//fmt.Printf("Remote instance '%s' accepting requests at %s\n",
-		//	remotename, host)
 
 		// Get status of the deployment
 		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
+		host := "http://" + deployment.RemoteVPS.GetIPAndPort()
 		resp, err := deployment.Status()
 		if err != nil {
 			log.WithError(err)
@@ -165,8 +128,8 @@ var deploymentStatusCmd = &cobra.Command{
 
 		switch resp.StatusCode {
 		case http.StatusOK:
-			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode,remotename, host)
-			fmt.Printf(" %s", body)
+			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode, deployment.Name, host)
+			fmt.Printf("%s", body)
 		case http.StatusForbidden:
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		case http.StatusNotFound:
