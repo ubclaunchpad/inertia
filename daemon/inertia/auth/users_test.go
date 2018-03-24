@@ -42,16 +42,14 @@ func TestAddDeleteAndHasUser(t *testing.T) {
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
 
-	found, err := manager.HasUser("bobheadxi")
+	err = manager.HasUser("bobheadxi")
 	assert.Nil(t, err)
-	assert.True(t, found)
 
 	err = manager.RemoveUser("bobheadxi")
 	assert.Nil(t, err)
 
-	found, err = manager.HasUser("bobheadxi")
-	assert.Nil(t, err)
-	assert.False(t, found)
+	err = manager.HasUser("bobheadxi")
+	assert.Equal(t, errUserNotFound, err)
 }
 
 func TestIsAdmin(t *testing.T) {

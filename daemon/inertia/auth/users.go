@@ -22,9 +22,9 @@ type userProps struct {
 	Admin          bool   `json:"admin"`
 }
 
-// sessionProps are properties associated with session,
+// session are properties associated with session,
 // used for database entries
-type sessionProps struct {
+type session struct {
 	Username string    `json:"username"`
 	Expires  time.Time `json:"created"`
 }
@@ -34,21 +34,23 @@ type userManager struct {
 	cookieName    string
 	cookieTimeout int64
 
-	// bolt.DB is an embedded key/value database,
-	// where each "bucket" is a collection
-	db             *bolt.DB
-	usersBucket    []byte
-	sessionsBucket []byte
+	// db is a boltdb database, which is an embedded
+	// key/value database where each "bucket" is a collection
+	db          *bolt.DB
+	usersBucket []byte
 
+	// sessions is a map of active user sessions
+	sessions          map[string]*session
 	endSessionCleanup chan bool
 }
 
 func newUserManager(dbPath string, timeout int64) (*userManager, error) {
 	manager := &userManager{
-		cookieName:     "ubclaunchpad/inertia",
-		cookieTimeout:  timeout,
-		usersBucket:    []byte("users"),
-		sessionsBucket: []byte("sessions"),
+		cookieName:        "ubclaunchpad/inertia",
+		cookieTimeout:     timeout,
+		usersBucket:       []byte("users"),
+		sessions:          make(map[string]*session),
+		endSessionCleanup: make(chan bool),
 	}
 
 	// Set up database
@@ -58,20 +60,9 @@ func newUserManager(dbPath string, timeout int64) (*userManager, error) {
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err = tx.CreateBucketIfNotExists(manager.usersBucket)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.CreateBucketIfNotExists(manager.sessionsBucket)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	})
 	manager.db = db
-
-	manager.endSessionCleanup = make(chan bool)
 	go manager.cleanSessions()
 
 	return manager, nil
@@ -81,8 +72,6 @@ func (m *userManager) Close() error {
 	m.endSessionCleanup <- true
 	return m.db.Close()
 }
-
-// User Administration Functions
 
 func (m *userManager) AddUser(username, password string, admin bool) error {
 	err := validateCredentialValues(username, password)
@@ -111,9 +100,7 @@ func (m *userManager) RemoveUser(username string) error {
 	})
 }
 
-// User Checks
-
-func (m *userManager) HasUser(username string) (bool, error) {
+func (m *userManager) HasUser(username string) error {
 	found := false
 	err := m.db.View(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
@@ -124,9 +111,12 @@ func (m *userManager) HasUser(username string) (bool, error) {
 		return nil
 	})
 	if err != nil {
-		return true, err
+		return err
 	}
-	return found, nil
+	if !found {
+		return errUserNotFound
+	}
+	return nil
 }
 
 func (m *userManager) IsCorrectCredentials(username, password string) (bool, error) {
@@ -135,7 +125,7 @@ func (m *userManager) IsCorrectCredentials(username, password string) (bool, err
 		users := tx.Bucket(m.usersBucket)
 		propsBytes := users.Get([]byte(username))
 		if propsBytes == nil {
-			return errors.New("User not found")
+			return errUserNotFound
 		}
 
 		props := &userProps{}
@@ -167,17 +157,19 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 	return admin, err
 }
 
-// Session Management
-
-func (m *userManager) SessionBegin(username string, w http.ResponseWriter, r *http.Request) error {
+// SessionBegin starts and returns a new session or returns an existing session
+func (m *userManager) SessionBegin(username string, w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(m.cookieName)
+
 	if err != nil || cookie.Value == "" {
-		id := generateSessionID()
+		// Create new session and cookie if no cookie yet
 		expiration := time.Now().Add(time.Duration(m.cookieTimeout) * time.Minute)
-		err := m.addSession(id, username, expiration)
-		if err != nil {
-			return err
+		s := &session{
+			Username: username,
+			Expires:  expiration,
 		}
+		id := generateSessionID()
+		m.sessions[id] = s
 		cookie := http.Cookie{
 			Name:     m.cookieName,
 			Value:    url.QueryEscape(id),
@@ -186,16 +178,24 @@ func (m *userManager) SessionBegin(username string, w http.ResponseWriter, r *ht
 			HttpOnly: true,
 		}
 		http.SetCookie(w, &cookie)
+	} else {
+		// Otherwise, end existing session and begin a new one
+		m.SessionEnd(w, r)
+		m.SessionBegin(username, w, r)
 	}
-	return nil
 }
 
+// SessionEnd ends a session and sets cookie to expire
 func (m *userManager) SessionEnd(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(m.cookieName)
 	if err != nil || cookie.Value == "" {
 		return
 	}
-	m.removeSession(cookie.Value)
+	id, err := url.QueryUnescape(cookie.Value)
+	if err != nil {
+		return
+	}
+	delete(m.sessions, id)
 	expiration := time.Now()
 	newCookie := http.Cookie{
 		Name:     m.cookieName,
@@ -207,58 +207,29 @@ func (m *userManager) SessionEnd(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &newCookie)
 }
 
-func (m *userManager) SessionCheck(w http.ResponseWriter, r *http.Request) (bool, error) {
+// GetSession verifies if given request is from a valid session and returns it
+func (m *userManager) GetSession(w http.ResponseWriter, r *http.Request) (*session, error) {
 	cookie, err := r.Cookie(m.cookieName)
 	if err != nil || cookie.Value == "" {
-		return false, err
+		return nil, err
 	}
-	s, err := m.getSession(cookie.Value)
+	id, err := url.QueryUnescape(cookie.Value)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	return m.isValidSession(s), nil
+	s, found := m.sessions[id]
+	if !found {
+		return nil, errSessionNotFound
+	}
+	if !m.isValidSession(s) {
+		m.SessionEnd(w, r)
+		return nil, errSessionNotFound
+	}
+	return s, nil
 }
 
-// Session Helpers
-
-func (m *userManager) removeSession(id string) error {
-	return m.db.Update(func(tx *bolt.Tx) error {
-		sessions := tx.Bucket(m.sessionsBucket)
-		return sessions.Delete([]byte(id))
-	})
-}
-
-func (m *userManager) addSession(id, username string, expires time.Time) error {
-	props := sessionProps{Username: username, Expires: expires}
-	return m.db.Update(func(tx *bolt.Tx) error {
-		sessions := tx.Bucket(m.sessionsBucket)
-		bytes, err := json.Marshal(props)
-		if err != nil {
-			return err
-		}
-		return sessions.Put([]byte(id), bytes)
-	})
-}
-
-func (m *userManager) getSession(id string) (*sessionProps, error) {
-	props := &sessionProps{}
-	err := m.db.View(func(tx *bolt.Tx) error {
-		users := tx.Bucket(m.sessionsBucket)
-		propsBytes := users.Get([]byte(id))
-		if propsBytes != nil {
-			err := json.Unmarshal(propsBytes, props)
-			if err != nil {
-				return errors.New("Corrupt session properties: " + err.Error())
-			}
-		} else {
-			return errSessionNotFound
-		}
-		return nil
-	})
-	return props, err
-}
-
-func (m *userManager) isValidSession(s *sessionProps) bool {
+// isValidSession checks if session is expired
+func (m *userManager) isValidSession(s *session) bool {
 	return s.Expires.Before(time.Now())
 }
 
@@ -269,25 +240,11 @@ func (m *userManager) cleanSessions() {
 		case <-m.endSessionCleanup:
 			return
 		default:
-			m.db.Update(func(tx *bolt.Tx) error {
-				sessions := tx.Bucket(m.sessionsBucket)
-				c := sessions.Cursor()
-				for k, v := c.First(); k != nil; k, v = c.Next() {
-					s := &sessionProps{}
-					err := json.Unmarshal(v, s)
-					if err != nil {
-						println(err)
-						continue
-					}
-					if !m.isValidSession(s) {
-						err = sessions.Delete(k)
-						if err != nil {
-							println(err)
-						}
-					}
+			for id, s := range m.sessions {
+				if !m.isValidSession(s) {
+					delete(m.sessions, id)
 				}
-				return nil
-			})
+			}
 			time.AfterFunc(
 				time.Duration(m.cookieTimeout)*time.Minute,
 				func() { m.cleanSessions() },

@@ -19,6 +19,7 @@ type PermissionsHandler struct {
 	mux         *http.ServeMux
 	denyHandler http.Handler
 	publicPaths []string
+	adminPaths  []string
 }
 
 // NewPermissionsHandler returns a new handler for authenticating
@@ -51,34 +52,63 @@ func NewPermissionsHandler(dbPath string, denyHandler http.HandlerFunc) (*Permis
 }
 
 // Close releases resources held by the PermissionsHandler
-func (handler *PermissionsHandler) Close() error {
-	return handler.users.Close()
+func (h *PermissionsHandler) Close() error {
+	return h.users.Close()
 }
 
 // Implement the ServeHTTP method to make a permissionHandler a http.Handler
-func (handler *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Check if the user has the right admin/user rights
+func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Check if path is public
+	// @todo
+
+	// Check if session and user is valid
+	s, err := h.users.GetSession(w, r)
+	if err != nil {
+		if err == errSessionNotFound {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	err = h.users.HasUser(s.Username)
+	if err != nil {
+		if err == errUserNotFound {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Check if user has sufficient permissions for path
+	// @todo
 
 	// Serve the requested page if permissions were granted
-	handler.mux.ServeHTTP(w, r)
+	h.mux.ServeHTTP(w, r)
+}
+
+// AttachPublicHandler attaches given path and handler and makes it publicly available
+func (h *PermissionsHandler) AttachPublicHandler(path string, handler http.Handler) {
+	h.publicPaths = append(h.publicPaths, path)
+	// @todo
+	h.mux.Handle(path, handler)
 }
 
 // AttachUserRestrictedHandler attaches and restricts given path and handler to logged in users.
-func (handler *PermissionsHandler) AttachUserRestrictedHandler(path string, h http.Handler) {
-	handler.publicPaths = append(handler.publicPaths, path)
+func (h *PermissionsHandler) AttachUserRestrictedHandler(path string, handler http.Handler) {
 	// @todo
-	handler.mux.Handle(path, h)
+	h.mux.Handle(path, handler)
 }
 
 // AttachAdminRestrictedHandler attaches and restricts given path and handler to logged in admins.
-func (handler *PermissionsHandler) AttachAdminRestrictedHandler(path string, h http.Handler) {
+func (h *PermissionsHandler) AttachAdminRestrictedHandler(path string, handler http.Handler) {
+	h.adminPaths = append(h.publicPaths, path)
 	// @todo
-	handler.mux.Handle(path, h)
+	h.mux.Handle(path, handler)
 }
 
-// User Administration Endpoint Handlers
-
-func (handler *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -94,7 +124,7 @@ func (handler *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http
 	}
 
 	// Add user (as admin if specified)
-	err = handler.users.AddUser(userReq.Username, userReq.Password, userReq.Admin)
+	err = h.users.AddUser(userReq.Username, userReq.Password, userReq.Admin)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -105,7 +135,7 @@ func (handler *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http
 	fmt.Fprintf(w, "[SUCCESS %d] User %s added!\n", http.StatusCreated, userReq.Username)
 }
 
-func (handler *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -121,7 +151,7 @@ func (handler *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *h
 	}
 
 	// Remove user
-	err = handler.users.RemoveUser(userReq.Username)
+	err = h.users.RemoveUser(userReq.Username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -132,7 +162,7 @@ func (handler *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *h
 	fmt.Fprintf(w, "[SUCCESS %d] User %s removed\n", http.StatusOK, userReq.Username)
 }
 
-func (handler *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -148,19 +178,16 @@ func (handler *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.R
 	}
 
 	// Log in user if password is correct
-	correct, err := handler.users.IsCorrectCredentials(userReq.Username, userReq.Password)
+	correct, err := h.users.IsCorrectCredentials(userReq.Username, userReq.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if !correct {
 		http.Error(w, "Login failed", http.StatusForbidden)
-	}
-	err = handler.users.SessionBegin(userReq.Username, w, r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	h.users.SessionBegin(userReq.Username, w, r)
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
