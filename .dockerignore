@@ -1,11 +1,11 @@
 # Misc
-.github/*
-.scripts/*
-.static/*
+.github
+.scripts
+.static
 Makefile
 
 # Test environment
-test_env/
+test_env
 
 # Documentation
 README.md
@@ -17,3 +17,9 @@ README.md
 # Docker config files
 Dockerfile
 .dockerignore
+
+# Non-daemon source code
+client
+
+# Node depedencies
+node_modules

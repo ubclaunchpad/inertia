@@ -1,30 +1,40 @@
-# Builds a tiny little image to ship the inertia binary in.
+# This Dockerfile builds a tiny little image to ship the Inertia daemon in.
 
-# Build the source in a preliminary container.
-FROM golang:alpine AS build-env
-
-ENV INERTIA_BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia \
-    INERTIA_DAEMON='true'
-
+### Part 1 - Building the Web Client
+FROM node:carbon AS web-build-env
+ENV BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia/daemon/web
 # Mount source code.
-ADD . ${INERTIA_BUILD_HOME}
-WORKDIR ${INERTIA_BUILD_HOME}
+ADD ./daemon/web ${BUILD_HOME}
+WORKDIR ${BUILD_HOME}
+# Build and minify client.
+RUN npm install --production
+RUN npm run build
 
+### Part 2 - Building the Inertia daemon
+FROM golang:alpine AS daemon-build-env
+ENV BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia
+# Mount source code.
+ADD . ${BUILD_HOME}
+WORKDIR ${BUILD_HOME}
 # Install dependencies if not already available.
 RUN apk add --update --no-cache git
 RUN if [ ! -d "vendor" ]; then \
     go get -u github.com/golang/dep/cmd/dep; \
     dep ensure; \
     fi
+# Build daemon binary.
+RUN go build -o /bin/inertia \
+    -ldflags "-X main.Version=$(git describe --tags)" \
+    ./daemon/inertia
 
-# Build Inertia.
-RUN go build -o /bin/inertia -ldflags "-X main.Version=$(git describe --tags)"
-
-# Copy the binary into a smaller image.
+### Part 3 - Copy builds into combined image
 FROM alpine
 LABEL maintainer "UBC Launchpad team@ubclaunchpad.com"
 WORKDIR /app
-COPY --from=build-env /bin/inertia /usr/local/bin
+COPY --from=daemon-build-env /bin/inertia /usr/local/bin
+COPY --from=web-build-env \
+    /go/src/github.com/ubclaunchpad/inertia/daemon/web/public/ \
+    /app/inertia-web
 
-# Container serves daemon by default.
-ENTRYPOINT ["inertia", "daemon", "run"]
+# Serve the daemon by default.
+ENTRYPOINT ["inertia", "run"]

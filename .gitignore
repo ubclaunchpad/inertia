@@ -1,8 +1,9 @@
-# Binaries for programs and plugins
+# Binaries
 *.exe
 *.dll
 *.so
 *.dylib
+inertia.*
 
 # Test binary, build with `go test -c`
 *.test
@@ -19,9 +20,12 @@ vendor
 # Development
 .vscode
 
-# Binaries
-inertia
-inertia.*
-
 # Docker images
 inertia-daemon-image
+
+# mac
+.DS_Store
+
+# Inertia web
+node_modules/
+public/

@@ -11,12 +11,7 @@ import (
 )
 
 func TestRemoteAddWalkthrough(t *testing.T) {
-	mockCallback := func(r *client.RemoteVPS) error {
-		assert.Equal(t, "pemfile", r.PEM)
-		assert.Equal(t, "user", r.User)
-		assert.Equal(t, "0.0.0.0", r.IP)
-		return nil
-	}
+	config := &client.Config{Remotes: make([]*client.RemoteVPS, 0)}
 	in, err := ioutil.TempFile("", "")
 	assert.Nil(t, err)
 	defer in.Close()
@@ -29,14 +24,17 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", mockCallback)
+	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", config)
+	r, found := config.GetRemote("inertia-rocks")
+	assert.True(t, found)
+	assert.Equal(t, "pemfile", r.PEM)
+	assert.Equal(t, "user", r.User)
+	assert.Equal(t, "0.0.0.0", r.IP)
 	assert.Nil(t, err)
 }
 
 func TestRemoteAddWalkthroughFailure(t *testing.T) {
-	mockCallback := func(r *client.RemoteVPS) error {
-		return nil
-	}
+	config := &client.Config{Remotes: make([]*client.RemoteVPS, 0)}
 	in, err := ioutil.TempFile("", "")
 	assert.Nil(t, err)
 	defer in.Close()
@@ -47,13 +45,13 @@ func TestRemoteAddWalkthroughFailure(t *testing.T) {
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", mockCallback)
+	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", config)
 	assert.Equal(t, errInvalidUser, err)
 
 	in.WriteAt([]byte("pemfile\nuser\n\n"), 0)
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", mockCallback)
+	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", config)
 	assert.Equal(t, errInvalidAddress, err)
 }

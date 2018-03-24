@@ -51,7 +51,7 @@ func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, err
 }
 
 func TestUp(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
@@ -65,6 +65,7 @@ func TestUp(t *testing.T) {
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
+		assert.Equal(t, "test_project", upReq.Project)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
@@ -81,13 +82,13 @@ func TestUp(t *testing.T) {
 	d, err := getMockDeployment(testServer, memory)
 	assert.Nil(t, err)
 
-	resp, err := d.Up(false)
+	resp, err := d.Up("test_project", false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func TestDown(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
@@ -114,7 +115,7 @@ func TestDown(t *testing.T) {
 }
 
 func TestStatus(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
@@ -141,7 +142,7 @@ func TestStatus(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
@@ -168,7 +169,7 @@ func TestReset(t *testing.T) {
 }
 
 func TestLogs(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
