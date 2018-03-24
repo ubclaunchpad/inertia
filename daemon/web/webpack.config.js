@@ -1,14 +1,9 @@
 /* eslint-disable */
 const webpack = require('webpack');
-const MinifyPlugin = require('babel-minify-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const HtmlWebpackPluginConfig = new HtmlWebpackPlugin({
-  template: './index.html',
-  filename: 'index.html',
-  inject: 'body',
-})
 
 const config = {
+  mode: 'development',
   entry: './index.js',
   output: {
     path: `${__dirname}/public/`,
@@ -22,21 +17,34 @@ const config = {
   },
   devtool: 'inline-source-map',
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.jsx?$/,
         exclude: '/node_modules/',
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015', 'react'],
-        },
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['es2015', 'react'],
+            },
+          }
+        ],
       },
     ],
   },
   plugins: [
     new webpack.EnvironmentPlugin(['NODE_ENV']),
-    HtmlWebpackPluginConfig,
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.DefinePlugin({
+      // suppress react devtools console warning
+      '__REACT_DEVTOOLS_GLOBAL_HOOK__': '({ isDisabled: true })'
+    }),
+    new HtmlWebpackPlugin({
+      template: './index.html',
+      filename: 'index.html',
+      inject: 'body',
+    })
   ]
 };
 
-module.exports = env => config;
+module.exports = config;
