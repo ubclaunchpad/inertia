@@ -13,7 +13,7 @@ func getTestUserManager(dir string) (*userManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newUserManager(path.Join(dir, "users.db"), "127.0.0.1", "/", 120)
+	return newUserManager(path.Join(dir, "users.db"))
 }
 
 func TestAddUserAndIsCorrectCredentials(t *testing.T) {

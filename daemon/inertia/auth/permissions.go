@@ -18,6 +18,7 @@ const UserDatabasePath = "/app/host/.inertia/users.db"
 type PermissionsHandler struct {
 	domain      string
 	users       *userManager
+	sessions    *sessionManager
 	mux         *http.ServeMux
 	publicPaths []string
 	adminPaths  []string
@@ -27,16 +28,20 @@ type PermissionsHandler struct {
 // users and handling user administration
 func NewPermissionsHandler(dbPath, domain, path string, timeout int) (*PermissionsHandler, error) {
 	// Set up user manager
-	userManager, err := newUserManager(dbPath, domain, path, timeout)
+	userManager, err := newUserManager(dbPath)
 	if err != nil {
 		return nil, err
 	}
+
+	// Set up session manager
+	sessionManager := newSessionManager(domain, path, timeout)
 
 	// Set up permissions handler
 	mux := http.NewServeMux()
 	handler := &PermissionsHandler{
 		domain:     domain,
 		users:      userManager,
+		sessions:   sessionManager,
 		mux:        mux,
 		adminPaths: make([]string, 0),
 	}
@@ -61,6 +66,7 @@ func NewPermissionsHandler(dbPath, domain, path string, timeout int) (*Permissio
 
 // Close releases resources held by the PermissionsHandler
 func (h *PermissionsHandler) Close() error {
+	h.sessions.Close()
 	return h.users.Close()
 }
 
@@ -77,7 +83,7 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if session is valid
-	s, err := h.users.GetSession(w, r)
+	s, err := h.sessions.GetSession(w, r)
 	if err != nil {
 		if err == errSessionNotFound || err == errCookieNotFound {
 			http.Error(w, err.Error(), http.StatusForbidden)
@@ -178,12 +184,15 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Remove user
+	// Remove user credentials
 	err = h.users.RemoveUser(userReq.Username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// End user sessions
+	h.sessions.EndAllUserSessions(userReq.Username)
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
@@ -191,11 +200,15 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Request) {
+	// Delete all users
 	err := h.users.Reset()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Delete all sessions
+	h.sessions.EndAllSessions()
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
@@ -227,7 +240,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Login failed", http.StatusForbidden)
 		return
 	}
-	h.users.SessionBegin(userReq.Username, w, r)
+	h.sessions.BeginSession(userReq.Username, w, r)
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "[SUCCESS %d] User %s logged in\n", http.StatusOK, userReq.Username)
