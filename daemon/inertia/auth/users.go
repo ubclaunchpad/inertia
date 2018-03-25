@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"golang.org/x/sync/syncmap"
 )
 
 var (
@@ -43,7 +44,7 @@ type userManager struct {
 	usersBucket []byte
 
 	// sessions is a map of active user sessions
-	sessions          map[string]*session
+	sessions          *syncmap.Map
 	endSessionCleanup chan bool
 }
 
@@ -54,7 +55,7 @@ func newUserManager(dbPath, domain, path string, timeout int) (*userManager, err
 		cookiePath:        path,
 		cookieTimeout:     time.Duration(timeout) * time.Minute,
 		usersBucket:       []byte("users"),
-		sessions:          make(map[string]*session),
+		sessions:          &syncmap.Map{},
 		endSessionCleanup: make(chan bool),
 	}
 
@@ -68,7 +69,26 @@ func newUserManager(dbPath, domain, path string, timeout int) (*userManager, err
 		return err
 	})
 	manager.db = db
-	go manager.cleanSessions()
+
+	// Set up session cleanup goroutine
+	ticker := time.NewTicker(manager.cookieTimeout)
+	go func() {
+		for {
+			select {
+			case <-manager.endSessionCleanup:
+				ticker.Stop()
+				return
+			case <-ticker.C:
+				manager.sessions.Range(func(id, s interface{}) bool {
+					session, ok := s.(*session)
+					if !ok || !manager.isValidSession(session) {
+						manager.sessions.Delete(id)
+					}
+					return true
+				})
+			}
+		}
+	}()
 
 	return manager, nil
 }
@@ -81,7 +101,7 @@ func (m *userManager) Close() error {
 
 // Reset deletes all users and drops all active sessions
 func (m *userManager) Reset() error {
-	m.sessions = make(map[string]*session)
+	m.sessions = &syncmap.Map{}
 	return m.db.Update(func(tx *bolt.Tx) error {
 		err := tx.DeleteBucket(m.usersBucket)
 		if err != nil {
@@ -192,7 +212,7 @@ func (m *userManager) SessionBegin(username string, w http.ResponseWriter, r *ht
 		Username: username,
 		Expires:  expiration,
 	}
-	m.sessions[id] = s
+	m.sessions.Store(id, s)
 	http.SetCookie(w, &http.Cookie{
 		Name:     m.cookieName,
 		Value:    url.QueryEscape(id),
@@ -213,7 +233,7 @@ func (m *userManager) SessionEnd(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	delete(m.sessions, id)
+	m.sessions.Delete(id)
 	expiration := time.Now()
 	newCookie := http.Cookie{
 		Name:     m.cookieName,
@@ -236,44 +256,34 @@ func (m *userManager) GetSession(w http.ResponseWriter, r *http.Request) (*sessi
 	if err != nil {
 		return nil, err
 	}
-	s, found := m.sessions[id]
+	s, found := m.sessions.Load(id)
 	if !found {
 		return nil, errSessionNotFound
 	}
-	if !m.isValidSession(s) {
+	session, ok := s.(*session)
+	if !ok {
+		m.sessions.Delete(id)
+		return nil, errSessionNotFound
+	}
+	if !m.isValidSession(session) {
 		m.SessionEnd(w, r)
 		return nil, errSessionNotFound
 	}
-	return s, nil
+	return session, nil
 }
 
 // endAllUserSessions removes all active sessions with given user
 func (m *userManager) endAllUserSessions(username string) {
-	for id, s := range m.sessions {
-		if s.Username == username {
-			delete(m.sessions, id)
+	m.sessions.Range(func(id, s interface{}) bool {
+		session, ok := s.(*session)
+		if !ok || session.Username == username {
+			m.sessions.Delete(id)
 		}
-	}
+		return true
+	})
 }
 
 // isValidSession checks if session is expired
 func (m *userManager) isValidSession(s *session) bool {
 	return s.Expires.After(time.Now())
-}
-
-// cleanSessions is a goroutine that continously cleans sessions
-func (m *userManager) cleanSessions() {
-	for {
-		select {
-		case <-m.endSessionCleanup:
-			return
-		default:
-			for id, s := range m.sessions {
-				if !m.isValidSession(s) {
-					delete(m.sessions, id)
-				}
-			}
-			time.AfterFunc(m.cookieTimeout, func() { m.cleanSessions() })
-		}
-	}
 }

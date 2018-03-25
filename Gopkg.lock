@@ -183,6 +183,8 @@
 [[projects]]
   name = "golang.org/x/crypto"
   packages = [
+    "bcrypt",
+    "blowfish",
     "cast5",
     "curve25519",
     "ed25519",
@@ -211,6 +213,12 @@
     "proxy"
   ]
   revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sync"
+  packages = ["syncmap"]
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   branch = "master"
@@ -302,6 +310,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "327be67df8f02606e468ee931ddc33a045bf1422ccc9f3903acb143f3df39d39"
+  inputs-digest = "c5619a919aad6ebb7d08707dfc91e764d33cc622b05731d8e82c431eb93226b9"
   solver-name = "gps-cdcl"
   solver-version = 1
