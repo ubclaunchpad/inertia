@@ -54,7 +54,7 @@ func NewPermissionsHandler(dbPath, domain, path string, timeout int) (*Permissio
 	// be used from the CLI and delivered with the daemon token.
 	mux.HandleFunc("/adduser", Authorized(handler.addUserHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/removeuser", Authorized(handler.removeUserHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/resetusers", Authorized(handler.removeUserHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/resetusers", Authorized(handler.resetUsersHandler, GetAPIPrivateKey))
 
 	return handler, nil
 }
@@ -79,7 +79,7 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check if session is valid
 	s, err := h.users.GetSession(w, r)
 	if err != nil {
-		if err == errSessionNotFound {
+		if err == errSessionNotFound || err == errCookieNotFound {
 			http.Error(w, err.Error(), http.StatusForbidden)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

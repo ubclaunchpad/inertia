@@ -230,7 +230,7 @@ func (m *userManager) SessionEnd(w http.ResponseWriter, r *http.Request) {
 func (m *userManager) GetSession(w http.ResponseWriter, r *http.Request) (*session, error) {
 	cookie, err := r.Cookie(m.cookieName)
 	if err != nil || cookie.Value == "" {
-		return nil, errSessionNotFound
+		return nil, errCookieNotFound
 	}
 	id, err := url.QueryUnescape(cookie.Value)
 	if err != nil {
