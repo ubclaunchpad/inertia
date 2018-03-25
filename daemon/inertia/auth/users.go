@@ -273,10 +273,7 @@ func (m *userManager) cleanSessions() {
 					delete(m.sessions, id)
 				}
 			}
-			time.AfterFunc(
-				time.Duration(m.cookieTimeout)*time.Minute,
-				func() { m.cleanSessions() },
-			)
+			time.AfterFunc(m.cookieTimeout, func() { m.cleanSessions() })
 		}
 	}
 }

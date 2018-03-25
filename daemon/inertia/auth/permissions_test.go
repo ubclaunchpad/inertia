@@ -23,7 +23,7 @@ func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
 }
 
 func TestServeHTTPPublicPath(t *testing.T) {
-	dir := "./test"
+	dir := "./test_perm"
 	ts := httptest.NewServer(nil)
 	defer ts.Close()
 
@@ -47,7 +47,7 @@ func TestServeHTTPPublicPath(t *testing.T) {
 }
 
 func TestServeHTTPWithUserReject(t *testing.T) {
-	dir := "./test"
+	dir := "./test_perm"
 	ts := httptest.NewServer(nil)
 	defer ts.Close()
 
@@ -71,7 +71,7 @@ func TestServeHTTPWithUserReject(t *testing.T) {
 }
 
 func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
-	dir := "./test"
+	dir := "./test_perm"
 	ts := httptest.NewServer(nil)
 	defer ts.Close()
 
@@ -117,7 +117,7 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 }
 
 func TestServeHTTPDenyNonAdmin(t *testing.T) {
-	dir := "./test"
+	dir := "./test_perm"
 	ts := httptest.NewServer(nil)
 	defer ts.Close()
 
@@ -163,7 +163,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 }
 
 func TestServeHTTPAllowAdmin(t *testing.T) {
-	dir := "./test"
+	dir := "./test_perm"
 	ts := httptest.NewServer(nil)
 	defer ts.Close()
 

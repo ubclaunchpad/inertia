@@ -2,6 +2,7 @@ package auth
 
 import (
 	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,16 +13,15 @@ func getTestUserManager(dir string) (*userManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newUserManager("./test/test.db", "0.0.0.0", "/", 120)
+	return newUserManager(path.Join(dir, "users.db"), "127.0.0.1", "/", 120)
 }
 
 func TestAddUserAndIsCorrectCredentials(t *testing.T) {
-	dir := "./test"
+	dir := "./test_users"
 	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
 	assert.Nil(t, err)
 	defer manager.Close()
-	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
@@ -36,12 +36,11 @@ func TestAddUserAndIsCorrectCredentials(t *testing.T) {
 }
 
 func TestAddDeleteAndHasUser(t *testing.T) {
-	dir := "./test"
+	dir := "./test_users"
 	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
 	assert.Nil(t, err)
 	defer manager.Close()
-	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
@@ -57,12 +56,11 @@ func TestAddDeleteAndHasUser(t *testing.T) {
 }
 
 func TestIsAdmin(t *testing.T) {
-	dir := "./test"
+	dir := "./test_users"
 	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
 	assert.Nil(t, err)
 	defer manager.Close()
-	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
