@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
 )
@@ -17,14 +18,13 @@ const UserDatabasePath = "/app/host/.inertia/users.db"
 type PermissionsHandler struct {
 	users       *userManager
 	mux         *http.ServeMux
-	denyHandler http.Handler
 	publicPaths []string
 	adminPaths  []string
 }
 
 // NewPermissionsHandler returns a new handler for authenticating
 // users and handling user administration
-func NewPermissionsHandler(dbPath string, denyHandler http.HandlerFunc) (*PermissionsHandler, error) {
+func NewPermissionsHandler(dbPath string) (*PermissionsHandler, error) {
 	// Set up user manager
 	userManager, err := newUserManager(dbPath, 120)
 	if err != nil {
@@ -34,19 +34,19 @@ func NewPermissionsHandler(dbPath string, denyHandler http.HandlerFunc) (*Permis
 	// Set up permissions handler
 	mux := http.NewServeMux()
 	handler := &PermissionsHandler{
-		users:       userManager,
-		mux:         mux,
-		denyHandler: denyHandler,
+		users:      userManager,
+		mux:        mux,
+		adminPaths: make([]string, 0),
 	}
+
+	// Set paths that don't require authentication.
+	handler.publicPaths = []string{"/login", "/adduser", "/removeuser"}
+	mux.HandleFunc("/login", handler.loginHandler)
 
 	// The following endpoints are for user administration and must
 	// be used from the CLI and delivered with the daemon token.
-	handler.publicPaths = []string{"/adduser", "/removeuser"}
 	mux.HandleFunc("/adduser", Authorized(handler.addUserHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/removeuser", Authorized(handler.removeUserHandler, GetAPIPrivateKey))
-
-	// The following endpoints require no prior authentication.
-	mux.HandleFunc("/login", handler.loginHandler)
 
 	return handler, nil
 }
@@ -58,10 +58,16 @@ func (h *PermissionsHandler) Close() error {
 
 // Implement the ServeHTTP method to make a permissionHandler a http.Handler
 func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Check if path is public
-	// @todo
+	path := r.URL.Path
 
-	// Check if session and user is valid
+	// Serve if path is public
+	for _, prefix := range h.publicPaths {
+		if strings.HasPrefix(path, prefix) {
+			h.mux.ServeHTTP(w, r)
+		}
+	}
+
+	// Check if session is valid
 	s, err := h.users.GetSession(w, r)
 	if err != nil {
 		if err == errSessionNotFound {
@@ -71,6 +77,8 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	// Check if user is valid
 	err = h.users.HasUser(s.Username)
 	if err != nil {
 		if err == errUserNotFound {
@@ -82,7 +90,18 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user has sufficient permissions for path
-	// @todo
+	for _, prefix := range h.adminPaths {
+		if strings.HasPrefix(path, prefix) {
+			admin, err := h.users.IsAdmin(s.Username)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			if !admin {
+				http.Error(w, err.Error(), http.StatusForbidden)
+			}
+			return
+		}
+	}
 
 	// Serve the requested page if permissions were granted
 	h.mux.ServeHTTP(w, r)
@@ -90,21 +109,21 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // AttachPublicHandler attaches given path and handler and makes it publicly available
 func (h *PermissionsHandler) AttachPublicHandler(path string, handler http.Handler) {
+	// Add path as exception to user restriction
 	h.publicPaths = append(h.publicPaths, path)
-	// @todo
 	h.mux.Handle(path, handler)
 }
 
 // AttachUserRestrictedHandler attaches and restricts given path and handler to logged in users.
 func (h *PermissionsHandler) AttachUserRestrictedHandler(path string, handler http.Handler) {
-	// @todo
+	// By default, all paths are user restricted
 	h.mux.Handle(path, handler)
 }
 
 // AttachAdminRestrictedHandler attaches and restricts given path and handler to logged in admins.
 func (h *PermissionsHandler) AttachAdminRestrictedHandler(path string, handler http.Handler) {
+	// Add path as one that requires elevated permissions
 	h.adminPaths = append(h.publicPaths, path)
-	// @todo
 	h.mux.Handle(path, handler)
 }
 
