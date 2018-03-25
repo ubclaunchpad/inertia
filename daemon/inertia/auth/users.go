@@ -68,11 +68,26 @@ func newUserManager(dbPath string, timeout int64) (*userManager, error) {
 	return manager, nil
 }
 
+// Close ends the session cleanup job and releases the DB handler
 func (m *userManager) Close() error {
 	m.endSessionCleanup <- true
 	return m.db.Close()
 }
 
+// Reset deletes all users and drops all active sessions
+func (m *userManager) Reset() error {
+	m.sessions = make(map[string]*session)
+	return m.db.Update(func(tx *bolt.Tx) error {
+		err := tx.DeleteBucket(m.usersBucket)
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucket(m.usersBucket)
+		return err
+	})
+}
+
+// AddUser inserts a new user
 func (m *userManager) AddUser(username, password string, admin bool) error {
 	err := validateCredentialValues(username, password)
 	if err != nil {
@@ -93,13 +108,16 @@ func (m *userManager) AddUser(username, password string, admin bool) error {
 	})
 }
 
+// RemoveUser removes user with given username and ends related sessions
 func (m *userManager) RemoveUser(username string) error {
+	m.endAllUserSessions(username)
 	return m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
 		return users.Delete([]byte(username))
 	})
 }
 
+// HasUser returns nil if user exists in database
 func (m *userManager) HasUser(username string) error {
 	found := false
 	err := m.db.View(func(tx *bolt.Tx) error {
@@ -119,6 +137,8 @@ func (m *userManager) HasUser(username string) error {
 	return nil
 }
 
+// IsCorrectCredentials checks if username and password has a match
+// in the database
 func (m *userManager) IsCorrectCredentials(username, password string) (bool, error) {
 	correct := false
 	err := m.db.View(func(tx *bolt.Tx) error {
@@ -139,6 +159,7 @@ func (m *userManager) IsCorrectCredentials(username, password string) (bool, err
 	return correct, err
 }
 
+// IsAdmin checks if given user is has administrator priviledges
 func (m *userManager) IsAdmin(username string) (bool, error) {
 	admin := false
 	err := m.db.View(func(tx *bolt.Tx) error {
@@ -226,6 +247,15 @@ func (m *userManager) GetSession(w http.ResponseWriter, r *http.Request) (*sessi
 		return nil, errSessionNotFound
 	}
 	return s, nil
+}
+
+// endAllUserSessions removes all active sessions with given user
+func (m *userManager) endAllUserSessions(username string) {
+	for id, s := range m.sessions {
+		if s.Username == username {
+			delete(m.sessions, id)
+		}
+	}
 }
 
 // isValidSession checks if session is expired

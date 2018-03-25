@@ -329,8 +329,10 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		adduser := deepCopy(deploymentUserAddCmd)
 		adduser.Flags().Bool("admin", false, "Create an admin user")
 		removeuser := deepCopy(deploymentUserRemoveCmd)
+		resetusers := deepCopy(deploymentUsersResetCmd)
 		user.AddCommand(adduser)
 		user.AddCommand(removeuser)
+		user.AddCommand(resetusers)
 		cmd.AddCommand(user)
 
 		ssh := deepCopy(deploymentSSHCmd)

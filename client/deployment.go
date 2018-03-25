@@ -19,7 +19,7 @@ type Deployment struct {
 	*RemoteVPS
 	Repository *git.Repository
 	Auth       string
-	Project	   string
+	Project    string
 }
 
 // GetDeployment returns the local deployment setup
@@ -58,7 +58,7 @@ func (d *Deployment) Up(project string, stream bool) (*http.Response, error) {
 	}
 
 	reqContent := &common.DaemonRequest{
-		Stream: stream,
+		Stream:  stream,
 		Project: project,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
@@ -108,6 +108,11 @@ func (d *Deployment) AddUser(username, password string, admin bool) (*http.Respo
 func (d *Deployment) RemoveUser(username string) (*http.Response, error) {
 	reqContent := &common.UserRequest{Username: username}
 	return d.request("/web/removeuser", "POST", reqContent)
+}
+
+// ResetUsers resets all users on the remote.
+func (d *Deployment) ResetUsers() (*http.Response, error) {
+	return d.request("/web/resetusers", "POST", nil)
 }
 
 func (d *Deployment) request(endpoint, method string, requestBody interface{}) (*http.Response, error) {

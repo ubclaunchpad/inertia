@@ -39,14 +39,20 @@ func NewPermissionsHandler(dbPath string) (*PermissionsHandler, error) {
 		adminPaths: make([]string, 0),
 	}
 
-	// Set paths that don't require authentication.
-	handler.publicPaths = []string{"/login", "/adduser", "/removeuser"}
+	// Set paths that don't require session authentication.
+	handler.publicPaths = []string{
+		"/login",
+		"/adduser",
+		"/removeuser",
+		"/resetusers",
+	}
 	mux.HandleFunc("/login", handler.loginHandler)
 
 	// The following endpoints are for user administration and must
 	// be used from the CLI and delivered with the daemon token.
 	mux.HandleFunc("/adduser", Authorized(handler.addUserHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/removeuser", Authorized(handler.removeUserHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/resetusers", Authorized(handler.removeUserHandler, GetAPIPrivateKey))
 
 	return handler, nil
 }
@@ -179,6 +185,18 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "[SUCCESS %d] User %s removed\n", http.StatusOK, userReq.Username)
+}
+
+func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Request) {
+	err := h.users.Reset()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "[SUCCESS %d] User and session databases reset\n", http.StatusOK)
 }
 
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
