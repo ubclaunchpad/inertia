@@ -68,14 +68,19 @@ func run(host, port, version string) {
 
 	// Inertia web - PermissionsHandler is used to authenticate web
 	// app access and manage users
-	permHandler, err := auth.NewPermissionsHandler(auth.UserDatabasePath, redirectToLogin)
+	webPrefix := "/web"
+	permHandler, err := auth.NewPermissionsHandler(
+		auth.UserDatabasePath, host, webPrefix, 120,
+	)
 	if err != nil {
 		println(err.Error())
 		return
 	}
 	defer permHandler.Close()
-	permHandler.AttachUserRestrictedHandler("/", http.FileServer(http.Dir("/app/inertia-web")))
-	mux.Handle("/web/", http.StripPrefix("/web", permHandler))
+	permHandler.AttachUserRestrictedHandler(
+		"/", http.FileServer(http.Dir("/app/inertia-web")),
+	)
+	mux.Handle(webPrefix, http.StripPrefix(webPrefix, permHandler))
 
 	// CLI API endpoints
 	mux.HandleFunc("/up", auth.Authorized(upHandler, auth.GetAPIPrivateKey))
@@ -92,9 +97,4 @@ func run(host, port, version string) {
 		daemonSSLKey,
 		mux,
 	))
-}
-
-func redirectToLogin(w http.ResponseWriter, r *http.Request) {
-	// @todo: direct to login page
-	http.Error(w, "Permission denied!", http.StatusForbidden)
 }

@@ -16,6 +16,7 @@ const UserDatabasePath = "/app/host/.inertia/users.db"
 // PermissionsHandler handles users, permissions, and sessions on top
 // of an http.ServeMux. It is used for Inertia Web.
 type PermissionsHandler struct {
+	domain      string
 	users       *userManager
 	mux         *http.ServeMux
 	publicPaths []string
@@ -24,9 +25,9 @@ type PermissionsHandler struct {
 
 // NewPermissionsHandler returns a new handler for authenticating
 // users and handling user administration
-func NewPermissionsHandler(dbPath string) (*PermissionsHandler, error) {
+func NewPermissionsHandler(dbPath, domain, path string, timeout int) (*PermissionsHandler, error) {
 	// Set up user manager
-	userManager, err := newUserManager(dbPath, 120)
+	userManager, err := newUserManager(dbPath, domain, path, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +35,7 @@ func NewPermissionsHandler(dbPath string) (*PermissionsHandler, error) {
 	// Set up permissions handler
 	mux := http.NewServeMux()
 	handler := &PermissionsHandler{
+		domain:     domain,
 		users:      userManager,
 		mux:        mux,
 		adminPaths: make([]string, 0),
@@ -70,6 +72,7 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, prefix := range h.publicPaths {
 		if strings.HasPrefix(path, prefix) {
 			h.mux.ServeHTTP(w, r)
+			return
 		}
 	}
 
@@ -103,7 +106,7 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			if !admin {
-				http.Error(w, err.Error(), http.StatusForbidden)
+				http.Error(w, "Admin privileges required", http.StatusForbidden)
 			}
 			return
 		}
@@ -226,7 +229,6 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 	}
 	h.users.SessionBegin(userReq.Username, w, r)
 
-	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "[SUCCESS %d] User %s logged in\n", http.StatusOK, userReq.Username)
 }

@@ -7,12 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func getTestUserManager(dir string) (*userManager, error) {
+	err := os.Mkdir(dir, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+	return newUserManager("./test/test.db", "0.0.0.0", "/", 120)
+}
+
 func TestAddUserAndIsCorrectCredentials(t *testing.T) {
 	dir := "./test"
-	err := os.Mkdir(dir, os.ModePerm)
-	assert.Nil(t, err)
+	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
-	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
 	defer manager.Close()
 	assert.NotNil(t, manager)
@@ -31,10 +37,8 @@ func TestAddUserAndIsCorrectCredentials(t *testing.T) {
 
 func TestAddDeleteAndHasUser(t *testing.T) {
 	dir := "./test"
-	err := os.Mkdir(dir, os.ModePerm)
-	assert.Nil(t, err)
+	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
-	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
 	defer manager.Close()
 	assert.NotNil(t, manager)
@@ -54,10 +58,8 @@ func TestAddDeleteAndHasUser(t *testing.T) {
 
 func TestIsAdmin(t *testing.T) {
 	dir := "./test"
-	err := os.Mkdir(dir, os.ModePerm)
-	assert.Nil(t, err)
+	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
-	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
 	defer manager.Close()
 	assert.NotNil(t, manager)

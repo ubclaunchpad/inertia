@@ -12,6 +12,7 @@ import (
 
 var (
 	errSessionNotFound = errors.New("Session not found")
+	errCookieNotFound  = errors.New("Cookie not found")
 	errUserNotFound    = errors.New("User not found")
 )
 
@@ -32,7 +33,9 @@ type session struct {
 // userManager administers sessions and user accounts
 type userManager struct {
 	cookieName    string
-	cookieTimeout int64
+	cookieDomain  string
+	cookiePath    string
+	cookieTimeout time.Duration
 
 	// db is a boltdb database, which is an embedded
 	// key/value database where each "bucket" is a collection
@@ -44,10 +47,12 @@ type userManager struct {
 	endSessionCleanup chan bool
 }
 
-func newUserManager(dbPath string, timeout int64) (*userManager, error) {
+func newUserManager(dbPath, domain, path string, timeout int) (*userManager, error) {
 	manager := &userManager{
-		cookieName:        "ubclaunchpad/inertia",
-		cookieTimeout:     timeout,
+		cookieName:        "ubclaunchpad-inertia",
+		cookieDomain:      domain,
+		cookiePath:        path,
+		cookieTimeout:     time.Duration(timeout) * time.Minute,
 		usersBucket:       []byte("users"),
 		sessions:          make(map[string]*session),
 		endSessionCleanup: make(chan bool),
@@ -178,32 +183,24 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 	return admin, err
 }
 
-// SessionBegin starts and returns a new session or returns an existing session
+// SessionBegin starts a new session with user by setting a cookie
+// and adding session to memory
 func (m *userManager) SessionBegin(username string, w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(m.cookieName)
-
-	if err != nil || cookie.Value == "" {
-		// Create new session and cookie if no cookie yet
-		expiration := time.Now().Add(time.Duration(m.cookieTimeout) * time.Minute)
-		s := &session{
-			Username: username,
-			Expires:  expiration,
-		}
-		id := generateSessionID()
-		m.sessions[id] = s
-		cookie := http.Cookie{
-			Name:     m.cookieName,
-			Value:    url.QueryEscape(id),
-			Path:     "/web",
-			Expires:  expiration,
-			HttpOnly: true,
-		}
-		http.SetCookie(w, &cookie)
-	} else {
-		// Otherwise, end existing session and begin a new one
-		m.SessionEnd(w, r)
-		m.SessionBegin(username, w, r)
+	expiration := time.Now().Add(m.cookieTimeout)
+	id := generateSessionID()
+	s := &session{
+		Username: username,
+		Expires:  expiration,
 	}
+	m.sessions[id] = s
+	http.SetCookie(w, &http.Cookie{
+		Name:     m.cookieName,
+		Value:    url.QueryEscape(id),
+		Domain:   m.cookieDomain,
+		Path:     m.cookiePath,
+		HttpOnly: true,
+		Expires:  expiration,
+	})
 }
 
 // SessionEnd ends a session and sets cookie to expire
@@ -220,7 +217,8 @@ func (m *userManager) SessionEnd(w http.ResponseWriter, r *http.Request) {
 	expiration := time.Now()
 	newCookie := http.Cookie{
 		Name:     m.cookieName,
-		Path:     "/web",
+		Domain:   m.cookieDomain,
+		Path:     m.cookiePath,
 		HttpOnly: true,
 		Expires:  expiration,
 		MaxAge:   -1,
@@ -232,7 +230,7 @@ func (m *userManager) SessionEnd(w http.ResponseWriter, r *http.Request) {
 func (m *userManager) GetSession(w http.ResponseWriter, r *http.Request) (*session, error) {
 	cookie, err := r.Cookie(m.cookieName)
 	if err != nil || cookie.Value == "" {
-		return nil, err
+		return nil, errSessionNotFound
 	}
 	id, err := url.QueryUnescape(cookie.Value)
 	if err != nil {
@@ -260,7 +258,7 @@ func (m *userManager) endAllUserSessions(username string) {
 
 // isValidSession checks if session is expired
 func (m *userManager) isValidSession(s *session) bool {
-	return s.Expires.Before(time.Now())
+	return s.Expires.After(time.Now())
 }
 
 // cleanSessions is a goroutine that continously cleans sessions
