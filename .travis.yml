@@ -45,7 +45,7 @@ script:
   - go vet ./...                    # Report suspicious constructs
   - megacheck ./...                 # Static analysis
   - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
-  - goveralls -v -service=travis-ci -repotoken "$COVERALLS_TOKEN"
+  - goveralls -v -show -race -package=./... -service=travis-ci -repotoken "$COVERALLS_TOKEN"
 
 # Push version-tagged Docker image and build platform binaries
 before_deploy:
