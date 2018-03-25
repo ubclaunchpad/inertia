@@ -145,7 +145,7 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*DeploymentStatus, error) {
 	}
 	ignore := map[string]bool{
 		"/inertia-daemon": true,
-		"/docker-compose": true,
+		"/build":          true,
 	}
 	activeContainers := make([]string, 0)
 	for _, container := range containers {
@@ -185,24 +185,29 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer) error {
 		return err
 	}
 
-	return d.dockerCompose(cli, out)
+	switch d.Type {
+	case "docker-compose":
+		return d.dockerCompose(cli, out)
+	default:
+		return d.herokuishBuild(cli, out)
+	}
 }
 
+// dockerCompose builds and runs project using docker-compose -
+// the following code performs the bash equivalent of:
+//
+//    docker run -d \
+// 	    -v /var/run/docker.sock:/var/run/docker.sock \
+// 	    -v $HOME:/build \
+// 	    -w="/build/project" \
+// 	    docker/compose:1.18.0 up --build
+//
+// This starts a new container running a docker-compose image for
+// the sole purpose of building the project. This container is
+// separate from the daemon and the user's project, and is the
+// second container to require access to the docker socket.
+// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
 func (d *Deployment) dockerCompose(cli *docker.Client, out io.Writer) error {
-	// Build and run project using docker-compose - the following code
-	// performs the bash equivalent of:
-	//
-	//    docker run -d \
-	// 	    -v /var/run/docker.sock:/var/run/docker.sock \
-	// 	    -v $HOME:/build \
-	// 	    -w="/build/project" \
-	// 	    docker/compose:1.18.0 up --build
-	//
-	// This starts a new container running a docker-compose image for
-	// the sole purpose of building the project. This container is
-	// separate from the daemon and the user's project, and is the
-	// second container to require access to the docker socket.
-	// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
 	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
 	resp, err := cli.ContainerCreate(
@@ -221,7 +226,45 @@ func (d *Deployment) dockerCompose(cli *docker.Client, out io.Writer) error {
 				"/var/run/docker.sock:/var/run/docker.sock",
 				os.Getenv("HOME") + ":/build",
 			},
-		}, nil, "docker-compose",
+		}, nil, "build",
+	)
+	if err != nil {
+		return err
+	}
+	if len(resp.Warnings) > 0 {
+		warnings := strings.Join(resp.Warnings, "\n")
+		return errors.New(warnings)
+	}
+
+	fmt.Fprintln(out, "Building project...")
+	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+}
+
+// herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
+// to build the user project. Runs the bash equivalent of:
+//
+//    docker run --rm -d \
+//       -v /app/host/project:/tmp/app \
+//       gliderlabs/herokuish /bin/herokuish buildpack build
+//
+func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
+	fmt.Fprintln(out, "Setting up herokuish...")
+	ctx := context.Background()
+	resp, err := cli.ContainerCreate(
+		ctx, &container.Config{
+			Image: HerokuishVersion,
+			Cmd: []string{
+				"/bin/herokuish",
+				"buildpack",
+				"build",
+				"foobar",
+			},
+		},
+		&container.HostConfig{
+			Binds: []string{
+				Directory + ":/tmp/app",
+			},
+		}, nil, "build",
 	)
 	if err != nil {
 		return err
