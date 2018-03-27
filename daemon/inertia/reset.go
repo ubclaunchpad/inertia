@@ -1,40 +1,35 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
 // resetHandler shuts down and wipes the project directory
 func resetHandler(w http.ResponseWriter, r *http.Request) {
-	println("RESET request received")
+	if deployment == nil {
+		http.Error(w, noDeploymentMsg, http.StatusPreconditionFailed)
+		return
+	}
 
 	logger := newLogger(false, w)
 	defer logger.Close()
 
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
-	err = project.KillActiveContainers(cli, logger.GetWriter())
+
+	// Goodbye deployment
+	err = deployment.Destroy(cli)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
 	}
+	deployment = nil
 
-	err = common.RemoveContents(project.Directory)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Project removed from remote.")
+	logger.Success("Project removed from remote.", http.StatusOK)
 }

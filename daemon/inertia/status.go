@@ -5,80 +5,53 @@ import (
 	"net/http"
 
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
-	git "gopkg.in/src-d/go-git.v4"
 )
 
 // statusHandler lists currently active project containers
 func statusHandler(w http.ResponseWriter, r *http.Request) {
-	println("STATUS request received")
-
 	inertiaStatus := "inertia daemon " + daemonVersion + "\n"
+	if deployment == nil {
+		http.Error(
+			w, inertiaStatus+noDeploymentMsg,
+			http.StatusPreconditionFailed,
+		)
+		return
+	}
 
-	// Get status of repository
-	repo, err := git.PlainOpen(project.Directory)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusPreconditionFailed)
-		return
-	}
-	head, err := repo.Head()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusPreconditionFailed)
-		return
-	}
-	commit, err := repo.CommitObject(head.Hash())
-	if err != nil {
-		return
-	}
-	branchStatus := " - Branch:  " + head.Name().Short() + "\n"
-	commitStatus := " - Commit:  " + head.Hash().String() + "\n"
-	commitMessage := " - Message: " + commit.Message + "\n"
-	status := inertiaStatus + branchStatus + commitStatus + commitMessage
-
-	// Get containers
 	cli, err := docker.NewEnvClient()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
-	containers, err := project.GetActiveContainers(cli)
+	status, err := deployment.GetStatus(cli)
 	if err != nil {
-		if err.Error() == project.NoContainersResp {
-			// This is different from having 2 containers active -
-			// noContainersResp means that no attempt to build the project
-			// was made or the project was cleanly shut down.
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, status+project.NoContainersResp)
-			return
-		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// If there are only 2 containers active, that means that a build
-	// attempt was made but only the daemon and the docker-compose containers
-	// are active, indicating a build failure.
-	if len(containers) == 2 {
-		errorString := status + "It appears that an attempt to start your project was made but the build failed."
+	branchStatus := " - Branch:  " + status.Branch + "\n"
+	commitStatus := " - Commit:  " + status.CommitHash + "\n"
+	commitMessage := " - Message: " + status.CommitMessage + "\n"
+	statusString := inertiaStatus + branchStatus + commitStatus + commitMessage
+
+	// If build container is active, that means that a build
+	// attempt was made but only the daemon and docker-compose
+	// are active, indicating a build failure or build-in-progress
+	if len(status.Containers) == 0 && status.BuildContainerActive {
+		errorString := statusString +
+			"It appears that your build is still in progress."
 		http.Error(w, errorString, http.StatusNotFound)
 		return
 	}
 
-	ignore := map[string]bool{
-		"/inertia-daemon": true,
-		"/docker-compose": true,
+	activeContainers := "Active containers:\n"
+	for _, container := range status.Containers {
+		activeContainers += " - " + container + "\n"
 	}
-	// Only list project containers
-	activeContainers := "Active containers:"
-	for _, container := range containers {
-		if !ignore[container.Names[0]] {
-			activeContainers += "\n" + container.Image + " (" + container.Names[0] + ")"
-		}
-	}
+	statusString += activeContainers
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, status+activeContainers)
+	fmt.Fprint(w, statusString)
 }

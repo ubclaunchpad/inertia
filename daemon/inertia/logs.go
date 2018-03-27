@@ -2,20 +2,21 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	println("LOG request received")
+	if deployment == nil {
+		http.Error(w, noDeploymentMsg, http.StatusPreconditionFailed)
+		return
+	}
 
 	// Get container name from request
 	body, err := ioutil.ReadAll(r.Body)
@@ -40,17 +41,8 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	ctx := context.Background()
-	logs, err := cli.ContainerLogs(ctx, container, types.ContainerLogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     upReq.Stream,
-		Timestamps: true,
-	})
-	if err != nil {
-		logger.Err(err.Error(), http.StatusInternalServerError)
-		return
-	}
+
+	logs, err := deployment.Logs(container, upReq.Stream, cli)
 	defer logs.Close()
 
 	if upReq.Stream {

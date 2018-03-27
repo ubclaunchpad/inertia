@@ -11,10 +11,17 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
-// daemonVersion indicates the daemon's corresponding Inertia daemonVersion
-var daemonVersion string
+var (
+	// daemonVersion indicates the daemon's corresponding Inertia daemonVersion
+	daemonVersion string
+
+	// deployment is the currently deployed project on this remote
+	deployment *project.Deployment
+)
 
 const (
+	noDeploymentMsg = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
+
 	// specify location of SSL certificate
 	sslDirectory  = "/app/host/ssl/"
 	daemonSSLCert = sslDirectory + "daemon.cert"

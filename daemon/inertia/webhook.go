@@ -8,9 +8,7 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
-	git "gopkg.in/src-d/go-git.v4"
 )
 
 // gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
@@ -57,33 +55,15 @@ func processPushEvent(event *github.PushEvent) {
 	}
 
 	// Check for matching remotes
-	localRepo, err := git.PlainOpen(project.Directory)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	err = project.CompareRemotes(localRepo, common.GetSSHRemoteURL(repo.GetGitURL()))
+	err = deployment.CompareRemotes(common.GetSSHRemoteURL(repo.GetGitURL()))
 	if err != nil {
 		println(err.Error())
 		return
 	}
 
 	// If branches match, deploy, otherwise ignore the event.
-	head, err := localRepo.Head()
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	if head.Name().Short() == branch {
+	if deployment.Branch == branch {
 		println("Event branch matches deployed branch " + branch)
-		pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
-		if err != nil {
-			return
-		}
-		auth, err := auth.GetGithubKey(pemFile)
-		if err != nil {
-			return
-		}
 		cli, err := docker.NewEnvClient()
 		if err != nil {
 			println(err.Error())
@@ -91,14 +71,15 @@ func processPushEvent(event *github.PushEvent) {
 		}
 		defer cli.Close()
 
-		err = project.Deploy(auth, localRepo, branch, project.ProjectName, cli, os.Stdout)
+		// Deploy project
+		err = deployment.Deploy(cli, os.Stdout)
 		if err != nil {
 			println(err.Error())
 		}
 	} else {
 		println(
 			"Event branch " + branch + " does not match deployed branch " +
-				head.Name().Short() + " - ignoring event.",
+				deployment.Branch + " - ignoring event.",
 		)
 	}
 }

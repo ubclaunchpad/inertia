@@ -35,7 +35,7 @@ func getInertiaDeployTestKey() (ssh.AuthMethod, error) {
 
 func TestClone(t *testing.T) {
 	dir := "./test_clone/"
-	repo, err := Clone(dir, inertiaDeployTest, "dev", nil, os.Stdout)
+	repo, err := clone(dir, inertiaDeployTest, "dev", nil, os.Stdout)
 	defer os.RemoveAll(dir)
 	assert.Nil(t, err)
 
@@ -53,13 +53,13 @@ func TestForcePull(t *testing.T) {
 	})
 	defer os.RemoveAll(dir)
 	assert.Nil(t, err)
-	forcePulledRepo, err := ForcePull(dir, repo, auth, os.Stdout)
+	forcePulledRepo, err := forcePull(dir, repo, auth, os.Stdout)
 	assert.Nil(t, err)
 
 	// Try switching branches
-	err = UpdateRepository(dir, forcePulledRepo, "dev", auth, os.Stdout)
+	err = updateRepository(dir, forcePulledRepo, "dev", auth, os.Stdout)
 	assert.Nil(t, err)
-	err = UpdateRepository(dir, forcePulledRepo, "master", auth, os.Stdout)
+	err = updateRepository(dir, forcePulledRepo, "master", auth, os.Stdout)
 	assert.Nil(t, err)
 }
 
@@ -72,19 +72,8 @@ func TestUpdateRepository(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Try switching branches
-	err = UpdateRepository(dir, repo, "master", nil, os.Stdout)
+	err = updateRepository(dir, repo, "master", nil, os.Stdout)
 	assert.Nil(t, err)
-	err = UpdateRepository(dir, repo, "dev", nil, os.Stdout)
+	err = updateRepository(dir, repo, "dev", nil, os.Stdout)
 	assert.Nil(t, err)
-}
-
-func TestCompareRemotes(t *testing.T) {
-	// Traverse back down to root directory of repository
-	repo, err := git.PlainOpen("../../../")
-	assert.Nil(t, err)
-
-	for _, url := range urlVariations {
-		err = CompareRemotes(repo, url)
-		assert.Nil(t, err)
-	}
 }
