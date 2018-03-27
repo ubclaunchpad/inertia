@@ -13,11 +13,6 @@ import (
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	if deployment == nil {
-		http.Error(w, noDeploymentMsg, http.StatusPreconditionFailed)
-		return
-	}
-
 	// Get container name from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -34,6 +29,11 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	container := upReq.Container
 	logger := newLogger(upReq.Stream, w)
 	defer logger.Close()
+
+	if container == "/inertia-daemon" && deployment == nil {
+		http.Error(w, noDeploymentMsg, http.StatusPreconditionFailed)
+		return
+	}
 
 	cli, err := docker.NewEnvClient()
 	if err != nil {
