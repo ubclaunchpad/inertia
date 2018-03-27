@@ -1,28 +1,11 @@
 package common
 
 import (
-	"errors"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 )
-
-// CheckForDockerCompose returns error if current directory is a
-// not a docker-compose project
-func CheckForDockerCompose(cwd string) error {
-	dockerComposeYML := filepath.Join(cwd, "docker-compose.yml")
-	dockerComposeYAML := filepath.Join(cwd, "docker-compose.yaml")
-	_, err := os.Stat(dockerComposeYML)
-	YMLpresent := os.IsNotExist(err)
-	_, err = os.Stat(dockerComposeYAML)
-	YAMLpresent := os.IsNotExist(err)
-	if YMLpresent && YAMLpresent {
-		return errors.New("this does not appear to be a docker-compose project - currently,\n" +
-			"Inertia only supports docker-compose projects.")
-	}
-	return nil
-}
 
 // RemoveContents removes all files within given directory, returns nil if successful
 func RemoveContents(directory string) error {

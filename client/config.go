@@ -82,10 +82,6 @@ func InitializeInertiaProject(version string) error {
 	if err != nil {
 		return err
 	}
-	err = common.CheckForDockerCompose(cwd)
-	if err != nil {
-		return err
-	}
 
 	return createConfigFile(version)
 }

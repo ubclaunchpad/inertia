@@ -57,9 +57,5 @@ func killActiveContainers(cli *docker.Client, out io.Writer) error {
 	}
 
 	_, err = cli.ContainersPrune(ctx, filters.Args{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

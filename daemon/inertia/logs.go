@@ -43,6 +43,14 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	defer cli.Close()
 
 	logs, err := deployment.Logs(container, upReq.Stream, cli)
+	if err != nil {
+		if docker.IsErrContainerNotFound(err) {
+			logger.Err(err.Error(), http.StatusNotFound)
+		} else {
+			logger.Err(err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
 	defer logs.Close()
 
 	if upReq.Stream {
