@@ -79,7 +79,9 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 		return err
 	}
 
-	println("Inertia has been set up and daemon is running on remote!\n")
+	println("\nInertia has been set up and daemon is running on remote!")
+	println("You may have to wait briefly for Inertia to set up some dependencies.")
+	fmt.Printf("Use 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", name)
 
 	println("=============================\n")
 

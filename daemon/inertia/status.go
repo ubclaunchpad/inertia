@@ -38,10 +38,16 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	// If build container is active, that means that a build
 	// attempt was made but only the daemon and docker-compose
 	// are active, indicating a build failure or build-in-progress
-	if len(status.Containers) == 0 && status.BuildContainerActive {
-		errorString := statusString +
-			"It appears that your build is still in progress."
-		http.Error(w, errorString, http.StatusNotFound)
+	if len(status.Containers) == 0 {
+		if status.BuildContainerActive {
+			errorString := statusString +
+				"It appears that your build is still in progress."
+			http.Error(w, errorString, http.StatusNotFound)
+		} else {
+			errorString := statusString +
+				"No containers are active."
+			http.Error(w, errorString, http.StatusNotFound)
+		}
 		return
 	}
 
