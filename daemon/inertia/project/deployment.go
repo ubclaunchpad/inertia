@@ -93,7 +93,7 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 
 // Destroy shuts down the deployment and removes the repository
 func (d *Deployment) Destroy(cli *docker.Client) error {
-	d.Down(cli, nil)
+	d.Down(cli, os.Stdout)
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
@@ -253,12 +253,6 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image: HerokuishVersion,
-			Cmd: []string{
-				"/bin/herokuish",
-				"buildpack",
-				"build",
-				"foobar",
-			},
 		},
 		&container.HostConfig{
 			Binds: []string{
@@ -274,6 +268,34 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 		return errors.New(warnings)
 	}
 
+	// Build project slug using Heroku's buildpacks and commit
+	// the updated container
+	fmt.Fprintln(out, "Preparing build...")
+	id, err := cli.ContainerExecCreate(ctx, resp.ID, types.ExecConfig{
+		Cmd: []string{"/build"},
+	})
+	if err != nil {
+		return err
+	}
 	fmt.Fprintln(out, "Building project...")
-	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	_, err = cli.ContainerExecAttach(ctx, id.ID, types.ExecConfig{})
+	if err != nil {
+		return err
+	}
+	fmt.Fprintln(out, "Saving build...")
+	id, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Start the updated container
+	fmt.Fprintln(out, "Running project...")
+	id, err = cli.ContainerExecCreate(ctx, id.ID, types.ExecConfig{
+		Cmd: []string{"/start"},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = cli.ContainerExecAttach(ctx, id.ID, types.ExecConfig{})
+	return err
 }
