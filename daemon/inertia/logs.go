@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -58,8 +57,6 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, buf.String())
+		logger.Success(buf.String(), http.StatusOK)
 	}
 }
