@@ -36,8 +36,8 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 	return containers, nil
 }
 
-// killActiveContainers kills all active project containers (ie not including daemon)
-func killActiveContainers(cli *docker.Client, out io.Writer) error {
+// stopActiveContainers kills all active project containers (ie not including daemon)
+func stopActiveContainers(cli *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Shutting down active containers...")
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
@@ -45,9 +45,10 @@ func killActiveContainers(cli *docker.Client, out io.Writer) error {
 		return err
 	}
 
+	// Gracefully take down all containers except the daemon
 	for _, container := range containers {
 		if container.Names[0] != "/inertia-daemon" {
-			fmt.Fprintln(out, "Killing "+container.Image+" ("+container.Names[0]+")...")
+			fmt.Fprintln(out, "Stopping "+container.Names[0]+"...")
 			timeout := 10 * time.Second
 			err := cli.ContainerStop(ctx, container.ID, &timeout)
 			if err != nil {
@@ -56,6 +57,7 @@ func killActiveContainers(cli *docker.Client, out io.Writer) error {
 		}
 	}
 
+	// Prune images
 	_, err = cli.ContainersPrune(ctx, filters.Args{})
 	return err
 }

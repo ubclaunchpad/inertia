@@ -72,7 +72,7 @@ func processPushEvent(event *github.PushEvent) {
 		defer cli.Close()
 
 		// Deploy project
-		err = deployment.Deploy(cli, os.Stdout)
+		err = deployment.Deploy(false, cli, os.Stdout)
 		if err != nil {
 			println(err.Error())
 		}

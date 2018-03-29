@@ -82,13 +82,13 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	// active
 	_, err := getActiveContainers(cli)
 	if err != nil {
-		killErr := killActiveContainers(cli, out)
+		killErr := stopActiveContainers(cli, out)
 		if killErr != nil {
 			println(err)
 		}
 		return err
 	}
-	return killActiveContainers(cli, out)
+	return stopActiveContainers(cli, out)
 }
 
 // Destroy shuts down the deployment and removes the repository
@@ -168,19 +168,21 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*DeploymentStatus, error) {
 }
 
 // Deploy will update, build, and deploy the project
-func (d *Deployment) Deploy(cli *docker.Client, out io.Writer) error {
+func (d *Deployment) Deploy(skipUpdate bool, cli *docker.Client, out io.Writer) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	fmt.Println(out, "Deploying repository...")
 
 	// Update repository
-	err := updateRepository(Directory, d.repo, d.Branch, d.auth, out)
-	if err != nil {
-		return err
+	if !skipUpdate {
+		err := updateRepository(Directory, d.repo, d.Branch, d.auth, out)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Kill active project containers if there are any
-	err = killActiveContainers(cli, out)
+	err := stopActiveContainers(cli, out)
 	if err != nil {
 		return err
 	}
@@ -252,7 +254,8 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	ctx := context.Background()
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
-			Image: HerokuishVersion,
+			AttachStdout: true,
+			Image:        HerokuishVersion,
 		},
 		&container.HostConfig{
 			Binds: []string{

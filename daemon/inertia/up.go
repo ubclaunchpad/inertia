@@ -30,6 +30,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	defer logger.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
+	skipUpdate := false
 	err = common.CheckForGit(project.Directory)
 	if err != nil || deployment == nil {
 		logger.Println("No git repository present.")
@@ -40,6 +41,9 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		deployment = d
+
+		// Project was just pulled! No need to update again.
+		skipUpdate = true
 	}
 
 	// Check for matching remotes
@@ -60,7 +64,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = deployment.Deploy(cli, logger.GetWriter())
+	err = deployment.Deploy(skipUpdate, cli, logger.GetWriter())
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
