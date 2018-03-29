@@ -24,14 +24,19 @@ func correctPassword(hash string, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
+// validateCredentialValues takes a username and password and verifies
+// if they are of sufficient length and if they only contain legal characters
 func validateCredentialValues(username, password string) error {
 	if username == password {
 		return errSameUsernamePassword
 	}
-	if len(password) < 5 {
+	if len(password) < 5 || len(password) >= 128 {
 		return errInvalidPassword
 	}
-	validChars := "abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ_0123456789"
+	if len(username) < 3 || len(username) >= 128 {
+		return errInvalidUsername
+	}
+	validChars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 NEXT_USERNAME_CHAR:
 	for _, char := range username {
