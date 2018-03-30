@@ -47,6 +47,7 @@ func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, err
 		RemoteVPS:  mockRemote,
 		Repository: mockRepo,
 		Auth:       fakeAuth,
+		Project:    "test_project",
 	}, nil
 }
 
@@ -66,6 +67,7 @@ func TestUp(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
 		assert.Equal(t, "test_project", upReq.Project)
+		assert.Equal(t, "docker-compose", upReq.BuildType)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
@@ -82,7 +84,7 @@ func TestUp(t *testing.T) {
 	d, err := getMockDeployment(testServer, memory)
 	assert.Nil(t, err)
 
-	resp, err := d.Up("test_project", false)
+	resp, err := d.Up("docker-compose", false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
