@@ -8,8 +8,8 @@ import (
 
 var (
 	errSameUsernamePassword = errors.New("Username and password must be different")
-	errInvalidUsername      = errors.New("Only letters, numbers and underscore are allowed in usernames")
-	errInvalidPassword      = errors.New("Only letters, numbers and underscore are allowed in passwords, and password must be at least 5 characters")
+	errInvalidUsername      = errors.New("Only letters, numbers and underscores are allowed in usernames")
+	errInvalidPassword      = errors.New("Only letters, numbers and underscores are allowed in passwords, and password must be at least 5 characters")
 )
 
 func hashPassword(password string) (string, error) {
@@ -36,7 +36,7 @@ func validateCredentialValues(username, password string) error {
 	if len(username) < 3 || len(username) >= 128 {
 		return errInvalidUsername
 	}
-	validChars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	validChars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 
 NEXT_USERNAME_CHAR:
 	for _, char := range username {
