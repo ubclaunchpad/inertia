@@ -160,9 +160,9 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*DeploymentStatus, error) {
 	}
 
 	return &DeploymentStatus{
-		Branch:               head.Name().Short(),
-		CommitHash:           head.Hash().String(),
-		CommitMessage:        commit.Message,
+		Branch:               strings.TrimSpace(head.Name().Short()),
+		CommitHash:           strings.TrimSpace(head.Hash().String()),
+		CommitMessage:        strings.TrimSpace(commit.Message),
 		Containers:           activeContainers,
 		BuildContainerActive: buildContainerActive,
 	}, nil
