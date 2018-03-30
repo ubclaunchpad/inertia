@@ -16,6 +16,7 @@ type DaemonRequest struct {
 	Stream     bool        `json:"stream"`
 	Container  string      `json:"container,omitempty"`
 	Project    string      `json:"project"`
+	BuildType  string      `json:"build_type"`
 	GitOptions *GitOptions `json:"git_options"`
 }
 

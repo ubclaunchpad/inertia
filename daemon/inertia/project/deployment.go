@@ -50,7 +50,7 @@ type DeploymentStatus struct {
 }
 
 // NewDeployment creates a new deployment
-func NewDeployment(projectName, remoteURL, branch string, out io.Writer) (*Deployment, error) {
+func NewDeployment(projectName, buildType, remoteURL, branch string, out io.Writer) (*Deployment, error) {
 	pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
 	if err != nil {
 		return nil, err
@@ -67,6 +67,7 @@ func NewDeployment(projectName, remoteURL, branch string, out io.Writer) (*Deplo
 	return &Deployment{
 		Project: projectName,
 		Branch:  branch,
+		Type:    buildType,
 		auth:    authMethod,
 		repo:    repo,
 	}, nil
@@ -187,11 +188,12 @@ func (d *Deployment) Deploy(skipUpdate bool, cli *docker.Client, out io.Writer) 
 		return err
 	}
 
+	// Use the appropriate build method
 	switch d.Type {
-	case "docker-compose":
-		return d.dockerCompose(cli, out)
-	default:
+	case "herokuish":
 		return d.herokuishBuild(cli, out)
+	default:
+		return d.dockerCompose(cli, out)
 	}
 }
 
@@ -269,6 +271,10 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	if len(resp.Warnings) > 0 {
 		warnings := strings.Join(resp.Warnings, "\n")
 		return errors.New(warnings)
+	}
+	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
 	}
 
 	// Build project slug using Heroku's buildpacks and commit

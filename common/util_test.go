@@ -6,11 +6,41 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestCheckForDockerCompose(t *testing.T) {
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+
+	ymlPath := path.Join(cwd, "/docker-compose.yml")
+	yamlPath := path.Join(cwd, "/docker-compose.yaml")
+
+	// No!
+	b := CheckForDockerCompose(cwd)
+	assert.False(t, b)
+
+	// Yes!
+	file, err := os.Create(ymlPath)
+	assert.Nil(t, err)
+	file.Close()
+	b = CheckForDockerCompose(cwd)
+	assert.True(t, b)
+	os.Remove(ymlPath)
+
+	// Yes!
+	file, err = os.Create(yamlPath)
+	assert.Nil(t, err)
+	file.Close()
+	b = CheckForDockerCompose(cwd)
+	assert.True(t, b)
+	os.Remove(yamlPath)
+}
 
 func TestFlushRoutine(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

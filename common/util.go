@@ -7,6 +7,18 @@ import (
 	"path/filepath"
 )
 
+// CheckForDockerCompose returns error if current directory is a
+// not a docker-compose project
+func CheckForDockerCompose(cwd string) bool {
+	dockerComposeYML := filepath.Join(cwd, "docker-compose.yml")
+	dockerComposeYAML := filepath.Join(cwd, "docker-compose.yaml")
+	_, err := os.Stat(dockerComposeYML)
+	YMLnotPresent := os.IsNotExist(err)
+	_, err = os.Stat(dockerComposeYAML)
+	YAMLnotPresent := os.IsNotExist(err)
+	return !(YMLnotPresent && YAMLnotPresent)
+}
+
 // RemoveContents removes all files within given directory, returns nil if successful
 func RemoveContents(directory string) error {
 	d, err := os.Open(directory)

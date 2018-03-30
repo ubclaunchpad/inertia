@@ -35,7 +35,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || deployment == nil {
 		logger.Println("No git repository present.")
 		common.RemoveContents(project.Directory)
-		d, err := project.NewDeployment(upReq.Project, gitOpts.RemoteURL, gitOpts.Branch, logger.GetWriter())
+		d, err := project.NewDeployment(upReq.Project, upReq.BuildType, gitOpts.RemoteURL, gitOpts.Branch, logger.GetWriter())
 		if err != nil {
 			logger.Err(err.Error(), http.StatusPreconditionFailed)
 			return

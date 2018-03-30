@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 var initCmd = &cobra.Command{
@@ -18,12 +19,27 @@ There must be a local git repository in order for initialization
 to succeed.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		version := cmd.Parent().Version
-		givenVersion, _ := cmd.Flags().GetString("version")
+		givenVersion, err := cmd.Flags().GetString("version")
+		if err != nil {
+			log.Fatal(err)
+		}
 		if givenVersion != version {
 			version = givenVersion
 		}
 
-		err := client.InitializeInertiaProject(cmd.Parent().Version)
+		// Determine best build type for project
+		buildType := "herokuish"
+		cwd, err := os.Getwd()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if common.CheckForDockerCompose(cwd) {
+			println("docker-compose project detected")
+			buildType = "docker-compose"
+		}
+
+		// Hello world config file!
+		err = client.InitializeInertiaProject(cmd.Parent().Version, buildType)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -74,5 +90,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	addCmd.Flags().String("version", "default", "Inertia daemon version")
+	initCmd.Flags().String("version", Version, "Specify Inertia daemon version to use")
 }

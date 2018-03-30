@@ -20,10 +20,11 @@ var (
 
 // Config represents the current projects configuration.
 type Config struct {
-	Version string       `toml:"inertia"`
-	Project string       `toml:"project"`
-	Remotes []*RemoteVPS `toml:"remote"`
-	Writer  io.Writer    `toml:"-"`
+	Version   string       `toml:"inertia"`
+	Project   string       `toml:"project-name"`
+	BuildType string       `toml:"build-type"`
+	Remotes   []*RemoteVPS `toml:"remote"`
+	Writer    io.Writer    `toml:"-"`
 }
 
 // Write writes configuration to Inertia config file.
@@ -73,7 +74,7 @@ func (config *Config) RemoveRemote(name string) bool {
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func InitializeInertiaProject(version string) error {
+func InitializeInertiaProject(version, buildType string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -83,20 +84,19 @@ func InitializeInertiaProject(version string) error {
 		return err
 	}
 
-	return createConfigFile(version)
+	return createConfigFile(version, buildType)
 }
 
 // createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func createConfigFile(version string) error {
+func createConfigFile(version, buildType string) error {
 	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return err
 	}
 
+	// Check if Inertia is already set up.
 	s, fileErr := os.Stat(configFilePath)
-
-	// Check if everything already exists.
 	if s != nil {
 		return errors.New("inertia already properly configured in this folder")
 	}
@@ -106,12 +106,13 @@ func createConfigFile(version string) error {
 		return err
 	}
 
-	// Directory exists. Make sure JSON exists.
+	// Directory exists. Make sure configuration file exists.
 	if os.IsNotExist(fileErr) {
 		config := Config{
-			Project: filepath.Base(cwd),
-			Version: version,
-			Remotes: make([]*RemoteVPS, 0),
+			Project:   filepath.Base(cwd),
+			Version:   version,
+			BuildType: buildType,
+			Remotes:   make([]*RemoteVPS, 0),
 		}
 
 		path, err := GetConfigFilePath()
