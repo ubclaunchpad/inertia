@@ -19,7 +19,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	if deployment == nil {
 		http.Error(
 			w, inertiaStatus+msgNoDeployment,
-			http.StatusPreconditionFailed,
+			http.StatusNotFound,
 		)
 		return
 	}
@@ -47,10 +47,10 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	if len(status.Containers) == 0 {
 		if status.BuildContainerActive {
 			errorString := statusString + msgBuildInProgress
-			http.Error(w, errorString, http.StatusNotFound)
+			http.Error(w, errorString, http.StatusOK)
 		} else {
 			errorString := statusString + msgNoContainersActive
-			http.Error(w, errorString, http.StatusNotFound)
+			http.Error(w, errorString, http.StatusOK)
 		}
 		return
 	}

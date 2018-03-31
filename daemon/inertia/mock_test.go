@@ -36,7 +36,7 @@ func (f *FakeDeployment) Destroy(c *docker.Client, w io.Writer) error {
 }
 
 func (f *FakeDeployment) Logs(o project.LogOptions, c *docker.Client) (io.ReadCloser, error) {
-	return f.Logs(o, c)
+	return f.LogsFunc(o, c)
 }
 
 func (f *FakeDeployment) GetStatus(c *docker.Client) (*project.DeploymentStatus, error) {

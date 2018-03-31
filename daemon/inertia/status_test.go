@@ -129,6 +129,6 @@ func TestStatusHandlerNoDeployment(t *testing.T) {
 	handler := http.HandlerFunc(statusHandler)
 
 	handler.ServeHTTP(recorder, req)
-	assert.Equal(t, recorder.Code, http.StatusPreconditionFailed)
+	assert.Equal(t, recorder.Code, http.StatusNotFound)
 	assert.Contains(t, recorder.Body.String(), msgNoDeployment)
 }

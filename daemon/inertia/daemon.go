@@ -105,5 +105,4 @@ func dockerPull(image string, cli *docker.Client, wait *sync.WaitGroup) {
 		println(err.Error())
 	}
 	println(image + " download complete")
-	return
 }
