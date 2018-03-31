@@ -1,9 +1,6 @@
 package common
 
 const (
-	// DefaultSecret used for some verification
-	DefaultSecret = "inertia"
-
 	// DaemonOkResp is the OK response upon successfully reaching daemon
 	DaemonOkResp = "I'm a little Webhook, short and stout!"
 
