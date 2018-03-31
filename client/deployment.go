@@ -60,6 +60,7 @@ func (d *Deployment) Up(project string, stream bool) (*http.Response, error) {
 	reqContent := &common.DaemonRequest{
 		Stream:  stream,
 		Project: project,
+		Secret:  d.RemoteVPS.Daemon.Secret,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
 			Branch:    d.Branch,
