@@ -18,6 +18,7 @@ type DaemonRequest struct {
 	Project    string      `json:"project"`
 	BuildType  string      `json:"build_type"`
 	GitOptions *GitOptions `json:"git_options"`
+	Secret     string      `json:"secret"`
 }
 
 // GitOptions represents GitHub-related deployment options

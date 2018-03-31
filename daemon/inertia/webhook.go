@@ -11,11 +11,13 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
+var webhookSecret = "inertia"
+
 // gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
 func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.MsgDaemonOK)
 
-	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
+	payload, err := github.ValidatePayload(r, []byte(webhookSecret))
 	if err != nil {
 		println(err.Error())
 		return

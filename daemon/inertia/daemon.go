@@ -27,8 +27,6 @@ const (
 	sslDirectory  = "/app/host/ssl/"
 	daemonSSLCert = sslDirectory + "daemon.cert"
 	daemonSSLKey  = sslDirectory + "daemon.key"
-
-	defaultSecret = "inertia"
 )
 
 // run starts the daemon

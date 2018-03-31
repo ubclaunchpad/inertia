@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 // RemoteVPS contains parameters for the VPS
@@ -24,6 +23,7 @@ type DaemonConfig struct {
 	Port    string `toml:"port"`
 	SSHPort string `toml:"ssh_port"`
 	Token   string `toml:"token"`
+	Secret  string `toml:"secret"`
 }
 
 // GetHost creates the user@IP string.
@@ -92,7 +92,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	// Output Webhook url to user.
 	println("GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
 	println("http://" + remote.IP + ":" + remote.Daemon.Port)
-	println("Github WebHook Secret: " + common.DefaultSecret + "\n")
+	println("Github WebHook Secret: " + remote.Daemon.Secret + "\n")
 
 	println("Inertia daemon successfully deployed! Add your webhook url and deploy\nkey to enable continuous deployment.")
 	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", name)

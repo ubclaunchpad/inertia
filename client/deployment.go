@@ -67,6 +67,7 @@ func (d *Deployment) Up(buildType string, stream bool) (*http.Response, error) {
 		Stream:    stream,
 		Project:   d.Project,
 		BuildType: buildType,
+		Secret:    d.RemoteVPS.Daemon.Secret,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
 			Branch:    d.Branch,

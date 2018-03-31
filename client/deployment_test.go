@@ -22,13 +22,14 @@ var (
 func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, error) {
 	wholeURL := strings.Split(ts.URL, ":")
 	url := strings.Trim(wholeURL[1], "/")
-	port := wholeURL[2]
+	port := wholeURL[2] 
 	mockRemote := &RemoteVPS{
 		User: "",
 		IP:   url,
 		PEM:  "",
 		Daemon: &DaemonConfig{
-			Port: port,
+			Port:   port,
+			Secret: "arjan",
 		},
 	}
 	mockRepo, err := git.Init(s, nil)
@@ -66,6 +67,7 @@ func TestUp(t *testing.T) {
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
+		assert.Equal(t, "arjan", upReq.Secret)
 		assert.Equal(t, "test_project", upReq.Project)
 		assert.Equal(t, "docker-compose", upReq.BuildType)
 

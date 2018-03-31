@@ -16,6 +16,7 @@ import (
 var (
 	errInvalidUser    = errors.New("invalid user")
 	errInvalidAddress = errors.New("invalid IP address")
+	errInvalidSecret  = errors.New("invalid secret")
 )
 
 // remoteCmd represents the remote command
@@ -107,6 +108,13 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, 
 	}
 	address := response
 
+	fmt.Println("Enter webhook secret:")
+	n, err = fmt.Fscanln(in, &response)
+	if err != nil || n == 0 {
+		return errInvalidSecret
+	}
+	secret := response
+
 	branch := currBranch
 	fmt.Println("Enter project branch to deploy (leave blank for current branch):")
 	n, err = fmt.Fscanln(in, &response)
@@ -128,6 +136,7 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, 
 		Daemon: &client.DaemonConfig{
 			Port:    port,
 			SSHPort: sshPort,
+			Secret:  secret,
 		},
 	})
 	return config.Write()
