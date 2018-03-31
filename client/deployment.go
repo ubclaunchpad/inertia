@@ -19,7 +19,7 @@ type Deployment struct {
 	*RemoteVPS
 	Repository *git.Repository
 	Auth       string
-	Project	   string
+	Project    string
 }
 
 // GetDeployment returns the local deployment setup
@@ -58,8 +58,9 @@ func (d *Deployment) Up(project string, stream bool) (*http.Response, error) {
 	}
 
 	reqContent := &common.DaemonRequest{
-		Stream: stream,
+		Stream:  stream,
 		Project: project,
+		Secret:  d.RemoteVPS.Daemon.Secret,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
 			Branch:    d.Branch,

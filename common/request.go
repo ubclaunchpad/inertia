@@ -1,9 +1,6 @@
 package common
 
 const (
-	// DefaultSecret used for some verification
-	DefaultSecret = "inertia"
-
 	// DaemonOkResp is the OK response upon successfully reaching daemon
 	DaemonOkResp = "I'm a little Webhook, short and stout!"
 
@@ -17,6 +14,7 @@ type DaemonRequest struct {
 	Container  string      `json:"container,omitempty"`
 	Project    string      `json:"project"`
 	GitOptions *GitOptions `json:"git_options"`
+	Secret     string      `json:"secret"`
 }
 
 // GitOptions represents GitHub-related deployment options
