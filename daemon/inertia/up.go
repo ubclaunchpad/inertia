@@ -41,6 +41,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			ProjectName: upReq.Project,
 			BuildType:   upReq.BuildType,
 			RemoteURL:   gitOpts.RemoteURL,
+			Branch:      gitOpts.Branch,
 			PemFilePath: auth.DaemonGithubKeyLocation,
 		}, logger.GetWriter())
 		if err != nil {
