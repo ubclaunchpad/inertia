@@ -29,29 +29,43 @@ const (
 	Directory = "/app/host/project"
 )
 
+// Deployer does great deploys
+type Deployer interface {
+	Deploy(DeployOptions, *docker.Client, io.Writer) error
+	Down(*docker.Client, io.Writer) error
+	Destroy(*docker.Client, io.Writer) error
+
+	Logs(LogOptions, *docker.Client) (io.ReadCloser, error)
+	GetStatus(*docker.Client) (*DeploymentStatus, error)
+
+	SetConfig(DeploymentConfig)
+	GetBranch() string
+	CompareRemotes(string) error
+}
+
 // Deployment represents the deployed project
 type Deployment struct {
-	Project string
-	Branch  string
-	Type    string
+	project   string
+	branch    string
+	buildType string
 
 	repo *git.Repository
 	auth ssh.AuthMethod
 	mux  sync.Mutex
 }
 
-// DeploymentStatus lists details about the deployed project
-type DeploymentStatus struct {
-	Branch               string
-	CommitHash           string
-	CommitMessage        string
-	Containers           []string
-	BuildContainerActive bool
+// DeploymentConfig is used to configure Deployment
+type DeploymentConfig struct {
+	ProjectName string
+	BuildType   string
+	RemoteURL   string
+	Branch      string
+	PemFilePath string
 }
 
 // NewDeployment creates a new deployment
-func NewDeployment(projectName, buildType, remoteURL, branch string, out io.Writer) (*Deployment, error) {
-	pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
+func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
+	pemFile, err := os.Open(cfg.PemFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -59,18 +73,66 @@ func NewDeployment(projectName, buildType, remoteURL, branch string, out io.Writ
 	if err != nil {
 		return nil, err
 	}
-	repo, err := initializeRepository(remoteURL, branch, authMethod, out)
+	repo, err := initializeRepository(cfg.RemoteURL, cfg.Branch, authMethod, out)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Deployment{
-		Project: projectName,
-		Branch:  branch,
-		Type:    buildType,
-		auth:    authMethod,
-		repo:    repo,
+		project:   cfg.ProjectName,
+		branch:    cfg.Branch,
+		buildType: cfg.BuildType,
+		auth:      authMethod,
+		repo:      repo,
 	}, nil
+}
+
+// SetConfig updates the deployment's configuration. Only supports
+// ProjectName, Branch, and BuildType for now.
+func (d *Deployment) SetConfig(cfg DeploymentConfig) {
+	if cfg.ProjectName != "" {
+		d.project = cfg.ProjectName
+	}
+	if cfg.Branch != "" {
+		d.branch = cfg.Branch
+	}
+	if cfg.BuildType != "" {
+		d.buildType = cfg.BuildType
+	}
+}
+
+// DeployOptions is used to configure how the deployment handles the deploy
+type DeployOptions struct {
+	SkipUpdate bool
+}
+
+// Deploy will update, build, and deploy the project
+func (d *Deployment) Deploy(opts DeployOptions, cli *docker.Client, out io.Writer) error {
+	d.mux.Lock()
+	defer d.mux.Unlock()
+	fmt.Println(out, "Preparing to deploy project")
+
+	// Update repository
+	if !opts.SkipUpdate {
+		err := updateRepository(Directory, d.repo, d.branch, d.auth, out)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Kill active project containers if there are any
+	err := stopActiveContainers(cli, out)
+	if err != nil {
+		return err
+	}
+
+	// Use the appropriate build method
+	switch d.buildType {
+	case "herokuish":
+		return d.herokuishBuild(cli, out)
+	default:
+		return d.dockerCompose(cli, out)
+	}
 }
 
 // Down shuts down the deployment
@@ -93,37 +155,38 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 }
 
 // Destroy shuts down the deployment and removes the repository
-func (d *Deployment) Destroy(cli *docker.Client) error {
-	d.Down(cli, os.Stdout)
+func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
+	d.Down(cli, out)
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	return common.RemoveContents(Directory)
 }
 
-// CompareRemotes will compare the remote of the deployment
-// with given remote URL and return nil if they match
-func (d *Deployment) CompareRemotes(remoteURL string) error {
-	remotes, err := d.repo.Remotes()
-	if err != nil {
-		return err
-	}
-	localRemoteURL := common.GetSSHRemoteURL(remotes[0].Config().URLs[0])
-	if localRemoteURL != common.GetSSHRemoteURL(remoteURL) {
-		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
-	}
-	return nil
+// LogOptions is used to configure retrieved container logs
+type LogOptions struct {
+	Container string
+	Stream    bool
 }
 
 // Logs get logs ;)
-func (d *Deployment) Logs(container string, follow bool, cli *docker.Client) (io.ReadCloser, error) {
+func (d *Deployment) Logs(opts LogOptions, cli *docker.Client) (io.ReadCloser, error) {
 	ctx := context.Background()
-	return cli.ContainerLogs(ctx, container, types.ContainerLogsOptions{
+	return cli.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
-		Follow:     follow,
+		Follow:     opts.Stream,
 		Timestamps: true,
 	})
+}
+
+// DeploymentStatus lists details about the deployed project
+type DeploymentStatus struct {
+	Branch               string
+	CommitHash           string
+	CommitMessage        string
+	Containers           []string
+	BuildContainerActive bool
 }
 
 // GetStatus returns the status of the deployment
@@ -168,33 +231,23 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*DeploymentStatus, error) {
 	}, nil
 }
 
-// Deploy will update, build, and deploy the project
-func (d *Deployment) Deploy(skipUpdate bool, cli *docker.Client, out io.Writer) error {
-	d.mux.Lock()
-	defer d.mux.Unlock()
-	fmt.Println(out, "Deploying repository...")
+// GetBranch returns the currently deployed branch
+func (d *Deployment) GetBranch() string {
+	return d.branch
+}
 
-	// Update repository
-	if !skipUpdate {
-		err := updateRepository(Directory, d.repo, d.Branch, d.auth, out)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Kill active project containers if there are any
-	err := stopActiveContainers(cli, out)
+// CompareRemotes will compare the remote of the deployment
+// with given remote URL and return nil if they match
+func (d *Deployment) CompareRemotes(remoteURL string) error {
+	remotes, err := d.repo.Remotes()
 	if err != nil {
 		return err
 	}
-
-	// Use the appropriate build method
-	switch d.Type {
-	case "herokuish":
-		return d.herokuishBuild(cli, out)
-	default:
-		return d.dockerCompose(cli, out)
+	localRemoteURL := common.GetSSHRemoteURL(remotes[0].Config().URLs[0])
+	if localRemoteURL != common.GetSSHRemoteURL(remoteURL) {
+		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
+	return nil
 }
 
 // dockerCompose builds and runs project using docker-compose -
@@ -220,7 +273,7 @@ func (d *Deployment) dockerCompose(cli *docker.Client, out io.Writer) error {
 			WorkingDir: "/build/project",
 			Env:        []string{"HOME=/build"},
 			Cmd: []string{
-				"-p", d.Project,
+				"-p", d.project,
 				"up",
 				"--build",
 			},
@@ -281,30 +334,34 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	// the updated container
 	fmt.Fprintln(out, "Preparing build...")
 	id, err := cli.ContainerExecCreate(ctx, resp.ID, types.ExecConfig{
-		Cmd: []string{"/build"},
+		Cmd:          []string{"/build"},
+		AttachStdout: true,
 	})
 	if err != nil {
 		return err
 	}
 	fmt.Fprintln(out, "Building project...")
-	_, err = cli.ContainerExecAttach(ctx, id.ID, types.ExecConfig{})
-	if err != nil {
-		return err
-	}
-	fmt.Fprintln(out, "Saving build...")
-	id, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{})
-	if err != nil {
-		return err
-	}
-
-	// Start the updated container
-	fmt.Fprintln(out, "Running project...")
-	id, err = cli.ContainerExecCreate(ctx, id.ID, types.ExecConfig{
-		Cmd: []string{"/start"},
+	hijackedResp, err := cli.ContainerExecAttach(ctx, id.ID, types.ExecConfig{
+		AttachStdout: true,
 	})
 	if err != nil {
 		return err
 	}
-	_, err = cli.ContainerExecAttach(ctx, id.ID, types.ExecConfig{})
-	return err
+	hijackedResp.Close()
+	fmt.Fprintln(out, "Saving build...")
+	id, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
+		Config: &container.Config{
+			Cmd: []string{"/start"},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(out, "Old: "+resp.ID)
+	fmt.Fprintln(out, "New: "+id.ID)
+
+	// Start the updated container
+	fmt.Fprintln(out, "Running project...")
+	return cli.ContainerStart(ctx, id.ID, types.ContainerStartOptions{})
 }

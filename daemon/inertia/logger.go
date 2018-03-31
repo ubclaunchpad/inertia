@@ -24,18 +24,8 @@ func (d *daemonWriter) Write(p []byte) (n int, err error) {
 	return d.stdWriter.Write(p)
 }
 
-// logger is a multilogger used by the daemon to pipe
+// daemonLogger is a multilogger used by the daemon to pipe
 // output to multiple places depending on context.
-type logger interface {
-	Println(a interface{})
-	Err(msg string, status int)
-	Success(msg string, status int)
-	GetWriter() io.Writer
-	Close()
-}
-
-// daemonLogger is the default logger implementation used
-// by the Inertia daemon
 type daemonLogger struct {
 	stream     bool
 	writer     io.Writer
@@ -44,7 +34,7 @@ type daemonLogger struct {
 }
 
 // newLogger creates a new logger
-func newLogger(stream bool, httpWriter http.ResponseWriter) logger {
+func newLogger(stream bool, httpWriter http.ResponseWriter) *daemonLogger {
 	writer := &daemonWriter{stdWriter: os.Stdout}
 	var reader *io.PipeReader
 	if stream {

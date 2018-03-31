@@ -7,6 +7,7 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
@@ -31,11 +32,15 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check for existing git repository, clone if no git repository exists.
 	skipUpdate := false
-	err = common.CheckForGit(project.Directory)
-	if err != nil || deployment == nil {
-		logger.Println("No git repository present.")
+	if deployment == nil {
+		logger.Println("No deployment detected")
 		common.RemoveContents(project.Directory)
-		d, err := project.NewDeployment(upReq.Project, upReq.BuildType, gitOpts.RemoteURL, gitOpts.Branch, logger.GetWriter())
+		d, err := project.NewDeployment(project.DeploymentConfig{
+			ProjectName: upReq.Project,
+			BuildType:   upReq.BuildType,
+			RemoteURL:   gitOpts.RemoteURL,
+			PemFilePath: auth.DaemonGithubKeyLocation,
+		}, logger.GetWriter())
 		if err != nil {
 			logger.Err(err.Error(), http.StatusPreconditionFailed)
 			return
@@ -54,8 +59,10 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Change deployment parameters if necessary
-	deployment.Project = upReq.Project
-	deployment.Branch = gitOpts.Branch
+	deployment.SetConfig(project.DeploymentConfig{
+		ProjectName: upReq.Project,
+		Branch:      gitOpts.Branch,
+	})
 
 	// Deploy project
 	cli, err := docker.NewEnvClient()
@@ -64,7 +71,9 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = deployment.Deploy(skipUpdate, cli, logger.GetWriter())
+	err = deployment.Deploy(project.DeployOptions{
+		SkipUpdate: skipUpdate,
+	}, cli, logger.GetWriter())
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return

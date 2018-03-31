@@ -8,6 +8,7 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
 // logHandler handles requests for container logs
@@ -30,7 +31,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	defer logger.Close()
 
 	if container != "/inertia-daemon" && deployment == nil {
-		http.Error(w, noDeploymentMsg, http.StatusPreconditionFailed)
+		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
 
@@ -41,7 +42,10 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	logs, err := deployment.Logs(container, upReq.Stream, cli)
+	logs, err := deployment.Logs(project.LogOptions{
+		Container: upReq.Container,
+		Stream:    upReq.Stream,
+	}, cli)
 	if err != nil {
 		if docker.IsErrContainerNotFound(err) {
 			logger.Err(err.Error(), http.StatusNotFound)

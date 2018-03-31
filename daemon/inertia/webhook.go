@@ -13,7 +13,7 @@ import (
 
 // gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
 func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, common.DaemonOkResp)
+	fmt.Fprint(w, common.MsgDaemonOK)
 
 	payload, err := github.ValidatePayload(r, []byte(defaultSecret))
 	if err != nil {
@@ -48,21 +48,20 @@ func processPushEvent(event *github.PushEvent) {
 
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
-	err := common.CheckForGit(project.Directory)
-	if err != nil {
-		println("No git repository present - try running 'inertia $REMOTE up'")
+	if deployment == nil {
+		println("No deployment detected - try running 'inertia $REMOTE up'")
 		return
 	}
 
 	// Check for matching remotes
-	err = deployment.CompareRemotes(common.GetSSHRemoteURL(repo.GetGitURL()))
+	err := deployment.CompareRemotes(common.GetSSHRemoteURL(repo.GetGitURL()))
 	if err != nil {
 		println(err.Error())
 		return
 	}
 
 	// If branches match, deploy, otherwise ignore the event.
-	if deployment.Branch == branch {
+	if deployment.GetBranch() == branch {
 		println("Event branch matches deployed branch " + branch)
 		cli, err := docker.NewEnvClient()
 		if err != nil {
@@ -72,14 +71,16 @@ func processPushEvent(event *github.PushEvent) {
 		defer cli.Close()
 
 		// Deploy project
-		err = deployment.Deploy(false, cli, os.Stdout)
+		err = deployment.Deploy(project.DeployOptions{
+			SkipUpdate: false,
+		}, cli, os.Stdout)
 		if err != nil {
 			println(err.Error())
 		}
 	} else {
 		println(
 			"Event branch " + branch + " does not match deployed branch " +
-				deployment.Branch + " - ignoring event.",
+				deployment.GetBranch() + " - ignoring event.",
 		)
 	}
 }

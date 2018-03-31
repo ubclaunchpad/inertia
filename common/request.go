@@ -4,8 +4,8 @@ const (
 	// DefaultSecret used for some verification
 	DefaultSecret = "inertia"
 
-	// DaemonOkResp is the OK response upon successfully reaching daemon
-	DaemonOkResp = "I'm a little Webhook, short and stout!"
+	// MsgDaemonOK is the OK response upon successfully reaching daemon
+	MsgDaemonOK = "I'm a little Webhook, short and stout!"
 
 	// DefaultPort defines the standard daemon port
 	DefaultPort = "8081"

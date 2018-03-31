@@ -10,7 +10,7 @@ import (
 // downHandler tries to take the deployment offline
 func downHandler(w http.ResponseWriter, r *http.Request) {
 	if deployment == nil {
-		http.Error(w, noDeploymentMsg, http.StatusPreconditionFailed)
+		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
 

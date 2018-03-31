@@ -17,11 +17,11 @@ var (
 	daemonVersion string
 
 	// deployment is the currently deployed project on this remote
-	deployment *project.Deployment
+	deployment project.Deployer
 )
 
 const (
-	noDeploymentMsg = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
+	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
 
 	// specify location of SSL certificate
 	sslDirectory  = "/app/host/ssl/"

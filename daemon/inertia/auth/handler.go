@@ -46,5 +46,5 @@ func Authorized(handler http.HandlerFunc, keyLookup func(*jwt.Token) (interface{
 // HealthCheckHandler returns a 200 if the daemon is happy.
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, common.DaemonOkResp)
+	fmt.Fprint(w, common.MsgDaemonOK)
 }

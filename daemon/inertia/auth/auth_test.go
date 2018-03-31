@@ -41,7 +41,7 @@ func TestAuthorizationOK(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusOK)
-	assert.Equal(t, rr.Body.String(), common.DaemonOkResp)
+	assert.Equal(t, rr.Body.String(), common.MsgDaemonOK)
 }
 
 func TestAuthorizationMalformedBearerString(t *testing.T) {

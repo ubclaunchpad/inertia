@@ -7,12 +7,18 @@ import (
 	docker "github.com/docker/docker/client"
 )
 
-// statusHandler lists currently active project containers
+const (
+	msgBuildInProgress    = "It appears that your build is still in progress."
+	msgNoContainersActive = "No containers are active."
+)
+
+// statusHandler returns a formatted string about the status of the
+// deployment and lists currently active project containers
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	inertiaStatus := "inertia daemon " + daemonVersion + "\n"
 	if deployment == nil {
 		http.Error(
-			w, inertiaStatus+noDeploymentMsg,
+			w, inertiaStatus+msgNoDeployment,
 			http.StatusPreconditionFailed,
 		)
 		return
@@ -40,12 +46,10 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	// are active, indicating a build failure or build-in-progress
 	if len(status.Containers) == 0 {
 		if status.BuildContainerActive {
-			errorString := statusString +
-				"It appears that your build is still in progress."
+			errorString := statusString + msgBuildInProgress
 			http.Error(w, errorString, http.StatusNotFound)
 		} else {
-			errorString := statusString +
-				"No containers are active."
+			errorString := statusString + msgNoContainersActive
 			http.Error(w, errorString, http.StatusNotFound)
 		}
 		return

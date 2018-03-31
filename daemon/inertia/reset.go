@@ -9,7 +9,7 @@ import (
 // resetHandler shuts down and wipes the project directory
 func resetHandler(w http.ResponseWriter, r *http.Request) {
 	if deployment == nil {
-		http.Error(w, noDeploymentMsg, http.StatusPreconditionFailed)
+		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
 
@@ -24,7 +24,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	defer cli.Close()
 
 	// Goodbye deployment
-	err = deployment.Destroy(cli)
+	err = deployment.Destroy(cli, logger.GetWriter())
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
