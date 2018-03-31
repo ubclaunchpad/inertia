@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -144,52 +142,7 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, 
 	return config.Write()
 }
 
-// statusCmd represents the remote status command
-var statusCmd = &cobra.Command{
-	Use:   "status [REMOTE]",
-	Short: "Query the status of a remote instance",
-	Long: `Query the remote VPS for connectivity, daemon
-behaviour, and other information.`,
-	Args: cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		config, err := client.GetProjectConfigFromDisk()
-		if err != nil {
-			log.WithError(err)
-		}
 
-		remote, found := config.GetRemote(args[0])
-		if !found {
-			println("No such remote " + args[0])
-			println("Inertia currently supports one remote per repository")
-			println("Run `inertia remote -v' to see what remote is available")
-			os.Exit(1)
-		}
-
-		host := "http://" + remote.GetIPAndPort()
-		resp, err := http.Get(host)
-		if err != nil {
-			println("Could not connect to daemon")
-			println("Try running inertia [REMOTE] init")
-			return
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			println("Bad response from daemon")
-			println("Try running inertia [REMOTE] init")
-			return
-		}
-
-		if string(body) != common.DaemonOkResp {
-			println("Could not connect to daemon")
-			println("Try running inertia [REMOTE] init")
-			return
-		}
-
-		fmt.Printf("Remote instance '%s' accepting requests at %s\n",
-			args[0], host)
-	},
-}
 
 // listCmd represents the inertia list command
 var listCmd = &cobra.Command{
@@ -272,7 +225,6 @@ func printRemoteDetails(remote *client.RemoteVPS) {
 func init() {
 	rootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
-	remoteCmd.AddCommand(statusCmd)
 	remoteCmd.AddCommand(listCmd)
 	remoteCmd.AddCommand(removeCmd)
 	remoteCmd.AddCommand(showCmd)
