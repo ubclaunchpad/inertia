@@ -169,6 +169,8 @@ $> inertia --version      # check what version you have installed
 
 Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
 
+Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to go back to using an Inertia CLI installed using Homebrew.
+
 For development, you should install a build tagged as `test` so that you can make use `make testdaemon` for local development. See the next section for more details.
 
 ```bash
