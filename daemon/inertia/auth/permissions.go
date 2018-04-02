@@ -266,7 +266,11 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Login failed", http.StatusForbidden)
 		return
 	}
-	h.sessions.BeginSession(userReq.Username, w, r)
+	err = h.sessions.BeginSession(userReq.Username, w, r)
+	if err != nil {
+		http.Error(w, "Login failed: "+err.Error(), http.StatusForbidden)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "[SUCCESS %d] User %s logged in\n", http.StatusOK, userReq.Username)

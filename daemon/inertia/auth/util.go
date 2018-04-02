@@ -6,10 +6,10 @@ import (
 	"io"
 )
 
-func generateSessionID() string {
+func generateSessionID() (string, error) {
 	b := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		return ""
+		return "", err
 	}
-	return base64.URLEncoding.EncodeToString(b)
+	return base64.URLEncoding.EncodeToString(b), nil
 }
