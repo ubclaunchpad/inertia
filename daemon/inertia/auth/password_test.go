@@ -13,7 +13,7 @@ func TestHashPassword(t *testing.T) {
 	assert.NotEqual(t, unhashed, hashed)
 }
 
-func TestCorrectPassowrd(t *testing.T) {
+func TestCorrectPassword(t *testing.T) {
 	unhashed := "amazing"
 	hashed, err := hashPassword(unhashed)
 	assert.Nil(t, err)

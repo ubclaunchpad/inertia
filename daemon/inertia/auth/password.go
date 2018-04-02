@@ -8,10 +8,11 @@ import (
 
 var (
 	errSameUsernamePassword = errors.New("Username and password must be different")
-	errInvalidUsername      = errors.New("Only letters, numbers and underscores are allowed in usernames")
-	errInvalidPassword      = errors.New("Only letters, numbers and underscores are allowed in passwords, and password must be at least 5 characters")
+	errInvalidUsername      = errors.New("Only letters, numbers, underscores, and dashes are allowed in usernames, and username must be at least 3 characters")
+	errInvalidPassword      = errors.New("Only letters, numbers, underscores, and dashes are allowed in passwords, and password must be at least 5 characters")
 )
 
+// hashPassword generates a bcrypt-encrypted hash from given password
 func hashPassword(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -20,6 +21,7 @@ func hashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
+// correctPassword checks if given password maps correctly to the given hash
 func correctPassword(hash string, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
@@ -30,35 +32,21 @@ func validateCredentialValues(username, password string) error {
 	if username == password {
 		return errSameUsernamePassword
 	}
-	if len(password) < 5 || len(password) >= 128 {
+	if len(password) < 5 || len(password) >= 128 || !isLegalString(password) {
 		return errInvalidPassword
 	}
-	if len(username) < 3 || len(username) >= 128 {
+	if len(username) < 3 || len(username) >= 128 || !isLegalString(username) {
 		return errInvalidUsername
 	}
-	validChars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-
-NEXT_USERNAME_CHAR:
-	for _, char := range username {
-		for _, validChar := range validChars {
-			// if valid, skip to next character
-			if char == validChar {
-				continue NEXT_USERNAME_CHAR
-			}
-		}
-		return errInvalidUsername
-	}
-
-NEXT_PASSWORD_CHAR:
-	for _, char := range password {
-		for _, validChar := range validChars {
-			// if valid, skip to next character
-			if char == validChar {
-				continue NEXT_PASSWORD_CHAR
-			}
-		}
-		return errInvalidPassword
-	}
-
 	return nil
+}
+
+// isLegalString returns true if `str` only contains characters [A-Z], [a-z], or '_' or '-'
+func isLegalString(str string) bool {
+	for _, c := range str {
+		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && c != '_' && c != '-' {
+			return false
+		}
+	}
+	return true
 }
