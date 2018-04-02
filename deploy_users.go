@@ -144,3 +144,38 @@ from the web app.`,
 		}
 	},
 }
+
+var deploymentUsersListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all users registered on your remote.",
+	Long:  `List all users with access to Inertia Web on your remote.`,
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
+		deployment, err := client.GetDeployment(remoteName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resp, err := deployment.ListUsers()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err)
+		}
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+		case http.StatusForbidden:
+			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
+		default:
+			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
+				resp.StatusCode, body)
+		}
+	},
+}

@@ -60,6 +60,7 @@ func NewPermissionsHandler(dbPath, domain, path string, timeout int) (*Permissio
 	mux.HandleFunc("/adduser", Authorized(handler.addUserHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/removeuser", Authorized(handler.removeUserHandler, GetAPIPrivateKey))
 	mux.HandleFunc("/resetusers", Authorized(handler.resetUsersHandler, GetAPIPrivateKey))
+	mux.HandleFunc("/listusers", Authorized(handler.listUsersHandler, GetAPIPrivateKey))
 
 	return handler, nil
 }
@@ -213,6 +214,18 @@ func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "[SUCCESS %d] User and session databases reset\n", http.StatusOK)
+}
+
+func (h *PermissionsHandler) listUsersHandler(w http.ResponseWriter, r *http.Request) {
+	users := h.users.UserList()
+	userList := ""
+	for _, user := range users {
+		userList += " - " + user + "\n"
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "[SUCCESS %d] Users: \n%s\n", http.StatusOK, userList)
 }
 
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {

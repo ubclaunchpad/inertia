@@ -35,7 +35,7 @@ func TestAddUserAndIsCorrectCredentials(t *testing.T) {
 	assert.True(t, correct)
 }
 
-func TestAddDeleteAndHasUser(t *testing.T) {
+func TestAllUserManagementOperations(t *testing.T) {
 	dir := "./test_users"
 	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
@@ -44,6 +44,12 @@ func TestAddDeleteAndHasUser(t *testing.T) {
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
+
+	err = manager.AddUser("whoisthat", "ummmmmmmmmm", false)
+	assert.Nil(t, err)
+
+	users := manager.UserList()
+	assert.Equal(t, len(users), 2)
 
 	err = manager.HasUser("bobheadxi")
 	assert.Nil(t, err)
