@@ -37,14 +37,12 @@ Inertia is a cross-platform command line tool that simplifies setup and manageme
 
 All you need to get started is a docker-compose project, the Inertia CLI, and access to a virtual private server. To download the CLI:
 
-Inertia CLI binaries can be downloaded for various platforms in the [Releases](https://github.com/ubclaunchpad/inertia/releases) page. You can add this binary to your PATH or execute it directly to use the Inertia CLI:
-
 ```bash
 $> brew install ubclaunchpad/tap/inertia
 $> inertia
 ```
 
-For other platforms, you can also [download the appropriate binary for your platform from the Releases page](https://github.com/ubclaunchpad/inertia/releases) or [install Inertia from source](#installing-from-source).
+For other platforms, you can also [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases) or [install Inertia from source](#installing-from-source).
 
 ## Setup
 
