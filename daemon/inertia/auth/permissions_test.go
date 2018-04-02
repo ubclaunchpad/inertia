@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -19,7 +20,11 @@ func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewPermissionsHandler(path.Join(dir, "users.db"), "127.0.0.1", "/", 3000)
+	return NewPermissionsHandler(
+		path.Join(dir, "users.db"),
+		"127.0.0.1", "/", 3000,
+		getFakeAPIKey,
+	)
 }
 
 func TestServeHTTPPublicPath(t *testing.T) {
@@ -205,5 +210,71 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	assert.Nil(t, err)
 	defer resp.Body.Close()
 
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestUserControlHandlers(t *testing.T) {
+	dir := "./test_perm"
+	ts := httptest.NewServer(nil)
+	defer ts.Close()
+
+	// Set up permission handler
+	ph, err := getTestPermissionsHandler(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer ph.Close()
+	ts.Config.Handler = ph
+
+	// Test handler uses the getFakeAPIToken keylookup, which
+	// will match with the testToken
+	bearerTokenString := fmt.Sprintf("Bearer %s", testToken)
+
+	// Add a new user
+	body, err := json.Marshal(&common.UserRequest{
+		Username: "jimmyneutron",
+		Password: "asfasdlfjk",
+		Admin:    false,
+	})
+	assert.Nil(t, err)
+	payload := bytes.NewReader(body)
+	req, err := http.NewRequest("POST", ts.URL+"/adduser", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", bearerTokenString)
+	resp, err := http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	// Remove a user
+	body, err = json.Marshal(&common.UserRequest{
+		Username: "jimmyneutron",
+	})
+	assert.Nil(t, err)
+	payload = bytes.NewReader(body)
+	req, err = http.NewRequest("POST", ts.URL+"/removeuser", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Authorization", bearerTokenString)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// List users
+	req, err = http.NewRequest("POST", ts.URL+"/listusers", nil)
+	assert.Nil(t, err)
+	req.Header.Set("Authorization", bearerTokenString)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Reset all users
+	req, err = http.NewRequest("POST", ts.URL+"/resetusers", nil)
+	assert.Nil(t, err)
+	req.Header.Set("Authorization", bearerTokenString)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
