@@ -19,7 +19,7 @@ type Deployment struct {
 	*RemoteVPS
 	Repository *git.Repository
 	Auth       string
-	Project	   string
+	Project    string
 }
 
 // GetDeployment returns the local deployment setup
@@ -58,31 +58,32 @@ func (d *Deployment) Up(project string, stream bool) (*http.Response, error) {
 	}
 
 	reqContent := &common.DaemonRequest{
-		Stream: stream,
+		Stream:  stream,
 		Project: project,
+		Secret:  d.RemoteVPS.Daemon.Secret,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
 			Branch:    d.Branch,
 		},
 	}
-	return d.request("/up", "POST", reqContent)
+	return d.request("POST", "/up", reqContent)
 }
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
 func (d *Deployment) Down() (*http.Response, error) {
-	return d.request("/down", "POST", nil)
+	return d.request("POST", "/down", nil)
 }
 
 // Status lists the currently active containers on the remote VPS instance
 func (d *Deployment) Status() (*http.Response, error) {
-	return d.request("/status", "GET", nil)
+	return d.request("GET", "/status", nil)
 }
 
 // Reset shuts down deployment and deletes the contents of the deployment's
 // project directory
 func (d *Deployment) Reset() (*http.Response, error) {
-	return d.request("/reset", "POST", nil)
+	return d.request("POST", "/reset", nil)
 }
 
 // Logs get logs of given container
@@ -91,7 +92,7 @@ func (d *Deployment) Logs(stream bool, container string) (*http.Response, error)
 		Stream:    stream,
 		Container: container,
 	}
-	return d.request("/logs", "GET", reqContent)
+	return d.request("GET", "/logs", reqContent)
 }
 
 // AddUser adds an authorized user for access to Inertia Web
@@ -101,16 +102,21 @@ func (d *Deployment) AddUser(username, password string, admin bool) (*http.Respo
 		Password: password,
 		Admin:    admin,
 	}
-	return d.request("/web/adduser", "POST", reqContent)
+	return d.request("POST", "/web/adduser", reqContent)
 }
 
 // RemoveUser prevents a user from accessing Inertia Web
 func (d *Deployment) RemoveUser(username string) (*http.Response, error) {
 	reqContent := &common.UserRequest{Username: username}
-	return d.request("/web/removeuser", "POST", reqContent)
+	return d.request("POST", "/web/removeuser", reqContent)
 }
 
-func (d *Deployment) request(endpoint, method string, requestBody interface{}) (*http.Response, error) {
+// ResetUsers resets all users on the remote.
+func (d *Deployment) ResetUsers() (*http.Response, error) {
+	return d.request("POST", "/web/resetusers", nil)
+}
+
+func (d *Deployment) request(method, endpoint string, requestBody interface{}) (*http.Response, error) {
 	// Assemble URL
 	url, err := url.Parse("https://" + d.RemoteVPS.GetIPAndPort())
 	if err != nil {

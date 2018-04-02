@@ -109,9 +109,8 @@ var deploymentStatusCmd = &cobra.Command{
 	Requires the Inertia daemon to be active on your remote - do this by 
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// Get status of the deployment
-		deployment, err := client.GetDeployment(strings.Split(cmd.Parent().Use, " ")[0])
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		deployment, err := client.GetDeployment(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -330,8 +329,10 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		adduser := deepCopy(deploymentUserAddCmd)
 		adduser.Flags().Bool("admin", false, "Create an admin user")
 		removeuser := deepCopy(deploymentUserRemoveCmd)
+		resetusers := deepCopy(deploymentUsersResetCmd)
 		user.AddCommand(adduser)
 		user.AddCommand(removeuser)
+		user.AddCommand(resetusers)
 		cmd.AddCommand(user)
 
 		ssh := deepCopy(deploymentSSHCmd)

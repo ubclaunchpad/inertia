@@ -2,20 +2,26 @@ package auth
 
 import (
 	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddUserAndIsCorrectCredentials(t *testing.T) {
-	dir := "./test"
+func getTestUserManager(dir string) (*userManager, error) {
 	err := os.Mkdir(dir, os.ModePerm)
-	assert.Nil(t, err)
+	if err != nil {
+		return nil, err
+	}
+	return newUserManager(path.Join(dir, "users.db"))
+}
+
+func TestAddUserAndIsCorrectCredentials(t *testing.T) {
+	dir := "./test_users"
+	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
-	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
 	defer manager.Close()
-	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
@@ -30,39 +36,31 @@ func TestAddUserAndIsCorrectCredentials(t *testing.T) {
 }
 
 func TestAddDeleteAndHasUser(t *testing.T) {
-	dir := "./test"
-	err := os.Mkdir(dir, os.ModePerm)
-	assert.Nil(t, err)
+	dir := "./test_users"
+	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
-	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
 	defer manager.Close()
-	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
 
-	found, err := manager.HasUser("bobheadxi")
+	err = manager.HasUser("bobheadxi")
 	assert.Nil(t, err)
-	assert.True(t, found)
 
 	err = manager.RemoveUser("bobheadxi")
 	assert.Nil(t, err)
 
-	found, err = manager.HasUser("bobheadxi")
-	assert.Nil(t, err)
-	assert.False(t, found)
+	err = manager.HasUser("bobheadxi")
+	assert.Equal(t, errUserNotFound, err)
 }
 
 func TestIsAdmin(t *testing.T) {
-	dir := "./test"
-	err := os.Mkdir(dir, os.ModePerm)
-	assert.Nil(t, err)
+	dir := "./test_users"
+	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
-	manager, err := newUserManager("./test/test.db", 120)
 	assert.Nil(t, err)
 	defer manager.Close()
-	assert.NotNil(t, manager)
 
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)

@@ -3,15 +3,13 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
-	"net/url"
-	"time"
 
 	"github.com/boltdb/bolt"
 )
 
 var (
 	errSessionNotFound = errors.New("Session not found")
+	errCookieNotFound  = errors.New("Cookie not found")
 	errUserNotFound    = errors.New("User not found")
 )
 
@@ -22,33 +20,17 @@ type userProps struct {
 	Admin          bool   `json:"admin"`
 }
 
-// sessionProps are properties associated with session,
-// used for database entries
-type sessionProps struct {
-	Username string    `json:"username"`
-	Expires  time.Time `json:"created"`
-}
-
 // userManager administers sessions and user accounts
 type userManager struct {
-	cookieName    string
-	cookieTimeout int64
-
-	// bolt.DB is an embedded key/value database,
-	// where each "bucket" is a collection
-	db             *bolt.DB
-	usersBucket    []byte
-	sessionsBucket []byte
-
-	endSessionCleanup chan bool
+	// db is a boltdb database, which is an embedded
+	// key/value database where each "bucket" is a collection
+	db          *bolt.DB
+	usersBucket []byte
 }
 
-func newUserManager(dbPath string, timeout int64) (*userManager, error) {
+func newUserManager(dbPath string) (*userManager, error) {
 	manager := &userManager{
-		cookieName:     "ubclaunchpad/inertia",
-		cookieTimeout:  timeout,
-		usersBucket:    []byte("users"),
-		sessionsBucket: []byte("sessions"),
+		usersBucket: []byte("users"),
 	}
 
 	// Set up database
@@ -58,32 +40,31 @@ func newUserManager(dbPath string, timeout int64) (*userManager, error) {
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err = tx.CreateBucketIfNotExists(manager.usersBucket)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.CreateBucketIfNotExists(manager.sessionsBucket)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	})
 	manager.db = db
-
-	manager.endSessionCleanup = make(chan bool)
-	go manager.cleanSessions()
 
 	return manager, nil
 }
 
+// Close ends the session cleanup job and releases the DB handler
 func (m *userManager) Close() error {
-	m.endSessionCleanup <- true
 	return m.db.Close()
 }
 
-// User Administration Functions
+// Reset deletes all users and drops all active sessions
+func (m *userManager) Reset() error {
+	return m.db.Update(func(tx *bolt.Tx) error {
+		err := tx.DeleteBucket(m.usersBucket)
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucket(m.usersBucket)
+		return err
+	})
+}
 
+// AddUser inserts a new user
 func (m *userManager) AddUser(username, password string, admin bool) error {
 	err := validateCredentialValues(username, password)
 	if err != nil {
@@ -104,6 +85,7 @@ func (m *userManager) AddUser(username, password string, admin bool) error {
 	})
 }
 
+// RemoveUser removes user with given username and ends related sessions
 func (m *userManager) RemoveUser(username string) error {
 	return m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
@@ -111,9 +93,8 @@ func (m *userManager) RemoveUser(username string) error {
 	})
 }
 
-// User Checks
-
-func (m *userManager) HasUser(username string) (bool, error) {
+// HasUser returns nil if user exists in database
+func (m *userManager) HasUser(username string) error {
 	found := false
 	err := m.db.View(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
@@ -124,18 +105,23 @@ func (m *userManager) HasUser(username string) (bool, error) {
 		return nil
 	})
 	if err != nil {
-		return true, err
+		return err
 	}
-	return found, nil
+	if !found {
+		return errUserNotFound
+	}
+	return nil
 }
 
+// IsCorrectCredentials checks if username and password has a match
+// in the database
 func (m *userManager) IsCorrectCredentials(username, password string) (bool, error) {
 	correct := false
 	err := m.db.View(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
 		propsBytes := users.Get([]byte(username))
 		if propsBytes == nil {
-			return errors.New("User not found")
+			return errUserNotFound
 		}
 
 		props := &userProps{}
@@ -149,6 +135,7 @@ func (m *userManager) IsCorrectCredentials(username, password string) (bool, err
 	return correct, err
 }
 
+// IsAdmin checks if given user is has administrator priviledges
 func (m *userManager) IsAdmin(username string) (bool, error) {
 	admin := false
 	err := m.db.View(func(tx *bolt.Tx) error {
@@ -165,133 +152,4 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 		return nil
 	})
 	return admin, err
-}
-
-// Session Management
-
-func (m *userManager) SessionBegin(username string, w http.ResponseWriter, r *http.Request) error {
-	cookie, err := r.Cookie(m.cookieName)
-	if err != nil || cookie.Value == "" {
-		id := generateSessionID()
-		expiration := time.Now().Add(time.Duration(m.cookieTimeout) * time.Minute)
-		err := m.addSession(id, username, expiration)
-		if err != nil {
-			return err
-		}
-		cookie := http.Cookie{
-			Name:     m.cookieName,
-			Value:    url.QueryEscape(id),
-			Path:     "/web",
-			Expires:  expiration,
-			HttpOnly: true,
-		}
-		http.SetCookie(w, &cookie)
-	}
-	return nil
-}
-
-func (m *userManager) SessionEnd(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(m.cookieName)
-	if err != nil || cookie.Value == "" {
-		return
-	}
-	m.removeSession(cookie.Value)
-	expiration := time.Now()
-	newCookie := http.Cookie{
-		Name:     m.cookieName,
-		Path:     "/web",
-		HttpOnly: true,
-		Expires:  expiration,
-		MaxAge:   -1,
-	}
-	http.SetCookie(w, &newCookie)
-}
-
-func (m *userManager) SessionCheck(w http.ResponseWriter, r *http.Request) (bool, error) {
-	cookie, err := r.Cookie(m.cookieName)
-	if err != nil || cookie.Value == "" {
-		return false, err
-	}
-	s, err := m.getSession(cookie.Value)
-	if err != nil {
-		return false, err
-	}
-	return m.isValidSession(s), nil
-}
-
-// Session Helpers
-
-func (m *userManager) removeSession(id string) error {
-	return m.db.Update(func(tx *bolt.Tx) error {
-		sessions := tx.Bucket(m.sessionsBucket)
-		return sessions.Delete([]byte(id))
-	})
-}
-
-func (m *userManager) addSession(id, username string, expires time.Time) error {
-	props := sessionProps{Username: username, Expires: expires}
-	return m.db.Update(func(tx *bolt.Tx) error {
-		sessions := tx.Bucket(m.sessionsBucket)
-		bytes, err := json.Marshal(props)
-		if err != nil {
-			return err
-		}
-		return sessions.Put([]byte(id), bytes)
-	})
-}
-
-func (m *userManager) getSession(id string) (*sessionProps, error) {
-	props := &sessionProps{}
-	err := m.db.View(func(tx *bolt.Tx) error {
-		users := tx.Bucket(m.sessionsBucket)
-		propsBytes := users.Get([]byte(id))
-		if propsBytes != nil {
-			err := json.Unmarshal(propsBytes, props)
-			if err != nil {
-				return errors.New("Corrupt session properties: " + err.Error())
-			}
-		} else {
-			return errSessionNotFound
-		}
-		return nil
-	})
-	return props, err
-}
-
-func (m *userManager) isValidSession(s *sessionProps) bool {
-	return s.Expires.Before(time.Now())
-}
-
-// cleanSessions is a goroutine that continously cleans sessions
-func (m *userManager) cleanSessions() {
-	for {
-		select {
-		case <-m.endSessionCleanup:
-			return
-		default:
-			m.db.Update(func(tx *bolt.Tx) error {
-				sessions := tx.Bucket(m.sessionsBucket)
-				c := sessions.Cursor()
-				for k, v := c.First(); k != nil; k, v = c.Next() {
-					s := &sessionProps{}
-					err := json.Unmarshal(v, s)
-					if err != nil {
-						println(err)
-						continue
-					}
-					if !m.isValidSession(s) {
-						err = sessions.Delete(k)
-						if err != nil {
-							println(err)
-						}
-					}
-				}
-				return nil
-			})
-			time.AfterFunc(
-				time.Duration(m.cookieTimeout)*time.Minute,
-				func() { m.cleanSessions() },
-			)
-		}
-	}
 }

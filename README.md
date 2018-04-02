@@ -35,16 +35,16 @@ Inertia is a cross-platform command line tool that simplifies setup and manageme
 
 # :package: Usage
 
-All you need to get started is a docker-compose project, an Inertia CLI binary, and access to a virtual private server.
+All you need to get started is a docker-compose project, the Inertia CLI, and access to a virtual private server. To download the CLI:
 
 Inertia CLI binaries can be downloaded for various platforms in the [Releases](https://github.com/ubclaunchpad/inertia/releases) page. You can add this binary to your PATH or execute it directly to use the Inertia CLI:
 
 ```bash
-$> mv $INERTIA_IMAGE ./inertia
-$> ./inertia
+$> brew install ubclaunchpad/tap/inertia
+$> inertia
 ```
 
-You can also [install Inertia from source](#installing-from-source).
+For other platforms, you can also [download the appropriate binary for your platform from the Releases page](https://github.com/ubclaunchpad/inertia/releases) or [install Inertia from source](#installing-from-source).
 
 ## Setup
 
@@ -65,7 +65,7 @@ $> inertia $VPS_NAME status
 
 This daemon will be used to manage your deployment.
 
-See our [wiki](https://github.com/ubclaunchpad/inertia/wiki/VPS-Compatibility) for more details on platform compatibility.
+See our [wiki](https://github.com/ubclaunchpad/inertia/wiki/VPS-Compatibility) for more details on VPS platform compatibility.
 
 ## Deployment Management
 
@@ -170,6 +170,8 @@ $> inertia --version      # check what version you have installed
 ```
 
 Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
+
+Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to go back to using an Inertia CLI installed using Homebrew.
 
 For development, you should install a build tagged as `test` so that you can make use `make testdaemon` for local development. See the next section for more details.
 

@@ -1,10 +1,15 @@
+[prune]
+  non-go = true
+  unused-packages = true
+  go-tests = true
+
 [[constraint]]
   name = "github.com/spf13/cobra"
   branch = "master"  
 
 [[constraint]]
   name = "gopkg.in/src-d/go-git.v4"
-  version = "4.1.1"
+  version = "4.2.0"
 
 [[constraint]]
   name = "github.com/google/go-github"
@@ -12,23 +17,19 @@
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
-  version = "1.0.4"
+  version = "1.0.5"
 
 [[constraint]]
   name = "github.com/docker/docker"
-  version = "1.13.1"
+  version = "v17.03.2-ce"
 
 [[constraint]]
   name = "github.com/dgrijalva/jwt-go"
-  version = "3.1.0"
+  version = "3.2.0"
 
 [[constraint]]
   name = "github.com/BurntSushi/toml"
   version = "0.3.0"
-
-[[constraint]]
-  revision = "9de5f2eaf759b4c4550b3db39fed2e9e5f86f45c"
-  name = "golang.org/x/crypto"
 
 [[constraint]]
   name = "github.com/boltdb/bolt"

@@ -34,6 +34,8 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	gitOpts := upReq.GitOptions
 	defer logger.Close()
 
+	webhookSecret = upReq.Secret
+
 	// Check for existing git repository, clone if no git repository exists.
 	err = common.CheckForGit(project.Directory)
 	if err != nil {

@@ -8,8 +8,8 @@ import (
 
 var (
 	errSameUsernamePassword = errors.New("Username and password must be different")
-	errInvalidUsername      = errors.New("Only letters, numbers and underscore are allowed in usernames")
-	errInvalidPassword      = errors.New("Only letters, numbers and underscore are allowed in passwords, and password must be at least 5 characters")
+	errInvalidUsername      = errors.New("Only letters, numbers and underscores are allowed in usernames")
+	errInvalidPassword      = errors.New("Only letters, numbers and underscores are allowed in passwords, and password must be at least 5 characters")
 )
 
 func hashPassword(password string) (string, error) {
@@ -24,14 +24,19 @@ func correctPassword(hash string, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
+// validateCredentialValues takes a username and password and verifies
+// if they are of sufficient length and if they only contain legal characters
 func validateCredentialValues(username, password string) error {
 	if username == password {
 		return errSameUsernamePassword
 	}
-	if len(password) < 5 {
+	if len(password) < 5 || len(password) >= 128 {
 		return errInvalidPassword
 	}
-	validChars := "abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ_0123456789"
+	if len(username) < 3 || len(username) >= 128 {
+		return errInvalidUsername
+	}
+	validChars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 
 NEXT_USERNAME_CHAR:
 	for _, char := range username {

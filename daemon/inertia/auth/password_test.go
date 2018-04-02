@@ -33,12 +33,15 @@ func TestValidateCredentialValues(t *testing.T) {
 	err = validateCredentialValues("ohnoitsme", "ohnoitsme")
 	assert.Equal(t, errSameUsernamePassword, err)
 
-	err = validateCredentialValues("wow", "oh")
+	err = validateCredentialValues("wowwow", "oh")
 	assert.Equal(t, errInvalidPassword, err)
+
+	err = validateCredentialValues("um", "ohasdf")
+	assert.Equal(t, errInvalidUsername, err)
 
 	err = validateCredentialValues("wow!!!!!!", "oasdfasdfh")
 	assert.Equal(t, errInvalidUsername, err)
 
-	err = validateCredentialValues("wow", "oasdfasdfh!!!!")
+	err = validateCredentialValues("wowwow", "oasdfasdfh!!!!")
 	assert.Equal(t, errInvalidPassword, err)
 }

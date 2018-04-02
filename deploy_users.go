@@ -63,8 +63,6 @@ Use the --admin flag to create an admin user.`,
 			fmt.Printf("(Status code %d) User added!\n", resp.StatusCode)
 		case http.StatusForbidden:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
-		case http.StatusPreconditionFailed:
-			fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
 				resp.StatusCode, body)
@@ -103,8 +101,43 @@ deployment from the web app.`,
 			fmt.Printf("(Status code %d) User removed.\n", resp.StatusCode)
 		case http.StatusForbidden:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
-		case http.StatusPreconditionFailed:
-			fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
+		default:
+			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
+				resp.StatusCode, body)
+		}
+	},
+}
+
+var deploymentUsersResetCmd = &cobra.Command{
+	Use:   "reset",
+	Short: "Reset user database on your remote.",
+	Long: `Removes all users credentials on your remote. All users will
+no longer be able to log in and view or configure the deployment 
+from the web app.`,
+	Args: cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
+		deployment, err := client.GetDeployment(remoteName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resp, err := deployment.ResetUsers()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err)
+		}
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			fmt.Printf("(Status code %d) All users removed.\n", resp.StatusCode)
+		case http.StatusForbidden:
+			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
 				resp.StatusCode, body)
