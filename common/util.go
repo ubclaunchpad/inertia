@@ -41,14 +41,19 @@ func RemoveContents(directory string) error {
 
 // FlushRoutine continuously writes everything in given ReadCloser
 // to a ResponseWriter. Use this as a goroutine.
-func FlushRoutine(w io.Writer, rc io.ReadCloser) {
+func FlushRoutine(w io.Writer, rc io.ReadCloser, stop chan bool) {
 	buffer := make([]byte, 100)
 	for {
-		// Read from pipe then write to ResponseWriter and flush it,
-		// sending the copied content to the client.
-		err := Flush(w, rc, buffer)
-		if err != nil {
-			break
+		select {
+		case <-stop:
+			return
+		default:
+			// Read from pipe then write to ResponseWriter and flush it,
+			// sending the copied content to the client.
+			err := Flush(w, rc, buffer)
+			if err != nil {
+				break
+			}
 		}
 	}
 }

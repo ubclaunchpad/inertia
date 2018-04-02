@@ -57,7 +57,8 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	defer logs.Close()
 
 	if upReq.Stream {
-		common.FlushRoutine(w, logs)
+		stop := make(chan bool)
+		common.FlushRoutine(w, logs, stop)
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -293,24 +294,20 @@ func (d *Deployment) dockerCompose(cli *docker.Client, out io.Writer) error {
 		return errors.New(warnings)
 	}
 
-	fmt.Fprintln(out, "Building project...")
+	fmt.Fprintln(out, "Building and starting up project...")
 	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }
 
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
-// to build the user project. Runs the bash equivalent of:
-//
-//    docker run --rm -d \
-//       -v /app/host/project:/tmp/app \
-//       gliderlabs/herokuish /bin/herokuish buildpack build
-//
+// to build the user project.
 func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Setting up herokuish...")
 	ctx := context.Background()
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
-			AttachStdout: true,
 			Image:        HerokuishVersion,
+			AttachStdout: true,
+			Cmd:          []string{"/build"},
 		},
 		&container.HostConfig{
 			Binds: []string{
@@ -322,46 +319,42 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 		return err
 	}
 	if len(resp.Warnings) > 0 {
+		fmt.Fprintln(out, "Warnings encountered on herokuish setup.")
 		warnings := strings.Join(resp.Warnings, "\n")
 		return errors.New(warnings)
 	}
+
+	fmt.Fprintln(out, "Building project...")
 	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	if err != nil {
 		return err
 	}
 
-	// Build project slug using Heroku's buildpacks and commit
-	// the updated container
-	fmt.Fprintln(out, "Preparing build...")
-	id, err := cli.ContainerExecCreate(ctx, resp.ID, types.ExecConfig{
-		Cmd:          []string{"/build"},
-		AttachStdout: true,
-	})
+	// Attach logs and report build progress until container exits
+	reader, err := d.Logs(LogOptions{Container: resp.ID, Stream: true}, cli)
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(out, "Building project...")
-	hijackedResp, err := cli.ContainerExecAttach(ctx, id.ID, types.ExecConfig{
-		AttachStdout: true,
-	})
+	stop := make(chan bool)
+	go common.FlushRoutine(out, reader, stop)
+	status, err := cli.ContainerWait(ctx, resp.ID)
+	stop <- true
 	if err != nil {
 		return err
 	}
-	hijackedResp.Close()
+	if status != 0 {
+		return errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+	}
+
+	// Save build and deploy image
 	fmt.Fprintln(out, "Saving build...")
-	id, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
+	_, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
+		Reference: "inertia-build",
 		Config: &container.Config{
-			Cmd: []string{"/start"},
+			AttachStdout: true,
+			Cmd:          []string{"/start"},
 		},
 	})
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintln(out, "Old: "+resp.ID)
-	fmt.Fprintln(out, "New: "+id.ID)
-
-	// Start the updated container
-	fmt.Fprintln(out, "Running project...")
-	return cli.ContainerStart(ctx, id.ID, types.ContainerStartOptions{})
+	fmt.Fprintln(out, "Starting up project...")
+	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }

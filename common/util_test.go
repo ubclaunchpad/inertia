@@ -45,7 +45,8 @@ func TestCheckForDockerCompose(t *testing.T) {
 func TestFlushRoutine(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		reader, writer := io.Pipe()
-		go FlushRoutine(w, reader)
+		stop := make(chan bool)
+		go FlushRoutine(w, reader, stop)
 
 		fmt.Println(writer, "Hello!")
 		time.Sleep(time.Millisecond)

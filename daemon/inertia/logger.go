@@ -39,7 +39,8 @@ func newLogger(stream bool, httpWriter http.ResponseWriter) *daemonLogger {
 	var reader *io.PipeReader
 	if stream {
 		r, w := io.Pipe()
-		go common.FlushRoutine(httpWriter, r)
+		stop := make(chan bool)
+		go common.FlushRoutine(httpWriter, r, stop)
 		writer.strWriter = w
 		reader = r
 	}
