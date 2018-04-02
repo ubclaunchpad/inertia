@@ -274,15 +274,18 @@ func (d *Deployment) dockerCompose(cli *docker.Client, out io.Writer) error {
 			WorkingDir: "/build/project",
 			Env:        []string{"HOME=/build"},
 			Cmd: []string{
+				// set project name
 				"-p", d.project,
-				"up",
-				"--build",
+				// run "up" with flags
+				"up", "--build",
 			},
 		},
 		&container.HostConfig{
+			AutoRemove: true,
 			Binds: []string{
-				"/var/run/docker.sock:/var/run/docker.sock",
 				os.Getenv("HOME") + ":/build",
+				// docker-compose needs to be able to start other containers
+				"/var/run/docker.sock:/var/run/docker.sock",
 			},
 		}, nil, "build",
 	)
@@ -303,11 +306,12 @@ func (d *Deployment) dockerCompose(cli *docker.Client, out io.Writer) error {
 func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Setting up herokuish...")
 	ctx := context.Background()
+
+	// Configure herokuish container to build project when run
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
-			Image:        HerokuishVersion,
-			AttachStdout: true,
-			Cmd:          []string{"/build"},
+			Image: HerokuishVersion,
+			Cmd:   []string{"/build"},
 		},
 		&container.HostConfig{
 			Binds: []string{
@@ -324,6 +328,7 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 		return errors.New(warnings)
 	}
 
+	// Start the herokuish container to build project
 	fmt.Fprintln(out, "Building project...")
 	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	if err != nil {
@@ -351,8 +356,7 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	_, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
 		Reference: "inertia-build",
 		Config: &container.Config{
-			AttachStdout: true,
-			Cmd:          []string{"/start"},
+			Cmd: []string{"/start"},
 		},
 	})
 	if err != nil {

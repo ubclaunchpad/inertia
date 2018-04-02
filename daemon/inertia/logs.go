@@ -31,7 +31,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	defer logger.Close()
 
 	if container != "/inertia-daemon" && deployment == nil {
-		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
+		logger.Err(msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
 

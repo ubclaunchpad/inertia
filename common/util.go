@@ -43,16 +43,17 @@ func RemoveContents(directory string) error {
 // to a ResponseWriter. Use this as a goroutine.
 func FlushRoutine(w io.Writer, rc io.ReadCloser, stop chan bool) {
 	buffer := make([]byte, 100)
+ROUTINE:
 	for {
 		select {
 		case <-stop:
-			return
+			break ROUTINE
 		default:
 			// Read from pipe then write to ResponseWriter and flush it,
 			// sending the copied content to the client.
 			err := Flush(w, rc, buffer)
 			if err != nil {
-				return
+				break ROUTINE
 			}
 		}
 	}

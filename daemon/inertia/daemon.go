@@ -101,6 +101,7 @@ func dockerPull(image string, cli *docker.Client, wait *sync.WaitGroup) {
 	_, err := cli.ImagePull(context.Background(), image, types.ImagePullOptions{})
 	if err != nil {
 		println(err.Error())
+	} else {
+		println(image + " download complete")
 	}
-	println(image + " download complete")
 }
