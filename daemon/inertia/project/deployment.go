@@ -315,7 +315,9 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 		},
 		&container.HostConfig{
 			Binds: []string{
-				Directory + ":/tmp/app",
+				// "/tmp/app" is the directory herokuish looks
+				// for during a build, so mount project there
+				os.Getenv("HOME") + "/project:/tmp/app",
 			},
 		}, nil, "build",
 	)
@@ -344,6 +346,7 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	go common.FlushRoutine(out, reader, stop)
 	status, err := cli.ContainerWait(ctx, resp.ID)
 	stop <- true
+	reader.Close()
 	if err != nil {
 		return err
 	}
