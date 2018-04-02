@@ -10,7 +10,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
-var (
+const (
 	// DaemonGithubKeyLocation is the default path of the deploy key
 	DaemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"
 
@@ -20,9 +20,13 @@ var (
 
 // GetAPIPrivateKey returns the private RSA key to authenticate HTTP
 // requests sent to the daemon. For now, we simply use the GitHub
-// deploy key.
-func GetAPIPrivateKey(*jwt.Token) (interface{}, error) {
-	pemFile, err := os.Open(DaemonGithubKeyLocation)
+// deploy key. Retrieves from default DaemonGithubKeyLocation.
+func GetAPIPrivateKey(t *jwt.Token) (interface{}, error) {
+	return getAPIPrivateKeyFromPath(t, DaemonGithubKeyLocation)
+}
+
+func getAPIPrivateKeyFromPath(t *jwt.Token, path string) (interface{}, error) {
+	pemFile, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +55,12 @@ func GenerateToken(key []byte) (string, error) {
 }
 
 // GitAuthFailedErr attaches the daemon key in the error message
-func GitAuthFailedErr() error {
-	bytes, err := ioutil.ReadFile(DaemonGithubKeyLocation + ".pub")
+func GitAuthFailedErr(path ...string) error {
+	keyLoc := DaemonGithubKeyLocation
+	if len(path) > 0 {
+		keyLoc = path[0]
+	}
+	bytes, err := ioutil.ReadFile(keyLoc + ".pub")
 	if err != nil {
 		bytes = []byte(err.Error() + "\nError reading key - try running 'inertia [REMOTE] init' again: ")
 	}

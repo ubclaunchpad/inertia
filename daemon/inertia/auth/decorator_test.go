@@ -10,6 +10,11 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
+func testHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, common.DaemonOkResp)
+}
+
 func TestAuthorizationOK(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/health-check", nil)
 
