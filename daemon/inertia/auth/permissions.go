@@ -53,12 +53,14 @@ func NewPermissionsHandler(
 	// Set paths that don't require session authentication.
 	handler.publicPaths = []string{
 		"/login",
+		"/logout",
 		"/adduser",
 		"/removeuser",
 		"/resetusers",
 		"/listusers",
 	}
 	mux.HandleFunc("/login", handler.loginHandler)
+	mux.HandleFunc("/logout", handler.logoutHandler)
 
 	// The following endpoints are for user administration and must
 	// be used from the CLI and delivered with the daemon token.
@@ -274,4 +276,14 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "[SUCCESS %d] User %s logged in\n", http.StatusOK, userReq.Username)
+}
+
+func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
+	err := h.sessions.EndSession(w, r)
+	if err != nil {
+		http.Error(w, "Logout failed: "+err.Error(), http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "[SUCCESS %d] Session ended\n", http.StatusOK)
 }
