@@ -355,6 +355,9 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 			Cmd:          []string{"/start"},
 		},
 	})
+	if err != nil {
+		return err
+	}
 	fmt.Fprintln(out, "Starting up project...")
 	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }

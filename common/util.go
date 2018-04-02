@@ -52,7 +52,7 @@ func FlushRoutine(w io.Writer, rc io.ReadCloser, stop chan bool) {
 			// sending the copied content to the client.
 			err := Flush(w, rc, buffer)
 			if err != nil {
-				break
+				return
 			}
 		}
 	}
