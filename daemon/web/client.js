@@ -20,6 +20,12 @@ export default class InertiaClient {
      * @param {Object} params 
      */
     async _post(endpoint, params) {
-        // @todo
+        const request = new Request(endpoint, params);
+
+        try {
+            return await fetch(request);
+        } catch (e) {
+            return e;
+        }
     }
 }

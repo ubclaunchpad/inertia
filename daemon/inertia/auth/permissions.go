@@ -216,6 +216,11 @@ func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: better way of handling cors
+	//w.Header().Set("Access-Control-Allow-Origin", "https://localhost:7900")
+	//w.Header().Set("Access-Control-Allow-Methods", "POST")
+	//w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
