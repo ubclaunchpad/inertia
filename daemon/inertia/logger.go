@@ -31,25 +31,26 @@ type daemonLogger struct {
 	writer     io.Writer
 	reader     *io.PipeReader
 	httpWriter http.ResponseWriter
+	stop       chan struct{}
 }
 
 // newLogger creates a new logger
 func newLogger(stream bool, httpWriter http.ResponseWriter) *daemonLogger {
 	writer := &daemonWriter{stdWriter: os.Stdout}
-	var reader *io.PipeReader
-	if stream {
-		r, w := io.Pipe()
-		stop := make(chan bool)
-		go common.FlushRoutine(httpWriter, r, stop)
-		writer.strWriter = w
-		reader = r
-	}
-	return &daemonLogger{
+	logger := &daemonLogger{
 		stream:     stream,
 		writer:     writer,
-		reader:     reader,
 		httpWriter: httpWriter,
 	}
+	if stream {
+		r, w := io.Pipe()
+		stop := make(chan struct{})
+		go common.FlushRoutine(httpWriter, r, stop)
+		writer.strWriter = w
+		logger.reader = r
+		logger.stop = stop
+	}
+	return logger
 }
 
 // Println prints to logger's standard writer
@@ -84,5 +85,6 @@ func (l *daemonLogger) GetWriter() io.Writer {
 func (l *daemonLogger) Close() {
 	if l.stream {
 		l.reader.Close()
+		close(l.stop)
 	}
 }

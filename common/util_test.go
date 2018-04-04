@@ -45,7 +45,7 @@ func TestCheckForDockerCompose(t *testing.T) {
 func TestFlushRoutine(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		reader, writer := io.Pipe()
-		stop := make(chan bool)
+		stop := make(chan struct{})
 		go FlushRoutine(w, reader, stop)
 
 		fmt.Println(writer, "Hello!")
@@ -56,6 +56,9 @@ func TestFlushRoutine(t *testing.T) {
 
 		fmt.Println(writer, "Bye!")
 		time.Sleep(time.Millisecond)
+
+		close(stop)
+		fmt.Println(writer, "Do I live?")
 	}))
 	defer testServer.Close()
 
@@ -64,7 +67,7 @@ func TestFlushRoutine(t *testing.T) {
 
 	reader := bufio.NewReader(resp.Body)
 	i := 0
-	for i < 3 {
+	for i < 4 {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
 			break
@@ -77,6 +80,8 @@ func TestFlushRoutine(t *testing.T) {
 			assert.Equal(t, "Lunch?", string(line))
 		case 2:
 			assert.Equal(t, "Bye!", string(line))
+		case 3:
+			assert.Equal(t, "", string(line))
 		}
 
 		i++

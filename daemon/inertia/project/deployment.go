@@ -319,7 +319,7 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 				// for during a build, so mount project there
 				os.Getenv("HOME") + "/project:/tmp/app",
 			},
-		}, nil, "build",
+		}, nil, "compile",
 	)
 	if err != nil {
 		return err
@@ -342,10 +342,10 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	stop := make(chan bool)
+	stop := make(chan struct{})
 	go common.FlushRoutine(out, reader, stop)
 	status, err := cli.ContainerWait(ctx, resp.ID)
-	stop <- true
+	close(stop)
 	reader.Close()
 	if err != nil {
 		return err
@@ -353,18 +353,29 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	if status != 0 {
 		return errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
 	}
+	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
 
-	// Save build and deploy image
+	// Save build as new image and create a container
 	fmt.Fprintln(out, "Saving build...")
 	_, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
 		Reference: "inertia-build",
-		Config: &container.Config{
-			Cmd: []string{"/start"},
-		},
 	})
 	if err != nil {
 		return err
 	}
+	resp, err = cli.ContainerCreate(ctx, &container.Config{
+		Image: "inertia-build:latest",
+		Cmd:   []string{},
+	}, nil, nil, "build")
+	if err != nil {
+		return err
+	}
+	if len(resp.Warnings) > 0 {
+		fmt.Fprintln(out, "Warnings encountered on herokuish setup.")
+		warnings := strings.Join(resp.Warnings, "\n")
+		return errors.New(warnings)
+	}
+
 	fmt.Fprintln(out, "Starting up project...")
 	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }
