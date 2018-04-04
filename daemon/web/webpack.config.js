@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const config = {
   mode: 'development',
-  entry: './index.js',
+  entry: ['babel-polyfill', './index.js'],
   output: {
     path: `${__dirname}/public/`,
     filename: 'bundle.js',
@@ -25,7 +25,7 @@ const config = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['es2015', 'react', 'stage-3'],
+              presets: ['es2015', 'stage-3', 'react'],
             },
           }
         ],
@@ -33,8 +33,12 @@ const config = {
     ],
   },
   plugins: [
-    new webpack.EnvironmentPlugin(['NODE_ENV']),
-    new webpack.HotModuleReplacementPlugin(),
+    new webpack.DefinePlugin({
+      'process.env': {
+        // define environment variables here
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+      }
+    }),
     new webpack.DefinePlugin({
       // suppress react devtools console warning
       '__REACT_DEVTOOLS_GLOBAL_HOOK__': '({ isDisabled: true })'
@@ -42,7 +46,7 @@ const config = {
     new HtmlWebpackPlugin({
       template: './index.html',
       filename: 'index.html',
-      inject: 'body',
+      inject: 'body'
     })
   ]
 };

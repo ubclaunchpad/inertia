@@ -17,7 +17,7 @@ export default class App extends React.Component {
   }
 
   async handleLoginSubmit() {
-    const endpoint = 'https://localhost:8081/web/login';
+    const endpoint = '/web/login';
     const params = {
       method: 'POST',
       headers: {

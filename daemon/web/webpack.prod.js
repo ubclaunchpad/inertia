@@ -10,7 +10,7 @@ const HtmlWebpackPluginConfig = new HtmlWebpackPlugin({
 
 const config = {
   mode: 'production',
-  entry: './index.js',
+  entry: ['babel-polyfill', './index.js'],
   output: {
     path: `${__dirname}/public/`,
     filename: 'bundle.js',

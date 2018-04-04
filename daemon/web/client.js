@@ -20,7 +20,7 @@ export default class InertiaClient {
    * @param {Object} params
    */
   async _post(endpoint, params) {
-    const request = new Request(endpoint, params);
+    const request = new Request(this.url + endpoint, params);
 
     try {
       return await fetch(request);
