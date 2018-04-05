@@ -39,7 +39,7 @@ to succeed.`,
 		}
 
 		// Hello world config file!
-		err = client.InitializeInertiaProject(cmd.Parent().Version, buildType)
+		err = client.InitializeInertiaProject(version, buildType)
 		if err != nil {
 			log.Fatal(err)
 		}
