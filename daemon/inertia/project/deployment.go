@@ -28,6 +28,9 @@ const (
 
 	// Directory specifies the location of deployed project
 	Directory = "/app/host/project"
+
+	// BuildStageName specifies the name of build stage containers
+	BuildStageName = "build"
 )
 
 // Deployer does great deploys
@@ -209,8 +212,8 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*DeploymentStatus, error) {
 		return nil, err
 	}
 	ignore := map[string]bool{
-		"/inertia-daemon": true,
-		"/build":          true,
+		"/inertia-daemon":    true,
+		"/" + BuildStageName: true,
 	}
 	activeContainers := make([]string, 0)
 	for _, container := range containers {
@@ -287,7 +290,7 @@ func (d *Deployment) dockerCompose(cli *docker.Client, out io.Writer) error {
 				// docker-compose needs to be able to start other containers
 				"/var/run/docker.sock:/var/run/docker.sock",
 			},
-		}, nil, "build",
+		}, nil, BuildStageName,
 	)
 	if err != nil {
 		return err
@@ -319,7 +322,7 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 				// for during a build, so mount project there
 				os.Getenv("HOME") + "/project:/tmp/app",
 			},
-		}, nil, "compile",
+		}, nil, BuildStageName,
 	)
 	if err != nil {
 		return err
@@ -365,17 +368,18 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	}
 	resp, err = cli.ContainerCreate(ctx, &container.Config{
 		Image: "inertia-build:latest",
-		Cmd:   []string{"/start", "web"},
-	}, nil, nil, "build")
+		// Currently, only start the standard "web" process
+		Cmd: []string{"/start", "web"},
+	}, nil, nil, d.project)
 	if err != nil {
 		return err
 	}
 	if len(resp.Warnings) > 0 {
-		fmt.Fprintln(out, "Warnings encountered on herokuish setup.")
+		fmt.Fprintln(out, "Warnings encountered on herokuish startup.")
 		warnings := strings.Join(resp.Warnings, "\n")
 		return errors.New(warnings)
 	}
 
-	fmt.Fprintln(out, "Starting up project...")
+	fmt.Fprintln(out, "Starting up project in container "+d.project+"...")
 	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }
