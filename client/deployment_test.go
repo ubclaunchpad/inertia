@@ -22,7 +22,7 @@ var (
 func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, error) {
 	wholeURL := strings.Split(ts.URL, ":")
 	url := strings.Trim(wholeURL[1], "/")
-	port := wholeURL[2] 
+	port := wholeURL[2]
 	mockRemote := &RemoteVPS{
 		User: "",
 		IP:   url,
