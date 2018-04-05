@@ -365,7 +365,7 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	}
 	resp, err = cli.ContainerCreate(ctx, &container.Config{
 		Image: "inertia-build:latest",
-		Cmd:   []string{},
+		Cmd:   []string{"/start", "web"},
 	}, nil, nil, "build")
 	if err != nil {
 		return err
