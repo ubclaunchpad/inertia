@@ -35,7 +35,7 @@ Inertia is a cross-platform command line tool that simplifies setup and manageme
 
 # :package: Usage
 
-All you need to get started is a docker-compose project, the Inertia CLI, and access to a virtual private server. To download the CLI:
+All you need to get started is a docker-compose project, the Inertia CLI, and access to a virtual private server. To install the CLI using [Homebrew](https://brew.sh):
 
 ```bash
 $> brew install ubclaunchpad/tap/inertia
