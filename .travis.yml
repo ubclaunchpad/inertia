@@ -31,21 +31,22 @@ matrix:
   fast_finish: true
 
 before_install:
-  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
-  - go get -u honnef.co/go/tools/cmd/megacheck                  
-  - go get -u github.com/fzipp/gocyclo
-  - go get -u github.com/mattn/goveralls
-  - go get -u github.com/golang/dep/cmd/dep
+  - go get honnef.co/go/tools/cmd/megacheck                  
+  - go get github.com/fzipp/gocyclo
+  - go get github.com/mattn/goveralls
+  - go get github.com/golang/dep/cmd/dep
   - dep ensure
 
-# Run tests and various code quality checks
+# Build daemon, run tests, and make various code quality checks
 script:
   - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
   - make testdaemon SSH_PORT=69     # Send test daemon to test VPS
+  - go test -v -race -coverprofile=coverage.out ./...
+  - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
+  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
+  - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
   - go vet ./...                    # Report suspicious constructs
   - megacheck ./...                 # Static analysis
-  - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
-  - goveralls -v -service=travis-ci -repotoken "$COVERALLS_TOKEN"
 
 # Push version-tagged Docker image and build platform binaries
 before_deploy:
