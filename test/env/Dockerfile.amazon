@@ -25,8 +25,8 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Copy test key to allow use
 RUN mkdir ~/.ssh/ ; touch ~/.ssh/authorized_keys
-COPY . .
-RUN cat test_key.pub >> ~/.ssh/authorized_keys
+COPY ./keys/ .
+RUN cat id_rsa.pub >> ~/.ssh/authorized_keys
 
 EXPOSE 0-9000
 CMD ["/usr/sbin/sshd", "-D"]

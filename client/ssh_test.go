@@ -28,7 +28,7 @@ func (runner *mockSSHRunner) RunSession() error {
 }
 
 func TestRun(t *testing.T) {
-	remote := getInstrumentedTestRemote()
+	remote := getTestRemote()
 	session := mockSSHRunner{r: remote}
 	cmd := "ls -lsa"
 
@@ -38,7 +38,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestRunInteractive(t *testing.T) {
-	remote := getInstrumentedTestRemote()
+	remote := getTestRemote()
 	session := mockSSHRunner{r: remote}
 	cmd := "ls -lsa"
 
