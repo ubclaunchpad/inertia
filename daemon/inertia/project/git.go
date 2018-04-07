@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
@@ -21,29 +20,6 @@ var (
 	ErrInvalidGitAuthentication = errors.New("git authentication failed")
 )
 
-// InitializeRepository sets up a project repository for the first time
-func InitializeRepository(remoteURL, branch string, w io.Writer) error {
-	fmt.Fprintln(w, "Setting up project...")
-	pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
-	if err != nil {
-		return err
-	}
-	authMethod, err := auth.GetGithubKey(pemFile)
-	if err != nil {
-		return err
-	}
-
-	// Clone project
-	_, err = Clone(Directory, remoteURL, branch, authMethod, w)
-	if err != nil {
-		if err == ErrInvalidGitAuthentication {
-			return auth.GitAuthFailedErr()
-		}
-		return err
-	}
-	return nil
-}
-
 // SimplifyGitErr checks errors that involve git remote operations and simplifies them
 // to ErrInvalidGitAuthentication if possible
 func SimplifyGitErr(err error) error {
@@ -56,9 +32,23 @@ func SimplifyGitErr(err error) error {
 	return nil
 }
 
-// Clone wraps git.PlainClone() and returns a more helpful error message
+// initializeRepository sets up a project repository for the first time
+func initializeRepository(remoteURL, branch string, authMethod ssh.AuthMethod, w io.Writer) (*git.Repository, error) {
+	fmt.Fprintln(w, "Setting up project...")
+	// Clone project
+	repo, err := clone(Directory, remoteURL, branch, authMethod, w)
+	if err != nil {
+		if err == ErrInvalidGitAuthentication {
+			return nil, auth.GitAuthFailedErr()
+		}
+		return nil, err
+	}
+	return repo, nil
+}
+
+// clone wraps git.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
-func Clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+func clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
 	fmt.Fprintf(out, "Cloning branch %s from %s...\n", branch, remoteURL)
 	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
 	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
@@ -80,9 +70,9 @@ func Clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writ
 	return repo, nil
 }
 
-// ForcePull deletes the project directory and makes a fresh clone of given repo
+// forcePull deletes the project directory and makes a fresh clone of given repo
 // git.Worktree.Pull() only supports merges that can be resolved as a fast-forward
-func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+func forcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
 	fmt.Fprintln(out, "Making a force pull...")
 	remotes, err := repo.Remotes()
 	if err != nil {
@@ -99,15 +89,15 @@ func ForcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out 
 	if err != nil {
 		return nil, err
 	}
-	repo, err = Clone(directory, remoteURL, branch, auth, out)
+	repo, err = clone(directory, remoteURL, branch, auth, out)
 	if err != nil {
 		return nil, err
 	}
 	return repo, nil
 }
 
-// UpdateRepository pulls and checkouts given branch from repository
-func UpdateRepository(directory string, repo *git.Repository, branch string, auth ssh.AuthMethod, out io.Writer) error {
+// updateRepository pulls and checkouts given branch from repository
+func updateRepository(directory string, repo *git.Repository, branch string, auth ssh.AuthMethod, out io.Writer) error {
 	tree, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -146,26 +136,13 @@ func UpdateRepository(directory string, repo *git.Repository, branch string, aut
 		if err == git.ErrForceNeeded {
 			// If pull fails, attempt a force pull before returning error
 			fmt.Fprintln(out, "Fast-forward failed - a force pull is required.")
-			_, err := ForcePull(directory, repo, auth, out)
+			_, err := forcePull(directory, repo, auth, out)
 			if err != nil {
 				return err
 			}
 		} else {
 			return err
 		}
-	}
-	return nil
-}
-
-// CompareRemotes checks if the given remote matches the remote of the given repository
-func CompareRemotes(localRepo *git.Repository, remoteURL string) error {
-	remotes, err := localRepo.Remotes()
-	if err != nil {
-		return err
-	}
-	localRemoteURL := common.GetSSHRemoteURL(remotes[0].Config().URLs[0])
-	if localRemoteURL != common.GetSSHRemoteURL(remoteURL) {
-		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
 	return nil
 }

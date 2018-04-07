@@ -87,7 +87,7 @@ func clientBootstrapDaemonDownSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/daemon-down.sh", size: 251, mode: os.FileMode(420), modTime: time.Unix(1522901431, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/daemon-down.sh", size: 251, mode: os.FileMode(420), modTime: time.Unix(1523130093, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -107,7 +107,7 @@ func clientBootstrapDaemonUpSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/daemon-up.sh", size: 1697, mode: os.FileMode(493), modTime: time.Unix(1522901431, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/daemon-up.sh", size: 1697, mode: os.FileMode(493), modTime: time.Unix(1523130426, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -127,7 +127,7 @@ func clientBootstrapDockerSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/docker.sh", size: 940, mode: os.FileMode(493), modTime: time.Unix(1522901436, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/docker.sh", size: 940, mode: os.FileMode(493), modTime: time.Unix(1523130093, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -167,7 +167,7 @@ func clientBootstrapTokenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/token.sh", size: 291, mode: os.FileMode(493), modTime: time.Unix(1522901431, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/token.sh", size: 291, mode: os.FileMode(493), modTime: time.Unix(1523130093, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -225,10 +225,10 @@ func AssetNames() []string {
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
 	"client/bootstrap/daemon-down.sh": clientBootstrapDaemonDownSh,
-	"client/bootstrap/daemon-up.sh": clientBootstrapDaemonUpSh,
-	"client/bootstrap/docker.sh": clientBootstrapDockerSh,
-	"client/bootstrap/keygen.sh": clientBootstrapKeygenSh,
-	"client/bootstrap/token.sh": clientBootstrapTokenSh,
+	"client/bootstrap/daemon-up.sh":   clientBootstrapDaemonUpSh,
+	"client/bootstrap/docker.sh":      clientBootstrapDockerSh,
+	"client/bootstrap/keygen.sh":      clientBootstrapKeygenSh,
+	"client/bootstrap/token.sh":       clientBootstrapTokenSh,
 }
 
 // AssetDir returns the file names below a certain
@@ -270,14 +270,15 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
+
 var _bintree = &bintree{nil, map[string]*bintree{
 	"client": &bintree{nil, map[string]*bintree{
 		"bootstrap": &bintree{nil, map[string]*bintree{
 			"daemon-down.sh": &bintree{clientBootstrapDaemonDownSh, map[string]*bintree{}},
-			"daemon-up.sh": &bintree{clientBootstrapDaemonUpSh, map[string]*bintree{}},
-			"docker.sh": &bintree{clientBootstrapDockerSh, map[string]*bintree{}},
-			"keygen.sh": &bintree{clientBootstrapKeygenSh, map[string]*bintree{}},
-			"token.sh": &bintree{clientBootstrapTokenSh, map[string]*bintree{}},
+			"daemon-up.sh":   &bintree{clientBootstrapDaemonUpSh, map[string]*bintree{}},
+			"docker.sh":      &bintree{clientBootstrapDockerSh, map[string]*bintree{}},
+			"keygen.sh":      &bintree{clientBootstrapKeygenSh, map[string]*bintree{}},
+			"token.sh":       &bintree{clientBootstrapTokenSh, map[string]*bintree{}},
 		}},
 	}},
 }}
@@ -328,4 +329,3 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
-

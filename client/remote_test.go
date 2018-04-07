@@ -22,10 +22,10 @@ func getTestConfig(writer io.Writer) *Config {
 	return config
 }
 
-func getInstrumentedTestRemote() *RemoteVPS {
+func getTestRemote() *RemoteVPS {
 	remote := &RemoteVPS{
 		IP:   "0.0.0.0",
-		PEM:  "../test_env/test_key",
+		PEM:  "../test/keys/id_rsa",
 		User: "root",
 		Daemon: &DaemonConfig{
 			Port: "8081",
@@ -41,7 +41,7 @@ func getInstrumentedTestRemote() *RemoteVPS {
 }
 
 func TestInstallDocker(t *testing.T) {
-	remote := getInstrumentedTestRemote()
+	remote := getTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/docker.sh")
 	assert.Nil(t, err)
 
@@ -52,7 +52,7 @@ func TestInstallDocker(t *testing.T) {
 }
 
 func TestDaemonUp(t *testing.T) {
-	remote := getInstrumentedTestRemote()
+	remote := getTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
 	actualCommand := fmt.Sprintf(string(script), "latest", "8081", "0.0.0.0")
@@ -68,7 +68,7 @@ func TestDaemonUp(t *testing.T) {
 }
 
 func TestKeyGen(t *testing.T) {
-	remote := getInstrumentedTestRemote()
+	remote := getTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/token.sh")
 	assert.Nil(t, err)
 	tokenScript := fmt.Sprintf(string(script), "test")
@@ -83,7 +83,7 @@ func TestKeyGen(t *testing.T) {
 }
 
 func TestBootstrap(t *testing.T) {
-	remote := getInstrumentedTestRemote()
+	remote := getTestRemote()
 	dockerScript, err := ioutil.ReadFile("bootstrap/docker.sh")
 	assert.Nil(t, err)
 
@@ -110,8 +110,12 @@ func TestBootstrap(t *testing.T) {
 	assert.Equal(t, tokenScript, session.Calls[3])
 }
 
-func TestInstrumentedBootstrap(t *testing.T) {
-	remote := getInstrumentedTestRemote()
+func TestBootstrapIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	remote := getTestRemote()
 	session := &SSHRunner{r: remote}
 	var writer bytes.Buffer
 	err := remote.Bootstrap(session, "testvps", getTestConfig(&writer))

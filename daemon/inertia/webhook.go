@@ -8,16 +8,14 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
-	git "gopkg.in/src-d/go-git.v4"
 )
 
 var webhookSecret = "inertia"
 
 // gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
 func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, common.DaemonOkResp)
+	fmt.Fprint(w, common.MsgDaemonOK)
 
 	payload, err := github.ValidatePayload(r, []byte(webhookSecret))
 	if err != nil {
@@ -52,40 +50,21 @@ func processPushEvent(event *github.PushEvent) {
 
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
-	err := common.CheckForGit(project.Directory)
-	if err != nil {
-		println("No git repository present - try running 'inertia $REMOTE up'")
+	if deployment == nil {
+		println("No deployment detected - try running 'inertia $REMOTE up'")
 		return
 	}
 
 	// Check for matching remotes
-	localRepo, err := git.PlainOpen(project.Directory)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	err = project.CompareRemotes(localRepo, common.GetSSHRemoteURL(repo.GetGitURL()))
+	err := deployment.CompareRemotes(common.GetSSHRemoteURL(repo.GetGitURL()))
 	if err != nil {
 		println(err.Error())
 		return
 	}
 
 	// If branches match, deploy, otherwise ignore the event.
-	head, err := localRepo.Head()
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	if head.Name().Short() == branch {
+	if deployment.GetBranch() == branch {
 		println("Event branch matches deployed branch " + branch)
-		pemFile, err := os.Open(auth.DaemonGithubKeyLocation)
-		if err != nil {
-			return
-		}
-		auth, err := auth.GetGithubKey(pemFile)
-		if err != nil {
-			return
-		}
 		cli, err := docker.NewEnvClient()
 		if err != nil {
 			println(err.Error())
@@ -93,14 +72,17 @@ func processPushEvent(event *github.PushEvent) {
 		}
 		defer cli.Close()
 
-		err = project.Deploy(auth, localRepo, branch, project.ProjectName, cli, os.Stdout)
+		// Deploy project
+		err = deployment.Deploy(project.DeployOptions{
+			SkipUpdate: false,
+		}, cli, os.Stdout)
 		if err != nil {
 			println(err.Error())
 		}
 	} else {
 		println(
 			"Event branch " + branch + " does not match deployed branch " +
-				head.Name().Short() + " - ignoring event.",
+				deployment.GetBranch() + " - ignoring event.",
 		)
 	}
 }

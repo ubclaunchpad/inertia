@@ -84,7 +84,15 @@ func (h *PermissionsHandler) Close() error {
 
 // Implement the ServeHTTP method to make a permissionHandler a http.Handler
 func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// http.StripPrefix removes the leading slash, but in the interest
+	// of maintaining similar behaviour to stdlib handler functions,
+	// we manually add a leading "/" here instead of having users not add
+	// a leading "/" on the path if it dosn't already exist.
 	path := r.URL.Path
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+		r.URL.Path = path
+	}
 
 	// Serve if path is public
 	for _, prefix := range h.publicPaths {

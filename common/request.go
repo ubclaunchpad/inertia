@@ -1,8 +1,8 @@
 package common
 
 const (
-	// DaemonOkResp is the OK response upon successfully reaching daemon
-	DaemonOkResp = "I'm a little Webhook, short and stout!"
+	// MsgDaemonOK is the OK response upon successfully reaching daemon
+	MsgDaemonOK = "I'm a little Webhook, short and stout!"
 )
 
 // DaemonRequest is the configurable body of a request to the daemon.
@@ -10,6 +10,7 @@ type DaemonRequest struct {
 	Stream     bool        `json:"stream"`
 	Container  string      `json:"container,omitempty"`
 	Project    string      `json:"project"`
+	BuildType  string      `json:"build_type"`
 	GitOptions *GitOptions `json:"git_options"`
 	Secret     string      `json:"secret"`
 }

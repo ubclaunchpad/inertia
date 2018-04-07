@@ -12,7 +12,7 @@ import (
 
 func testHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, common.DaemonOkResp)
+	fmt.Fprint(w, common.MsgDaemonOK)
 }
 
 func TestAuthorizationOK(t *testing.T) {
@@ -29,7 +29,7 @@ func TestAuthorizationOK(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusOK)
-	assert.Equal(t, rr.Body.String(), common.DaemonOkResp)
+	assert.Equal(t, rr.Body.String(), common.MsgDaemonOK)
 }
 
 func TestAuthorizationMalformedBearerString(t *testing.T) {

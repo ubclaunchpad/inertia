@@ -1,7 +1,6 @@
 package common
 
 import (
-	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -10,18 +9,14 @@ import (
 
 // CheckForDockerCompose returns error if current directory is a
 // not a docker-compose project
-func CheckForDockerCompose(cwd string) error {
+func CheckForDockerCompose(cwd string) bool {
 	dockerComposeYML := filepath.Join(cwd, "docker-compose.yml")
 	dockerComposeYAML := filepath.Join(cwd, "docker-compose.yaml")
 	_, err := os.Stat(dockerComposeYML)
-	YMLpresent := os.IsNotExist(err)
+	YMLnotPresent := os.IsNotExist(err)
 	_, err = os.Stat(dockerComposeYAML)
-	YAMLpresent := os.IsNotExist(err)
-	if YMLpresent && YAMLpresent {
-		return errors.New("this does not appear to be a docker-compose project - currently,\n" +
-			"Inertia only supports docker-compose projects.")
-	}
-	return nil
+	YAMLnotPresent := os.IsNotExist(err)
+	return !(YMLnotPresent && YAMLnotPresent)
 }
 
 // RemoveContents removes all files within given directory, returns nil if successful
@@ -46,14 +41,21 @@ func RemoveContents(directory string) error {
 
 // FlushRoutine continuously writes everything in given ReadCloser
 // to a ResponseWriter. Use this as a goroutine.
-func FlushRoutine(w io.Writer, rc io.ReadCloser) {
+func FlushRoutine(w io.Writer, rc io.ReadCloser, stop chan struct{}) {
 	buffer := make([]byte, 100)
+ROUTINE:
 	for {
-		// Read from pipe then write to ResponseWriter and flush it,
-		// sending the copied content to the client.
-		err := Flush(w, rc, buffer)
-		if err != nil {
-			break
+		select {
+		case <-stop:
+			Flush(w, rc, buffer)
+			break ROUTINE
+		default:
+			// Read from pipe then write to ResponseWriter and flush it,
+			// sending the copied content to the client.
+			err := Flush(w, rc, buffer)
+			if err != nil {
+				break ROUTINE
+			}
 		}
 	}
 }

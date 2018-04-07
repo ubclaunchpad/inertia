@@ -47,6 +47,7 @@ script:
   - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
   - go vet ./...                    # Report suspicious constructs
   - megacheck ./...                 # Static analysis
+  - docker kill $(docker ps -q)     # Remove testvps, etc
 
 # Push version-tagged Docker image and build platform binaries
 before_deploy:

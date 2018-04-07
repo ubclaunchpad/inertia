@@ -22,7 +22,7 @@ var urlVariations = []string{
 }
 
 func getInertiaDeployTestKey() (ssh.AuthMethod, error) {
-	pemFile, err := os.Open("../../../test_env/test_key")
+	pemFile, err := os.Open("../../../test/keys/id_rsa")
 	if err != nil {
 		return nil, err
 	}
@@ -33,9 +33,13 @@ func getInertiaDeployTestKey() (ssh.AuthMethod, error) {
 	return ssh.NewPublicKeys("git", bytes, "")
 }
 
-func TestClone(t *testing.T) {
+func TestCloneIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	dir := "./test_clone/"
-	repo, err := Clone(dir, inertiaDeployTest, "dev", nil, os.Stdout)
+	repo, err := clone(dir, inertiaDeployTest, "dev", nil, os.Stdout)
 	defer os.RemoveAll(dir)
 	assert.Nil(t, err)
 
@@ -44,7 +48,11 @@ func TestClone(t *testing.T) {
 	assert.Equal(t, "dev", head.Name().Short())
 }
 
-func TestForcePull(t *testing.T) {
+func TestForcePullIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	dir := "./test_force_pull/"
 	auth, err := getInertiaDeployTestKey()
 	assert.Nil(t, err)
@@ -53,17 +61,21 @@ func TestForcePull(t *testing.T) {
 	})
 	defer os.RemoveAll(dir)
 	assert.Nil(t, err)
-	forcePulledRepo, err := ForcePull(dir, repo, auth, os.Stdout)
+	forcePulledRepo, err := forcePull(dir, repo, auth, os.Stdout)
 	assert.Nil(t, err)
 
 	// Try switching branches
-	err = UpdateRepository(dir, forcePulledRepo, "dev", auth, os.Stdout)
+	err = updateRepository(dir, forcePulledRepo, "dev", auth, os.Stdout)
 	assert.Nil(t, err)
-	err = UpdateRepository(dir, forcePulledRepo, "master", auth, os.Stdout)
+	err = updateRepository(dir, forcePulledRepo, "master", auth, os.Stdout)
 	assert.Nil(t, err)
 }
 
-func TestUpdateRepository(t *testing.T) {
+func TestUpdateRepositoryIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	dir := "./test_update/"
 	repo, err := git.PlainClone(dir, false, &git.CloneOptions{
 		URL: inertiaDeployTest,
@@ -72,19 +84,8 @@ func TestUpdateRepository(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Try switching branches
-	err = UpdateRepository(dir, repo, "master", nil, os.Stdout)
+	err = updateRepository(dir, repo, "master", nil, os.Stdout)
 	assert.Nil(t, err)
-	err = UpdateRepository(dir, repo, "dev", nil, os.Stdout)
+	err = updateRepository(dir, repo, "dev", nil, os.Stdout)
 	assert.Nil(t, err)
-}
-
-func TestCompareRemotes(t *testing.T) {
-	// Traverse back down to root directory of repository
-	repo, err := git.PlainOpen("../../../")
-	assert.Nil(t, err)
-
-	for _, url := range urlVariations {
-		err = CompareRemotes(repo, url)
-		assert.Nil(t, err)
-	}
 }
