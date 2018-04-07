@@ -36,10 +36,11 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	branchStatus := " - Branch:  " + status.Branch + "\n"
-	commitStatus := " - Commit:  " + status.CommitHash + "\n"
-	commitMessage := " - Message: " + status.CommitMessage + "\n"
-	statusString := inertiaStatus + branchStatus + commitStatus + commitMessage
+	branchStatus := " - Branch:     " + status.Branch + "\n"
+	commitStatus := " - Commit:     " + status.CommitHash + "\n"
+	commitMessage := " - Message:    " + status.CommitMessage + "\n"
+	buildTypeStatus := " - Build Type: " + status.BuildType + "\n"
+	statusString := inertiaStatus + branchStatus + commitStatus + commitMessage + buildTypeStatus
 
 	// If build container is active, that means that a build
 	// attempt was made but only the daemon and docker-compose

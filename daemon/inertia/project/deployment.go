@@ -134,7 +134,11 @@ func (d *Deployment) Deploy(opts DeployOptions, cli *docker.Client, out io.Write
 	switch d.buildType {
 	case "herokuish":
 		return d.herokuishBuild(cli, out)
+	case "docker-compose":
+		return d.dockerCompose(cli, out)
 	default:
+		fmt.Println(out, "Unknown project type "+d.buildType)
+		fmt.Println(out, "Defaulting to docker-compose build")
 		return d.dockerCompose(cli, out)
 	}
 }
@@ -189,6 +193,7 @@ type DeploymentStatus struct {
 	Branch               string
 	CommitHash           string
 	CommitMessage        string
+	BuildType            string
 	Containers           []string
 	BuildContainerActive bool
 }
@@ -230,6 +235,7 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*DeploymentStatus, error) {
 		Branch:               strings.TrimSpace(head.Name().Short()),
 		CommitHash:           strings.TrimSpace(head.Hash().String()),
 		CommitMessage:        strings.TrimSpace(commit.Message),
+		BuildType:            strings.TrimSpace(d.buildType),
 		Containers:           activeContainers,
 		BuildContainerActive: buildContainerActive,
 	}, nil
