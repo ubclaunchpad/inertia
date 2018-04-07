@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
@@ -11,10 +12,17 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
-// daemonVersion indicates the daemon's corresponding Inertia daemonVersion
-var daemonVersion string
+var (
+	// daemonVersion indicates the daemon's corresponding Inertia daemonVersion
+	daemonVersion string
+
+	// deployment is the currently deployed project on this remote
+	deployment project.Deployer
+)
 
 const (
+	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
+
 	// specify location of SSL certificate
 	sslDirectory  = "/app/host/ssl/"
 	daemonSSLCert = sslDirectory + "daemon.cert"
@@ -25,22 +33,15 @@ const (
 func run(host, port, version string) {
 	daemonVersion = version
 
-	// Download docker-compose image
-	println("Downloading docker-compose...")
+	// Download build tools
 	cli, err := docker.NewEnvClient()
 	if err != nil {
 		println(err.Error())
 		println("Failed to start Docker client - shutting down daemon.")
 		return
 	}
-	_, err = cli.ImagePull(context.Background(), project.DockerComposeVersion, types.ImagePullOptions{})
-	if err != nil {
-		println(err.Error())
-		println("Failed to pull docker-compose image - shutting down daemon.")
-		cli.Close()
-		return
-	}
-	cli.Close()
+	println("Downloading build tools...")
+	go downloadDeps(cli)
 
 	// Check if the cert files are available.
 	println("Checking for existing SSL certificates in " + sslDirectory + "...")
@@ -83,4 +84,24 @@ func run(host, port, version string) {
 		daemonSSLKey,
 		mux,
 	))
+}
+
+func downloadDeps(cli *docker.Client) {
+	var wait sync.WaitGroup
+	wait.Add(2)
+	go dockerPull(project.DockerComposeVersion, cli, &wait)
+	go dockerPull(project.HerokuishVersion, cli, &wait)
+	wait.Wait()
+	cli.Close()
+}
+
+func dockerPull(image string, cli *docker.Client, wait *sync.WaitGroup) {
+	defer wait.Done()
+	println("Downloading " + image)
+	_, err := cli.ImagePull(context.Background(), image, types.ImagePullOptions{})
+	if err != nil {
+		println(err.Error())
+	} else {
+		println(image + " download complete")
+	}
 }

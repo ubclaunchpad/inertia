@@ -142,8 +142,6 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, 
 	return config.Write()
 }
 
-
-
 // listCmd represents the inertia list command
 var listCmd = &cobra.Command{
 	Use:   "ls",

@@ -27,8 +27,8 @@ if [ "$DAEMON_RELEASE" != "test" ]; then
     echo "Pulling Inertia daemon..."
     sudo docker pull $IMAGE
 else
-    echo "Launching existing Inertia daemon image..."
-    sudo docker load -i /daemon-image
+    echo "Loading existing Inertia daemon image..."
+    sudo docker load --quiet -i /daemon-image
 fi
 
 # Run container with access to the host docker socket and relevant directories -

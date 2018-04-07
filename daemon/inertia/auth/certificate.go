@@ -11,7 +11,6 @@ package auth
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -64,14 +63,6 @@ func GenerateCertificate(certPath, keyPath, host, method string) error {
 	switch method {
 	case "RSA":
 		priv, err = rsa.GenerateKey(rand.Reader, rsaBits)
-	case "P224":
-		priv, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
-	case "P256":
-		priv, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	case "P384":
-		priv, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-	case "P521":
-		priv, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
 		return errors.New("Unrecognised algorithm " + method)
 	}

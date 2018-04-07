@@ -65,6 +65,7 @@ testdaemon:
 	rm -f ./inertia-daemon-image
 	docker build -t ubclaunchpad/inertia:test .
 	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
+	docker rmi ubclaunchpad/inertia:test
 	chmod 400 ./test/keys/id_rsa
 	scp -i ./test/keys/id_rsa \
 		-o StrictHostKeyChecking=no \

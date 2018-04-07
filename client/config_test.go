@@ -8,7 +8,7 @@ import (
 )
 
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := createConfigFile("")
+	err := createConfigFile("", "")
 	assert.Nil(t, err)
 	config, err := GetProjectConfigFromDisk()
 	assert.Nil(t, err)

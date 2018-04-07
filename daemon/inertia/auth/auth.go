@@ -56,5 +56,5 @@ func GitAuthFailedErr() error {
 	if err != nil {
 		bytes = []byte(err.Error() + "\nError reading key - try running 'inertia [REMOTE] init' again: ")
 	}
-	return errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes[:]))
+	return errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes))
 }

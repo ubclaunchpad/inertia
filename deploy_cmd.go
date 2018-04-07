@@ -29,7 +29,11 @@ var deploymentUpCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp, err := deployment.Up(deployment.Project, stream)
+		buildType, err := cmd.Flags().GetString("type")
+		if err != nil {
+			log.Fatal(err)
+		}
+		resp, err := deployment.Up(buildType, stream)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -319,6 +323,7 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 
 		up := &cobra.Command{}
 		*up = *deploymentUpCmd
+		up.Flags().String("type", "", "Specify a build method for your project")
 		cmd.AddCommand(up)
 
 		down := &cobra.Command{}

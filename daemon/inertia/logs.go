@@ -2,21 +2,17 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	println("LOG request received")
-
 	// Get container name from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -34,32 +30,38 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	logger := newLogger(upReq.Stream, w)
 	defer logger.Close()
 
+	if container != "/inertia-daemon" && deployment == nil {
+		logger.Err(msgNoDeployment, http.StatusPreconditionFailed)
+		return
+	}
+
 	cli, err := docker.NewEnvClient()
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
-	ctx := context.Background()
-	logs, err := cli.ContainerLogs(ctx, container, types.ContainerLogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     upReq.Stream,
-		Timestamps: true,
-	})
+
+	logs, err := deployment.Logs(project.LogOptions{
+		Container: upReq.Container,
+		Stream:    upReq.Stream,
+	}, cli)
 	if err != nil {
-		logger.Err(err.Error(), http.StatusInternalServerError)
+		if docker.IsErrContainerNotFound(err) {
+			logger.Err(err.Error(), http.StatusNotFound)
+		} else {
+			logger.Err(err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 	defer logs.Close()
 
 	if upReq.Stream {
-		common.FlushRoutine(w, logs)
+		stop := make(chan struct{})
+		common.FlushRoutine(w, logs, stop)
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, buf.String())
+		logger.Success(buf.String(), http.StatusOK)
 	}
 }
