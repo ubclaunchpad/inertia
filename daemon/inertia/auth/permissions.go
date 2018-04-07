@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -26,7 +27,10 @@ type PermissionsHandler struct {
 
 // NewPermissionsHandler returns a new handler for authenticating
 // users and handling user administration
-func NewPermissionsHandler(dbPath, domain, path string, timeout int) (*PermissionsHandler, error) {
+func NewPermissionsHandler(
+	dbPath, domain, path string, timeout int,
+	keyLookup ...func(*jwt.Token) (interface{}, error),
+) (*PermissionsHandler, error) {
 	// Set up user manager
 	userManager, err := newUserManager(dbPath)
 	if err != nil {
@@ -49,17 +53,25 @@ func NewPermissionsHandler(dbPath, domain, path string, timeout int) (*Permissio
 	// Set paths that don't require session authentication.
 	handler.publicPaths = []string{
 		"/login",
+		"/logout",
 		"/adduser",
 		"/removeuser",
 		"/resetusers",
+		"/listusers",
 	}
 	mux.HandleFunc("/login", handler.loginHandler)
+	mux.HandleFunc("/logout", handler.logoutHandler)
 
 	// The following endpoints are for user administration and must
 	// be used from the CLI and delivered with the daemon token.
-	mux.HandleFunc("/adduser", Authorized(handler.addUserHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/removeuser", Authorized(handler.removeUserHandler, GetAPIPrivateKey))
-	mux.HandleFunc("/resetusers", Authorized(handler.resetUsersHandler, GetAPIPrivateKey))
+	lookup := GetAPIPrivateKey
+	if len(keyLookup) > 0 {
+		lookup = keyLookup[0]
+	}
+	mux.HandleFunc("/adduser", Authorized(handler.addUserHandler, lookup))
+	mux.HandleFunc("/removeuser", Authorized(handler.removeUserHandler, lookup))
+	mux.HandleFunc("/resetusers", Authorized(handler.resetUsersHandler, lookup))
+	mux.HandleFunc("/listusers", Authorized(handler.listUsersHandler, lookup))
 
 	return handler, nil
 }
@@ -215,6 +227,22 @@ func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Re
 	fmt.Fprintf(w, "[SUCCESS %d] User and session databases reset\n", http.StatusOK)
 }
 
+func (h *PermissionsHandler) listUsersHandler(w http.ResponseWriter, r *http.Request) {
+	users := h.users.UserList()
+	userList := ""
+	for _, user := range users {
+		userList += " - " + user + "\n"
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	if len(users) != 0 {
+		fmt.Fprintf(w, "[SUCCESS %d] Users: \n%s\n", http.StatusOK, userList)
+	} else {
+		fmt.Fprintf(w, "[SUCCESS %d] No users registered.", http.StatusOK)
+	}
+}
+
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
@@ -240,8 +268,22 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Login failed", http.StatusForbidden)
 		return
 	}
-	h.sessions.BeginSession(userReq.Username, w, r)
+	err = h.sessions.BeginSession(userReq.Username, w, r)
+	if err != nil {
+		http.Error(w, "Login failed: "+err.Error(), http.StatusForbidden)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "[SUCCESS %d] User %s logged in\n", http.StatusOK, userReq.Username)
+}
+
+func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
+	err := h.sessions.EndSession(w, r)
+	if err != nil {
+		http.Error(w, "Logout failed: "+err.Error(), http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "[SUCCESS %d] Session ended\n", http.StatusOK)
 }

@@ -93,6 +93,19 @@ func (m *userManager) RemoveUser(username string) error {
 	})
 }
 
+// UserList returns a list of all registered users
+func (m *userManager) UserList() []string {
+	userList := make([]string, 0)
+	m.db.Update(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		return users.ForEach(func(username, v []byte) error {
+			userList = append(userList, string(username))
+			return nil
+		})
+	})
+	return userList
+}
+
 // HasUser returns nil if user exists in database
 func (m *userManager) HasUser(username string) error {
 	found := false

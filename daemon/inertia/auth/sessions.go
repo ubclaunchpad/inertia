@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"sync"
@@ -69,10 +70,15 @@ func (s *sessionManager) Close() {
 
 // SessionBegin starts a new session with user by setting a cookie
 // and adding session to memory
-func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r *http.Request) {
+func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r *http.Request) error {
 	expiration := time.Now().Add(s.cookieTimeout)
-	id := generateSessionID()
+	id, err := generateSessionID()
+	if err != nil {
+		println("Failed to being session for " + username)
+		return errors.New("Failed to begin session for " + username + ": " + err.Error())
+	}
 
+	// Add session to map
 	s.Lock()
 	s.internal[id] = &session{
 		Username: username,
@@ -80,6 +86,7 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 	}
 	s.Unlock()
 
+	// Add cookie with session ID
 	http.SetCookie(w, &http.Cookie{
 		Name:     s.cookieName,
 		Value:    url.QueryEscape(id),
@@ -88,33 +95,41 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 		HttpOnly: true,
 		Expires:  expiration,
 	})
+	return nil
 }
 
 // SessionEnd ends a session and sets cookie to expire
-func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) {
+func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) error {
 	cookie, err := r.Cookie(s.cookieName)
-	if err != nil || cookie.Value == "" {
-		return
+	if err != nil {
+		return errors.New("Invalid cookie: " + err.Error())
+	}
+	if cookie.Value == "" {
+		return errors.New("Invalid cookie")
 	}
 	id, err := url.QueryUnescape(cookie.Value)
 	if err != nil {
-		return
+		return errors.New("Invalid cookie: " + err.Error())
 	}
 
+	// Delete session from map
 	s.Lock()
 	delete(s.internal, id)
 	s.Unlock()
 
+	// Set cookie to expire immediately
 	expiration := time.Now()
-	newCookie := http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:     s.cookieName,
 		Domain:   s.cookieDomain,
 		Path:     s.cookiePath,
 		HttpOnly: true,
 		Expires:  expiration,
 		MaxAge:   -1,
-	}
-	http.SetCookie(w, &newCookie)
+	})
+	println("logging out")
+	println(expiration.Format("2006-01-02 15:04:05"))
+	return nil
 }
 
 // GetSession verifies if given request is from a valid session and returns it

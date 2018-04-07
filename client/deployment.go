@@ -116,6 +116,11 @@ func (d *Deployment) ResetUsers() (*http.Response, error) {
 	return d.request("POST", "/web/resetusers", nil)
 }
 
+// ListUsers lists all users on the remote.
+func (d *Deployment) ListUsers() (*http.Response, error) {
+	return d.request("POST", "/web/listusers", nil)
+}
+
 func (d *Deployment) request(method, endpoint string, requestBody interface{}) (*http.Response, error) {
 	// Assemble URL
 	url, err := url.Parse("https://" + d.RemoteVPS.GetIPAndPort())

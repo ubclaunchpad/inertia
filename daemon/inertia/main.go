@@ -15,12 +15,14 @@ var Version string
 
 // runCmd starts the daemon
 var runCmd = &cobra.Command{
-	Use:   "run",
-	Short: "Run the daemon",
-	Long: `Run the daemon on a port, default 8081.
-Example:
+	Version: getVersion(),
+	Use:     "run",
+	Short:   "Run the daemon",
+	Long: `Run the daemon on a port, default 8081. Requires
+host address as an argument.
 
-inertia daemon run -p 8081`,
+Example:
+    inertia daemon run 0.0.0.0 -p 8081`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetString("port")
@@ -36,7 +38,7 @@ var tokenCmd = &cobra.Command{
 	Use:   "token",
 	Short: "Produce an API token to use with the daemon",
 	Long: `Produce an API token to use with the daemon,
-	Created using an RSA private key.`,
+Created using an RSA private key.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		keyBytes, err := auth.GetAPIPrivateKey(nil)
 		if err != nil {
