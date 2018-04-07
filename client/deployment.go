@@ -20,6 +20,7 @@ type Deployment struct {
 	Repository *git.Repository
 	Auth       string
 	Project    string
+	BuildType  string
 }
 
 // GetDeployment returns the local deployment setup
@@ -44,23 +45,29 @@ func GetDeployment(name string) (*Deployment, error) {
 		RemoteVPS:  remote,
 		Repository: repo,
 		Auth:       auth,
+		BuildType:  config.BuildType,
 		Project:    config.Project,
 	}, nil
 }
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (d *Deployment) Up(project string, stream bool) (*http.Response, error) {
+func (d *Deployment) Up(buildType string, stream bool) (*http.Response, error) {
 	// TODO: Support other Git remotes.
 	origin, err := d.Repository.Remote("origin")
 	if err != nil {
 		return nil, err
 	}
 
+	if buildType == "" {
+		buildType = d.BuildType
+	}
+
 	reqContent := &common.DaemonRequest{
-		Stream:  stream,
-		Project: project,
-		Secret:  d.RemoteVPS.Daemon.Secret,
+		Stream:    stream,
+		Project:   d.Project,
+		BuildType: buildType,
+		Secret:    d.RemoteVPS.Daemon.Secret,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(origin.Config().URLs[0]),
 			Branch:    d.Branch,
