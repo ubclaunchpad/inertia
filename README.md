@@ -35,14 +35,13 @@ Inertia is a cross-platform command line tool that simplifies setup and manageme
 
 # :package: Usage
 
-All you need to get started is a docker-compose project, the Inertia CLI, and access to a virtual private server. To download the CLI:
+All you need to get started is a docker-compose project, the Inertia CLI, and access to a virtual private server. To install the CLI using [Homebrew](https://brew.sh):
 
 ```bash
 $> brew install ubclaunchpad/tap/inertia
-$> inertia
 ```
 
-For other platforms, you can also [download the appropriate binary for your platform from the Releases page](https://github.com/ubclaunchpad/inertia/releases) or [install Inertia from source](#installing-from-source).
+For other platforms, you can also [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases) or [install Inertia from source](#installing-from-source).
 
 ## Setup
 
@@ -140,7 +139,7 @@ Inertia is set up serverside by executing a script over SSH that installs Docker
 
 # :construction: Development
 
-This section outlines the various tools available to help you get started developing Inertia. Run `make commands` to list all the Makefile shortcuts available.
+This section outlines the various tools available to help you get started developing Inertia. Run `make ls` to list all the Makefile shortcuts available.
 
 If you would like to contribute, feel free to comment on an issue or make one and open up a pull request!
 
@@ -169,7 +168,7 @@ $> inertia --version      # check what version you have installed
 
 Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
 
-Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to go back to using an Inertia CLI installed using Homebrew.
+Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to go back to using an Inertia CLI installed using Homebrew. To go back to a `go install`ed version of Inertia, you need to run `brew uninstall inertia`.
 
 For development, you should install a build tagged as `test` so that you can make use `make testdaemon` for local development. See the next section for more details.
 
@@ -182,8 +181,8 @@ $> make RELEASE=test    # installs current Inertia build and mark as "test"
 You will need Docker installed and running to run the Inertia test suite, which includes a number of integration tests.
 
 ```bash
-$> make test                              # test against ubuntu:latest
-$> make test VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
+$> make test-all                              # test against ubuntu:latest
+$> make test-all VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 ```
 
 You can also manually start a container that sets up a mock VPS for testing:
@@ -201,7 +200,7 @@ You can [SSH into this testvps container](https://bobheadxi.github.io/dockercept
 $> cd /path/to/my/dockercompose/project
 $> inertia init
 $> inertia remote add local
-# PEM file: inertia/test_env/test_key, User: 'root', Address: 0.0.0.0
+# PEM file: inertia/test/keys/id_rsa, User: 'root', Address: 0.0.0.0
 $> inertia local init
 $> inertia local status
 ```

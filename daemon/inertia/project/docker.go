@@ -28,6 +28,7 @@ const (
 	NoContainersResp = "There are currently no active containers."
 )
 
+// ProjectName is user-assigned name of deployed project
 var ProjectName = "project"
 
 // Deploy does git pull, docker-compose build, docker-compose up

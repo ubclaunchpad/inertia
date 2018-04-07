@@ -86,7 +86,7 @@ func TestAuthorizationSignatureInvalid(t *testing.T) {
 }
 
 func TestGetGithubKey(t *testing.T) {
-	inertiaKeyPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/ubclaunchpad/inertia/test_env/test_key")
+	inertiaKeyPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/ubclaunchpad/inertia/test/keys/id_rsa")
 	pemFile, err := os.Open(inertiaKeyPath)
 	assert.Nil(t, err)
 	_, err = GetGithubKey(pemFile)

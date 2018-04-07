@@ -5,7 +5,7 @@
 Makefile
 
 # Test environment
-test_env
+test
 
 # Documentation
 README.md

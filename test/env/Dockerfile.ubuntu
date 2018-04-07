@@ -1,5 +1,5 @@
 ARG VERSION
-FROM debian:${VERSION}
+FROM ubuntu:${VERSION}
 
 RUN apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y openssh-server
@@ -17,8 +17,8 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Copy test key to allow use
 RUN mkdir $HOME/.ssh/
-COPY . .
-RUN cat test_key.pub >> $HOME/.ssh/authorized_keys
+COPY ./keys/ .
+RUN cat id_rsa.pub >> $HOME/.ssh/authorized_keys
 
 EXPOSE 0-9000
 CMD ["/usr/sbin/sshd", "-D"]
