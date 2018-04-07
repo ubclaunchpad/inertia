@@ -1,7 +1,6 @@
-.PHONY: commands inertia inertia-tagged clean test test-v testenv testdaemon daemon bootstrap web-deps web-run web-build
+.PHONY: ls inertia inertia-tagged clean test test-v test-all test-integration test-integration-fast testenv testdaemon daemon bootstrap web-deps web-run web-build
 
 TAG = `git describe --tags`
-PACKAGES = `go list ./... | grep -v vendor/`
 SSH_PORT = 22
 VPS_VERSION = latest
 VPS_OS = ubuntu
@@ -10,7 +9,7 @@ RELEASE = canary
 all: inertia
 
 # List all commands
-commands:
+ls:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
 # Install Inertia with release version
@@ -26,31 +25,39 @@ clean:
 	rm -f ./inertia 
 	find . -type f -name inertia.\* -exec rm {} \;
 
-# Run test suite - creates test VPS and test daemon beforehand
+# Run unit test suite
 test:
-	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
-	make testdaemon
-	go test $(PACKAGES) -ldflags "-X main.Version=test" --cover
+	go test ./... -short -ldflags "-X main.Version=test" --cover
 
-# Run test suite - creates test VPS and test daemon beforehand
+# Run unit test suite verbosely
 test-v:
-	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
-	make testdaemon	
-	go test $(PACKAGES) -ldflags "-X main.Version=test" -v --cover
+	go test ./... -short -ldflags "-X main.Version=test" -v --cover
 
-# Run test suite without recreating test VPS
-test-dirty:
+# Run unit and integration tests - creates fresh test VPS and test daemon beforehand
+test-all:
+	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
-	go test $(PACKAGES) -ldflags "-X main.Version=test" --cover
+	go test ./... -ldflags "-X main.Version=test" --cover
+
+# Run integration tests verbosely - creates fresh test VPS and test daemon beforehand
+test-integration:
+	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
+	make testdaemon
+	go test ./... -v -ldflags "-X main.Version=test" --cover
+
+# Run integration tests verbosely without recreating test VPS
+test-integration-fast:
+	make testdaemon
+	go test ./... -run -v Integration -ldflags "-X main.Version=test" --cover
 
 # Create test VPS
 testenv:
 	docker stop testvps || true && docker rm testvps || true
-	docker build -f ./test_env/Dockerfile.$(VPS_OS) \
+	docker build -f ./test/env/Dockerfile.$(VPS_OS) \
 		-t $(VPS_OS)vps \
 		--build-arg VERSION=$(VPS_VERSION) \
-		./test_env
-	bash ./test_env/startvps.sh $(SSH_PORT) $(VPS_OS)vps
+		./test
+	bash ./test/env/startvps.sh $(SSH_PORT) $(VPS_OS)vps
 
 # Create test daemon and scp the image to the test VPS for use.
 # Requires Inertia version to be "test"
@@ -59,8 +66,8 @@ testdaemon:
 	docker build -t ubclaunchpad/inertia:test .
 	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
 	docker rmi ubclaunchpad/inertia:test
-	chmod 400 ./test_env/test_key
-	scp -i ./test_env/test_key \
+	chmod 400 ./test/keys/id_rsa
+	scp -i ./test/keys/id_rsa \
 		-o StrictHostKeyChecking=no \
 		-o UserKnownHostsFile=/dev/null \
 		-P $(SSH_PORT) \

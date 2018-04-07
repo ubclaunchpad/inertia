@@ -86,15 +86,19 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	println("=============================\n")
 
 	// Output deploy key to user.
-	println("GitHub Deploy Key (add to https://www.github.com/<your_repo>/settings/keys/new): ")
+	println(">> GitHub Deploy Key (add to https://www.github.com/<your_repo>/settings/keys/new): ")
 	println(pub.String())
 
 	// Output Webhook url to user.
-	println("GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println("http://" + remote.IP + ":" + remote.Daemon.Port)
-	println("Github WebHook Secret: " + remote.Daemon.Secret + "\n")
+	println(">> GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println("WebHook Address:  https://" + remote.IP + ":" + remote.Daemon.Port)
+	println("WebHook Secret:   " + remote.Daemon.Secret)
+	println(`Note that you will have to disable SSH verification in your webhook
+settings - Inertia uses self-signed certificates that GitHub won't
+be able to verify.` + "\n")
 
-	println("Inertia daemon successfully deployed! Add your webhook url and deploy\nkey to enable continuous deployment.")
+	println(`Inertia daemon successfully deployed! Add your webhook url and deploy
+key to enable continuous deployment.`)
 	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", name)
 
 	return nil

@@ -31,7 +31,6 @@ matrix:
   fast_finish: true
 
 before_install:
-  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
   - go get honnef.co/go/tools/cmd/megacheck                  
   - go get github.com/fzipp/gocyclo
   - go get github.com/mattn/goveralls
@@ -44,6 +43,7 @@ script:
   - make testdaemon SSH_PORT=69     # Send test daemon to test VPS
   - go test -v -race -coverprofile=coverage.out ./...
   - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
+  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
   - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
   - go vet ./...                    # Report suspicious constructs
   - megacheck ./...                 # Static analysis

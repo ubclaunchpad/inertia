@@ -22,7 +22,7 @@ var urlVariations = []string{
 }
 
 func getInertiaDeployTestKey() (ssh.AuthMethod, error) {
-	pemFile, err := os.Open("../../../test_env/test_key")
+	pemFile, err := os.Open("../../../test/keys/id_rsa")
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,11 @@ func getInertiaDeployTestKey() (ssh.AuthMethod, error) {
 	return ssh.NewPublicKeys("git", bytes, "")
 }
 
-func TestClone(t *testing.T) {
+func TestCloneIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	dir := "./test_clone/"
 	repo, err := clone(dir, inertiaDeployTest, "dev", nil, os.Stdout)
 	defer os.RemoveAll(dir)
@@ -44,7 +48,11 @@ func TestClone(t *testing.T) {
 	assert.Equal(t, "dev", head.Name().Short())
 }
 
-func TestForcePull(t *testing.T) {
+func TestForcePullIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	dir := "./test_force_pull/"
 	auth, err := getInertiaDeployTestKey()
 	assert.Nil(t, err)
@@ -63,7 +71,11 @@ func TestForcePull(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestUpdateRepository(t *testing.T) {
+func TestUpdateRepositoryIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	dir := "./test_update/"
 	repo, err := git.PlainClone(dir, false, &git.CloneOptions{
 		URL: inertiaDeployTest,
