@@ -73,9 +73,9 @@ func processPushEvent(event *github.PushEvent) {
 		defer cli.Close()
 
 		// Deploy project
-		err = deployment.Deploy(project.DeployOptions{
+		err = deployment.Deploy(cli, os.Stdout, project.DeployOptions{
 			SkipUpdate: false,
-		}, cli, os.Stdout)
+		})
 		if err != nil {
 			println(err.Error())
 		}

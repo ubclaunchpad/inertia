@@ -42,10 +42,10 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	logs, err := deployment.Logs(project.LogOptions{
+	logs, err := deployment.Logs(cli, project.LogOptions{
 		Container: upReq.Container,
 		Stream:    upReq.Stream,
-	}, cli)
+	})
 	if err != nil {
 		if docker.IsErrContainerNotFound(err) {
 			logger.Err(err.Error(), http.StatusNotFound)

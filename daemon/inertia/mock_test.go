@@ -23,7 +23,7 @@ type FakeDeployment struct {
 	LogsFunc           func(in1 project.LogOptions, in2 *docker.Client) (io.ReadCloser, error)
 }
 
-func (f *FakeDeployment) Deploy(o project.DeployOptions, c *docker.Client, w io.Writer) error {
+func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) error {
 	return f.DeployFunc(o, c, w)
 }
 
@@ -35,7 +35,7 @@ func (f *FakeDeployment) Destroy(c *docker.Client, w io.Writer) error {
 	return f.DestroyFunc(c, w)
 }
 
-func (f *FakeDeployment) Logs(o project.LogOptions, c *docker.Client) (io.ReadCloser, error) {
+func (f *FakeDeployment) Logs(c *docker.Client, o project.LogOptions) (io.ReadCloser, error) {
 	return f.LogsFunc(o, c)
 }
 
