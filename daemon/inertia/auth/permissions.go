@@ -252,6 +252,18 @@ func (h *PermissionsHandler) listUsersHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
+	// Handle CORS for local development
+	if origin := r.Header.Get("Origin"); origin == "http://localhost:7900" {
+		fmt.Println("setting cors")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Methods", "POST OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers",  "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+	}
+
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

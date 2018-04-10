@@ -24,8 +24,10 @@ export default class App extends React.Component {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        Username: this.state.username,
-        Password: this.state.password
+        username: this.state.username,
+        password: this.state.password,
+        email: "",
+        admin: false
       })
     };
 
