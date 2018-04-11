@@ -32,7 +32,61 @@ import (
 func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
+
 	resp, err := cli.ContainerCreate(
+		ctx, &container.Config{
+			Image:      DockerComposeVersion,
+			WorkingDir: "/build",
+			Env:        []string{"HOME=/build"},
+			Cmd: []string{
+				"-p", d.project,
+				"build",
+			},
+		},
+		&container.HostConfig{
+			AutoRemove: true,
+			Binds: []string{
+				os.Getenv("HOME") + "/project:/build",
+				// docker-compose needs to be able to start other containers
+				"/var/run/docker.sock:/var/run/docker.sock",
+			},
+		}, nil, BuildStageName,
+	)
+	if err != nil {
+		return err
+	}
+	if len(resp.Warnings) > 0 {
+		fmt.Fprintln(out, "Warnings encountered on docker-compose build.")
+		warnings := strings.Join(resp.Warnings, "\n")
+		return errors.New(warnings)
+	}
+
+	// Start the herokuish container to build project
+	fmt.Fprintln(out, "Building project...")
+	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Attach logs and report build progress until container exits
+	reader, err := d.Logs(cli, LogOptions{Container: resp.ID, Stream: true})
+	if err != nil {
+		return err
+	}
+	stop := make(chan struct{})
+	go common.FlushRoutine(out, reader, stop)
+	status, err := cli.ContainerWait(ctx, resp.ID)
+	close(stop)
+	reader.Close()
+	if err != nil {
+		return err
+	}
+	if status != 0 {
+		return errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+	}
+	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
+
+	resp, err = cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      DockerComposeVersion,
 			WorkingDir: "/build/project",
