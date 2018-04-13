@@ -19,6 +19,15 @@ func CheckForDockerCompose(cwd string) bool {
 	return !(YMLnotPresent && YAMLnotPresent)
 }
 
+// CheckForDockerfile returns error if current directory is a
+// not a Dockerfile project
+func CheckForDockerfile(cwd string) bool {
+	dockerfilePath := filepath.Join(cwd, "Dockerfile")
+	_, err := os.Stat(dockerfilePath)
+	dockerfileNotPresent := os.IsNotExist(err)
+	return !dockerfileNotPresent
+}
+
 // RemoveContents removes all files within given directory, returns nil if successful
 func RemoveContents(directory string) error {
 	d, err := os.Open(directory)

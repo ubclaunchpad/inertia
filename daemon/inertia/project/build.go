@@ -119,6 +119,11 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }
 
+// dockerBuild builds project from Dockerfile and deploys it
+func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
+	return nil
+}
+
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
 // to build the user project.
 func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {

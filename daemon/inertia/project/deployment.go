@@ -132,6 +132,8 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOption
 	switch d.buildType {
 	case "herokuish":
 		return herokuishBuild(d, cli, out)
+	case "dockerfile":
+		return dockerBuild(d, cli, out)
 	case "docker-compose":
 		return dockerCompose(d, cli, out)
 	default:

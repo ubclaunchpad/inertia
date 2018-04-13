@@ -42,6 +42,25 @@ func TestCheckForDockerCompose(t *testing.T) {
 	os.Remove(yamlPath)
 }
 
+func TestCheckForDockerfile(t *testing.T) {
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+
+	path := path.Join(cwd, "/Dockerfile")
+
+	// No!
+	b := CheckForDockerfile(cwd)
+	assert.False(t, b)
+
+	// Yes!
+	file, err := os.Create(path)
+	assert.Nil(t, err)
+	file.Close()
+	b = CheckForDockerfile(cwd)
+	assert.True(t, b)
+	os.Remove(path)
+}
+
 func TestFlushRoutine(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		reader, writer := io.Pipe()
