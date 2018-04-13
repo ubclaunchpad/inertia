@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,6 +25,10 @@ func (runner *mockSSHRunner) RunStream(cmd string, interactive bool) error {
 }
 
 func (runner *mockSSHRunner) RunSession() error {
+	return nil
+}
+
+func (runner *mockSSHRunner) CopyFile(r io.Reader, remotePath string, permissions string, size int64) error {
 	return nil
 }
 

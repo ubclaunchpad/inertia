@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
+	"path"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -15,6 +17,7 @@ type SSHSession interface {
 	Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error)
 	RunStream(cmd string, interactive bool) error
 	RunSession() error
+	CopyFile(r io.Reader, remotePath string, permissions string, size int64) error
 }
 
 // SSHRunner runs commands over SSH and captures results.
@@ -98,6 +101,31 @@ func (runner *SSHRunner) RunSession() error {
 		str, _ := reader.ReadString('\n')
 		fmt.Fprint(in, str)
 	}
+}
+
+// CopyFile copies given reader to remote
+func (runner *SSHRunner) CopyFile(fileReader io.Reader, remotePath string, permissions string, size int64) error {
+	contentsBytes, _ := ioutil.ReadAll(fileReader)
+	reader := bytes.NewReader(contentsBytes)
+
+	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
+	if err != nil {
+		return err
+	}
+
+	filename := path.Base(remotePath)
+	directory := path.Dir(remotePath)
+
+	go func() {
+		w, _ := session.StdinPipe()
+		defer w.Close()
+		fmt.Fprintln(w, "C"+permissions, size, filename)
+		io.Copy(w, reader)
+		fmt.Fprintln(w, "\x00")
+	}()
+
+	session.Run("/usr/bin/scp -t " + directory)
+	return nil
 }
 
 // Stubbed out for testing.
