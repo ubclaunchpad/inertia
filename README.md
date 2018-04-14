@@ -16,7 +16,9 @@
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
   </a>
 
-  <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
+  <a href="https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md">
+    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
+  </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases">
     <img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg" />
@@ -25,7 +27,25 @@
 
 ----------------
 
-Inertia is a cross-platform command line tool that simplifies setup and management of automated project deployment on any virtual private server. It aims to provide the ease and flexibility of services like Heroku without the complexity of Kubernetes while still giving users full control over their projects.
+Inertia is a cross-platform command line tool that enables effortless setup and management of continuous, automated deployment on any virtual private server.
+
+<p align="center">
+    <img src="/.static/inertia-init.png" width="45%" />
+</p>
+
+|   | Main Features  |
+----|-----------------
+🚀  | Simple setup from your computer without ever having to manually SSH into your remote
+🍰  | Use any remote virtual private server platform you want
+⚒  | Deploy a wide range of supported projects (including docker-compose and Heroku buildpacks)
+🚄  | Have your project automatically updated as soon as you `git push`
+🛂  | Start up and shut down your deployment with ease
+📚  | Monitor your deployed application's logs straight from your command line
+🏷  | Configure deployment to your liking with branch settings and more
+
+Maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/)
+
+----------------
 
 - [Getting Started](#package-getting-started)
   - [Setup](#setup)
