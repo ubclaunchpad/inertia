@@ -13,6 +13,17 @@ import (
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
+	// Handle CORS for local development
+	if origin := r.Header.Get("Origin"); origin == "http://localhost:7900" {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Methods", "GET OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers",  "Content-Type Accept")
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+	}
+
 	// Get container name from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
