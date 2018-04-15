@@ -27,7 +27,7 @@
 
 ----------------
 
-Inertia is a cross-platform command line tool that enables effortless setup and management of continuous, automated deployment on any virtual private server.
+Inertia is a simple cross-platform command line application that enables effortless setup and management of continuous, automated deployment on any virtual private server. It is built and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
 
 <p align="center">
     <img src="/.static/inertia-init.png" width="45%" />
@@ -36,14 +36,12 @@ Inertia is a cross-platform command line tool that enables effortless setup and 
 |   | Main Features  |
 ----|-----------------
 🚀  | Simple setup from your computer without ever having to manually SSH into your remote
-🍰  | Use any remote virtual private server platform you want
-⚒  | Deploy a wide range of supported projects (including docker-compose and Heroku buildpacks)
+🍰  | Use any Linux-based remote virtual private server platform you want
+⚒  | Deploy a wide range of supported project types (including docker-compose and Heroku buildpacks)
 🚄  | Have your project automatically updated as soon as you `git push`
 🛂  | Start up and shut down your deployment with ease
 📚  | Monitor your deployed application's logs straight from your command line
 🏷  | Configure deployment to your liking with branch settings and more
-
-Maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/)
 
 ----------------
 
@@ -53,6 +51,7 @@ Maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/)
   - [Deployment Management](#deployment-management)
   - [Release Streams](#release-streams)
 - [Motivation and Design](#bulb-motivation-and-design)
+- [Contributing](#books-contributing)
 
 # :package: Getting Started
 
@@ -138,9 +137,9 @@ Add some bling to your Inertia-deployed project :sunglasses:
 
 # :bulb: Motivation and Design
 
-[UBC Launch Pad](http://www.ubclaunchpad.com) is a software engineering club at the University of British Columbia that aims to provide students with a community where they can work together to build a all sorts of cool projects, ranging from mobile apps and web services to cryptocurrencies.
+[UBC Launch Pad](http://www.ubclaunchpad.com) is a student-run software engineering club at the University of British Columbia that aims to provide students with a community where they can work together to build a all sorts of cool projects, ranging from mobile apps and web services to cryptocurrencies and machine learning applications.
 
-Many of our projects rely on hosting providers for deployment. We are frequently changing hosting providers based on available funding and sponsorship. Inertia is a project to develop an in-house deployment system to make setting up continuously deployed applications simple and painless, regardless of the hosting provider.
+Many of our projects rely on hosting providers for deployment. Unfortunately we frequently change hosting providers based on available funding and sponsorship, meaning our projects often need to be redeployed. Inertia is a project to develop an in-house deployment system to make setting up continuously deployed applications simple and painless, regardless of the hosting provider.
 
 The primary design goals of Inertia are to:
 
@@ -159,3 +158,7 @@ The deployment daemon runs persistently in the background on the server, receivi
 </p>
 
 Inertia is set up serverside by executing a script over SSH that installs Docker and starts an Inertia daemon image with [access to the host Docker socket](https://bobheadxi.github.io/dockerception/#docker-in-docker). This Docker-in-Docker configuration gives the daemon the ability to start up other containers *alongside* it, rather than *within* it, as required. Once the daemon is set up, we avoid using further SSH commands and execute Docker commands through Docker's Golang API. Instead of installing the docker-compose toolset, we [use a docker-compose image](https://bobheadxi.github.io/dockerception/#docker-compose-in-docker) to build and deploy user projects.
+
+# :books: Contributing
+
+Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for more details and development tips.
