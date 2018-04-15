@@ -43,12 +43,12 @@ test-all:
 test-integration:
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
-	go test ./... -v -ldflags "-X main.Version=test" --cover
+	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
 
 # Run integration tests verbosely without recreating test VPS
 test-integration-fast:
 	make testdaemon
-	go test ./... -run -v Integration -ldflags "-X main.Version=test" --cover
+	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
 
 # Create test VPS
 testenv:
