@@ -1,7 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import InertiaClient from '../client';
-import App from './App';
 
 export default class Login extends React.Component {
   constructor(props) {
@@ -12,7 +9,6 @@ export default class Login extends React.Component {
       loginAlert: ""
     };
     this.handleLoginSubmit = this.handleLoginSubmit.bind(this);
-    this.handleGetLogs = this.handleGetLogs.bind(this);
     this.handleUsernameBlur = this.handleUsernameBlur.bind(this);
     this.handlePasswordBlur = this.handlePasswordBlur.bind(this);
   }
@@ -25,30 +21,21 @@ export default class Login extends React.Component {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        username: 'bear',
-        password: 'tree',
-        // username: this.state.username,
-        // password: this.state.password,
+        username: this.state.username,
+        password: this.state.password,
         email: "",
         admin: true
       })
     };
 
     const response = await this.props.client._post(endpoint, params);
-    console.log("Login response is: ", response);
-    // this.setState({loginAlert: response.body});
-  }
 
-  async handleGetLogs() {
-    const endpoint = '/logs';
-    const params = {
-      headers: {
-        'Accept': 'application/json'
-      }
-    };
+    if (response.status !== 200) {
+      this.setState({loginAlert: 'Username and/or password is incorrect'});
+      return;
+    }
 
-    const response = await this.props.client._get(endpoint, params);
-    console.log("Logs response is: ", response);
+    this.props.history.push('/home');
   }
 
   handleUsernameBlur(e) {
@@ -61,39 +48,47 @@ export default class Login extends React.Component {
 
   render () {
     return (
-      <div>
+      <div style={styles.container}>
         <p align="center">
           <img
             src="https://github.com/ubclaunchpad/inertia/blob/master/.static/inertia-with-name.png?raw=true"
-            width="10%"/>
+            width="20%"/>
         </p>
-        <p align="center">
-          This is the Inertia web client!
+        <p align="center" style={{ fontWeight: 500, fontSize: 24, color: '#101010', paddingTop: '2rem' }}>
+          Inertia Web
         </p>
         <div style={styles.login}>
           <input onBlur={this.handleUsernameBlur} placeholder="Username"/>
-          <input onBlur={this.handlePasswordBlur} placeholder="Password"/>
+          <input style={{ marginBottom: '0.5rem' }} onBlur={this.handlePasswordBlur} placeholder="Password"/>
           <button onClick={this.handleLoginSubmit}>Login</button>
-          <p>{this.state.loginAlert}</p>
-          <button onClick={this.handleGetLogs}>Get Logs</button>
+          <p style={styles.loginAlert}>{this.state.loginAlert}</p>
         </div>
       </div>
     )
   }
 }
 
-App.propTypes = {
-  client: PropTypes.instanceOf(InertiaClient)
-};
-
 const styles = {
   container: {
     display: 'flex',
+    flexFlow: 'column',
+    justifyContent: 'center',
+    height: '100%',
+    width: '100%'
   },
+
   login: {
+    position: 'relative',
     display: 'flex',
     flexFlow: 'column',
-    alignItems: 'center'
+    alignItems: 'center',
+    margin: '0.5rem 0',
+    marginBottom: '10rem'
+  },
+
+  loginAlert: {
+    position: 'absolute',
+    top: '105%'
   }
 };
 

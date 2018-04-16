@@ -1,5 +1,5 @@
 import React from 'react';
-import { Redirect, Router, Route } from 'react-router-dom';
+import { Redirect, HashRouter, Route } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import InertiaClient from '../client';
@@ -7,11 +7,18 @@ import Login from './Login';
 import Home from './Home';
 import { isAuthenticated } from '../common/AuthService';
 
-const AuthRoute = ({ component: Component, ...rest }) => (
-  <Route {...rest} render={(props) => (
+const AuthRoute = ({ component: Component, props, ...rest }) => (
+  <Route {...rest} render={(routeProps) => (
     isAuthenticated()
-      ? <Component {...props}/>
+      ? <Component {...Object.assign({}, routeProps, props)}/>
       : <Redirect to="/login"/>
+  )}/>
+);
+
+// render a route component with props
+const PropsRoute = ({ component: Component, props, ...rest }) => (
+  <Route {...rest} render={(routeProps) => (
+      <Component {...Object.assign({}, routeProps, props)}/>
   )}/>
 );
 
@@ -22,14 +29,25 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <Router>
-        <Route path="/login" component={Login}/>
-        <AuthRoute path="/home" component={Home}/>
-      </Router>
+      <HashRouter>
+        <div style={styles.container}>
+          <Route exact path="/" component={() => <Redirect to="/login" />}/>
+          <PropsRoute path="/login" component={Login} props={this.props}/>
+          <AuthRoute path="/home" component={Home} props={this.props}/>
+        </div>
+      </HashRouter>
     );
   }
 }
 
 App.propTypes = {
   client: PropTypes.instanceOf(InertiaClient)
+};
+
+const styles = {
+  container: {
+    display: 'flex',
+    height: '100%',
+    width: '100%'
+  }
 };
