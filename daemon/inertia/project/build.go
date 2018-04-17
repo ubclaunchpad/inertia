@@ -121,7 +121,48 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 
 // dockerBuild builds project from Dockerfile and deploys it
 func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
-	return nil
+	fmt.Fprintln(out, "Building Dockerfile project...")
+	ctx := context.Background()
+	buildContext, err := os.Open(Directory)
+	if err != nil {
+		return err
+	}
+	defer buildContext.Close()
+
+	imageName := d.project + "-image"
+	buildResp, err := cli.ImageBuild(ctx, buildContext, types.ImageBuildOptions{
+		Tags:       []string{imageName},
+		Remove:     true,
+		Dockerfile: "Dockerfile",
+	})
+	if err != nil {
+		return err
+	}
+
+	stop := make(chan struct{})
+	go common.FlushRoutine(out, buildResp.Body, stop)
+	// @TODO: detect image build completion
+	close(stop)
+	buildResp.Body.Close()
+
+	containerResp, err := cli.ContainerCreate(
+		ctx, &container.Config{
+			Image: imageName,
+		},
+		&container.HostConfig{
+			AutoRemove: true,
+		}, nil, d.project,
+	)
+	if err != nil {
+		return err
+	}
+	if len(containerResp.Warnings) > 0 {
+		warnings := strings.Join(containerResp.Warnings, "\n")
+		return errors.New(warnings)
+	}
+
+	fmt.Fprintln(out, "Starting up project in container "+d.project+"...")
+	return cli.ContainerStart(ctx, containerResp.ID, types.ContainerStartOptions{})
 }
 
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
