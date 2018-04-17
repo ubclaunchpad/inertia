@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 )
 
 // CheckForDockerCompose returns error if current directory is a
@@ -78,4 +79,10 @@ func Flush(w io.Writer, rc io.ReadCloser, buffer []byte) error {
 		buffer[i] = 0
 	}
 	return nil
+}
+
+// Extract gets the project name from its URL in the form [username]/[project]
+func Extract(URL string) string {
+	r, _ := regexp.Compile(".com(/|:)(\\w+/\\w+)")
+	return r.FindStringSubmatch(URL)[2]
 }

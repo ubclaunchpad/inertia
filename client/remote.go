@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 // RemoteVPS contains parameters for the VPS
@@ -85,12 +86,16 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 	println("=============================\n")
 
+	repo, err := common.GetLocalRepo()
+	origin, err := repo.Remote("origin")
+	projectName := common.Extract(common.GetSSHRemoteURL(origin.Config().URLs[0]))
+
 	// Output deploy key to user.
-	println(">> GitHub Deploy Key (add to https://www.github.com/<your_repo>/settings/keys/new): ")
+	println(">> GitHub Deploy Key (add to https://www.github.com/" + projectName + "/settings/keys/new): ")
 	println(pub.String())
 
 	// Output Webhook url to user.
-	println(">> GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println(">> GitHub WebHook URL (add to https://www.github.com/" + projectName + "/settings/hooks/new): ")
 	println("WebHook Address:  https://" + remote.IP + ":" + remote.Daemon.Port)
 	println("WebHook Secret:   " + remote.Daemon.Secret)
 	println(`Note that you will have to disable SSH verification in your webhook
