@@ -129,6 +129,7 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 	}
 	defer buildContext.Close()
 
+	// Build image
 	imageName := d.project + "-image"
 	buildResp, err := cli.ImageBuild(ctx, buildContext, types.ImageBuildOptions{
 		Tags:       []string{imageName},
@@ -139,12 +140,13 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 		return err
 	}
 
+	// Output build progress
 	stop := make(chan struct{})
-	go common.FlushRoutine(out, buildResp.Body, stop)
-	// @TODO: detect image build completion
+	common.FlushRoutine(out, buildResp.Body, stop)
 	close(stop)
 	buildResp.Body.Close()
 
+	// Create container from image
 	containerResp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image: imageName,
