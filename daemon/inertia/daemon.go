@@ -67,7 +67,7 @@ func run(host, port, version string) {
 
 	// Inertia web - PermissionsHandler is used to authenticate web
 	// app access and manage users
-	webPrefix := "/web"
+	webPrefix := "/web/"
 	permHandler, err := auth.NewPermissionsHandler(
 		auth.UserDatabasePath, host, webPrefix, 120,
 	)

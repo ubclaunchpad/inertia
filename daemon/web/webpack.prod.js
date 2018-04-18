@@ -6,24 +6,34 @@ const HtmlWebpackPluginConfig = new HtmlWebpackPlugin({
   template: './index.html',
   filename: 'index.html',
   inject: 'body',
-})
+});
 
 const config = {
-  entry: './index.js',
+  mode: 'production',
+  entry: ['babel-polyfill', './index.js'],
   output: {
     path: `${__dirname}/public/`,
     filename: 'bundle.js',
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.jsx?$/,
-        exclude: '/node_modules/',
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015', 'react'],
-        },
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['es2015', 'react', 'stage-3'],
+            },
+          }
+        ],
       },
+      {
+        test: /\.css/,
+        exclude: /node_modules/,
+        use: ['style-loader', 'css-loader'],
+      }
     ],
   },
   plugins: [
@@ -33,4 +43,4 @@ const config = {
   ]
 };
 
-module.exports = env => config;
+module.exports = config;
