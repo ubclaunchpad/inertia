@@ -17,12 +17,10 @@ const UserDatabasePath = "/app/host/.inertia/users.db"
 // PermissionsHandler handles users, permissions, and sessions on top
 // of an http.ServeMux. It is used for Inertia Web.
 type PermissionsHandler struct {
-	domain      string
-	users       *userManager
-	sessions    *sessionManager
-	mux         *http.ServeMux
-	publicPaths []string
-	adminPaths  []string
+	domain   string
+	users    *userManager
+	sessions *sessionManager
+	mux      *http.ServeMux
 }
 
 // NewPermissionsHandler returns a new handler for authenticating
@@ -43,21 +41,10 @@ func NewPermissionsHandler(
 	// Set up permissions handler
 	mux := http.NewServeMux()
 	handler := &PermissionsHandler{
-		domain:     domain,
-		users:      userManager,
-		sessions:   sessionManager,
-		mux:        mux,
-		adminPaths: make([]string, 0),
-	}
-
-	// Set paths that don't require session authentication.
-	handler.publicPaths = []string{
-		"/login",
-		"/logout",
-		"/adduser",
-		"/removeuser",
-		"/resetusers",
-		"/listusers",
+		domain:   domain,
+		users:    userManager,
+		sessions: sessionManager,
+		mux:      mux,
 	}
 	mux.HandleFunc("/login", handler.loginHandler)
 	mux.HandleFunc("/logout", handler.logoutHandler)
@@ -93,72 +80,11 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		path = "/" + path
 		r.URL.Path = path
 	}
-
-	// Serve if path is public
-	for _, prefix := range h.publicPaths {
-		if strings.HasPrefix(path, prefix) {
-			h.mux.ServeHTTP(w, r)
-			return
-		}
-	}
-
-	// Check if session is valid
-	s, err := h.sessions.GetSession(w, r)
-	if err != nil {
-		if err == errSessionNotFound || err == errCookieNotFound {
-			http.Error(w, err.Error(), http.StatusForbidden)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Check if user is valid
-	err = h.users.HasUser(s.Username)
-	if err != nil {
-		if err == errUserNotFound {
-			http.Error(w, err.Error(), http.StatusForbidden)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Check if user has sufficient permissions for path
-	for _, prefix := range h.adminPaths {
-		if strings.HasPrefix(path, prefix) {
-			admin, err := h.users.IsAdmin(s.Username)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			if !admin {
-				http.Error(w, "Admin privileges required", http.StatusForbidden)
-			}
-			return
-		}
-	}
-
-	// Serve the requested page if permissions were granted
 	h.mux.ServeHTTP(w, r)
 }
 
 // AttachPublicHandler attaches given path and handler and makes it publicly available
 func (h *PermissionsHandler) AttachPublicHandler(path string, handler http.Handler) {
-	// Add path as exception to user restriction
-	h.publicPaths = append(h.publicPaths, path)
-	h.mux.Handle(path, handler)
-}
-
-// AttachUserRestrictedHandler attaches and restricts given path and handler to logged in users.
-func (h *PermissionsHandler) AttachUserRestrictedHandler(path string, handler http.Handler) {
-	// By default, all paths are user restricted
-	h.mux.Handle(path, handler)
-}
-
-// AttachAdminRestrictedHandler attaches and restricts given path and handler to logged in admins.
-func (h *PermissionsHandler) AttachAdminRestrictedHandler(path string, handler http.Handler) {
-	// Add path as one that requires elevated permissions
-	h.adminPaths = append(h.publicPaths, path)
 	h.mux.Handle(path, handler)
 }
 
@@ -257,7 +183,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		fmt.Println("setting cors")
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Methods", "POST OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers",  "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 		if r.Method == "OPTIONS" {
 			return
