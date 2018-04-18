@@ -37,18 +37,14 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      DockerComposeVersion,
-			WorkingDir: "/build",
+			WorkingDir: "/build/project",
 			Env:        []string{"HOME=/build"},
-			Cmd: []string{
-				"-p", d.project,
-				"build",
-			},
+			Cmd:        []string{"-p", d.project, "build"},
 		},
 		&container.HostConfig{
 			AutoRemove: true,
 			Binds: []string{
-				os.Getenv("HOME") + "/project:/build",
-				// docker-compose needs to be able to start other containers
+				os.Getenv("HOME") + "/project/:/build",
 				"/var/run/docker.sock:/var/run/docker.sock",
 			},
 		}, nil, BuildStageName,
@@ -87,6 +83,12 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 	}
 	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
 
+	// @TODO allow configuration
+	dockerComposeRelFilePath := "docker-compose.yml"
+	dockerComposeFilePath := os.Getenv("HOME") + "/project/" + dockerComposeRelFilePath
+
+	// Set up docker-compose up
+	fmt.Fprintln(out, "Preparing to start project...")
 	resp, err = cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      DockerComposeVersion,
@@ -95,18 +97,16 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 			Cmd: []string{
 				// set project name
 				"-p", d.project,
-				// run "up" with flags
-				"up", "--build",
+				"up",
 			},
 		},
 		&container.HostConfig{
 			AutoRemove: true,
 			Binds: []string{
-				os.Getenv("HOME") + ":/build",
-				// docker-compose needs to be able to start other containers
+				dockerComposeFilePath + ":/build/project/docker-compose.yml",
 				"/var/run/docker.sock:/var/run/docker.sock",
 			},
-		}, nil, d.project,
+		}, nil, "docker-compose",
 	)
 	if err != nil {
 		return err
@@ -130,12 +130,15 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 		return err
 	}
 
+	// @TODO: support configuration
+	dockerFilePath := "Dockerfile"
+
 	// Build image
 	imageName := d.project + "-image"
 	buildResp, err := cli.ImageBuild(ctx, buildCtx, types.ImageBuildOptions{
 		Tags:           []string{imageName},
 		Remove:         true,
-		Dockerfile:     "Dockerfile", // @TODO: support option to choose Dockerfile
+		Dockerfile:     dockerFilePath,
 		SuppressOutput: false,
 	})
 	if err != nil {
