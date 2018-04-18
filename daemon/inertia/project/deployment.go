@@ -20,17 +20,6 @@ import (
 // Directory specifies the location of deployed project
 var Directory = "/app/host/project"
 
-const (
-	// DockerComposeVersion is the version of docker-compose used
-	DockerComposeVersion = "docker/compose:1.19.0"
-
-	// HerokuishVersion is the version of Herokuish used
-	HerokuishVersion = "gliderlabs/herokuish:v0.4.0"
-
-	// BuildStageName specifies the name of build stage containers
-	BuildStageName = "build"
-)
-
 // Deployer does great deploys
 type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) error

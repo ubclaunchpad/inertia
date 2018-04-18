@@ -16,6 +16,17 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
+const (
+	// DockerComposeVersion is the version of docker-compose used
+	DockerComposeVersion = "docker/compose:1.21.0"
+
+	// HerokuishVersion is the version of Herokuish used
+	HerokuishVersion = "gliderlabs/herokuish:v0.4.0"
+
+	// BuildStageName specifies the name of build stage containers
+	BuildStageName = "build"
+)
+
 // dockerCompose builds and runs project using docker-compose -
 // the following code performs the bash equivalent of:
 //
