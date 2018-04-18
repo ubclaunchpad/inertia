@@ -17,15 +17,15 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
+// Directory specifies the location of deployed project
+var Directory = "/app/host/project"
+
 const (
 	// DockerComposeVersion is the version of docker-compose used
 	DockerComposeVersion = "docker/compose:1.19.0"
 
 	// HerokuishVersion is the version of Herokuish used
 	HerokuishVersion = "gliderlabs/herokuish:v0.4.0"
-
-	// Directory specifies the location of deployed project
-	Directory = "/app/host/project"
 
 	// BuildStageName specifies the name of build stage containers
 	BuildStageName = "build"

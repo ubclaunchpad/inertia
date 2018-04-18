@@ -1,6 +1,7 @@
 package project
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -123,18 +124,19 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Building Dockerfile project...")
 	ctx := context.Background()
-	buildContext, err := os.Open(Directory)
+	buildCtx := bytes.NewBuffer(nil)
+	err := common.BuildTar(Directory, buildCtx)
 	if err != nil {
 		return err
 	}
-	defer buildContext.Close()
 
 	// Build image
 	imageName := d.project + "-image"
-	buildResp, err := cli.ImageBuild(ctx, buildContext, types.ImageBuildOptions{
-		Tags:       []string{imageName},
-		Remove:     true,
-		Dockerfile: "Dockerfile",
+	buildResp, err := cli.ImageBuild(ctx, buildCtx, types.ImageBuildOptions{
+		Tags:           []string{imageName},
+		Remove:         true,
+		Dockerfile:     "Dockerfile", // @TODO: support option to choose Dockerfile
+		SuppressOutput: false,
 	})
 	if err != nil {
 		return err
@@ -146,6 +148,8 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 	close(stop)
 	buildResp.Body.Close()
 
+	fmt.Fprintf(out, "%s (%s) build has exited\n", imageName, buildResp.OSType)
+
 	// Create container from image
 	containerResp, err := cli.ContainerCreate(
 		ctx, &container.Config{
@@ -156,6 +160,9 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 		}, nil, d.project,
 	)
 	if err != nil {
+		if strings.Contains(err.Error(), "No such image") {
+			return errors.New("Image build was unsuccessful")
+		}
 		return err
 	}
 	if len(containerResp.Warnings) > 0 {
