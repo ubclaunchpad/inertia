@@ -76,7 +76,7 @@ func run(host, port, version string) {
 		return
 	}
 	defer permHandler.Close()
-	permHandler.AttachUserRestrictedHandler(
+	permHandler.AttachPublicHandler(
 		"/", http.FileServer(http.Dir("/app/inertia-web")),
 	)
 	mux.Handle(webPrefix, http.StripPrefix(webPrefix, permHandler))
