@@ -5,7 +5,11 @@ import PropTypes from 'prop-types';
 import InertiaClient from '../client';
 import Login from './Login';
 import Home from './Home';
-import { isAuthenticated } from '../common/AuthService';
+
+const isAuthenticated = () => {
+  // TODO: authentication check prior to route change
+  return true;
+};
 
 const AuthRoute = ({ component: Component, props, ...rest }) => (
   <Route {...rest} render={(routeProps) => (
