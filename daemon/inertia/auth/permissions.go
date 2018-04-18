@@ -48,6 +48,7 @@ func NewPermissionsHandler(
 	}
 	mux.HandleFunc("/login", handler.loginHandler)
 	mux.HandleFunc("/logout", handler.logoutHandler)
+	mux.HandleFunc("/validate", handler.validateHandler)
 
 	// The following endpoints are for user administration and must
 	// be used from the CLI and delivered with the daemon token.
@@ -229,6 +230,41 @@ func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		http.Error(w, "Logout failed: "+err.Error(), http.StatusInternalServerError)
 	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "[SUCCESS %d] Session ended\n", http.StatusOK)
+}
+
+func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if session is valid
+	s, err := h.sessions.GetSession(w, r)
+	if err != nil {
+		if err == errSessionNotFound || err == errCookieNotFound {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Check if user exists
+	err = h.users.HasUser(s.Username)
+	if err != nil {
+		if err == errUserNotFound {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Check if user is admin
+	/*
+		admin, err := h.users.IsAdmin(s.Username)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	*/
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "[SUCCESS %d] Session ended\n", http.StatusOK)
