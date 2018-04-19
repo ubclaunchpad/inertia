@@ -74,7 +74,7 @@ func run(host, port, version string) {
 	mux.HandleFunc("/", gitHubWebHookHandler)
 
 	// Inertia web
-	mux.Handle("/admin/", http.StripPrefix("/admin/", http.FileServer(http.Dir("/app/inertia-web"))))
+	// mux.Handle("/admin/", http.StripPrefix("/admin/", http.FileServer(http.Dir("/app/inertia-web"))))
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)
