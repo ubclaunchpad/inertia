@@ -61,32 +61,31 @@ func run(host, port, version string) {
 		}
 	}
 
-	// GitHub webhook endpoint
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", gitHubWebHookHandler)
-
-	// Inertia web - PermissionsHandler is used to authenticate web
-	// app access and manage users
 	webPrefix := "/web/"
-	permHandler, err := auth.NewPermissionsHandler(
+	handler, err := auth.NewPermissionsHandler(
 		auth.UserDatabasePath, host, webPrefix, 120,
 	)
 	if err != nil {
 		println(err.Error())
 		return
 	}
-	defer permHandler.Close()
-	permHandler.AttachPublicHandler(
-		"/", http.FileServer(http.Dir("/app/inertia-web")),
+	defer handler.Close()
+
+	// Inertia web
+	handler.AttachPublicHandler(
+		webPrefix,
+		http.FileServer(http.Dir("/app/inertia-web")).(http.HandlerFunc),
 	)
-	mux.Handle(webPrefix, http.StripPrefix(webPrefix, permHandler))
+
+	// GitHub webhook endpoint
+	handler.AttachPublicHandler("/webhook", gitHubWebHookHandler)
 
 	// CLI API endpoints
-	mux.HandleFunc("/up", auth.Authorized(upHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/down", auth.Authorized(downHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/status", auth.Authorized(statusHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/reset", auth.Authorized(resetHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/logs", auth.Authorized(logHandler, auth.GetAPIPrivateKey))
+	handler.AttachUserRestrictedHandler("/status", statusHandler)
+	handler.AttachAdminRestrictedHandler("/up", upHandler)
+	handler.AttachAdminRestrictedHandler("/down", downHandler)
+	handler.AttachAdminRestrictedHandler("/reset", resetHandler)
+	handler.AttachUserRestrictedHandler("/logs", logHandler)
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)
@@ -94,7 +93,7 @@ func run(host, port, version string) {
 		":"+port,
 		daemonSSLCert,
 		daemonSSLKey,
-		mux,
+		handler,
 	))
 }
 
