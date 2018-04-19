@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
@@ -13,16 +14,16 @@ import (
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	// Handle CORS for local development
-	if origin := r.Header.Get("Origin"); origin == "http://localhost:7900" {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Methods", "GET OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers",  "Content-Type Accept")
+	/* 	// Handle CORS for local development
+	   	if origin := r.Header.Get("Origin"); origin == "http://localhost:7900" {
+	   		w.Header().Set("Access-Control-Allow-Origin", origin)
+	   		w.Header().Set("Access-Control-Allow-Methods", "GET OPTIONS")
+	   		w.Header().Set("Access-Control-Allow-Headers",  "Content-Type Accept")
 
-		if r.Method == "OPTIONS" {
-			return
-		}
-	}
+	   		if r.Method == "OPTIONS" {
+	   			return
+	   		}
+	   	} */
 
 	// Get container name from request
 	body, err := ioutil.ReadAll(r.Body)
@@ -41,7 +42,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	logger := newLogger(upReq.Stream, w)
 	defer logger.Close()
 
-	if container != "/inertia-daemon" && deployment == nil {
+	if !strings.Contains(container, "inertia-daemon") && deployment == nil {
 		logger.Err(msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
@@ -53,7 +54,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	logs, err := deployment.Logs(project.LogOptions{
+	logs, err := project.ContainerLogs(project.LogOptions{
 		Container: upReq.Container,
 		Stream:    upReq.Stream,
 	}, cli)

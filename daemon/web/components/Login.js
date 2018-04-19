@@ -14,7 +14,7 @@ export default class Login extends React.Component {
   }
 
   async handleLoginSubmit() {
-    const endpoint = '/web/login';
+    const endpoint = '/user/login';
     const params = {
       headers: {
         'Accept': 'application/json',

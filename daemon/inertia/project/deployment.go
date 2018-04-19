@@ -39,9 +39,7 @@ type Deployer interface {
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
 
-	Logs(LogOptions, *docker.Client) (io.ReadCloser, error)
 	GetStatus(*docker.Client) (*DeploymentStatus, error)
-
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
@@ -169,23 +167,6 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	return common.RemoveContents(Directory)
-}
-
-// LogOptions is used to configure retrieved container logs
-type LogOptions struct {
-	Container string
-	Stream    bool
-}
-
-// Logs get logs ;)
-func (d *Deployment) Logs(opts LogOptions, cli *docker.Client) (io.ReadCloser, error) {
-	ctx := context.Background()
-	return cli.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     opts.Stream,
-		Timestamps: true,
-	})
 }
 
 // DeploymentStatus lists details about the deployed project
@@ -347,7 +328,7 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	}
 
 	// Attach logs and report build progress until container exits
-	reader, err := d.Logs(LogOptions{Container: resp.ID, Stream: true}, cli)
+	reader, err := ContainerLogs(LogOptions{Container: resp.ID, Stream: true}, cli)
 	if err != nil {
 		return err
 	}

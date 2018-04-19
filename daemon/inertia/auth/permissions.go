@@ -17,13 +17,13 @@ const UserDatabasePath = "/app/host/.inertia/users.db"
 // PermissionsHandler handles users, permissions, and sessions on top
 // of an http.ServeMux. It is used for Inertia Web.
 type PermissionsHandler struct {
-	domain      string
-	users       *userManager
-	sessions    *sessionManager
-	mux         *http.ServeMux
-	keyLookup   func(*jwt.Token) (interface{}, error)
-	publicPaths []string
-	adminPaths  []string
+	domain     string
+	users      *userManager
+	sessions   *sessionManager
+	mux        *http.ServeMux
+	keyLookup  func(*jwt.Token) (interface{}, error)
+	userPaths  []string
+	adminPaths []string
 }
 
 // NewPermissionsHandler returns a new handler for authenticating
@@ -50,17 +50,14 @@ func NewPermissionsHandler(
 		sessions: sessionManager,
 		mux:      mux,
 	}
-
-	userPrefix := "/user/"
-	userHandler := http.NewServeMux()
+	handler.keyLookup = GetAPIPrivateKey
+	if len(keyLookup) > 0 {
+		handler.keyLookup = keyLookup[0]
+	}
 
 	// The following endpoints are for user administration and session
 	// administration
-	handler.publicPaths = []string{
-		"/user/login",
-		"/user/logout",
-		"/user/validate",
-	}
+	userHandler := http.NewServeMux()
 	userHandler.HandleFunc("/login", handler.loginHandler)
 	userHandler.HandleFunc("/logout", handler.logoutHandler)
 	userHandler.HandleFunc("/validate", handler.validateHandler)
@@ -70,15 +67,11 @@ func NewPermissionsHandler(
 		"/user/resetusers",
 		"/user/listusers",
 	}
-	handler.keyLookup = GetAPIPrivateKey
-	if len(keyLookup) > 0 {
-		handler.keyLookup = keyLookup[0]
-	}
 	userHandler.HandleFunc("/adduser", handler.addUserHandler)
 	userHandler.HandleFunc("/removeuser", handler.removeUserHandler)
 	userHandler.HandleFunc("/resetusers", handler.resetUsersHandler)
 	userHandler.HandleFunc("/listusers", handler.listUsersHandler)
-	mux.Handle(userPrefix, http.StripPrefix(userPrefix, userHandler))
+	mux.Handle("/user/", http.StripPrefix("/user", userHandler))
 
 	return handler, nil
 }
@@ -101,20 +94,24 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = path
 	}
 
-	// Serve if path is public
-	for _, prefix := range h.publicPaths {
-		if strings.HasPrefix(path, prefix) {
-			h.mux.ServeHTTP(w, r)
-			return
-		}
-	}
-
-	// Check if this path is for admins
+	// Check if this is restricted
 	adminRestricted := false
 	for _, prefix := range h.adminPaths {
 		if strings.HasPrefix(path, prefix) {
 			adminRestricted = true
 		}
+	}
+	userRestricted := false
+	for _, prefix := range h.userPaths {
+		if strings.HasPrefix(path, prefix) {
+			userRestricted = true
+		}
+	}
+
+	// Serve if path is public
+	if !userRestricted && !adminRestricted {
+		h.mux.ServeHTTP(w, r)
+		return
 	}
 
 	// Check token in header - if no tokens, check cookie
@@ -140,6 +137,7 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// Serve the requested endpoint to token holders
 		h.mux.ServeHTTP(w, r)
+		return
 	}
 
 	// Check if session is valid
@@ -181,22 +179,26 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // AttachPublicHandler attaches given path and handler and makes it publicly available
-func (h *PermissionsHandler) AttachPublicHandler(path string, handler http.HandlerFunc) {
-	// Add path as exception to user restriction
-	h.publicPaths = append(h.publicPaths, path)
+func (h *PermissionsHandler) AttachPublicHandler(path string, handler http.Handler) {
 	h.mux.Handle(path, handler)
 }
 
-// AttachUserRestrictedHandler attaches and restricts given path and handler to logged in users.
-func (h *PermissionsHandler) AttachUserRestrictedHandler(path string, handler http.HandlerFunc) {
-	// By default, all paths are user restricted
+// AttachPublicHandlerFunc attaches given path and handler and makes it publicly available
+func (h *PermissionsHandler) AttachPublicHandlerFunc(path string, handler http.HandlerFunc) {
 	h.mux.Handle(path, handler)
 }
 
-// AttachAdminRestrictedHandler attaches and restricts given path and handler to logged in admins.
-func (h *PermissionsHandler) AttachAdminRestrictedHandler(path string, handler http.HandlerFunc) {
+// AttachUserRestrictedHandlerFunc attaches and restricts given path and handler to logged in users.
+func (h *PermissionsHandler) AttachUserRestrictedHandlerFunc(path string, handler http.HandlerFunc) {
+	// Add path to user-restricted paths
+	h.userPaths = append(h.userPaths, path)
+	h.mux.Handle(path, handler)
+}
+
+// AttachAdminRestrictedHandlerFunc attaches and restricts given path and handler to logged in admins.
+func (h *PermissionsHandler) AttachAdminRestrictedHandlerFunc(path string, handler http.HandlerFunc) {
 	// Add path as one that requires elevated permissions
-	h.adminPaths = append(h.publicPaths, path)
+	h.adminPaths = append(h.adminPaths, path)
 	h.mux.Handle(path, handler)
 }
 
@@ -351,6 +353,7 @@ func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Requ
 	s, err := h.sessions.GetSession(w, r)
 	if err != nil {
 		if err == errSessionNotFound || err == errCookieNotFound {
+			println(err.Error()) //
 			http.Error(w, err.Error(), http.StatusForbidden)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -369,14 +372,5 @@ func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Check if user is admin
-	/*
-		admin, err := h.users.IsAdmin(s.Username)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	*/
-
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "[SUCCESS %d] Session ended\n", http.StatusOK)
 }

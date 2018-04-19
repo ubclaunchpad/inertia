@@ -63,7 +63,7 @@ func run(host, port, version string) {
 
 	webPrefix := "/web/"
 	handler, err := auth.NewPermissionsHandler(
-		auth.UserDatabasePath, host, webPrefix, 120,
+		auth.UserDatabasePath, host, "/web", 120,
 	)
 	if err != nil {
 		println(err.Error())
@@ -74,18 +74,25 @@ func run(host, port, version string) {
 	// Inertia web
 	handler.AttachPublicHandler(
 		webPrefix,
-		http.FileServer(http.Dir("/app/inertia-web")).(http.HandlerFunc),
+		http.StripPrefix(
+			webPrefix, http.FileServer(http.Dir("/app/inertia-web")),
+		),
 	)
 
 	// GitHub webhook endpoint
-	handler.AttachPublicHandler("/webhook", gitHubWebHookHandler)
+	handler.AttachPublicHandlerFunc("/webhook", gitHubWebHookHandler)
 
 	// CLI API endpoints
-	handler.AttachUserRestrictedHandler("/status", statusHandler)
-	handler.AttachAdminRestrictedHandler("/up", upHandler)
-	handler.AttachAdminRestrictedHandler("/down", downHandler)
-	handler.AttachAdminRestrictedHandler("/reset", resetHandler)
-	handler.AttachUserRestrictedHandler("/logs", logHandler)
+	handler.AttachUserRestrictedHandlerFunc("/status", statusHandler)
+	handler.AttachUserRestrictedHandlerFunc("/logs", logHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/up", upHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/down", downHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/reset", resetHandler)
+
+	// Root "ok" endpoint
+	handler.AttachPublicHandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)

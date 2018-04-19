@@ -74,7 +74,6 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 	expiration := time.Now().Add(s.cookieTimeout)
 	id, err := generateSessionID()
 	if err != nil {
-		println("Failed to being session for " + username)
 		return errors.New("Failed to begin session for " + username + ": " + err.Error())
 	}
 
@@ -88,12 +87,11 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 
 	// Add cookie with session ID
 	http.SetCookie(w, &http.Cookie{
-		Name:     s.cookieName,
-		Value:    url.QueryEscape(id),
-		Domain:   s.cookieDomain,
-		Path:     s.cookiePath,
-		HttpOnly: true,
-		Expires:  expiration,
+		Name:    s.cookieName,
+		Value:   url.QueryEscape(id),
+		Domain:  s.cookieDomain,
+		Path:    s.cookiePath,
+		Expires: expiration,
 	})
 	return nil
 }
@@ -120,15 +118,12 @@ func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) erro
 	// Set cookie to expire immediately
 	expiration := time.Now()
 	http.SetCookie(w, &http.Cookie{
-		Name:     s.cookieName,
-		Domain:   s.cookieDomain,
-		Path:     s.cookiePath,
-		HttpOnly: true,
-		Expires:  expiration,
-		MaxAge:   -1,
+		Name:    s.cookieName,
+		Domain:  s.cookieDomain,
+		Path:    s.cookiePath,
+		Expires: expiration,
+		MaxAge:  -1,
 	})
-	println("logging out")
-	println(expiration.Format("2006-01-02 15:04:05"))
 	return nil
 }
 

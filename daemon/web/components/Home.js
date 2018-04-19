@@ -64,7 +64,7 @@ export default class Home extends React.Component {
   }
 
   async handleLogOut() {
-    const endpoint = '/web/logout';
+    const endpoint = '/user/logout';
     const params = {
       headers: {
         'Accept': 'application/json'
