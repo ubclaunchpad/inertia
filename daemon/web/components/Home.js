@@ -2,8 +2,8 @@ import React from 'react';
 
 const SidebarHeader = ({ children }) => (
   <div style={sidebarHeaderStyles.container}>
-    <a href="/#/home" onClick={() => {return false;}} style={sidebarHeaderStyles.text}>
-      { children }
+    <a href="/#/home" onClick={() => { return false; }} style={sidebarHeaderStyles.text}>
+      {children}
     </a>
   </div>
 );
@@ -24,8 +24,8 @@ const sidebarHeaderStyles = {
 
 const SidebarButton = ({ children }) => (
   <div style={sidebarButtonStyles.container}>
-    <a href="/#/home" onClick={() => {}} style={sidebarButtonStyles.text}>
-      { children }
+    <a href="/#/home" onClick={() => { }} style={sidebarButtonStyles.text}>
+      {children}
     </a>
   </div>
 );
@@ -49,10 +49,22 @@ export default class Home extends React.Component {
   constructor(props) {
     super(props);
     this.handleGetLogs = this.handleGetLogs.bind(this);
+    this.handleLogOut = this.handleLogOut.bind(this);
   }
 
   async handleGetLogs() {
     const endpoint = '/logs';
+    const params = {
+      headers: {
+        'Accept': 'application/json'
+      }
+    };
+
+    const response = await this.props.client._get(endpoint, params);
+  }
+
+  async handleLogOut() {
+    const endpoint = '/web/logout';
     const params = {
       headers: {
         'Accept': 'application/json'
@@ -68,7 +80,7 @@ export default class Home extends React.Component {
 
         <header style={styles.headerBar}>
           <p style={{ fontWeight: 500, fontSize: 24, color: '#101010' }}>Inertia Web</p>
-          <a href="/" style={{ textDecoration: 'none', color: '#5f5f5f' }}>logout</a>
+          <a href="/" onClick={this.handleLogout} style={{ textDecoration: 'none', color: '#5f5f5f' }}>logout</a>
         </header>
 
         <div style={styles.innerContainer}>

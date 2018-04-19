@@ -35,7 +35,7 @@ export default class App extends React.Component {
     const params = {
       headers: { 'Accept': 'application/json' },
     };
-    const response = await this.props.client._get("/validate", params);
+    const response = await this.props.client._get("/web/validate", params);
     return (response.status === 200);
   };
 

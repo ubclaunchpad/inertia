@@ -54,9 +54,6 @@ export default class Login extends React.Component {
             src="https://github.com/ubclaunchpad/inertia/blob/master/.static/inertia-with-name.png?raw=true"
             width="20%"/>
         </p>
-        <p align="center" style={{ fontWeight: 500, fontSize: 24, color: '#101010', paddingTop: '2rem' }}>
-          Inertia Web
-        </p>
         <div style={styles.login}>
           <input onBlur={this.handleUsernameBlur} placeholder="Username"/>
           <input style={{ marginBottom: '0.5rem' }} onBlur={this.handlePasswordBlur} placeholder="Password"/>
