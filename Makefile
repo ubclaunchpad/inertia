@@ -6,9 +6,6 @@ VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = canary
 
-METALINTER_VERSION = 2.0.5
-METALINTER_PLATFORM = linux
-
 all: inertia
 
 # List all commands
