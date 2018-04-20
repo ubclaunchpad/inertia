@@ -24,7 +24,7 @@ type LogOptions struct {
 }
 
 // ContainerLogs get logs ;)
-func ContainerLogs(opts LogOptions, cli *docker.Client) (io.ReadCloser, error) {
+func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
 	ctx := context.Background()
 	return cli.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
 		ShowStdout: true,

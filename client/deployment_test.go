@@ -20,9 +20,19 @@ var (
 )
 
 func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, error) {
-	wholeURL := strings.Split(ts.URL, ":")
-	url := strings.Trim(wholeURL[1], "/")
-	port := wholeURL[2]
+	var (
+		url  string
+		port string
+	)
+	if ts != nil {
+		wholeURL := strings.Split(ts.URL, ":")
+		url = strings.Trim(wholeURL[1], "/")
+		port = wholeURL[2]
+	} else {
+		url = "0.0.0.0"
+		port = "8080"
+	}
+
 	mockRemote := &RemoteVPS{
 		User: "",
 		IP:   url,
@@ -143,6 +153,17 @@ func TestStatus(t *testing.T) {
 	resp, err := d.Status()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestStatusFail(t *testing.T) {
+	memory := memory.NewStorage()
+	defer func() { memory = nil }()
+
+	d, err := getMockDeployment(nil, memory)
+	assert.Nil(t, err)
+
+	_, err = d.Status()
+	assert.Contains(t, err.Error(), "appears offline")
 }
 
 func TestReset(t *testing.T) {

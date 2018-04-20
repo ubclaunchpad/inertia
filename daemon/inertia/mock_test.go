@@ -23,7 +23,7 @@ type FakeDeployment struct {
 	GetStatusFunc      func(in1 *docker.Client) (*common.DeploymentStatus, error)
 }
 
-func (f *FakeDeployment) Deploy(o project.DeployOptions, c *docker.Client, w io.Writer) error {
+func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) error {
 	return f.DeployFunc(o, c, w)
 }
 

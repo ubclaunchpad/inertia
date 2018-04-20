@@ -32,7 +32,7 @@ clean:
 	find . -type f -name inertia.\* -exec rm {} \;
 
 lint:
-	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor ./...'
+	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=60s ./...'
 
 # Run unit test suite
 test:

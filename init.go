@@ -33,9 +33,14 @@ to succeed.`,
 		if err != nil {
 			log.Fatal(err)
 		}
+		// docker-compose projects will usually have Dockerfiles,
+		// so check for that first, then check for Dockerfile
 		if common.CheckForDockerCompose(cwd) {
 			println("docker-compose project detected")
 			buildType = "docker-compose"
+		} else if common.CheckForDockerfile(cwd) {
+			println("Dockerfile project detected")
+			buildType = "dockerfile"
 		}
 
 		// Hello world config file!

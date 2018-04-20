@@ -74,9 +74,9 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = deployment.Deploy(project.DeployOptions{
+	err = deployment.Deploy(cli, logger.GetWriter(), project.DeployOptions{
 		SkipUpdate: skipUpdate,
-	}, cli, logger.GetWriter())
+	})
 	if err != nil {
 		logger.Err(err.Error(), http.StatusInternalServerError)
 		return

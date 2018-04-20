@@ -5,10 +5,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
 	git "gopkg.in/src-d/go-git.v4"
@@ -84,7 +86,12 @@ func (d *Deployment) Down() (*http.Response, error) {
 
 // Status lists the currently active containers on the remote VPS instance
 func (d *Deployment) Status() (*http.Response, error) {
-	return d.request("GET", "/status", nil)
+	resp, err := d.request("GET", "/status", nil)
+	if err != nil &&
+		(strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "refused")) {
+		return nil, fmt.Errorf("daemon on remote %s appears offline or inaccessible", d.Name)
+	}
+	return resp, err
 }
 
 // Reset shuts down deployment and deletes the contents of the deployment's
