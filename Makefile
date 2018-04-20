@@ -74,7 +74,8 @@ testenv:
 # Requires Inertia version to be "test"
 testdaemon:
 	rm -f ./inertia-daemon-image
-	docker build -t ubclaunchpad/inertia:test .
+	docker build --build-arg INERTIA_VERSION=$(TAG) \
+		-t ubclaunchpad/inertia:test .
 	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
 	docker rmi ubclaunchpad/inertia:test
 	chmod 400 ./test/keys/id_rsa
@@ -89,7 +90,8 @@ testdaemon:
 # Creates a daemon release and pushes it to Docker Hub repository.
 # Requires access to the UBC Launch Pad Docker Hub.
 daemon:
-	docker build -t ubclaunchpad/inertia:$(RELEASE) .
+	docker build --build-arg INERTIA_VERSION=$(RELEASE) \
+		-t ubclaunchpad/inertia:$(RELEASE) .
 	docker push ubclaunchpad/inertia:$(RELEASE)
 
 # Recompiles assets. Use whenever a script in client/bootstrap is
