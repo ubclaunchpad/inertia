@@ -2,7 +2,7 @@ import React from 'react';
 
 export default class InertiaClient {
   constructor(url) {
-    this.url = "https://" + url;
+    this.url = 'https://' + url;
   }
 
   /**
@@ -11,7 +11,7 @@ export default class InertiaClient {
    * @param {Object} params
    */
   async _get(endpoint, params) {
-    params.method = "GET";
+    params.method = 'GET';
 
     const request = new Request(this.url + endpoint, params);
 
@@ -28,7 +28,7 @@ export default class InertiaClient {
    * @param {Object} params
    */
   async _post(endpoint, params) {
-    params.method = "POST";
+    params.method = 'POST';
 
     const request = new Request(this.url + endpoint, params);
 

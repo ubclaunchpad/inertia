@@ -4,9 +4,9 @@ export default class Login extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: "",
-      password: "",
-      loginAlert: ""
+      username: '',
+      password: '',
+      loginAlert: ''
     };
     this.handleLoginSubmit = this.handleLoginSubmit.bind(this);
     this.handleUsernameBlur = this.handleUsernameBlur.bind(this);
@@ -23,7 +23,7 @@ export default class Login extends React.Component {
       body: JSON.stringify({
         username: this.state.username,
         password: this.state.password,
-        email: "",
+        email: '',
         admin: true
       })
     };
@@ -31,7 +31,7 @@ export default class Login extends React.Component {
     const response = await this.props.client._post(endpoint, params);
 
     if (response.status !== 200) {
-      this.setState({loginAlert: 'Username and/or password is incorrect'});
+      this.setState({ loginAlert: 'Username and/or password is incorrect' });
       return;
     }
 
@@ -39,29 +39,29 @@ export default class Login extends React.Component {
   }
 
   handleUsernameBlur(e) {
-    this.setState({username: e.target.value});
+    this.setState({ username: e.target.value });
   }
 
   handlePasswordBlur(e) {
-    this.setState({password: e.target.value});
+    this.setState({ password: e.target.value });
   }
 
-  render () {
+  render() {
     return (
       <div style={styles.container}>
         <p align="center">
           <img
             src="https://github.com/ubclaunchpad/inertia/blob/master/.static/inertia-with-name.png?raw=true"
-            width="20%"/>
+            width="20%" />
         </p>
         <div style={styles.login}>
-          <input onBlur={this.handleUsernameBlur} placeholder="Username"/>
-          <input style={{ marginBottom: '0.5rem' }} onBlur={this.handlePasswordBlur} placeholder="Password"/>
+          <input onBlur={this.handleUsernameBlur} placeholder="Username" />
+          <input style={{ marginBottom: '0.5rem' }} onBlur={this.handlePasswordBlur} placeholder="Password" />
           <button onClick={this.handleLoginSubmit}>Login</button>
           <p style={styles.loginAlert}>{this.state.loginAlert}</p>
         </div>
       </div>
-    )
+    );
   }
 }
 
