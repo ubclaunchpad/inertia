@@ -136,12 +136,12 @@ var deploymentStatusCmd = &cobra.Command{
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode, deployment.Name, host)
-			var status common.DeploymentStatus
+			status := &common.DeploymentStatus{}
 			err := json.NewDecoder(resp.Body).Decode(status)
 			if err != nil {
 				log.Fatal(err)
 			}
-			println(formatStatus(&status))
+			println(formatStatus(status))
 		case http.StatusForbidden:
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		case http.StatusNotFound:
