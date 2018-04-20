@@ -12,6 +12,11 @@ all: inertia
 ls:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
+# Sets up all dependencies
+deps:
+	dep ensure
+	make web-deps
+
 # Install Inertia with release version
 inertia:
 	go install -ldflags "-X main.Version=$(RELEASE)"
@@ -86,9 +91,9 @@ daemon:
 bootstrap:
 	go-bindata -o client/bootstrap.go -pkg client client/bootstrap/...
 
-# Install Inertia Web dependencies.
+# Install Inertia Web dependencies. Use PACKAGE to install something.
 web-deps:
-	(cd ./daemon/web; npm install)
+	(cd ./daemon/web; npm install $(PACKAGE))
 
 # Run local development instance of Inertia Web.
 web-run:
