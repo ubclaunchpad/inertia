@@ -8,8 +8,12 @@ test
 # Documentation
 *.md
 
-# All hidden folders
-.*
+# All hidden things
+.github
+.scripts
+.static
+.dockerignore
+.travis.yml
 
 # Non-daemon source code
 client
