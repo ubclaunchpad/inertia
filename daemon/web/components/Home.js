@@ -1,4 +1,7 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
+import InertiaClient from '../client';
 
 const SidebarHeader = ({ children }) => (
   <div style={sidebarHeaderStyles.container}>
@@ -44,34 +47,50 @@ const sidebarButtonStyles = {
   }
 };
 
-
 export default class Home extends React.Component {
   constructor(props) {
     super(props);
-    this.handleGetLogs = this.handleGetLogs.bind(this);
-    this.handleLogout = this.handleLogout.bind(this);
-  }
+    this.state = {
+      loading: true,
 
-  async handleGetLogs() {
-    const endpoint = '/logs';
-    const params = {
-      headers: {
-        'Accept': 'application/json'
-      }
+      remoteVersion: '',
+      remoteStatus: '',
+
+      repoBranch: '',
+      repoCommitHash: '',
+      repoCommitMessage: '',
+      repoBuildType: '',
+      repoBuilding: false,
+
+      containers: [],
     };
-    const response = await this.props.client._get(endpoint, params);
+
+    this.handleLogout = this.handleLogout.bind(this);
+    this.handleGetStatus = this.handleGetStatus.bind(this);
+
+    this.handleGetStatus()
+      .then(() => this.setState({ loading: false }))
+      .catch((err) => console.error(err));
   }
 
   async handleLogout() {
-    const endpoint = '/user/logout';
-    const params = {
-      headers: {
-        'Accept': 'application/json'
-      }
-    };
-
-    const response = await this.props.client._post(endpoint, params);
+    const response = await this.props.client.logout();
+    if (response.status != 200) console.error(response);
     this.props.history.push('/login');
+  }
+
+  async handleGetStatus() {
+    const response = await this.props.client.getRemoteStatus();
+    switch (response.status) {
+      case 200:
+        console.log(JSON.parse(response.body));
+        break;
+      case 404:
+        console.log(response);
+        break;
+      default:
+        Promise.reject(Error('bad response:', response.body));
+    }
   }
 
   render() {
@@ -104,6 +123,10 @@ export default class Home extends React.Component {
     );
   }
 }
+
+Home.propTypes = {
+  client: PropTypes.instanceOf(InertiaClient),
+};
 
 // hardcode all styles for now, until we flesh out UI
 const styles = {

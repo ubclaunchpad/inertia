@@ -14,25 +14,14 @@ export default class Login extends React.Component {
   }
 
   async handleLoginSubmit() {
-    const endpoint = '/user/login';
-    const params = {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: JSON.stringify({
-        username: this.state.username,
-        password: this.state.password,
-        email: '',
-        admin: true
-      })
-    };
-    const response = await this.props.client._post(endpoint, params);
+    const response = await this.props.client.login(
+      this.state.username,
+      this.state.password
+    );
     if (response.status !== 200) {
       this.setState({ loginAlert: 'Username and/or password is incorrect' });
       return;
     }
-
     this.props.history.push('/home');
   }
 

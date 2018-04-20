@@ -5,6 +5,62 @@ export default class InertiaClient {
     this.url = 'https://' + url;
   }
 
+  async logout() {
+    const endpoint = '/user/logout';
+    const params = {
+      headers: {
+        'Accept': 'application/json'
+      }
+    };
+    return this._post(endpoint, params);
+  }
+
+  async login(username, password) {
+    const endpoint = '/user/login';
+    const params = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password,
+      })
+    };
+    return this._post(endpoint, params);
+  }
+
+  async validate() {
+    const params = {
+      headers: { 'Accept': 'application/json' },
+    };
+    return this._get('/user/validate', params);
+  }
+
+  async getContainerLogs(container = 'inertia-daemon') {
+    const endpoint = '/logs';
+    const params = {
+      headers: {
+        'Accept': 'text/plain'
+      },
+      body: JSON.stringify({
+        container: container,
+        stream: true,
+      })
+    };
+    return this._get(endpoint, params);
+  }
+
+  async getRemoteStatus() {
+    const endpoint = '/status';
+    const params = {
+      headers: {
+        'Accept': 'application/json'
+      }
+    };
+    return this._get(endpoint, params);
+  }
+
   /**
    * Makes a GET request to the given API endpoint with the given params.
    * @param {String} endpoint
@@ -18,7 +74,7 @@ export default class InertiaClient {
     try {
       return await fetch(request);
     } catch (e) {
-      return e;
+      return Promise.reject(e);
     }
   }
 
@@ -35,7 +91,7 @@ export default class InertiaClient {
     try {
       return await fetch(request);
     } catch (e) {
-      return e;
+      return Promise.reject(e);
     }
   }
 }

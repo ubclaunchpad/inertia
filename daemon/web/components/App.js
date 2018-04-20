@@ -54,12 +54,7 @@ export default class App extends React.Component {
   }
 
   async isAuthenticated() {
-    const params = {
-      headers: { 'Accept': 'application/json' },
-    };
-    const response = await this.props.client._get(
-      '/user/validate', params
-    );
+    const response = await this.props.client.validate();
     return (response.status === 200);
   }
 
