@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -30,7 +31,7 @@ type PermissionsHandler struct {
 // users and handling user administration. Param userlandPath is
 // used to set cookie domain.
 func NewPermissionsHandler(
-	dbPath, domain, userlandPath string, timeout int,
+	dbPath, hostDomain string, timeout int,
 	keyLookup ...func(*jwt.Token) (interface{}, error),
 ) (*PermissionsHandler, error) {
 	// Set up user manager
@@ -40,12 +41,12 @@ func NewPermissionsHandler(
 	}
 
 	// Set up session manager
-	sessionManager := newSessionManager(domain, userlandPath, timeout)
+	sessionManager := newSessionManager(hostDomain, timeout)
 
 	// Set up permissions handler
 	mux := http.NewServeMux()
 	handler := &PermissionsHandler{
-		domain:   domain,
+		domain:   hostDomain,
 		users:    userManager,
 		sessions: sessionManager,
 		mux:      mux,
@@ -60,6 +61,9 @@ func NewPermissionsHandler(
 	userHandler := http.NewServeMux()
 	userHandler.HandleFunc("/login", handler.loginHandler)
 	userHandler.HandleFunc("/logout", handler.logoutHandler)
+	handler.userPaths = []string{
+		"/user/validate",
+	}
 	userHandler.HandleFunc("/validate", handler.validateHandler)
 	handler.adminPaths = []string{
 		"/user/adduser",
@@ -82,8 +86,21 @@ func (h *PermissionsHandler) Close() error {
 	return h.users.Close()
 }
 
-// Implement the ServeHTTP method to make a permissionHandler a http.Handler
+// nolint: gocyclo
 func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// CORS for development
+	origin, err := url.Parse(r.Header.Get("Origin"))
+	if err == nil && origin.Hostname() == "127.0.0.1" {
+		allowedOrigin := "http://" + origin.Host
+		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Methods", "POST OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == "OPTIONS" {
+			return
+		}
+	}
+
 	// http.StripPrefix removes the leading slash, but in the interest
 	// of maintaining similar behaviour to stdlib handler functions,
 	// we manually add a leading "/" here instead of having users not add
@@ -151,17 +168,6 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if user is valid
-	err = h.users.HasUser(s.Username)
-	if err != nil {
-		if err == errUserNotFound {
-			http.Error(w, err.Error(), http.StatusForbidden)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
 	// Check if user has sufficient permissions for path
 	if adminRestricted {
 		admin, err := h.users.IsAdmin(s.Username)
@@ -185,21 +191,21 @@ func (h *PermissionsHandler) AttachPublicHandler(path string, handler http.Handl
 
 // AttachPublicHandlerFunc attaches given path and handler and makes it publicly available
 func (h *PermissionsHandler) AttachPublicHandlerFunc(path string, handler http.HandlerFunc) {
-	h.mux.Handle(path, handler)
+	h.mux.HandleFunc(path, handler)
 }
 
 // AttachUserRestrictedHandlerFunc attaches and restricts given path and handler to logged in users.
 func (h *PermissionsHandler) AttachUserRestrictedHandlerFunc(path string, handler http.HandlerFunc) {
 	// Add path to user-restricted paths
 	h.userPaths = append(h.userPaths, path)
-	h.mux.Handle(path, handler)
+	h.mux.HandleFunc(path, handler)
 }
 
 // AttachAdminRestrictedHandlerFunc attaches and restricts given path and handler to logged in admins.
 func (h *PermissionsHandler) AttachAdminRestrictedHandlerFunc(path string, handler http.HandlerFunc) {
 	// Add path as one that requires elevated permissions
 	h.adminPaths = append(h.adminPaths, path)
-	h.mux.Handle(path, handler)
+	h.mux.HandleFunc(path, handler)
 }
 
 func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -292,18 +298,6 @@ func (h *PermissionsHandler) listUsersHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
-	// Handle CORS for local development
-	if origin := r.Header.Get("Origin"); origin == "http://localhost:7900" {
-		fmt.Println("setting cors")
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Methods", "POST OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-		if r.Method == "OPTIONS" {
-			return
-		}
-	}
-
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -342,6 +336,7 @@ func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Reques
 	err := h.sessions.EndSession(w, r)
 	if err != nil {
 		http.Error(w, "Logout failed: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -349,28 +344,5 @@ func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Request) {
-	// Check if session is valid
-	s, err := h.sessions.GetSession(w, r)
-	if err != nil {
-		if err == errSessionNotFound || err == errCookieNotFound {
-			println(err.Error()) //
-			http.Error(w, err.Error(), http.StatusForbidden)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Check if user exists
-	err = h.users.HasUser(s.Username)
-	if err != nil {
-		if err == errUserNotFound {
-			http.Error(w, err.Error(), http.StatusForbidden)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
 	w.WriteHeader(http.StatusOK)
 }

@@ -14,8 +14,7 @@ const (
 	// DaemonGithubKeyLocation is the default path of the deploy key
 	DaemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"
 
-	malformedAuthStringErrorMsg = "Malformed authentication string"
-	tokenInvalidErrorMsg        = "Token invalid"
+	tokenInvalidErrorMsg = "Token invalid"
 )
 
 // GetAPIPrivateKey returns the private RSA key to authenticate HTTP

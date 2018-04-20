@@ -18,7 +18,7 @@ export default class Login extends React.Component {
     const params = {
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: JSON.stringify({
         username: this.state.username,
@@ -27,9 +27,7 @@ export default class Login extends React.Component {
         admin: true
       })
     };
-
     const response = await this.props.client._post(endpoint, params);
-
     if (response.status !== 200) {
       this.setState({ loginAlert: 'Username and/or password is incorrect' });
       return;

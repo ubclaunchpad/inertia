@@ -63,7 +63,7 @@ func run(host, port, version string) {
 
 	webPrefix := "/web/"
 	handler, err := auth.NewPermissionsHandler(
-		auth.UserDatabasePath, host, "/web", 120,
+		auth.UserDatabasePath, host, 120,
 	)
 	if err != nil {
 		println(err.Error())

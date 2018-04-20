@@ -12,7 +12,7 @@ export default class InertiaClient {
    */
   async _get(endpoint, params) {
     params.method = 'GET';
-
+    params.credentials = 'include';
     const request = new Request(this.url + endpoint, params);
 
     try {
@@ -29,7 +29,7 @@ export default class InertiaClient {
    */
   async _post(endpoint, params) {
     params.method = 'POST';
-
+    params.credentials = 'include';
     const request = new Request(this.url + endpoint, params);
 
     try {

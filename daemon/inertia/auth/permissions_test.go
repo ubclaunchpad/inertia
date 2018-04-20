@@ -15,20 +15,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestPermissionsHandler(dir string, p ...string) (*PermissionsHandler, error) {
+func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
 	err := os.Mkdir(dir, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
-	var endpoint string
-	if len(p) > 0 {
-		endpoint = p[0]
-	} else {
-		endpoint = "/"
-	}
 	return NewPermissionsHandler(
 		path.Join(dir, "users.db"),
-		"127.0.0.1", endpoint, 3000,
+		"127.0.0.1", 3000,
 		getFakeAPIKey,
 	)
 }
@@ -49,36 +43,6 @@ func TestServeHTTPPublicPath(t *testing.T) {
 	}))
 
 	req, err := http.NewRequest("POST", ts.URL+"/test", nil)
-	assert.Nil(t, err)
-	resp, err := http.DefaultClient.Do(req)
-	assert.Nil(t, err)
-	defer resp.Body.Close()
-
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestServeHTTPPublicPathOnNestedHandler(t *testing.T) {
-	// This test emulates the daemon's PermissionsHandler setup
-	dir := "./test_perm"
-	ts := httptest.NewServer(nil)
-	defer ts.Close()
-
-	// Set up permission handler
-	webPrefix := "/web/"
-	ph, err := getTestPermissionsHandler(dir, webPrefix)
-	defer os.RemoveAll(dir)
-	assert.Nil(t, err)
-	defer ph.Close()
-
-	// Daemon uses a nested handler
-	mux := http.NewServeMux()
-	mux.Handle(webPrefix, http.StripPrefix(webPrefix, ph))
-	ts.Config.Handler = mux
-	ph.AttachPublicHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-
-	req, err := http.NewRequest("POST", ts.URL+"/web/test", nil)
 	assert.Nil(t, err)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)

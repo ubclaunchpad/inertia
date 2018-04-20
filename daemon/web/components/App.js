@@ -8,9 +8,9 @@ import Login from './Login';
 import Home from './Home';
 
 // render a route component that requires authentication
-const AuthRoute = ({ component: Component, props, ...rest }) => (
+const AuthRoute = ({ authenticated, component: Component, props, ...rest }) => (
   <Route {...rest} render={(routeProps) => (
-    props.authenticated
+    authenticated
       ? <Component {...Object.assign({}, routeProps, props)} />
       : <Redirect to="/login" />
   )} />
@@ -43,6 +43,7 @@ export default class App extends React.Component {
 
     const history = createHistory();
     history.listen(() => {
+      this.setState({ loading: true, authenticated: false });
       this.isAuthenticated().then((authenticated) => {
         this.setState({
           loading: false,
@@ -59,7 +60,6 @@ export default class App extends React.Component {
     const response = await this.props.client._get(
       '/user/validate', params
     );
-    console.log('checking auth', response.status);
     return (response.status === 200);
   }
 

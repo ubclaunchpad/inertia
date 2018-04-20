@@ -49,7 +49,7 @@ export default class Home extends React.Component {
   constructor(props) {
     super(props);
     this.handleGetLogs = this.handleGetLogs.bind(this);
-    this.handleLogOut = this.handleLogOut.bind(this);
+    this.handleLogout = this.handleLogout.bind(this);
   }
 
   async handleGetLogs() {
@@ -59,11 +59,10 @@ export default class Home extends React.Component {
         'Accept': 'application/json'
       }
     };
-
     const response = await this.props.client._get(endpoint, params);
   }
 
-  async handleLogOut() {
+  async handleLogout() {
     const endpoint = '/user/logout';
     const params = {
       headers: {
@@ -71,7 +70,8 @@ export default class Home extends React.Component {
       }
     };
 
-    const response = await this.props.client._get(endpoint, params);
+    const response = await this.props.client._post(endpoint, params);
+    this.props.history.push('/login');
   }
 
   render() {
@@ -80,7 +80,7 @@ export default class Home extends React.Component {
 
         <header style={styles.headerBar}>
           <p style={{ fontWeight: 500, fontSize: 24, color: '#101010' }}>Inertia Web</p>
-          <a href="/" onClick={this.handleLogout} style={{ textDecoration: 'none', color: '#5f5f5f' }}>logout</a>
+          <a onClick={this.handleLogout} style={{ textDecoration: 'none', color: '#5f5f5f' }}>logout</a>
         </header>
 
         <div style={styles.innerContainer}>

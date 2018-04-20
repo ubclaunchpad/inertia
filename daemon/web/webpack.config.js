@@ -13,7 +13,7 @@ const config = {
     port: 7900,
     inline: true,
     contentBase: './public',
-    publicPath: '/',
+    publicPath: '/web/',
   },
   devtool: 'inline-source-map',
   module: {

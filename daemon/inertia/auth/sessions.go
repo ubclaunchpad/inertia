@@ -18,7 +18,6 @@ type session struct {
 type sessionManager struct {
 	cookieName    string
 	cookieDomain  string
-	cookiePath    string
 	cookieTimeout time.Duration
 	internal      map[string]*session
 
@@ -26,11 +25,10 @@ type sessionManager struct {
 	endSessionCleanup chan bool
 }
 
-func newSessionManager(domain, path string, timeout int) *sessionManager {
+func newSessionManager(domain string, timeout int) *sessionManager {
 	manager := &sessionManager{
 		cookieName:    "ubclaunchpad-inertia",
 		cookieDomain:  domain,
-		cookiePath:    path,
 		cookieTimeout: time.Duration(timeout) * time.Minute,
 		internal:      make(map[string]*session),
 
@@ -87,11 +85,11 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 
 	// Add cookie with session ID
 	http.SetCookie(w, &http.Cookie{
-		Name:    s.cookieName,
-		Value:   url.QueryEscape(id),
-		Domain:  s.cookieDomain,
-		Path:    s.cookiePath,
-		Expires: expiration,
+		Name:     s.cookieName,
+		Value:    url.QueryEscape(id),
+		Domain:   s.cookieDomain,
+		HttpOnly: true,
+		Expires:  expiration,
 	})
 	return nil
 }
@@ -116,19 +114,20 @@ func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) erro
 	s.Unlock()
 
 	// Set cookie to expire immediately
-	expiration := time.Now()
 	http.SetCookie(w, &http.Cookie{
-		Name:    s.cookieName,
-		Domain:  s.cookieDomain,
-		Path:    s.cookiePath,
-		Expires: expiration,
-		MaxAge:  -1,
+		Name:     s.cookieName,
+		Value:    url.QueryEscape(id),
+		Domain:   s.cookieDomain,
+		MaxAge:   int(s.cookieTimeout / time.Second),
+		HttpOnly: true,
+		Expires:  time.Unix(0, 0),
 	})
 	return nil
 }
 
 // GetSession verifies if given request is from a valid session and returns it
 func (s *sessionManager) GetSession(w http.ResponseWriter, r *http.Request) (*session, error) {
+
 	cookie, err := r.Cookie(s.cookieName)
 	if err != nil || cookie.Value == "" {
 		return nil, errCookieNotFound
