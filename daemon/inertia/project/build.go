@@ -77,7 +77,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 	}
 
 	// Attach logs and report build progress until container exits
-	reader, err := d.Logs(cli, LogOptions{Container: resp.ID, Stream: true})
+	reader, err := ContainerLogs(cli, LogOptions{Container: resp.ID, Stream: true})
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 	}
 
 	// Attach logs and report build progress until container exits
-	reader, err := d.Logs(cli, LogOptions{Container: resp.ID, Stream: true})
+	reader, err := ContainerLogs(cli, LogOptions{Container: resp.ID, Stream: true})
 	if err != nil {
 		return err
 	}

@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
@@ -317,7 +319,7 @@ func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
 	}
 
 	// Attach logs and report build progress until container exits
-	reader, err := ContainerLogs(LogOptions{Container: resp.ID, Stream: true}, cli)
+	reader, err := ContainerLogs(cli, LogOptions{Container: resp.ID, Stream: true})
 	if err != nil {
 		return err
 	}
