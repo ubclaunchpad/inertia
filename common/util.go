@@ -139,16 +139,13 @@ func BuildTar(dir string, outputs ...io.Writer) error {
 
 		// open files for taring
 		f, err := os.Open(file)
-		defer f.Close()
 		if err != nil {
 			return err
 		}
+		defer f.Close()
 
 		// copy file data into tar writer
-		if _, err := io.Copy(tw, f); err != nil {
-			return err
-		}
-
-		return nil
+		_, err = io.Copy(tw, f)
+		return err
 	})
 }
