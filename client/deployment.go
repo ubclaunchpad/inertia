@@ -125,7 +125,7 @@ func (d *Deployment) ResetUsers() (*http.Response, error) {
 
 // ListUsers lists all users on the remote.
 func (d *Deployment) ListUsers() (*http.Response, error) {
-	return d.request("POST", "/user/listusers", nil)
+	return d.request("GET", "/user/listusers", nil)
 }
 
 func (d *Deployment) request(method, endpoint string, requestBody interface{}) (*http.Response, error) {
