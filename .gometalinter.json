@@ -6,7 +6,6 @@
         "misspell",
         "gofmt",
         "goimports",
-        "gosimple",
         "vet"
     ],
     "Exclude": [
