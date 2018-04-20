@@ -88,7 +88,7 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 		Name:     s.cookieName,
 		Value:    url.QueryEscape(id),
 		Domain:   s.cookieDomain,
-		MaxAge:   int(s.cookieTimeout / time.Second),
+		Path:     "/",
 		HttpOnly: true,
 		Expires:  expiration,
 	})
@@ -117,9 +117,9 @@ func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) erro
 	// Set cookie to expire immediately
 	http.SetCookie(w, &http.Cookie{
 		Name:     s.cookieName,
-		Value:    url.QueryEscape(id),
+		Value:    "",
 		Domain:   s.cookieDomain,
-		MaxAge:   -1,
+		Path:     "/",
 		HttpOnly: true,
 		Expires:  time.Unix(0, 0),
 	})
@@ -128,7 +128,6 @@ func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) erro
 
 // GetSession verifies if given request is from a valid session and returns it
 func (s *sessionManager) GetSession(w http.ResponseWriter, r *http.Request) (*session, error) {
-
 	cookie, err := r.Cookie(s.cookieName)
 	if err != nil || cookie.Value == "" {
 		return nil, errCookieNotFound
@@ -142,6 +141,7 @@ func (s *sessionManager) GetSession(w http.ResponseWriter, r *http.Request) (*se
 	session, found := s.internal[id]
 	if !found {
 		s.RUnlock()
+		s.EndSession(w, r)
 		return nil, errSessionNotFound
 	}
 	if !s.isValidSession(session) {
