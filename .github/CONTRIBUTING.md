@@ -35,8 +35,7 @@ $> go get -u github.com/ubclaunchpad/inertia
 We use [dep](https://github.com/golang/dep) for managing Golang dependencies, and [npm](https://www.npmjs.com) to manage dependencies for Inertia's React web app. Make sure both are installed before running the following commands.
 
 ```bash
-$> dep ensure         # Inertia CLI and daemon dependencies
-$> make web-deps      # Inertia Web dependencies
+$> make deps           # Install all dependencies
 $> make RELEASE=test  # installs Inertia build tagged as "test"
 $> inertia --version  # check what version you have installed
 ```

@@ -41,9 +41,8 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // public-private key-pair. It outputs configuration information
 // for the user.
 func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Config) error {
-	println("Setting up remote " + name + " at " + remote.IP)
+	println("Setting up remote \"" + name + "\" at " + remote.IP)
 
-	// Generate a session for each command.
 	println(">> Step 1/4: Installing docker...")
 	err := remote.installDocker(runner)
 	if err != nil {
@@ -59,6 +58,8 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 		return err
 	}
 
+	// This step needs to run before any other commands that rely on
+	// the daemon image, since the daemon is loaded here.
 	println("\n>> Step 3/4: Starting daemon...")
 	if err != nil {
 		return err

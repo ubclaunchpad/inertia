@@ -1,0 +1,38 @@
+{
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "jsx": true
+        }
+    },
+    "rules": {
+        "semi": "error",
+        "no-mixed-spaces-and-tabs": "error",
+        "no-trailing-spaces": "error",
+        "no-const-assign": "error",
+        "no-lonely-if": "error",
+        "prefer-const": "error",
+        "no-var": "error",
+        "no-useless-computed-key": "error",
+        "quotes": [
+            "error",
+            "single"
+        ],
+        "space-before-function-paren": [
+            "error",
+            {
+                "anonymous": "always",
+                "named": "never",
+                "asyncArrow": "always"
+            }
+        ],
+        "prefer-arrow-callback": "error",
+        "space-before-blocks": "error",
+        "no-multiple-empty-lines": "warn",
+        "no-this-before-super": "warn",
+        "no-unreachable": "warn",
+        "constructor-super": "warn",
+        "valid-typeof": "warn"
+    }
+}

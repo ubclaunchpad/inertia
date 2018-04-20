@@ -123,7 +123,7 @@ func TestStatus(t *testing.T) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
-		assert.Equal(t, "POST", req.Method)
+		assert.Equal(t, "GET", req.Method)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
@@ -177,7 +177,7 @@ func TestLogs(t *testing.T) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
-		assert.Equal(t, "POST", req.Method)
+		assert.Equal(t, "GET", req.Method)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path

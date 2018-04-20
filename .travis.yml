@@ -31,22 +31,18 @@ matrix:
   fast_finish: true
 
 before_install:
-  - go get honnef.co/go/tools/cmd/megacheck                  
-  - go get github.com/fzipp/gocyclo
-  - go get github.com/mattn/goveralls
-  - go get github.com/golang/dep/cmd/dep
-  - dep ensure
+  - go get -u github.com/mattn/goveralls
+  - go get -u github.com/golang/dep/cmd/dep
+  - make deps
 
 # Build daemon, run tests, and make various code quality checks
 script:
   - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
-  - make testdaemon SSH_PORT=69     # Send test daemon to test VPS
-  - go test -v -race -coverprofile=coverage.out ./...
+  - make testdaemon SSH_PORT=69   # Send test daemon to testVPS
+  - go test -v -race -coverprofile=coverage.out ./...  # Execute tests
   - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
-  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
-  - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
-  - go vet ./...                    # Report suspicious constructs
-  - megacheck ./...                 # Static analysis
+  - make lint                     # Static code analysis
+  - docker kill $(docker ps -q)   # Remove testvps, etc
 
 # Push version-tagged Docker image and build platform binaries
 before_deploy:

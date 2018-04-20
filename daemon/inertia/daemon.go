@@ -61,20 +61,38 @@ func run(host, port, version string) {
 		}
 	}
 
-	// API endpoints
-	mux := http.NewServeMux()
-	mux.HandleFunc("/up", auth.Authorized(upHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/down", auth.Authorized(downHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/status", auth.Authorized(statusHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/reset", auth.Authorized(resetHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/logs", auth.Authorized(logHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/health-check", auth.Authorized(auth.HealthCheckHandler, auth.GetAPIPrivateKey))
-
-	// GitHub webhook endpoint
-	mux.HandleFunc("/", gitHubWebHookHandler)
+	webPrefix := "/web/"
+	handler, err := auth.NewPermissionsHandler(
+		auth.UserDatabasePath, host, 120,
+	)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	defer handler.Close()
 
 	// Inertia web
-	// mux.Handle("/admin/", http.StripPrefix("/admin/", http.FileServer(http.Dir("/app/inertia-web"))))
+	handler.AttachPublicHandler(
+		webPrefix,
+		http.StripPrefix(
+			webPrefix, http.FileServer(http.Dir("/app/inertia-web")),
+		),
+	)
+
+	// GitHub webhook endpoint
+	handler.AttachPublicHandlerFunc("/webhook", gitHubWebHookHandler)
+
+	// CLI API endpoints
+	handler.AttachUserRestrictedHandlerFunc("/status", statusHandler)
+	handler.AttachUserRestrictedHandlerFunc("/logs", logHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/up", upHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/down", downHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/reset", resetHandler)
+
+	// Root "ok" endpoint
+	handler.AttachPublicHandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)
@@ -82,7 +100,7 @@ func run(host, port, version string) {
 		":"+port,
 		daemonSSLCert,
 		daemonSSLKey,
-		mux,
+		handler,
 	))
 }
 

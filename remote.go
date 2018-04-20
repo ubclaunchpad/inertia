@@ -19,7 +19,6 @@ var (
 	errInvalidSecret  = errors.New("invalid secret")
 )
 
-// remoteCmd represents the remote command
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
 	Short: "Configure the local settings for a remote VPS instance",
@@ -36,7 +35,6 @@ inerta remote status gcloud`,
 	Args: cobra.MinimumNArgs(1),
 }
 
-// addCmd represents the remote add command
 var addCmd = &cobra.Command{
 	Use:   "add [REMOTE]",
 	Short: "Add a reference to a remote VPS instance",
@@ -80,7 +78,8 @@ file. Specify a VPS name.`,
 	},
 }
 
-// addRemoteWalkthough is the walkthrough that asks users for RemoteVPS details
+// addRemoteWalkthough is the command line walkthrough that asks
+// users for RemoteVPS details
 func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, config *client.Config) error {
 	homeEnvVar := os.Getenv("HOME")
 	sshDir := filepath.Join(homeEnvVar, ".ssh")
@@ -142,7 +141,6 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, 
 	return config.Write()
 }
 
-// listCmd represents the inertia list command
 var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List currently configured remotes",
@@ -164,7 +162,6 @@ var listCmd = &cobra.Command{
 	},
 }
 
-// removeCmd represents the inertia list command
 var removeCmd = &cobra.Command{
 	Use:   "rm [REMOTE]",
 	Short: "Remove a remote.",
@@ -227,15 +224,7 @@ func init() {
 	remoteCmd.AddCommand(removeCmd)
 	remoteCmd.AddCommand(showCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// remoteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
 	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
-	addCmd.Flags().StringP("port", "p", common.DefaultPort, "Daemon port")
+	addCmd.Flags().StringP("port", "p", "8081", "Daemon port")
 	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }

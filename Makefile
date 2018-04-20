@@ -12,6 +12,12 @@ all: inertia
 ls:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
+# Sets up all dependencies
+deps:
+	curl -sfL https://install.goreleaser.com/github.com/alecthomas/gometalinter.sh | bash
+	dep ensure
+	make web-deps
+
 # Install Inertia with release version
 inertia:
 	go install -ldflags "-X main.Version=$(RELEASE)"
@@ -20,10 +26,13 @@ inertia:
 inertia-tagged:
 	go install -ldflags "-X main.Version=$(TAG)"
 
-# Remove binaries
+# Remove Inertia binaries
 clean:
 	rm -f ./inertia 
 	find . -type f -name inertia.\* -exec rm {} \;
+
+lint:
+	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor ./...'
 
 # Run unit test suite
 test:
@@ -34,7 +43,9 @@ test-v:
 	go test ./... -short -ldflags "-X main.Version=test" -v --cover
 
 # Run unit and integration tests - creates fresh test VPS and test daemon beforehand
+# Also attempts to run linter
 test-all:
+	make lint
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
 	go test ./... -ldflags "-X main.Version=test" --cover
@@ -86,9 +97,9 @@ daemon:
 bootstrap:
 	go-bindata -o client/bootstrap.go -pkg client client/bootstrap/...
 
-# Install Inertia Web dependencies.
+# Install Inertia Web dependencies. Use PACKAGE to install something.
 web-deps:
-	(cd ./daemon/web; npm install)
+	(cd ./daemon/web; npm install $(PACKAGE))
 
 # Run local development instance of Inertia Web.
 web-run:

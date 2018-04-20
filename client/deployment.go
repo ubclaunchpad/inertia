@@ -73,24 +73,24 @@ func (d *Deployment) Up(buildType string, stream bool) (*http.Response, error) {
 			Branch:    d.Branch,
 		},
 	}
-	return d.post("/up", reqContent)
+	return d.request("POST", "/up", reqContent)
 }
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
 func (d *Deployment) Down() (*http.Response, error) {
-	return d.post("/down", nil)
+	return d.request("POST", "/down", nil)
 }
 
 // Status lists the currently active containers on the remote VPS instance
 func (d *Deployment) Status() (*http.Response, error) {
-	return d.post("/status", nil)
+	return d.request("GET", "/status", nil)
 }
 
 // Reset shuts down deployment and deletes the contents of the deployment's
 // project directory
 func (d *Deployment) Reset() (*http.Response, error) {
-	return d.post("/reset", nil)
+	return d.request("POST", "/reset", nil)
 }
 
 // Logs get logs of given container
@@ -99,10 +99,36 @@ func (d *Deployment) Logs(stream bool, container string) (*http.Response, error)
 		Stream:    stream,
 		Container: container,
 	}
-	return d.post("/logs", reqContent)
+	return d.request("GET", "/logs", reqContent)
 }
 
-func (d *Deployment) post(endpoint string, requestBody *common.DaemonRequest) (*http.Response, error) {
+// AddUser adds an authorized user for access to Inertia Web
+func (d *Deployment) AddUser(username, password string, admin bool) (*http.Response, error) {
+	reqContent := &common.UserRequest{
+		Username: username,
+		Password: password,
+		Admin:    admin,
+	}
+	return d.request("POST", "/user/adduser", reqContent)
+}
+
+// RemoveUser prevents a user from accessing Inertia Web
+func (d *Deployment) RemoveUser(username string) (*http.Response, error) {
+	reqContent := &common.UserRequest{Username: username}
+	return d.request("POST", "/user/removeuser", reqContent)
+}
+
+// ResetUsers resets all users on the remote.
+func (d *Deployment) ResetUsers() (*http.Response, error) {
+	return d.request("POST", "/user/resetusers", nil)
+}
+
+// ListUsers lists all users on the remote.
+func (d *Deployment) ListUsers() (*http.Response, error) {
+	return d.request("GET", "/user/listusers", nil)
+}
+
+func (d *Deployment) request(method, endpoint string, requestBody interface{}) (*http.Response, error) {
 	// Assemble URL
 	url, err := url.Parse("https://" + d.RemoteVPS.GetIPAndPort())
 	if err != nil {
@@ -114,7 +140,7 @@ func (d *Deployment) post(endpoint string, requestBody *common.DaemonRequest) (*
 	// Assemble request
 	var payload io.Reader
 	if requestBody != nil {
-		body, err := json.Marshal(*requestBody)
+		body, err := json.Marshal(requestBody)
 		if err != nil {
 			return nil, err
 		}
@@ -122,7 +148,7 @@ func (d *Deployment) post(endpoint string, requestBody *common.DaemonRequest) (*
 	} else {
 		payload = nil
 	}
-	req, err := http.NewRequest("POST", urlString, payload)
+	req, err := http.NewRequest(method, urlString, payload)
 	if err != nil {
 		return nil, err
 	}

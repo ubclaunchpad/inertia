@@ -17,6 +17,23 @@ var (
 	ErrNoContainers = errors.New("There are currently no active containers")
 )
 
+// LogOptions is used to configure retrieved container logs
+type LogOptions struct {
+	Container string
+	Stream    bool
+}
+
+// ContainerLogs get logs ;)
+func ContainerLogs(opts LogOptions, cli *docker.Client) (io.ReadCloser, error) {
+	ctx := context.Background()
+	return cli.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     opts.Stream,
+		Timestamps: true,
+	})
+}
+
 // getActiveContainers returns all active containers and returns and error
 // if the Daemon is the only active container
 func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
