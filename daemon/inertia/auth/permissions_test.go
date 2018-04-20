@@ -15,20 +15,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestPermissionsHandler(dir string, p ...string) (*PermissionsHandler, error) {
+func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
 	err := os.Mkdir(dir, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
-	var endpoint string
-	if len(p) > 0 {
-		endpoint = p[0]
-	} else {
-		endpoint = "/"
-	}
 	return NewPermissionsHandler(
 		path.Join(dir, "users.db"),
-		"127.0.0.1", endpoint, 3000,
+		"127.0.0.1", 3000,
 		getFakeAPIKey,
 	)
 }
@@ -44,41 +38,11 @@ func TestServeHTTPPublicPath(t *testing.T) {
 	assert.Nil(t, err)
 	defer ph.Close()
 	ts.Config.Handler = ph
-	ph.AttachPublicHandler("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ph.AttachPublicHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
 	req, err := http.NewRequest("POST", ts.URL+"/test", nil)
-	assert.Nil(t, err)
-	resp, err := http.DefaultClient.Do(req)
-	assert.Nil(t, err)
-	defer resp.Body.Close()
-
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestServeHTTPPublicPathOnNestedHandler(t *testing.T) {
-	// This test emulates the daemon's PermissionsHandler setup
-	dir := "./test_perm"
-	ts := httptest.NewServer(nil)
-	defer ts.Close()
-
-	// Set up permission handler
-	webPrefix := "/web/"
-	ph, err := getTestPermissionsHandler(dir, webPrefix)
-	defer os.RemoveAll(dir)
-	assert.Nil(t, err)
-	defer ph.Close()
-
-	// Daemon uses a nested handler
-	mux := http.NewServeMux()
-	mux.Handle(webPrefix, http.StripPrefix(webPrefix, ph))
-	ts.Config.Handler = mux
-	ph.AttachPublicHandler("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-
-	req, err := http.NewRequest("POST", ts.URL+"/web/test", nil)
 	assert.Nil(t, err)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
@@ -98,7 +62,7 @@ func TestServeHTTPWithUserReject(t *testing.T) {
 	assert.Nil(t, err)
 	defer ph.Close()
 	ts.Config.Handler = ph
-	ph.AttachUserRestrictedHandler("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ph.AttachUserRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -122,7 +86,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	assert.Nil(t, err)
 	defer ph.Close()
 	ts.Config.Handler = ph
-	ph.AttachUserRestrictedHandler("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ph.AttachUserRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -134,7 +98,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
-	req, err := http.NewRequest("POST", ts.URL+"/login", bytes.NewReader(body))
+	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
 	assert.Nil(t, err)
 	loginResp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
@@ -146,8 +110,17 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	cookie := loginResp.Cookies()[0]
 	assert.Equal(t, "ubclaunchpad-inertia", cookie.Name)
 
+	// Attempt to validate
+	req, err = http.NewRequest("POST", ts.URL+"/user/validate", nil)
+	assert.Nil(t, err)
+	req.AddCookie(cookie)
+	resp, err := http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
 	// Log out
-	req, err = http.NewRequest("POST", ts.URL+"/logout", nil)
+	req, err = http.NewRequest("POST", ts.URL+"/user/logout", nil)
 	assert.Nil(t, err)
 	req.AddCookie(cookie)
 	logoutResp, err := http.DefaultClient.Do(req)
@@ -173,7 +146,7 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	assert.Nil(t, err)
 	defer ph.Close()
 	ts.Config.Handler = ph
-	ph.AttachUserRestrictedHandler("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ph.AttachUserRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -185,7 +158,7 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
-	req, err := http.NewRequest("POST", ts.URL+"/login", bytes.NewReader(body))
+	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
 	assert.Nil(t, err)
 	loginResp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
@@ -219,7 +192,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	assert.Nil(t, err)
 	defer ph.Close()
 	ts.Config.Handler = ph
-	ph.AttachAdminRestrictedHandler("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ph.AttachAdminRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -231,7 +204,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
-	req, err := http.NewRequest("POST", ts.URL+"/login", bytes.NewReader(body))
+	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
 	assert.Nil(t, err)
 	loginResp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
@@ -265,7 +238,7 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	assert.Nil(t, err)
 	defer ph.Close()
 	ts.Config.Handler = ph
-	ph.AttachAdminRestrictedHandler("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ph.AttachAdminRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -277,7 +250,7 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
-	req, err := http.NewRequest("POST", ts.URL+"/login", bytes.NewReader(body))
+	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
 	assert.Nil(t, err)
 	loginResp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
@@ -324,7 +297,7 @@ func TestUserControlHandlers(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	payload := bytes.NewReader(body)
-	req, err := http.NewRequest("POST", ts.URL+"/adduser", payload)
+	req, err := http.NewRequest("POST", ts.URL+"/user/adduser", payload)
 	assert.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", bearerTokenString)
@@ -339,7 +312,7 @@ func TestUserControlHandlers(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	payload = bytes.NewReader(body)
-	req, err = http.NewRequest("POST", ts.URL+"/removeuser", payload)
+	req, err = http.NewRequest("POST", ts.URL+"/user/removeuser", payload)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", bearerTokenString)
 	resp, err = http.DefaultClient.Do(req)
@@ -348,7 +321,7 @@ func TestUserControlHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// List users
-	req, err = http.NewRequest("POST", ts.URL+"/listusers", nil)
+	req, err = http.NewRequest("POST", ts.URL+"/user/listusers", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", bearerTokenString)
 	resp, err = http.DefaultClient.Do(req)
@@ -357,7 +330,7 @@ func TestUserControlHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Reset all users
-	req, err = http.NewRequest("POST", ts.URL+"/resetusers", nil)
+	req, err = http.NewRequest("POST", ts.URL+"/user/resetusers", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", bearerTokenString)
 	resp, err = http.DefaultClient.Do(req)

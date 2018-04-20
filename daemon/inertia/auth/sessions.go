@@ -18,7 +18,6 @@ type session struct {
 type sessionManager struct {
 	cookieName    string
 	cookieDomain  string
-	cookiePath    string
 	cookieTimeout time.Duration
 	internal      map[string]*session
 
@@ -26,11 +25,10 @@ type sessionManager struct {
 	endSessionCleanup chan bool
 }
 
-func newSessionManager(domain, path string, timeout int) *sessionManager {
+func newSessionManager(domain string, timeout int) *sessionManager {
 	manager := &sessionManager{
 		cookieName:    "ubclaunchpad-inertia",
 		cookieDomain:  domain,
-		cookiePath:    path,
 		cookieTimeout: time.Duration(timeout) * time.Minute,
 		internal:      make(map[string]*session),
 
@@ -74,7 +72,6 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 	expiration := time.Now().Add(s.cookieTimeout)
 	id, err := generateSessionID()
 	if err != nil {
-		println("Failed to being session for " + username)
 		return errors.New("Failed to begin session for " + username + ": " + err.Error())
 	}
 
@@ -91,7 +88,7 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 		Name:     s.cookieName,
 		Value:    url.QueryEscape(id),
 		Domain:   s.cookieDomain,
-		Path:     s.cookiePath,
+		MaxAge:   int(s.cookieTimeout / time.Second),
 		HttpOnly: true,
 		Expires:  expiration,
 	})
@@ -118,22 +115,20 @@ func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) erro
 	s.Unlock()
 
 	// Set cookie to expire immediately
-	expiration := time.Now()
 	http.SetCookie(w, &http.Cookie{
 		Name:     s.cookieName,
+		Value:    url.QueryEscape(id),
 		Domain:   s.cookieDomain,
-		Path:     s.cookiePath,
-		HttpOnly: true,
-		Expires:  expiration,
 		MaxAge:   -1,
+		HttpOnly: true,
+		Expires:  time.Unix(0, 0),
 	})
-	println("logging out")
-	println(expiration.Format("2006-01-02 15:04:05"))
 	return nil
 }
 
 // GetSession verifies if given request is from a valid session and returns it
 func (s *sessionManager) GetSession(w http.ResponseWriter, r *http.Request) (*session, error) {
+
 	cookie, err := r.Cookie(s.cookieName)
 	if err != nil || cookie.Value == "" {
 		return nil, errCookieNotFound

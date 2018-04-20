@@ -20,7 +20,6 @@ type FakeDeployment struct {
 	DownFunc           func(in1 *docker.Client, in2 io.Writer) error
 	GetBranchFunc      func() string
 	GetStatusFunc      func(in1 *docker.Client) (*project.DeploymentStatus, error)
-	LogsFunc           func(in1 project.LogOptions, in2 *docker.Client) (io.ReadCloser, error)
 }
 
 func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) error {
@@ -33,10 +32,6 @@ func (f *FakeDeployment) Down(c *docker.Client, w io.Writer) error {
 
 func (f *FakeDeployment) Destroy(c *docker.Client, w io.Writer) error {
 	return f.DestroyFunc(c, w)
-}
-
-func (f *FakeDeployment) Logs(c *docker.Client, o project.LogOptions) (io.ReadCloser, error) {
-	return f.LogsFunc(o, c)
 }
 
 func (f *FakeDeployment) GetStatus(c *docker.Client) (*project.DeploymentStatus, error) {

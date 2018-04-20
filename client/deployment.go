@@ -116,23 +116,23 @@ func (d *Deployment) AddUser(username, password string, admin bool) (*http.Respo
 		Password: password,
 		Admin:    admin,
 	}
-	return d.request("POST", "/web/adduser", reqContent)
+	return d.request("POST", "/user/adduser", reqContent)
 }
 
 // RemoveUser prevents a user from accessing Inertia Web
 func (d *Deployment) RemoveUser(username string) (*http.Response, error) {
 	reqContent := &common.UserRequest{Username: username}
-	return d.request("POST", "/web/removeuser", reqContent)
+	return d.request("POST", "/user/removeuser", reqContent)
 }
 
 // ResetUsers resets all users on the remote.
 func (d *Deployment) ResetUsers() (*http.Response, error) {
-	return d.request("POST", "/web/resetusers", nil)
+	return d.request("POST", "/user/resetusers", nil)
 }
 
 // ListUsers lists all users on the remote.
 func (d *Deployment) ListUsers() (*http.Response, error) {
-	return d.request("POST", "/web/listusers", nil)
+	return d.request("GET", "/user/listusers", nil)
 }
 
 func (d *Deployment) request(method, endpoint string, requestBody interface{}) (*http.Response, error) {

@@ -146,10 +146,9 @@ from the web app.`,
 }
 
 var deploymentUsersListCmd = &cobra.Command{
-	Use:   "list",
+	Use:   "ls",
 	Short: "List all users registered on your remote.",
 	Long:  `List all users with access to Inertia Web on your remote.`,
-	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, err := client.GetDeployment(remoteName)

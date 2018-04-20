@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
@@ -30,7 +31,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	logger := newLogger(upReq.Stream, w)
 	defer logger.Close()
 
-	if container != "/inertia-daemon" && deployment == nil {
+	if !strings.Contains(container, "inertia-daemon") && deployment == nil {
 		logger.Err(msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
@@ -42,7 +43,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	logs, err := deployment.Logs(cli, project.LogOptions{
+	logs, err := project.ContainerLogs(project.LogOptions{
 		Container: upReq.Container,
 		Stream:    upReq.Stream,
 	})

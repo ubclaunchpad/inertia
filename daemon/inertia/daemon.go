@@ -61,32 +61,38 @@ func run(host, port, version string) {
 		}
 	}
 
-	// GitHub webhook endpoint
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", gitHubWebHookHandler)
-
-	// Inertia web - PermissionsHandler is used to authenticate web
-	// app access and manage users
-	webPrefix := "/web"
-	permHandler, err := auth.NewPermissionsHandler(
-		auth.UserDatabasePath, host, webPrefix, 120,
+	webPrefix := "/web/"
+	handler, err := auth.NewPermissionsHandler(
+		auth.UserDatabasePath, host, 120,
 	)
 	if err != nil {
 		println(err.Error())
 		return
 	}
-	defer permHandler.Close()
-	permHandler.AttachUserRestrictedHandler(
-		"/", http.FileServer(http.Dir("/app/inertia-web")),
+	defer handler.Close()
+
+	// Inertia web
+	handler.AttachPublicHandler(
+		webPrefix,
+		http.StripPrefix(
+			webPrefix, http.FileServer(http.Dir("/app/inertia-web")),
+		),
 	)
-	mux.Handle(webPrefix, http.StripPrefix(webPrefix, permHandler))
+
+	// GitHub webhook endpoint
+	handler.AttachPublicHandlerFunc("/webhook", gitHubWebHookHandler)
 
 	// CLI API endpoints
-	mux.HandleFunc("/up", auth.Authorized(upHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/down", auth.Authorized(downHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/status", auth.Authorized(statusHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/reset", auth.Authorized(resetHandler, auth.GetAPIPrivateKey))
-	mux.HandleFunc("/logs", auth.Authorized(logHandler, auth.GetAPIPrivateKey))
+	handler.AttachUserRestrictedHandlerFunc("/status", statusHandler)
+	handler.AttachUserRestrictedHandlerFunc("/logs", logHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/up", upHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/down", downHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/reset", resetHandler)
+
+	// Root "ok" endpoint
+	handler.AttachPublicHandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)
@@ -94,7 +100,7 @@ func run(host, port, version string) {
 		":"+port,
 		daemonSSLCert,
 		daemonSSLKey,
-		mux,
+		handler,
 	))
 }
 

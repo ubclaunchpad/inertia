@@ -26,9 +26,7 @@ type Deployer interface {
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
 
-	Logs(*docker.Client, LogOptions) (io.ReadCloser, error)
 	GetStatus(*docker.Client) (*DeploymentStatus, error)
-
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
@@ -160,23 +158,6 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 	return common.RemoveContents(Directory)
 }
 
-// LogOptions is used to configure retrieved container logs
-type LogOptions struct {
-	Container string
-	Stream    bool
-}
-
-// Logs get logs ;)
-func (d *Deployment) Logs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
-	ctx := context.Background()
-	return cli.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     opts.Stream,
-		Timestamps: true,
-	})
-}
-
 // DeploymentStatus lists details about the deployed project
 type DeploymentStatus struct {
 	Branch               string
@@ -247,4 +228,134 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
 	return nil
+}
+
+// dockerCompose builds and runs project using docker-compose -
+// the following code performs the bash equivalent of:
+//
+//    docker run -d \
+// 	    -v /var/run/docker.sock:/var/run/docker.sock \
+// 	    -v $HOME:/build \
+// 	    -w="/build/project" \
+// 	    docker/compose:1.18.0 up --build
+//
+// This starts a new container running a docker-compose image for
+// the sole purpose of building the project. This container is
+// separate from the daemon and the user's project, and is the
+// second container to require access to the docker socket.
+// See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
+func (d *Deployment) dockerCompose(cli *docker.Client, out io.Writer) error {
+	fmt.Fprintln(out, "Setting up docker-compose...")
+	ctx := context.Background()
+	resp, err := cli.ContainerCreate(
+		ctx, &container.Config{
+			Image:      DockerComposeVersion,
+			WorkingDir: "/build/project",
+			Env:        []string{"HOME=/build"},
+			Cmd: []string{
+				// set project name
+				"-p", d.project,
+				// run "up" with flags
+				"up", "--build",
+			},
+		},
+		&container.HostConfig{
+			AutoRemove: true,
+			Binds: []string{
+				os.Getenv("HOME") + ":/build",
+				// docker-compose needs to be able to start other containers
+				"/var/run/docker.sock:/var/run/docker.sock",
+			},
+		}, nil, BuildStageName,
+	)
+	if err != nil {
+		return err
+	}
+	if len(resp.Warnings) > 0 {
+		warnings := strings.Join(resp.Warnings, "\n")
+		return errors.New(warnings)
+	}
+
+	fmt.Fprintln(out, "Building and starting up project...")
+	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+}
+
+// herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
+// to build the user project.
+func (d *Deployment) herokuishBuild(cli *docker.Client, out io.Writer) error {
+	fmt.Fprintln(out, "Setting up herokuish...")
+	ctx := context.Background()
+
+	// Configure herokuish container to build project when run
+	resp, err := cli.ContainerCreate(
+		ctx, &container.Config{
+			Image: HerokuishVersion,
+			Cmd:   []string{"/build"},
+		},
+		&container.HostConfig{
+			Binds: []string{
+				// "/tmp/app" is the directory herokuish looks
+				// for during a build, so mount project there
+				os.Getenv("HOME") + "/project:/tmp/app",
+			},
+		}, nil, BuildStageName,
+	)
+	if err != nil {
+		return err
+	}
+	if len(resp.Warnings) > 0 {
+		fmt.Fprintln(out, "Warnings encountered on herokuish setup.")
+		warnings := strings.Join(resp.Warnings, "\n")
+		return errors.New(warnings)
+	}
+
+	// Start the herokuish container to build project
+	fmt.Fprintln(out, "Building project...")
+	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Attach logs and report build progress until container exits
+	reader, err := ContainerLogs(LogOptions{Container: resp.ID, Stream: true}, cli)
+	if err != nil {
+		return err
+	}
+	stop := make(chan struct{})
+	go common.FlushRoutine(out, reader, stop)
+	status, err := cli.ContainerWait(ctx, resp.ID)
+	close(stop)
+	reader.Close()
+	if err != nil {
+		return err
+	}
+	if status != 0 {
+		return errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+	}
+	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
+
+	// Save build as new image and create a container
+	fmt.Fprintln(out, "Saving build...")
+	_, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
+		Reference: "inertia-build",
+	})
+	if err != nil {
+		return err
+	}
+	resp, err = cli.ContainerCreate(ctx, &container.Config{
+		Image: "inertia-build:latest",
+		// Currently, only start the standard "web" process
+		Cmd: []string{"/start", "web"},
+	}, nil, nil, d.project)
+	if err != nil {
+		return err
+	}
+	if len(resp.Warnings) > 0 {
+		fmt.Fprintln(out, "Warnings encountered on herokuish startup.")
+		warnings := strings.Join(resp.Warnings, "\n")
+		return errors.New(warnings)
+	}
+
+	fmt.Fprintln(out, "Starting up project in container "+d.project+"...")
+	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 }

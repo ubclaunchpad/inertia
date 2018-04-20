@@ -13,11 +13,16 @@ var (
 	errUserNotFound    = errors.New("User not found")
 )
 
+const (
+	loginAttemptsLimit = 5
+)
+
 // userProps are properties associated with user, used
 // for database entries
 type userProps struct {
-	HashedPassword string `json:"hashedPassword"`
-	Admin          bool   `json:"admin"`
+	HashedPassword string
+	Admin          bool
+	LoginAttempts  int
 }
 
 // userManager administers sessions and user accounts
@@ -130,22 +135,58 @@ func (m *userManager) HasUser(username string) error {
 // in the database
 func (m *userManager) IsCorrectCredentials(username, password string) (bool, error) {
 	correct := false
-	err := m.db.View(func(tx *bolt.Tx) error {
+	userbytes := []byte(username)
+	var userErr error
+	transactionErr := m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
-		propsBytes := users.Get([]byte(username))
+		propsBytes := users.Get(userbytes)
 		if propsBytes == nil {
 			return errUserNotFound
 		}
-
 		props := &userProps{}
 		err := json.Unmarshal(propsBytes, props)
 		if err != nil {
 			return errors.New("Corrupt user properties: " + err.Error())
 		}
+
+		// Delete user since LoginAttempts must be updated
+		err = users.Delete(userbytes)
+		if err != nil {
+			return err
+		}
+
 		correct = correctPassword(props.HashedPassword, password)
-		return nil
+		if !correct {
+			// Track number of login attempts and don't add
+			// user back to the database if past limit
+			props.LoginAttempts++
+			if props.LoginAttempts <= loginAttemptsLimit {
+				bytes, err := json.Marshal(props)
+				if err != nil {
+					return err
+				}
+				return users.Put(userbytes, bytes)
+			}
+
+			// Rollback will occur if transaction returns and
+			// error, so store in variable
+			userErr = errors.New("Too many login attempts - user deleted")
+			return nil
+		}
+
+		// Reset attempts to 0 if login successful
+		props.LoginAttempts = 0
+		bytes, err := json.Marshal(props)
+		if err != nil {
+			return err
+		}
+		return users.Put(userbytes, bytes)
 	})
-	return correct, err
+
+	if userErr != nil {
+		return correct, userErr
+	}
+	return correct, transactionErr
 }
 
 // IsAdmin checks if given user is has administrator priviledges
