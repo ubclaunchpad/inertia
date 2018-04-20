@@ -1,0 +1,15 @@
+{
+    "Enable": [
+        "megacheck",
+        "interfacer",
+        "goconst",
+        "misspell",
+        "gofmt",
+        "goimports",
+        "gosimple",
+        "vet"
+    ],
+    "Exclude": [
+        "client/bootstrap.go"
+    ]
+}

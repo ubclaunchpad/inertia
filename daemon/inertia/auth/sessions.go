@@ -88,6 +88,7 @@ func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r 
 		Name:     s.cookieName,
 		Value:    url.QueryEscape(id),
 		Domain:   s.cookieDomain,
+		MaxAge:   int(s.cookieTimeout / time.Second),
 		HttpOnly: true,
 		Expires:  expiration,
 	})
@@ -118,7 +119,7 @@ func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) erro
 		Name:     s.cookieName,
 		Value:    url.QueryEscape(id),
 		Domain:   s.cookieDomain,
-		MaxAge:   int(s.cookieTimeout / time.Second),
+		MaxAge:   -1,
 		HttpOnly: true,
 		Expires:  time.Unix(0, 0),
 	})

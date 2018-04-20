@@ -6,6 +6,9 @@ VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = canary
 
+METALINTER_VERSION = 2.0.5
+METALINTER_PLATFORM = linux
+
 all: inertia
 
 # List all commands
@@ -14,6 +17,7 @@ ls:
 
 # Sets up all dependencies
 deps:
+	curl -sfL https://install.goreleaser.com/github.com/alecthomas/gometalinter.sh | bash
 	dep ensure
 	make web-deps
 
@@ -25,10 +29,13 @@ inertia:
 inertia-tagged:
 	go install -ldflags "-X main.Version=$(TAG)"
 
-# Remove binaries
+# Remove Inertia binaries
 clean:
 	rm -f ./inertia 
 	find . -type f -name inertia.\* -exec rm {} \;
+
+lint:
+	./bin/gometalinter --vendor ./...
 
 # Run unit test suite
 test:
@@ -39,7 +46,9 @@ test-v:
 	go test ./... -short -ldflags "-X main.Version=test" -v --cover
 
 # Run unit and integration tests - creates fresh test VPS and test daemon beforehand
+# Also attempts to run linter
 test-all:
+	make lint
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
 	go test ./... -ldflags "-X main.Version=test" --cover
