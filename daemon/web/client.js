@@ -31,16 +31,14 @@ export default class InertiaClient {
   }
 
   async validate() {
-    const params = {
-      headers: { 'Accept': 'application/json' },
-    };
-    return this._get('/user/validate', params);
+    return this._get('/user/validate', {});
   }
 
   async getContainerLogs(container = 'inertia-daemon') {
     const endpoint = '/logs';
     const params = {
       headers: {
+        'Content-Type': 'application/json',
         'Accept': 'text/plain'
       },
       body: JSON.stringify({
@@ -55,6 +53,7 @@ export default class InertiaClient {
     const endpoint = '/status';
     const params = {
       headers: {
+        'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
     };
@@ -74,7 +73,7 @@ export default class InertiaClient {
     try {
       return await fetch(request);
     } catch (e) {
-      return Promise.reject(e);
+      return e;
     }
   }
 
@@ -91,7 +90,7 @@ export default class InertiaClient {
     try {
       return await fetch(request);
     } catch (e) {
-      return Promise.reject(e);
+      return e;
     }
   }
 }

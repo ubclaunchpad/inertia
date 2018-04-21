@@ -47,6 +47,28 @@ const sidebarButtonStyles = {
   }
 };
 
+const SidebarText = ({ children }) => (
+  <div style={sidebarButtonStyles.container}>
+    <p style={sidebarButtonStyles.text}>
+      {children}
+    </p>
+  </div>
+);
+const sidebarTextStyles = {
+  container: {
+    display: 'flex',
+    alignItems: 'center',
+    height: '3rem',
+    width: '100%',
+    paddingLeft: '3rem'
+  },
+
+  text: {
+    textDecoration: 'none',
+    color: '#101010'
+  }
+};
+
 export default class Home extends React.Component {
   constructor(props) {
     super(props);
@@ -54,14 +76,12 @@ export default class Home extends React.Component {
       loading: true,
 
       remoteVersion: '',
-      remoteStatus: '',
 
       repoBranch: '',
       repoCommitHash: '',
       repoCommitMessage: '',
       repoBuildType: '',
       repoBuilding: false,
-
       containers: [],
     };
 
@@ -81,34 +101,52 @@ export default class Home extends React.Component {
 
   async handleGetStatus() {
     const response = await this.props.client.getRemoteStatus();
-    switch (response.status) {
-      case 200:
-        console.log(JSON.parse(response.body));
-        break;
-      case 404:
-        console.log(response);
-        break;
-      default:
-        Promise.reject(Error('bad response:', response.body));
-    }
+    if (response.status !== 200) return new Error('bad response: ' + response);
+    const status = await response.json();
+    this.setState({
+      remoteVersion: status.version,
+      repoBranch: status.branch,
+      repoBuilding: status.build_active,
+      repoCommitHash: status.commit_hash,
+      repoCommitMessage: status.commit_message,
+      containers: status.containers,
+    });
   }
 
   render() {
+    const containers = this.state.containers.map((c) =>
+      <SidebarButton>{c}</SidebarButton>
+    );
+
+    const buildMessage = this.state.repoBuilding
+      ? <SidebarText>{buildMessage}</SidebarText>
+      : <SidebarText>No deployment active</SidebarText>;
+    const repoState = this.state.repoCommitHash
+      ? (
+        <div>
+          <SidebarText>{this.state.repoBranch} ({this.state.repoBuildType})</SidebarText>
+          <SidebarText>{this.state.repoCommitMessage} ({this.state.repoCommitHash})</SidebarText>
+        </div>
+      )
+      : null;
+
     return (
       <div style={styles.container}>
 
         <header style={styles.headerBar}>
           <p style={{ fontWeight: 500, fontSize: 24, color: '#101010' }}>Inertia Web</p>
+          <p align='center' style={{ fontWeight: 300, fontSize: 12, color: '#101010' }}>{this.state.remoteVersion}</p>
           <a onClick={this.handleLogout} style={{ textDecoration: 'none', color: '#5f5f5f' }}>logout</a>
         </header>
 
         <div style={styles.innerContainer}>
 
           <div style={styles.sidebar}>
-            <SidebarHeader>Deployments</SidebarHeader>
-            <SidebarButton>project-app</SidebarButton>
-            <SidebarButton>project-db</SidebarButton>
-            <SidebarButton>project-server</SidebarButton>
+            <SidebarHeader>Status</SidebarHeader>
+            {buildMessage}
+            {repoState}
+            <SidebarHeader>Containers</SidebarHeader>
+            {containers}
           </div>
 
           <div style={styles.main}>
@@ -118,7 +156,6 @@ export default class Home extends React.Component {
           </div>
 
         </div>
-
       </div>
     );
   }
