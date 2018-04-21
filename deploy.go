@@ -127,12 +127,6 @@ var deploymentStatusCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer resp.Body.Close()
-
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode, deployment.Name, host)
@@ -143,9 +137,19 @@ var deploymentStatusCmd = &cobra.Command{
 			}
 			println(formatStatus(status))
 		case http.StatusForbidden:
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		default:
-			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
+			fmt.Printf("(Status code %d) %s\n",
 				resp.StatusCode, body)
 		}
 	},

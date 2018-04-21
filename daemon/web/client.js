@@ -38,10 +38,10 @@ export default class InertiaClient {
     const endpoint = '/logs';
     const params = {
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/plain'
+        'Accept': 'text/plain',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
+      query: JSON.stringify({
         container: container,
         stream: true,
       })

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import InertiaClient from '../client';
+import Dashboard from './Dashboard';
 
 const SidebarHeader = ({ children }) => (
   <div style={sidebarHeaderStyles.container}>
@@ -25,9 +26,9 @@ const sidebarHeaderStyles = {
   }
 };
 
-const SidebarButton = ({ children }) => (
+const SidebarButton = ({ children, onClick }) => (
   <div style={sidebarButtonStyles.container}>
-    <a href="/#/home" onClick={() => { }} style={sidebarButtonStyles.text}>
+    <a onClick={onClick} style={sidebarButtonStyles.text}>
       {children}
     </a>
   </div>
@@ -83,6 +84,8 @@ export default class Home extends React.Component {
       repoBuildType: '',
       repoBuilding: false,
       containers: [],
+
+      viewContainer: '',
     };
 
     this.handleLogout = this.handleLogout.bind(this);
@@ -107,6 +110,7 @@ export default class Home extends React.Component {
       remoteVersion: status.version,
       repoBranch: status.branch,
       repoBuilding: status.build_active,
+      repoBuildType: status.build_type,
       repoCommitHash: status.commit_hash,
       repoCommitMessage: status.commit_message,
       containers: status.containers,
@@ -114,18 +118,25 @@ export default class Home extends React.Component {
   }
 
   render() {
+    // Render container list
     const containers = this.state.containers.map((c) =>
-      <SidebarButton>{c}</SidebarButton>
+      <SidebarButton
+        onClick={() => {
+          this.setState({ viewContainer: c });
+        }}
+        key={c} >{c}</SidebarButton>
     );
 
+    // Report repository status
     const buildMessage = this.state.repoBuilding
-      ? <SidebarText>{buildMessage}</SidebarText>
-      : <SidebarText>No deployment active</SidebarText>;
+      ? <SidebarText>Build in progress</SidebarText>
+      : null;
     const repoState = this.state.repoCommitHash
       ? (
         <div>
-          <SidebarText>{this.state.repoBranch} ({this.state.repoBuildType})</SidebarText>
-          <SidebarText>{this.state.repoCommitMessage} ({this.state.repoCommitHash})</SidebarText>
+          <SidebarText>Type: {this.state.repoBuildType}</SidebarText>
+          <SidebarText>Branch: {this.state.repoBranch}</SidebarText>
+          <SidebarText>Commit {this.state.repoCommitHash.substr(1, 5)}: {this.state.repoCommitMessage}</SidebarText>
         </div>
       )
       : null;
@@ -150,11 +161,10 @@ export default class Home extends React.Component {
           </div>
 
           <div style={styles.main}>
-            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={styles.underConstruction}>coming soon!</p>
-            </div>
+            <Dashboard
+              container={this.state.viewContainer}
+              client={this.props.client} />
           </div>
-
         </div>
       </div>
     );
@@ -210,10 +220,4 @@ const styles = {
   button: {
     flex: 'none'
   },
-
-  underConstruction: {
-    textAlign: 'center',
-    fontSize: 24,
-    color: '#9f9f9f'
-  }
 };
