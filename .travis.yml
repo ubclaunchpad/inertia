@@ -42,7 +42,6 @@ script:
   - go test -race -coverprofile=coverage.out ./...  # Execute tests
   - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
   - make lint                     # Static code analysis
-  - docker kill $(docker ps -q)   # Remove testvps, etc
 
 # Push version-tagged Docker image and build platform binaries
 before_deploy:

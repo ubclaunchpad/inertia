@@ -14,9 +14,9 @@ ls:
 
 # Sets up all dependencies
 deps:
-	curl -sfL https://install.goreleaser.com/github.com/alecthomas/gometalinter.sh | bash
 	dep ensure
 	make web-deps
+	bash test/deps.sh
 
 # Install Inertia with release version
 inertia:
