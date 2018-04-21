@@ -55,6 +55,22 @@ func TestDockerComposeIntegration(t *testing.T) {
 			foundP = true
 		}
 	}
+
+	// try again if project no up (workaround for Travis)
+	if !foundP {
+		time.Sleep(5 * time.Second)
+		containers, err = cli.ContainerList(
+			context.Background(),
+			types.ContainerListOptions{},
+		)
+		assert.Nil(t, err)
+		for _, c := range containers {
+			if strings.Contains(c.Names[0], testProjectName) {
+				foundP = true
+			}
+		}
+	}
+
 	assert.True(t, foundDC, "docker-compose container should be active")
 	assert.True(t, foundP, "project container should be active")
 
