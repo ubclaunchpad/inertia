@@ -144,10 +144,6 @@ var deploymentStatusCmd = &cobra.Command{
 			println(formatStatus(status))
 		case http.StatusForbidden:
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-		case http.StatusNotFound:
-			fmt.Printf("(Status code %d) Problem with deployment: %s\n", resp.StatusCode, body)
-		case http.StatusPreconditionFailed:
-			fmt.Printf("(Status code %d) Problem with deployment setup: %s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
 				resp.StatusCode, body)

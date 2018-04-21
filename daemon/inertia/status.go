@@ -5,17 +5,20 @@ import (
 	"net/http"
 
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 // statusHandler returns a formatted string about the status of the
 // deployment and lists currently active project containers
 func statusHandler(w http.ResponseWriter, r *http.Request) {
-	inertiaStatus := "inertia daemon " + daemonVersion + "\n"
 	if deployment == nil {
-		http.Error(
-			w, inertiaStatus+msgNoDeployment,
-			http.StatusNotFound,
-		)
+		status := &common.DeploymentStatus{
+			InertiaVersion: Version,
+			Containers:     make([]string, 0),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(status)
 		return
 	}
 
@@ -30,6 +33,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	status.InertiaVersion = Version
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
