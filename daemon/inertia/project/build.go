@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -26,6 +27,15 @@ const (
 	// BuildStageName specifies the name of build stage containers
 	BuildStageName = "build"
 )
+
+// getTrueDirectory converts given filepath to host-based filepath
+// if applicable - Docker commands are sent to the mounted Docker
+// socket and hence are executed on the host, using the host's filepaths,
+// which means Docker client commands must use this function when
+// dealing with paths
+func getTrueDirectory(path string) string {
+	return strings.Replace(path, "/app/host", os.Getenv("HOME"), 1)
+}
 
 // dockerCompose builds and runs project using docker-compose -
 // the following code performs the bash equivalent of:
@@ -57,7 +67,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 		&container.HostConfig{
 			AutoRemove: true,
 			Binds: []string{
-				d.directory + ":/build",
+				getTrueDirectory(d.directory) + ":/build",
 				"/var/run/docker.sock:/var/run/docker.sock",
 			},
 		}, nil, BuildStageName,
@@ -98,7 +108,9 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 
 	// @TODO allow configuration
 	dockerComposeRelFilePath := "docker-compose.yml"
-	dockerComposeFilePath := path.Join(d.directory, dockerComposeRelFilePath)
+	dockerComposeFilePath := path.Join(
+		getTrueDirectory(d.directory), dockerComposeRelFilePath,
+	)
 
 	// Set up docker-compose up
 	fmt.Fprintln(out, "Preparing to start project...")
@@ -206,7 +218,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 			Binds: []string{
 				// "/tmp/app" is the directory herokuish looks
 				// for during a build, so mount project there
-				d.directory + ":/tmp/app",
+				getTrueDirectory(d.directory) + ":/tmp/app",
 			},
 		}, nil, BuildStageName,
 	)
