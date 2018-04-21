@@ -38,7 +38,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	containers, err := cli.ContainerList(
 		context.Background(),
@@ -87,7 +87,7 @@ func TestDockerBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	containers, err := cli.ContainerList(
 		context.Background(),
@@ -131,7 +131,7 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	containers, err := cli.ContainerList(
 		context.Background(),
