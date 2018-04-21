@@ -64,11 +64,11 @@ test-integration-fast:
 # Create test VPS
 testenv:
 	docker stop testvps || true && docker rm testvps || true
-	docker build -f ./test/env/Dockerfile.$(VPS_OS) \
+	docker build -f ./test/vps/Dockerfile.$(VPS_OS) \
 		-t $(VPS_OS)vps \
 		--build-arg VERSION=$(VPS_VERSION) \
 		./test
-	bash ./test/env/startvps.sh $(SSH_PORT) $(VPS_OS)vps
+	bash ./test/start_vps.sh $(SSH_PORT) $(VPS_OS)vps
 
 # Create test daemon and scp the image to the test VPS for use.
 # Requires Inertia version to be "test"

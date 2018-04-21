@@ -24,7 +24,7 @@ const (
 	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
 
 	// specify location of SSL certificate
-	sslDirectory  = "/app/host/ssl/"
+	sslDirectory  = "/app/host/.inertia/.ssl/"
 	daemonSSLCert = sslDirectory + "daemon.cert"
 	daemonSSLKey  = sslDirectory + "daemon.key"
 )
