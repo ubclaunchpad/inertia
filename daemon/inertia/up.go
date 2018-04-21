@@ -36,7 +36,6 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	skipUpdate := false
 	if deployment == nil {
 		logger.Println("No deployment detected")
-		common.RemoveContents(project.Directory)
 		d, err := project.NewDeployment(project.DeploymentConfig{
 			ProjectName: upReq.Project,
 			BuildType:   upReq.BuildType,

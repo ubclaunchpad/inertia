@@ -15,9 +15,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
-// Directory specifies the location of deployed project
-var Directory = "/app/host/project"
-
 // Deployer does great deploys
 type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) error
@@ -32,6 +29,8 @@ type Deployer interface {
 
 // Deployment represents the deployed project
 type Deployment struct {
+	directory string
+
 	project   string
 	branch    string
 	buildType string
@@ -52,6 +51,9 @@ type DeploymentConfig struct {
 
 // NewDeployment creates a new deployment
 func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
+	directory := "/app/host/project"
+	common.RemoveContents(directory)
+
 	pemFile, err := os.Open(cfg.PemFilePath)
 	if err != nil {
 		return nil, err
@@ -60,12 +62,13 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
-	repo, err := initializeRepository(cfg.RemoteURL, cfg.Branch, authMethod, out)
+	repo, err := initializeRepository(directory, cfg.RemoteURL, cfg.Branch, authMethod, out)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Deployment{
+		directory: directory,
 		project:   cfg.ProjectName,
 		branch:    cfg.Branch,
 		buildType: cfg.BuildType,
@@ -101,7 +104,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOption
 
 	// Update repository
 	if !opts.SkipUpdate {
-		err := updateRepository(Directory, d.repo, d.branch, d.auth, out)
+		err := updateRepository(d.directory, d.repo, d.branch, d.auth, out)
 		if err != nil {
 			return err
 		}
@@ -153,7 +156,7 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
-	return common.RemoveContents(Directory)
+	return common.RemoveContents(d.directory)
 }
 
 // DeploymentStatus lists details about the deployed project

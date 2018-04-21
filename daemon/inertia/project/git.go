@@ -32,10 +32,10 @@ func SimplifyGitErr(err error) error {
 }
 
 // initializeRepository sets up a project repository for the first time
-func initializeRepository(remoteURL, branch string, authMethod transport.AuthMethod, w io.Writer) (*git.Repository, error) {
+func initializeRepository(directory, remoteURL, branch string, authMethod transport.AuthMethod, w io.Writer) (*git.Repository, error) {
 	fmt.Fprintln(w, "Setting up project...")
 	// Clone project
-	repo, err := clone(Directory, remoteURL, branch, authMethod, w)
+	repo, err := clone(directory, remoteURL, branch, authMethod, w)
 	if err != nil {
 		if err == ErrInvalidGitAuthentication {
 			return nil, auth.GitAuthFailedErr()

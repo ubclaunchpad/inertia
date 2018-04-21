@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -45,8 +46,9 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 		return nil, err
 	}
 
-	// Error if only one container (daemon) is active
-	if len(containers) <= 1 {
+	// Error if only daemon is active
+	if len(containers) == 0 || (len(containers) == 1 &&
+		strings.Contains(containers[0].Names[0], "intertia-daemon")) {
 		return nil, ErrNoContainers
 	}
 
