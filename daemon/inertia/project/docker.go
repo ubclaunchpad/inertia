@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -24,7 +25,7 @@ type LogOptions struct {
 }
 
 // ContainerLogs get logs ;)
-func ContainerLogs(opts LogOptions, cli *docker.Client) (io.ReadCloser, error) {
+func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
 	ctx := context.Background()
 	return cli.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
 		ShowStdout: true,
@@ -45,8 +46,9 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 		return nil, err
 	}
 
-	// Error if only one container (daemon) is active
-	if len(containers) <= 1 {
+	// Error if only daemon is active
+	if len(containers) == 0 || (len(containers) == 1 &&
+		strings.Contains(containers[0].Names[0], "intertia-daemon")) {
 		return nil, ErrNoContainers
 	}
 

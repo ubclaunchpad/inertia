@@ -28,5 +28,10 @@ RUN mkdir ~/.ssh/ ; touch ~/.ssh/authorized_keys
 COPY ./keys/ .
 RUN cat id_rsa.pub >> ~/.ssh/authorized_keys
 
+# Copy certs
+RUN mkdir ~/.inertia/ ; mkdir ~/.inertia/.ssl/
+COPY ./certs/ .
+RUN mv daemon.cert ~/.inertia/.ssl ; mv daemon.key ~/.inertia/.ssl
+
 EXPOSE 0-9000
 CMD ["/usr/sbin/sshd", "-D"]

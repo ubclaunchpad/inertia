@@ -20,8 +20,8 @@ CONTAINER_PORT=8081
 
 # Set up directories.
 mkdir -p $HOME/project
-mkdir -p $HOME/ssl
 mkdir -p $HOME/.inertia
+mkdir -p $HOME/.inertia/.ssl
 
 # Check if already running and take down existing daemon.
 ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`

@@ -1,5 +1,5 @@
 ARG VERSION
-FROM debian:${VERSION}
+FROM ubuntu:${VERSION}
 
 RUN apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y openssh-server
@@ -19,6 +19,11 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 RUN mkdir $HOME/.ssh/
 COPY ./keys/ .
 RUN cat id_rsa.pub >> $HOME/.ssh/authorized_keys
+
+# Copy certs
+RUN mkdir ~/.inertia/ ; mkdir ~/.inertia/.ssl/
+COPY ./certs/ .
+RUN mv daemon.cert ~/.inertia/.ssl ; mv daemon.key ~/.inertia/.ssl
 
 EXPOSE 0-9000
 CMD ["/usr/sbin/sshd", "-D"]

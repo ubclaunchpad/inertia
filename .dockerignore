@@ -8,8 +8,14 @@ test
 # Documentation
 *.md
 
-# All hidden folders
-.*
+# All hidden things
+.github
+.scripts
+.static
+.dockerignore
+.travis.yml
+.eslintrc
+.gometalinter.json
 
 # Non-daemon source code
 client
