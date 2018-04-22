@@ -3,9 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -76,69 +74,6 @@ file. Specify a VPS name.`,
 		fmt.Println("You can now run 'inertia " + args[0] + " init' to set this remote up")
 		fmt.Println("for continuous deployment.")
 	},
-}
-
-// addRemoteWalkthough is the command line walkthrough that asks
-// users for RemoteVPS details
-func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, config *client.Config) error {
-	homeEnvVar := os.Getenv("HOME")
-	sshDir := filepath.Join(homeEnvVar, ".ssh")
-	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
-
-	var response string
-	fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'):")
-	_, err := fmt.Fscanln(in, &response)
-	if err != nil {
-		response = defaultSSHLoc
-	}
-	pemLoc := response
-
-	fmt.Println("Enter user:")
-	n, err := fmt.Fscanln(in, &response)
-	if err != nil || n == 0 {
-		return errInvalidUser
-	}
-	user := response
-
-	fmt.Println("Enter IP address of remote:")
-	n, err = fmt.Fscanln(in, &response)
-	if err != nil || n == 0 {
-		return errInvalidAddress
-	}
-	address := response
-
-	fmt.Println("Enter webhook secret:")
-	n, err = fmt.Fscanln(in, &response)
-	if err != nil || n == 0 {
-		return errInvalidSecret
-	}
-	secret := response
-
-	branch := currBranch
-	fmt.Println("Enter project branch to deploy (leave blank for current branch):")
-	n, err = fmt.Fscanln(in, &response)
-	if err == nil && n != 0 {
-		branch = response
-	}
-
-	fmt.Println("\nPort " + port + " will be used as the daemon port.")
-	fmt.Println("Port " + sshPort + " will be used as the SSH port.")
-	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
-	fmt.Println("of the -ssh flag to set a custom SSH port.")
-
-	config.AddRemote(&client.RemoteVPS{
-		Name:   name,
-		IP:     address,
-		User:   user,
-		PEM:    pemLoc,
-		Branch: branch,
-		Daemon: &client.DaemonConfig{
-			Port:    port,
-			SSHPort: sshPort,
-			Secret:  secret,
-		},
-	})
-	return config.Write()
 }
 
 var listCmd = &cobra.Command{
