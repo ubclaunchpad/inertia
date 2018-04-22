@@ -160,8 +160,8 @@ The deployment daemon runs persistently in the background on the server, receivi
 Inertia is set up serverside by executing a script over SSH that installs Docker and starts an Inertia daemon image with [access to the host Docker socket](https://bobheadxi.github.io/dockerception/#docker-in-docker). This Docker-in-Docker configuration gives the daemon the ability to start up other containers *alongside* it, rather than *within* it, as required. Once the daemon is set up, we avoid using further SSH commands and execute Docker commands through Docker's Golang API. Instead of installing the docker-compose toolset, we [use a docker-compose image](https://bobheadxi.github.io/dockerception/#docker-compose-in-docker) to build and deploy user projects. Inertia also supports projects configured for Heroku buildpacks using the [gliderlabs/herokuish](https://github.com/gliderlabs/herokuish) Docker image for builds and deployments.
 
 The team has made a few presentations about Inertia that go over its design in a bit more detail:
-- [First UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
-- [Vancouver DevOpsDays 2018: Building a Simple, Self-hosted Continuous Deployment Application](https://drive.google.com/open?id=1DV2NR_YXpUZai-S7ttGcwrhWJXL7BcwiIrBJn69-IJg)
+- [UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
+- [Vancouver DevOpsDays 2018](https://drive.google.com/open?id=1DV2NR_YXpUZai-S7ttGcwrhWJXL7BcwiIrBJn69-IJg) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
 
 # :books: Contributing
 
