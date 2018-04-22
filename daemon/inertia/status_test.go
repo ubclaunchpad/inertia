@@ -27,7 +27,7 @@ func TestStatusHandlerBuildInProgress(t *testing.T) {
 	}
 
 	// Assmble request
-	req, err := http.NewRequest("POST", "/status", nil)
+	req, err := http.NewRequest("GET", "/status", nil)
 	assert.Nil(t, err)
 
 	// Record responses
@@ -54,7 +54,7 @@ func TestStatusHandlerNoContainers(t *testing.T) {
 	}
 
 	// Assmble request
-	req, err := http.NewRequest("POST", "/status", nil)
+	req, err := http.NewRequest("GET", "/status", nil)
 	assert.Nil(t, err)
 
 	// Record responses
@@ -81,7 +81,7 @@ func TestStatusHandlerActiveContainers(t *testing.T) {
 	}
 
 	// Assmble request
-	req, err := http.NewRequest("POST", "/status", nil)
+	req, err := http.NewRequest("GET", "/status", nil)
 	assert.Nil(t, err)
 
 	// Record responses
@@ -104,7 +104,7 @@ func TestStatusHandlerStatusError(t *testing.T) {
 	}
 
 	// Assmble request
-	req, err := http.NewRequest("POST", "/status", nil)
+	req, err := http.NewRequest("GET", "/status", nil)
 	assert.Nil(t, err)
 
 	// Record responses
@@ -117,7 +117,7 @@ func TestStatusHandlerStatusError(t *testing.T) {
 
 func TestStatusHandlerNoDeployment(t *testing.T) {
 	// Assmble request
-	req, err := http.NewRequest("POST", "/status", nil)
+	req, err := http.NewRequest("GET", "/status", nil)
 	assert.Nil(t, err)
 
 	// Record responses
@@ -125,6 +125,6 @@ func TestStatusHandlerNoDeployment(t *testing.T) {
 	handler := http.HandlerFunc(statusHandler)
 
 	handler.ServeHTTP(recorder, req)
-	assert.Equal(t, recorder.Code, http.StatusNotFound)
-	assert.Contains(t, recorder.Body.String(), msgNoDeployment)
+	assert.Equal(t, recorder.Code, http.StatusOK)
+	assert.Contains(t, recorder.Body.String(), "\"branch\":\"\"")
 }

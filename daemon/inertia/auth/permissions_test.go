@@ -132,7 +132,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	assert.True(t, len(logoutResp.Cookies()) > 0)
 	cookie = logoutResp.Cookies()[0]
 	assert.Equal(t, "ubclaunchpad-inertia", cookie.Name)
-	assert.Equal(t, -1, cookie.MaxAge)
+	assert.Equal(t, 0, cookie.MaxAge)
 }
 
 func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
