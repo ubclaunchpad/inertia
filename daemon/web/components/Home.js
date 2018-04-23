@@ -4,20 +4,22 @@ import PropTypes from 'prop-types';
 import InertiaClient from '../client';
 import Dashboard from './Dashboard';
 
-const SidebarHeader = ({ children }) => (
+const SidebarHeader = ({ children, onClick }) => (
   <div style={sidebarHeaderStyles.container}>
-    <a href="/#/home" onClick={() => { return false; }} style={sidebarHeaderStyles.text}>
+    <a onClick={onClick} style={sidebarHeaderStyles.text}>
       {children}
     </a>
   </div>
 );
+
 const sidebarHeaderStyles = {
   container: {
     display: 'flex',
     alignItems: 'center',
     height: '3rem',
     width: '100%',
-    paddingLeft: '2rem'
+    paddingLeft: '1.5rem',
+    paddingTop: '1rem'
   },
 
   text: {
@@ -27,44 +29,33 @@ const sidebarHeaderStyles = {
 };
 
 const SidebarButton = ({ children, onClick }) => (
-  <div style={sidebarButtonStyles.container}>
-    <a onClick={onClick} style={sidebarButtonStyles.text}>
+  <div style={sidebarTextStyles.container}>
+    <a onClick={onClick} style={sidebarTextStyles.text}>
       {children}
     </a>
   </div>
 );
-const sidebarButtonStyles = {
-  container: {
-    display: 'flex',
-    alignItems: 'center',
-    height: '3rem',
-    width: '100%',
-    paddingLeft: '3rem'
-  },
-
-  text: {
-    textDecoration: 'none',
-    color: '#101010'
-  }
-};
 
 const SidebarText = ({ children }) => (
-  <div style={sidebarButtonStyles.container}>
-    <p style={sidebarButtonStyles.text}>
+  <div style={sidebarTextStyles.container}>
+    <p style={sidebarTextStyles.text}>
       {children}
     </p>
   </div>
 );
+
 const sidebarTextStyles = {
   container: {
     display: 'flex',
     alignItems: 'center',
-    height: '3rem',
+    height: 'flex',
     width: '100%',
-    paddingLeft: '3rem'
+    paddingLeft: '2rem',
+    paddingTop: '0.5rem'
   },
 
   text: {
+    fontSize: '80%',
     textDecoration: 'none',
     color: '#101010'
   }
@@ -74,8 +65,6 @@ export default class Home extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loading: true,
-
       remoteVersion: '',
 
       repoBranch: '',
@@ -92,7 +81,7 @@ export default class Home extends React.Component {
     this.handleGetStatus = this.handleGetStatus.bind(this);
 
     this.handleGetStatus()
-      .then(() => this.setState({ loading: false }))
+      .then(() => { })
       .catch((err) => console.error(err));
   }
 
@@ -136,7 +125,7 @@ export default class Home extends React.Component {
         <div>
           <SidebarText>Type: {this.state.repoBuildType}</SidebarText>
           <SidebarText>Branch: {this.state.repoBranch}</SidebarText>
-          <SidebarText>Commit {this.state.repoCommitHash.substr(1, 5)}: {this.state.repoCommitMessage}</SidebarText>
+          <SidebarText>Commit: {this.state.repoCommitHash.substr(1, 8)} "{this.state.repoCommitMessage}"</SidebarText>
         </div>
       )
       : null;
@@ -146,17 +135,21 @@ export default class Home extends React.Component {
 
         <header style={styles.headerBar}>
           <p style={{ fontWeight: 500, fontSize: 24, color: '#101010' }}>Inertia Web</p>
-          <p align='center' style={{ fontWeight: 300, fontSize: 12, color: '#101010' }}>{this.state.remoteVersion}</p>
           <a onClick={this.handleLogout} style={{ textDecoration: 'none', color: '#5f5f5f' }}>logout</a>
         </header>
 
         <div style={styles.innerContainer}>
 
           <div style={styles.sidebar}>
-            <SidebarHeader>Status</SidebarHeader>
+            <SidebarHeader
+              onClick={() => {
+                this.setState({ viewContainer: '' });
+              }}>Daemon</SidebarHeader>
+            <SidebarText>{this.state.remoteVersion}</SidebarText>
+            <SidebarHeader>Repository Status</SidebarHeader>
             {buildMessage}
             {repoState}
-            <SidebarHeader>Containers</SidebarHeader>
+            <SidebarHeader>Active Containers</SidebarHeader>
             {containers}
           </div>
 
@@ -197,7 +190,7 @@ const styles = {
     alignItems: 'center',
     width: '100%',
     height: '4rem',
-    padding: '0 2rem',
+    padding: '0 1.5rem',
     borderBottom: '1px solid #c1c1c1'
   },
 

@@ -34,19 +34,18 @@ export default class InertiaClient {
     return this._get('/user/validate', {});
   }
 
-  async getContainerLogs(container = 'inertia-daemon') {
+  async getContainerLogs(container = '/inertia-daemon') {
     const endpoint = '/logs';
     const params = {
       headers: {
-        'Accept': 'text/plain',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      query: JSON.stringify({
-        container: container,
+      body: JSON.stringify({
         stream: true,
+        container: container,
       })
     };
-    return this._get(endpoint, params);
+    return this._post(endpoint, params);
   }
 
   async getRemoteStatus() {
@@ -73,7 +72,7 @@ export default class InertiaClient {
     try {
       return await fetch(request);
     } catch (e) {
-      return e;
+      throw e;
     }
   }
 
@@ -86,11 +85,10 @@ export default class InertiaClient {
     params.method = 'POST';
     params.credentials = 'include';
     const request = new Request(this.url + endpoint, params);
-
     try {
       return await fetch(request);
     } catch (e) {
-      return e;
+      throw e;
     }
   }
 }

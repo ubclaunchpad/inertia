@@ -16,18 +16,44 @@ export default class Dashboard extends React.Component {
     }
 
     async getLogs() {
+        this.setState({ errored: false, logEntries: [] });
         try {
             let resp;
-            if (this.props.container) {
+            if (!this.props.container) {
                 resp = await this.props.client.getContainerLogs();
             } else {
                 resp = await this.props.client.getContainerLogs(this.props.container);
             }
             if (resp.status != 200) this.setState({ errored: true, logEntries: [] });
-            const logs = await resp.json();
-            console.log(logs)
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            const stream = () => {
+                return reader.read().then((data) => {
+                    const parts = decoder.decode(data.value).split('\n');
+                    this.setState({
+                        logEntries: this.state.logEntries.concat(parts),
+                    });
+                    return stream();
+                });
+            };
+            stream();
         } catch (e) {
-            console.log(e);
+            this.setState({
+                errored: true,
+                logEntries: [],
+            });
+            console.error(e);
+        }
+    }
+
+    componentDidMount() {
+        this.getLogs();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.container != this.props.container) {
+            this.getLogs();
         }
     }
 
@@ -40,7 +66,6 @@ export default class Dashboard extends React.Component {
     }
 
     render() {
-        this.getLogs();
         return (
             <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
                 {this.getMessage()}

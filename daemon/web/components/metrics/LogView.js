@@ -8,23 +8,39 @@ export default class LogView extends React.Component {
         super(props);
 
         this.getEntries = this.getEntries.bind(this);
+        this.scrollToBottom = this.scrollToBottom.bind(this);
+    }
+
+    scrollToBottom() {
+        this.messagesEnd.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    componentDidMount() {
+        this.scrollToBottom();
+    }
+
+    componentDidUpdate() {
+        this.scrollToBottom();
     }
 
     getEntries() {
-        let logText = '';
-        for (let i = this.props.logs.length; i > 0; i--) {
-            logText = logText + this.props.logs[i] + '\n';
-        }
-        return (
-            <p>{logText}</p>
-        );
+        let i = 0;
+        return this.props.logs.map((l) => {
+            i++;
+            return (<p key={i} >{l}</p>);
+        });
     }
 
     render() {
         const resultList = this.getEntries();
         return (
             <div>
-                {resultList}
+                <div>
+                    {resultList}
+                </div>
+                <div style={{ float: 'left', clear: 'both' }}
+                    ref={(el) => { this.messagesEnd = el; }}>
+                </div>
             </div>
         );
     }

@@ -43,7 +43,9 @@ export default class App extends React.Component {
 
     const history = createHistory();
     history.listen(() => {
-      this.setState({ loading: true, authenticated: false });
+      this.setState({
+        loading: true,
+      });
       this.isAuthenticated().then((authenticated) => {
         this.setState({
           loading: false,

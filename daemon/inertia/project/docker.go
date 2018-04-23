@@ -22,6 +22,7 @@ var (
 type LogOptions struct {
 	Container string
 	Stream    bool
+	Detailed  bool
 }
 
 // ContainerLogs get logs ;)
@@ -32,6 +33,7 @@ func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
 		ShowStderr: true,
 		Follow:     opts.Stream,
 		Timestamps: true,
+		Details:    opts.Detailed,
 	})
 }
 
