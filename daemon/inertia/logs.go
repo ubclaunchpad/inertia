@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -17,6 +18,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	// Get container name from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		println(err.Error())
 		http.Error(w, err.Error(), http.StatusLengthRequired)
 		return
 	}
@@ -24,6 +26,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	var upReq common.DaemonRequest
 	err = json.Unmarshal(body, &upReq)
 	if err != nil {
+		println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -60,9 +63,12 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	if upReq.Stream {
 		stop := make(chan struct{})
 		common.FlushRoutine(w, logs, stop)
+		defer close(stop)
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)
-		logger.Success(buf.String(), http.StatusOK)
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, buf.String())
 	}
 }
