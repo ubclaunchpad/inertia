@@ -92,7 +92,7 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 	// Output Webhook url to user.
 	println(">> GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
-	println("WebHook Address:  https://" + remote.IP + ":" + remote.Daemon.Port)
+	println("WebHook Address:  https://" + remote.IP + ":" + remote.Daemon.Port + "/webhook")
 	println("WebHook Secret:   " + remote.Daemon.Secret)
 	println(`Note that you will have to disable SSH verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't

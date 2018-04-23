@@ -107,7 +107,7 @@ To enable continuous deployment, you need the webhook URL that is printed during
 
 ```bash
 GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
-http://myhost.com:8081
+http://myhost.com:8081/webhook
 Github WebHook Secret: inertia
 ``` 
 
