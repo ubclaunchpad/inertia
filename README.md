@@ -165,4 +165,6 @@ The team has made a few presentations about Inertia that go over its design in a
 
 # :books: Contributing
 
-Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for more details and development tips.
+Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! 
+
+Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for contribution guidelines and a detailed guide to help you get started with Inertia's codebase.

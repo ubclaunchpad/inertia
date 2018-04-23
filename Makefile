@@ -6,7 +6,7 @@ VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = canary
 
-all: inertia
+all: bootstrap deps inertia
 
 # List all commands
 ls:

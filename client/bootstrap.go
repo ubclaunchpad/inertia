@@ -107,7 +107,7 @@ func clientBootstrapDaemonUpSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/bootstrap/daemon-up.sh", size: 1707, mode: os.FileMode(493), modTime: time.Unix(1524293604, 0)}
+	info := bindataFileInfo{name: "client/bootstrap/daemon-up.sh", size: 1707, mode: os.FileMode(493), modTime: time.Unix(1524325552, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
