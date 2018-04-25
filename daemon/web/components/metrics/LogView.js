@@ -7,12 +7,7 @@ export default class LogView extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state = {
-            entries: [],
-            streamRunning: false,
-        };
-
-        this.readLogs = this.readLogs.bind(this);
+        this.getEntries = this.getEntries.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
     }
 
@@ -22,58 +17,22 @@ export default class LogView extends React.Component {
 
     componentDidMount() {
         this.scrollToBottom();
-        if (!this.state.streamRunning) this.readLogs().catch((err) => {
-            this.setState({ streamRunning: false });
-        });
     }
 
     componentDidUpdate() {
         this.scrollToBottom();
-        if (!this.state.streamRunning) this.readLogs().catch((err) => {
-            this.setState({ streamRunning: false });
-        });
     }
 
-    async readLogs() {
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
-        const stream = () => {
-            if (!this.props.logs) {
-                this.setState({
-                    streamRunning: false,
-                });
-                return;
-            }
-
-            return this.props.logs.read().then((data) => {
-                const chunk = decoder.decode(data.value);
-                const parts = chunk.split('\n')
-                    .filter((p) => p.length > 0);
-                if (parts.length === 0) return;
-
-                parts[0] = buffer + parts[0];
-                buffer = '';
-                if (!chunk.endsWith('\n')) {
-                    buffer = parts.pop();
-                }
-
-                this.setState({
-                    entries: this.state.entries.concat(parts),
-                });
-
-                return stream();
-            });
-        };
-        return stream();
-    }
-
-    render() {
+    getEntries() {
         let i = 0;
-        const entries = this.state.entries.map((l) => {
+        return this.props.logs.map((l) => {
             i++;
             return (<code key={i} >{l}<br /></code>);
         });
+    }
 
+    render() {
+        const resultList = this.getEntries();
         return (
             <div>
                 <div style={{
@@ -82,7 +41,7 @@ export default class LogView extends React.Component {
                     left: 0,
                     position: 'absolute'
                 }}>
-                    {entries}
+                    {resultList}
                 </div>
                 <div style={{ float: 'left', clear: 'both' }}
                     ref={(el) => { this.messagesEnd = el; }}>
@@ -93,5 +52,5 @@ export default class LogView extends React.Component {
 }
 
 LogView.propTypes = {
-    reader: PropTypes.instanceOf(ReadableStream),
+    logs: PropTypes.array,
 };

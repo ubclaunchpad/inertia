@@ -10,48 +10,62 @@ export default class Dashboard extends React.Component {
         this.state = {
             errored: false,
             logEntries: [],
-            switch: true,
-            reader: null,
         };
         this.getLogs = this.getLogs.bind(this);
         this.getMessage = this.getMessage.bind(this);
     }
 
     async getLogs() {
-        let resp;
-        if (!this.props.container) {
-            resp = await this.props.client.getContainerLogs();
-        } else {
-            resp = await this.props.client.getContainerLogs(this.props.container);
+        this.setState({ errored: false, logEntries: [] });
+        try {
+            let resp;
+            if (!this.props.container) {
+                resp = await this.props.client.getContainerLogs();
+            } else {
+                resp = await this.props.client.getContainerLogs(this.props.container);
+            }
+            if (resp.status !== 200) this.setState({
+                errored: true, logEntries: [],
+            });
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let buffer = '';
+            const stream = () => {
+                return reader.read().then((data) => {
+                    const chunk = decoder.decode(data.value);
+                    const parts = chunk.split('\n');
+
+                    parts[0] = buffer + parts[0];
+                    buffer = '';
+                    if (!chunk.endsWith('\n')) {
+                        buffer = parts.pop();
+                    }
+
+                    this.setState({
+                        logEntries: this.state.logEntries.concat(parts),
+                    });
+
+                    return stream();
+                });
+            };
+            stream();
+        } catch (e) {
+            this.setState({
+                errored: true,
+                logEntries: [],
+            });
+            console.error(e);
         }
-
-        if (resp.status !== 200) Promise.reject(new Error('non-200 response'));
-
-        const reader = resp.body.getReader();
-        this.setState({ reader: reader });
     }
 
     componentDidMount() {
-        this.getLogs().catch((err) => {
-            this.setState({
-                errored: true,
-                reader: null,
-            });
-        });
+        this.getLogs();
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.container !== this.props.container) {
-            this.setState({
-                errored: false,
-                reader: null,
-            });
-            this.getLogs().catch((err) => {
-                this.setState({
-                    errored: true,
-                    reader: null,
-                });
-            });
+    componentDidUpdate(prevProps) {
+        if (prevProps.container != this.props.container) {
+            this.getLogs();
         }
     }
 
@@ -73,7 +87,7 @@ export default class Dashboard extends React.Component {
                 position: 'relative'
             }}>
                 {this.getMessage()}
-                <LogView logs={this.state.reader} />
+                <LogView logs={this.state.logEntries} />
             </div>
         );
     }

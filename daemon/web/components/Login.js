@@ -43,7 +43,7 @@ export default class Login extends React.Component {
         </p>
         <div style={styles.login}>
           <input onBlur={this.handleUsernameBlur} placeholder="Username" />
-          <input type='password' style={{ marginBottom: '0.5rem' }} onBlur={this.handlePasswordBlur} placeholder="Password" />
+          <input style={{ marginBottom: '0.5rem' }} onBlur={this.handlePasswordBlur} placeholder="Password" />
           <button onClick={this.handleLoginSubmit}>Login</button>
           <p style={styles.loginAlert}>{this.state.loginAlert}</p>
         </div>
