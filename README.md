@@ -161,7 +161,7 @@ Inertia is set up serverside by executing a script over SSH that installs Docker
 
 The team has made a few presentations about Inertia that go over its design in a bit more detail:
 - [UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
-- [Vancouver DevOpsDays 2018](https://drive.google.com/open?id=1DV2NR_YXpUZai-S7ttGcwrhWJXL7BcwiIrBJn69-IJg) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
+- [Vancouver DevOpsDays 2018](https://docs.google.com/presentation/d/e/2PACX-1vRJXUnRmxpegHNVTgn_Kd8VFyeuiIwzDQl9c0oQqi1QSnIjFUIIjawsvLdu2RfHAXv_5T8kvSgSWGuq/pub?start=false&loop=false&delayms=15000) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
 
 # :books: Contributing
 
