@@ -30,7 +30,7 @@ const sidebarHeaderStyles = {
 
 const SidebarButton = ({ children, onClick }) => (
   <div style={sidebarTextStyles.container}>
-    <a onClick={onClick} style={sidebarTextStyles.text}>
+    <a onClick={onClick} style={sidebarTextStyles.button}>
       {children}
     </a>
   </div>
@@ -58,6 +58,12 @@ const sidebarTextStyles = {
     fontSize: '80%',
     textDecoration: 'none',
     color: '#101010'
+  },
+
+  button: {
+    fontSize: '80%',
+    textDecoration: 'none',
+    color: '#101010',
   }
 };
 
@@ -113,7 +119,7 @@ export default class Home extends React.Component {
         onClick={() => {
           this.setState({ viewContainer: c });
         }}
-        key={c} >{c}</SidebarButton>
+        key={c} ><code>{c}</code></SidebarButton>
     );
 
     // Report repository status
@@ -123,9 +129,9 @@ export default class Home extends React.Component {
     const repoState = this.state.repoCommitHash
       ? (
         <div>
-          <SidebarText>Type: {this.state.repoBuildType}</SidebarText>
-          <SidebarText>Branch: {this.state.repoBranch}</SidebarText>
-          <SidebarText>Commit: {this.state.repoCommitHash.substr(1, 8)} "{this.state.repoCommitMessage}"</SidebarText>
+          <SidebarText>Type: <code>{this.state.repoBuildType}</code></SidebarText>
+          <SidebarText>Branch: <code>{this.state.repoBranch}</code></SidebarText>
+          <SidebarText>Commit: <code>{this.state.repoCommitHash.substr(1, 8)}</code> <br/>"{this.state.repoCommitMessage}"</SidebarText>
         </div>
       )
       : null;
@@ -145,7 +151,7 @@ export default class Home extends React.Component {
               onClick={() => {
                 this.setState({ viewContainer: '' });
               }}>Daemon</SidebarHeader>
-            <SidebarText>{this.state.remoteVersion}</SidebarText>
+            <SidebarText><code>{this.state.remoteVersion}</code></SidebarText>
             <SidebarHeader>Repository Status</SidebarHeader>
             {buildMessage}
             {repoState}

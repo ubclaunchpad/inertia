@@ -34,8 +34,13 @@ export default class LogView extends React.Component {
     render() {
         const resultList = this.getEntries();
         return (
-            <div align='left'>
-                <div>
+            <div>
+                <div style={{
+                    flex: 1,
+                    bottom: 0,
+                    left: 0,
+                    position: 'absolute'
+                }}>
                     {resultList}
                 </div>
                 <div style={{ float: 'left', clear: 'both' }}

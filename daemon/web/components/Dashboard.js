@@ -24,16 +24,28 @@ export default class Dashboard extends React.Component {
             } else {
                 resp = await this.props.client.getContainerLogs(this.props.container);
             }
-            if (resp.status != 200) this.setState({ errored: true, logEntries: [] });
+            if (resp.status !== 200) this.setState({
+                errored: true, logEntries: [],
+            });
 
             const reader = resp.body.getReader();
             const decoder = new TextDecoder('utf-8');
+            let buffer = '';
             const stream = () => {
                 return reader.read().then((data) => {
-                    const parts = decoder.decode(data.value).split('\n');
+                    const chunk = decoder.decode(data.value);
+                    const parts = chunk.split('\n');
+
+                    parts[0] = buffer + parts[0];
+                    buffer = '';
+                    if (!chunk.endsWith('\n')) {
+                        buffer = parts.pop();
+                    }
+
                     this.setState({
                         logEntries: this.state.logEntries.concat(parts),
                     });
+
                     return stream();
                 });
             };
@@ -67,7 +79,13 @@ export default class Dashboard extends React.Component {
 
     render() {
         return (
-            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{
+                display: 'flex',
+                height: '100%',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative'
+            }}>
                 {this.getMessage()}
                 <LogView logs={this.state.logEntries} />
             </div>
@@ -84,6 +102,6 @@ const styles = {
     underConstruction: {
         textAlign: 'center',
         fontSize: 24,
-        color: '#9f9f9f'
+        color: '#9f9f9f',
     }
 };

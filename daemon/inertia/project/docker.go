@@ -33,7 +33,7 @@ func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     opts.Stream,
-		Timestamps: opts.NoTimestamps,
+		Timestamps: !opts.NoTimestamps,
 		Details:    opts.Detailed,
 	})
 }
