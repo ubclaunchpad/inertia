@@ -10,13 +10,15 @@ export default class Dashboard extends React.Component {
         this.state = {
             errored: false,
             logEntries: [],
+            logReader: null,
         };
         this.getLogs = this.getLogs.bind(this);
         this.getMessage = this.getMessage.bind(this);
     }
 
     async getLogs() {
-        this.setState({ errored: false, logEntries: [] });
+        if (this.state.logReader) await this.state.logReader.cancel();
+        this.setState({ errored: false, logEntries: [], logReader: null });
         try {
             let resp;
             if (!this.props.container) {
@@ -29,33 +31,34 @@ export default class Dashboard extends React.Component {
             });
 
             const reader = resp.body.getReader();
+            this.setState({ logReader: reader });
+
             const decoder = new TextDecoder('utf-8');
             let buffer = '';
             const stream = () => {
-                return reader.read().then((data) => {
-                    const chunk = decoder.decode(data.value);
-                    const parts = chunk.split('\n');
+                return promiseState(reader.closed).then((s) => {
+                    if (s == 'pending') return reader.read().then((data) => {
+                        const chunk = decoder.decode(data.value);
+                        const parts = chunk.split('\n')
+                            .filter((c) => c);
 
-                    parts[0] = buffer + parts[0];
-                    buffer = '';
-                    if (!chunk.endsWith('\n')) {
-                        buffer = parts.pop();
-                    }
+                        parts[0] = buffer + parts[0];
+                        buffer = '';
+                        if (!chunk.endsWith('\n')) {
+                            buffer = parts.pop();
+                        }
 
-                    this.setState({
-                        logEntries: this.state.logEntries.concat(parts),
+                        this.setState({
+                            logEntries: this.state.logEntries.concat(parts),
+                        });
+
+                        return stream();
                     });
-
-                    return stream();
                 });
             };
             stream();
         } catch (e) {
-            this.setState({
-                errored: true,
-                logEntries: [],
-            });
-            console.error(e);
+            console.log(e);
         }
     }
 
@@ -105,3 +108,9 @@ const styles = {
         color: '#9f9f9f',
     }
 };
+
+function promiseState(p) {
+    const t = {};
+    return Promise.race([p, t])
+        .then(v => (v === t) ? 'pending' : 'fulfilled', () => 'rejected');
+}
