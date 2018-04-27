@@ -21,11 +21,10 @@ func cleanupContainers(cli *docker.Client) error {
 		return err
 	}
 
-	// Gracefully take down all containers except the testvps
+	// Take down all containers except the testvps
 	for _, container := range containers {
 		if container.Names[0] != "/testvps" {
-			timeout := 10 * time.Second
-			err := cli.ContainerStop(ctx, container.ID, &timeout)
+			err := cli.ContainerKill(ctx, container.ID, "SIGKILL")
 			if err != nil {
 				return err
 			}
@@ -45,6 +44,10 @@ func TestDockerComposeIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
+	// Set up
+	err = cleanupContainers(cli)
+	assert.Nil(t, err)
+
 	testProjectDir := path.Join(
 		os.Getenv("GOPATH"),
 		"/src/github.com/ubclaunchpad/inertia/test/build/docker-compose",
@@ -55,16 +58,15 @@ func TestDockerComposeIntegration(t *testing.T) {
 		project:   testProjectName,
 		buildType: "docker-compose",
 	}
-	err = cleanupContainers(cli)
-	assert.Nil(t, err)
 
 	// Execute build
 	err = dockerCompose(d, cli, os.Stdout)
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 
+	// Check for containers
 	containers, err := cli.ContainerList(
 		context.Background(),
 		types.ContainerListOptions{},
@@ -111,6 +113,9 @@ func TestDockerBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
+	err = cleanupContainers(cli)
+	assert.Nil(t, err)
+
 	testProjectDir := path.Join(
 		os.Getenv("GOPATH"),
 		"/src/github.com/ubclaunchpad/inertia/test/build/dockerfile",
@@ -121,8 +126,6 @@ func TestDockerBuildIntegration(t *testing.T) {
 		project:   testProjectName,
 		buildType: "dockerfile",
 	}
-	err = cleanupContainers(cli)
-	assert.Nil(t, err)
 
 	// Execute build
 	err = dockerBuild(d, cli, os.Stdout)
@@ -156,6 +159,9 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
+	err = cleanupContainers(cli)
+	assert.Nil(t, err)
+
 	testProjectDir := path.Join(
 		os.Getenv("GOPATH"),
 		"/src/github.com/ubclaunchpad/inertia/test/build/herokuish",
@@ -166,8 +172,6 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 		project:   testProjectName,
 		buildType: "herokuish",
 	}
-	err = cleanupContainers(cli)
-	assert.Nil(t, err)
 
 	// Execute build
 	err = herokuishBuild(d, cli, os.Stdout)

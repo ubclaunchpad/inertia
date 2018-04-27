@@ -81,7 +81,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 		return errors.New(warnings)
 	}
 
-	// Start the herokuish container to build project
+	// Start container to build project
 	fmt.Fprintln(out, "Building project...")
 	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	if err != nil {

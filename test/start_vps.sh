@@ -8,7 +8,6 @@ IMAGE=$2    # argument 2: VPS image to build
 
 docker run --rm -d \
     -p $SSH_PORT:22 \
-    -p 80:80 \
     -p 8081:8081 \
     -p 8000:8000 \
     --name testvps \
