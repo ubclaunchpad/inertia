@@ -24,7 +24,7 @@ func getTestConfig(writer io.Writer) *Config {
 
 func getTestRemote() *RemoteVPS {
 	remote := &RemoteVPS{
-		IP:   "0.0.0.0",
+		IP:   "127.0.0.1",
 		PEM:  "../test/keys/id_rsa",
 		User: "root",
 		Daemon: &DaemonConfig{
@@ -96,7 +96,7 @@ func TestBootstrap(t *testing.T) {
 
 	script, err = ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
-	daemonScript := fmt.Sprintf(string(script), "test", "8081", "0.0.0.0")
+	daemonScript := fmt.Sprintf(string(script), "test", "8081", "127.0.0.1")
 
 	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}
