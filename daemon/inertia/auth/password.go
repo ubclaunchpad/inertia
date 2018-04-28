@@ -8,8 +8,8 @@ import (
 
 var (
 	errSameUsernamePassword = errors.New("Username and password must be different")
-	errInvalidUsername      = errors.New("Only letters, numbers, underscores, and dashes are allowed in usernames, and username must be at least 3 characters")
-	errInvalidPassword      = errors.New("Only letters, numbers, underscores, and dashes are allowed in passwords, and password must be at least 5 characters")
+	errInvalidUsername      = errors.New("Username must be at least 3 characters and only letters, numbers, underscores, and dashes are allowed")
+	errInvalidPassword      = errors.New("Password must be at least 5 characters and only letters, numbers, underscores, and dashes are allowed")
 )
 
 // hashPassword generates a bcrypt-encrypted hash from given password
