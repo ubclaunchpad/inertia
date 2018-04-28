@@ -72,19 +72,13 @@ Note that if you install Inertia using these commands or any variation of `go in
 
 ### CLI
 
-The codebase for the CLI is in the root directory. This code should only include the user interface - all client-based logic and functionality should go into the client.
+The codebase for the CLI is in the root directory. This code should only include the CLI user interface - all client-based logic and functionality should go into the `client` package.
 
 ### Client
 
-The Inertia client manages all clientside functionality. The client codebase is in `./client/`.
+The Inertia client package manages all clientside functionality. The client codebase is in `./client/`.
 
-To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary. So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our go executables.
-
-```bash
-$> go get -u github.com/jteeuwen/go-bindata/...
-```
-
-If you make changes to the bootstrapping shell scripts in `client/bootstrap/`, convert them to `Assets` by running:
+To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary - instead, we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our Go executables. If you make changes to the bootstrapping shell scripts in `client/bootstrap/`, convert them to `Assets` by running:
 
 ```bash
 $> make bootstrap
@@ -93,7 +87,7 @@ $> make bootstrap
 Then use your asset!
 
 ```go
-shellScriptData, err := Asset("cmd/bootstrap/myshellscript.sh")
+shellScriptData, err := Asset("client/bootstrap/myshellscript.sh")
 if err != nil {
   log.Fatal("No asset with that name")
 }
@@ -104,7 +98,7 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 
 ### Daemon
 
-The Inertia daemon manages all serverside functionality. The daemon codebase is in `./daemon/inertia/`.
+The Inertia daemon package manages all serverside functionality. The daemon codebase is in `./daemon/inertia/`.
 
 To use a daemon compiled from source, set your Inertia version in `.inertia.toml` to `test` and run:
 
@@ -134,7 +128,7 @@ This sneaky configuration file can be found under `Docker -> Preferences -> Daem
 
 ### Web
 
-The Inertia Web application provides a web interface to manage an Inertia deployment. The web application codebase is in `./daemon/web/`.
+Inertia Web provides a web interface to manage an Inertia deployment. The web application codebase is in `./daemon/web/`.
 
 To run a local instance of Inertia Web:
 
@@ -206,3 +200,5 @@ $> inertia local up --stream
 $> inertia local status
 $> inertia local logs
 ```
+
+Please free free to open up an Issue if any of these steps are no clear or don't work!

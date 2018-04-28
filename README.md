@@ -37,11 +37,12 @@ Inertia is a simple cross-platform command line application that enables effortl
 ----|-----------------
 🚀  | Simple setup from your computer without ever having to manually SSH into your remote
 🍰  | Use any Linux-based remote virtual private server platform you want
-⚒  | Deploy a wide range of supported project types (including docker-compose and Heroku buildpacks)
-🚄  | Have your project automatically updated as soon as you `git push`
-🛂  | Start up and shut down your deployment with ease
-📚  | Monitor your deployed application's logs straight from your command line
+⚒  | Deploy a wide range of supported project types (including Dockerfile, docker-compose, and Heroku projects)
+🚄  | Have your project automatically updated, rebuilt, and deployed as soon as you `git push`
+🛂  | Start up, shut down, and monitor your deployment with ease
 🏷  | Configure deployment to your liking with branch settings and more
+🌐  | Add users and check on your deployment anywhere through Inertia Web
+🔑  | Secured with tokens and HTTPS across the board
 
 ----------------
 
@@ -100,6 +101,8 @@ $> inertia $VPS_NAME up --stream
 ```
 
 Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
+
+Inertia also offers a web application - this can be accessed at `https://$ADDRESS:8081/web` once users have been added through the `inertia $VPS_NAME user` commands.
 
 ## Continuous Deployment
 
