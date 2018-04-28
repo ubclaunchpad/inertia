@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Bootstraps a machine for docker and docker-compose.
+# Bootstraps a machine for docker.
 
 set -e
 

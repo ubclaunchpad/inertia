@@ -2,11 +2,14 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/ubclaunchpad/inertia/common"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -124,24 +127,29 @@ var deploymentStatusCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode, deployment.Name, host)
-			fmt.Printf("%s", body)
+			status := &common.DeploymentStatus{}
+			err := json.NewDecoder(resp.Body).Decode(status)
+			if err != nil {
+				log.Fatal(err)
+			}
+			println(formatStatus(status))
 		case http.StatusForbidden:
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-		case http.StatusNotFound:
-			fmt.Printf("(Status code %d) Problem with deployment: %s\n", resp.StatusCode, body)
-		case http.StatusPreconditionFailed:
-			fmt.Printf("(Status code %d) Problem with deployment setup: %s\n", resp.StatusCode, body)
 		default:
-			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
+			fmt.Printf("(Status code %d) %s\n",
 				resp.StatusCode, body)
 		}
 	},

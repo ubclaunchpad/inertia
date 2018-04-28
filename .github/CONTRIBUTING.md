@@ -1,4 +1,4 @@
-# Contributing
+# :books: Contributing
 
 This document outlines key considerations and tips for anyone contributing to Inertia.
 
@@ -10,19 +10,29 @@ This document outlines key considerations and tips for anyone contributing to In
 
 # Opening an Issue
 
-Please do a quick search of past issues before opening a ticket. If working on a ticket, please assign it to yourself or leave a comment saying you are working on it. If you have decide to stop working on a ticket before it gets resolved, please un-assign yourself.
+🎉 An issue, whether it be bugs, feature requests, or general feedback is welcome!
+
+However, please do a quick search of past issues before opening a ticket. If you are working on a ticket, please assign it to yourself or leave a comment noting that you are working on it - similarly, if you decide to stop working on a ticket before it gets resolved, please un-assign yourself or leave a comment. This helps us keep track of which tickets are in progress.
 
 # Submitting a Pull Request
+
+👍 Contributions of any size are very much appreciated.
 
 All pull requests should be connected to one or more issues. Please try to fill out the pull request template to the best of your ability and use a clear, descriptive title.
 
 At the very least, all pull requests need to pass our Travis builds and receive an approval from a reviewer. Please include tests whenever possible.
 
+Read on for a comprehensive guide on how to get started with Inertia's codebase!
+
 # Development Tips
 
-This section outlines the various tools available to help you get started developing Inertia. Run `make ls` to list all the Makefile shortcuts available.
+👷 This section will walk you through Inertia's codebase, how to get a development environment set up, and outline the various tools available to help you out.
 
-If you would like to contribute, feel free to comment on an issue or make one and open up a pull request!
+Please free free to open up a ticket if any of these instructions are unclear or straight up do not work on your platform!
+
+- [Setup](#setup)
+- [Overview](#overview)
+- [Testing Environment](#setting-up-a-testing-environment)
 
 ## Setup
 
@@ -32,68 +42,63 @@ First, [install Go](https://golang.org/doc/install#install) and grab Inertia's s
 $> go get -u github.com/ubclaunchpad/inertia
 ```
 
-We use [dep](https://github.com/golang/dep) for managing Golang dependencies, and [npm](https://www.npmjs.com) to manage dependencies for Inertia's React web app. Make sure both are installed before running the following commands.
+If you are looking to contribute, you can then set your own fork as a remote:
 
 ```bash
-$> make deps           # Install all dependencies
-$> make RELEASE=test  # installs Inertia build tagged as "test"
+$> git remote rename origin upstream   # Set the official repo as you
+                                       # "upstream" so you can pull
+                                       # updates
+$> git remote add origin https://github.com/$AMAZING_YOU/inertia.git
+```
+
+Inertia uses:
+- [dep](https://github.com/golang/dep) for managing Golang dependencies
+- [npm](https://www.npmjs.com) to manage dependencies for Inertia's React web app
+- [Docker](https://www.docker.com/community-edition) for various application functionalities and integration testing
+
+Make sure all of the above are installed before running:
+
+```bash
+$> make RELEASE=test  # installs dependencies and an Inertia 
+                      # build tagged as "test" to gopath
 $> inertia --version  # check what version you have installed
 ```
 
-A build tagged as `test` allows you to use `make testdaemon` for local development. See the next section for more details.
+A build tagged as `test` allows you to use `make testdaemon` for local development. See the next section for more details. Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
 
-Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
+Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to use an Inertia CLI installed using Homebrew. To go back to a `go install`ed version of Inertia, you need to run `brew uninstall inertia`.
 
-Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to go back to using an Inertia CLI installed using Homebrew. To go back to a `go install`ed version of Inertia, you need to run `brew uninstall inertia`.
+## Overview
 
-## Repository Structure
+### CLI
 
-The codebase for the CLI is in the root directory. This code should only include the user interface - all client-based logic and functionality should go into the client.
+The codebase for the CLI is in the root directory. This code should only include the CLI user interface - all client-based logic and functionality should go into the `client` package.
 
 ### Client
 
-The Inertia client manages all clientside functionality. The client codebase is in `client/`.
+The Inertia client package manages all clientside functionality. The client codebase is in `./client/`.
+
+To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary - instead, we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our Go executables. If you make changes to the bootstrapping shell scripts in `client/bootstrap/`, convert them to `Assets` by running:
+
+```bash
+$> make bootstrap
+```
+
+Then use your asset!
+
+```go
+shellScriptData, err := Asset("client/bootstrap/myshellscript.sh")
+if err != nil {
+  log.Fatal("No asset with that name")
+}
+
+// Optionally run shell script over SSH.
+result, _ := remote.RunSSHCommand(string(shellScriptData))
+```
 
 ### Daemon
 
-The Inertia daemon manages all serverside functionality. The daemon codebase is in `daemon/inertia`.
-
-### Inertia Web
-
-The Inertia Web application provides a web interface to manage an Inertia deployment. The web application codebase is in `daemon/web`.
-
-## Testing and Locally Deploying
-
-You will need Docker installed and running to run the Inertia test suite, which includes a number of integration tests.
-
-```bash
-$> make test-all                              # test against ubuntu:latest
-$> make test-all VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
-```
-
-You can also manually start a container that sets up a mock VPS for testing:
-
-```bash
-$> make testenv VPS_OS=ubuntu VERSION=16.04
-# This defaults to ubuntu:lastest without args.
-# Note the location of the key that is printed and use that when
-# adding your local remote.
-```
-
-You can [SSH into this testvps container](https://bobheadxi.github.io/dockerception/#ssh-services-in-docker) and otherwise treat it just as you would treat a real VPS:
-
-```bash
-$> cd /path/to/my/dockercompose/project
-$> inertia init
-$> inertia remote add local
-# PEM file: inertia/test/keys/id_rsa, User: 'root', Address: 0.0.0.0
-$> inertia local init
-$> inertia local status
-```
-
-The above steps will pull and use a daemon image from Docker Hub based on the version in your `.inertia.toml`.
-
-### Daemon
+The Inertia daemon package manages all serverside functionality. The daemon codebase is in `./daemon/inertia/`.
 
 To use a daemon compiled from source, set your Inertia version in `.inertia.toml` to `test` and run:
 
@@ -121,38 +126,79 @@ You probably need to go into your Docker settings and add this line to the Docke
 
 This sneaky configuration file can be found under `Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
 
-### Web App
+### Web
 
-Inertia Web is a React application. To run a local instance of Inertia Web:
+Inertia Web provides a web interface to manage an Inertia deployment. The web application codebase is in `./daemon/web/`.
+
+To run a local instance of Inertia Web:
 
 ```bash
-$> make web-run
+$> make web-deps   # install npm dependencies
+$> make web-run    # run local instance of application                    
 ```
 
 Make sure you have a local daemon set up for this web app to work - see the previous section for more details.
 
-## Compiling Bash Scripts
+## Setting up a Testing Environment
 
-To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary. So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our go executables.
-
-```bash
-$> go get -u github.com/jteeuwen/go-bindata/...
-```
-
-If you make changes to the bootstrapping shell scripts in `client/bootstrap/`, convert them to `Assets` by running:
+You will need Docker installed and running to run whole the Inertia test suite, which includes a number of integration tests.
 
 ```bash
-$> make bootstrap
+$> make test-all                              # test against ubuntu:latest
+$> make test-all VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 ```
 
-Then use your asset!
+Alternatively, `make test` will just run the unit tests.
 
-```go
-shellScriptData, err := Asset("cmd/bootstrap/myshellscript.sh")
-if err != nil {
-  log.Fatal("No asset with that name")
-}
+Setting up a more comprehensive test environment, where you take a project from setup to deployment using Inertia, is a bit trickier - these are the recommended steps:
 
-// Optionally run shell script over SSH.
-result, _ := remote.RunSSHCommand(string(shellScriptData))
+1. **Manually set up a mock VPS**
+
+```bash
+$> make testenv VPS_OS=ubuntu VERSION=16.04
+# This defaults to ubuntu:lastest without args.
+# Note the location of the key that is printed and use that when
+# adding your local remote.
 ```
+
+You can [SSH into this testvps container](https://bobheadxi.github.io/dockerception/#ssh-services-in-docker) and otherwise treat it just as you would treat a real VPS.
+
+2. **Compile and install Inertia**
+
+```bash
+$> make RELEASE=test
+```
+
+3. **Build and deliver Inertia daemon to the `testvps`**
+
+```bash
+$> make testdaemon
+```
+
+4. **Set up a test project**
+
+You will need a GitHub repository you own, since you need permission to add deploy keys. The Inertia team typically uses the [inertia-deploy-test](https://github.com/ubclaunchpad/inertia-deploy-test) repository - you could just fork this repository.
+
+```bash
+$> git clone https://github.com/$AWESOME_YOU/inertia-deploy-test.git
+$> cd inertia-deploy-test
+$> inertia init
+$> inertia remote add local
+# - PEM file: $INERTIA_PATH/test/keys/id_rsa
+# - Address:  127.0.0.1 
+# - User:     root
+$> inertia local init
+$> inertia local status
+```
+
+The above steps will pull and use a daemon image from Docker Hub based on the version in your `.inertia.toml`.
+
+Following these steps, you can run Inertia through deployment:
+
+```bash
+$> inertia local up --stream
+$> inertia local status
+$> inertia local logs
+```
+
+Please free free to open up an Issue if any of these steps are no clear or don't work!

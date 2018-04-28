@@ -1,19 +1,25 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
-const SidebarHeader = ({ children }) => (
+import InertiaClient from '../client';
+import Dashboard from './Dashboard';
+
+const SidebarHeader = ({ children, onClick }) => (
   <div style={sidebarHeaderStyles.container}>
-    <a href="/#/home" onClick={() => { return false; }} style={sidebarHeaderStyles.text}>
+    <a onClick={onClick} style={sidebarHeaderStyles.text}>
       {children}
     </a>
   </div>
 );
+
 const sidebarHeaderStyles = {
   container: {
     display: 'flex',
     alignItems: 'center',
     height: '3rem',
     width: '100%',
-    paddingLeft: '2rem'
+    paddingLeft: '1.5rem',
+    paddingTop: '1rem'
   },
 
   text: {
@@ -22,59 +28,114 @@ const sidebarHeaderStyles = {
   }
 };
 
-const SidebarButton = ({ children }) => (
-  <div style={sidebarButtonStyles.container}>
-    <a href="/#/home" onClick={() => { }} style={sidebarButtonStyles.text}>
+const SidebarButton = ({ children, onClick }) => (
+  <div style={sidebarTextStyles.container}>
+    <a onClick={onClick} style={sidebarTextStyles.button}>
       {children}
     </a>
   </div>
 );
-const sidebarButtonStyles = {
+
+const SidebarText = ({ children }) => (
+  <div style={sidebarTextStyles.container}>
+    <p style={sidebarTextStyles.text}>
+      {children}
+    </p>
+  </div>
+);
+
+const sidebarTextStyles = {
   container: {
     display: 'flex',
     alignItems: 'center',
-    height: '3rem',
+    height: 'flex',
     width: '100%',
-    paddingLeft: '3rem'
+    paddingLeft: '2rem',
+    paddingTop: '0.5rem'
   },
 
   text: {
+    fontSize: '80%',
     textDecoration: 'none',
     color: '#101010'
+  },
+
+  button: {
+    fontSize: '80%',
+    textDecoration: 'none',
+    color: '#101010',
   }
 };
-
 
 export default class Home extends React.Component {
   constructor(props) {
     super(props);
-    this.handleGetLogs = this.handleGetLogs.bind(this);
-    this.handleLogout = this.handleLogout.bind(this);
-  }
+    this.state = {
+      remoteVersion: '',
 
-  async handleGetLogs() {
-    const endpoint = '/logs';
-    const params = {
-      headers: {
-        'Accept': 'application/json'
-      }
+      repoBranch: '',
+      repoCommitHash: '',
+      repoCommitMessage: '',
+      repoBuildType: '',
+      repoBuilding: false,
+      containers: [],
+
+      viewContainer: '',
     };
-    const response = await this.props.client._get(endpoint, params);
+
+    this.handleLogout = this.handleLogout.bind(this);
+    this.handleGetStatus = this.handleGetStatus.bind(this);
+
+    this.handleGetStatus()
+      .then(() => { })
+      .catch((err) => console.error(err));
   }
 
   async handleLogout() {
-    const endpoint = '/user/logout';
-    const params = {
-      headers: {
-        'Accept': 'application/json'
-      }
-    };
-
-    const response = await this.props.client._post(endpoint, params);
+    const response = await this.props.client.logout();
+    if (response.status != 200) console.error(response);
     this.props.history.push('/login');
   }
 
+  async handleGetStatus() {
+    const response = await this.props.client.getRemoteStatus();
+    if (response.status !== 200) return new Error('bad response: ' + response);
+    const status = await response.json();
+    this.setState({
+      remoteVersion: status.version,
+      repoBranch: status.branch,
+      repoBuilding: status.build_active,
+      repoBuildType: status.build_type,
+      repoCommitHash: status.commit_hash,
+      repoCommitMessage: status.commit_message,
+      containers: status.containers,
+    });
+  }
+
   render() {
+    // Render container list
+    const containers = this.state.containers.map((c) =>
+      <SidebarButton
+        onClick={() => {
+          this.setState({ viewContainer: c });
+        }}
+        key={c} ><code>{c}</code></SidebarButton>
+    );
+
+    // Report repository status
+    const buildMessage = this.state.repoBuilding
+      ? <SidebarText>Build in progress</SidebarText>
+      : null;
+    const repoState = this.state.repoCommitHash
+      ? (
+        <div>
+          <SidebarText>Type: <code>{this.state.repoBuildType}</code></SidebarText>
+          <SidebarText>Branch: <code>{this.state.repoBranch}</code></SidebarText>
+          <SidebarText>Commit: <code>{this.state.repoCommitHash.substr(1, 8)}</code> <br/>"{this.state.repoCommitMessage}"</SidebarText>
+        </div>
+      )
+      : null;
+
     return (
       <div style={styles.container}>
 
@@ -86,24 +147,32 @@ export default class Home extends React.Component {
         <div style={styles.innerContainer}>
 
           <div style={styles.sidebar}>
-            <SidebarHeader>Deployments</SidebarHeader>
-            <SidebarButton>project-app</SidebarButton>
-            <SidebarButton>project-db</SidebarButton>
-            <SidebarButton>project-server</SidebarButton>
+            <SidebarHeader
+              onClick={() => {
+                this.setState({ viewContainer: '' });
+              }}>Daemon</SidebarHeader>
+            <SidebarText><code>{this.state.remoteVersion}</code></SidebarText>
+            <SidebarHeader>Repository Status</SidebarHeader>
+            {buildMessage}
+            {repoState}
+            <SidebarHeader>Active Containers</SidebarHeader>
+            {containers}
           </div>
 
           <div style={styles.main}>
-            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={styles.underConstruction}>coming soon!</p>
-            </div>
+            <Dashboard
+              container={this.state.viewContainer}
+              client={this.props.client} />
           </div>
-
         </div>
-
       </div>
     );
   }
 }
+
+Home.propTypes = {
+  client: PropTypes.instanceOf(InertiaClient),
+};
 
 // hardcode all styles for now, until we flesh out UI
 const styles = {
@@ -127,7 +196,7 @@ const styles = {
     alignItems: 'center',
     width: '100%',
     height: '4rem',
-    padding: '0 2rem',
+    padding: '0 1.5rem',
     borderBottom: '1px solid #c1c1c1'
   },
 
@@ -150,10 +219,4 @@ const styles = {
   button: {
     flex: 'none'
   },
-
-  underConstruction: {
-    textAlign: 'center',
-    fontSize: 24,
-    color: '#9f9f9f'
-  }
 };

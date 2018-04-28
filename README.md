@@ -37,11 +37,12 @@ Inertia is a simple cross-platform command line application that enables effortl
 ----|-----------------
 🚀  | Simple setup from your computer without ever having to manually SSH into your remote
 🍰  | Use any Linux-based remote virtual private server platform you want
-⚒  | Deploy a wide range of supported project types (including docker-compose and Heroku buildpacks)
-🚄  | Have your project automatically updated as soon as you `git push`
-🛂  | Start up and shut down your deployment with ease
-📚  | Monitor your deployed application's logs straight from your command line
+⚒  | Deploy a wide range of supported project types (including Dockerfile, docker-compose, and Heroku projects)
+🚄  | Have your project automatically updated, rebuilt, and deployed as soon as you `git push`
+🛂  | Start up, shut down, and monitor your deployment with ease
 🏷  | Configure deployment to your liking with branch settings and more
+🌐  | Add users and check on your deployment anywhere through Inertia Web
+🔑  | Secured with tokens and HTTPS across the board
 
 ----------------
 
@@ -101,13 +102,15 @@ $> inertia $VPS_NAME up --stream
 
 Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
 
+Inertia also offers a web application - this can be accessed at `https://$ADDRESS:8081/web` once users have been added through the `inertia $VPS_NAME user` commands.
+
 ## Continuous Deployment
 
 To enable continuous deployment, you need the webhook URL that is printed during `inertia $VPS_NAME init`:
 
 ```bash
 GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
-http://myhost.com:8081
+http://myhost.com:8081/webhook
 Github WebHook Secret: inertia
 ``` 
 
@@ -160,9 +163,11 @@ The deployment daemon runs persistently in the background on the server, receivi
 Inertia is set up serverside by executing a script over SSH that installs Docker and starts an Inertia daemon image with [access to the host Docker socket](https://bobheadxi.github.io/dockerception/#docker-in-docker). This Docker-in-Docker configuration gives the daemon the ability to start up other containers *alongside* it, rather than *within* it, as required. Once the daemon is set up, we avoid using further SSH commands and execute Docker commands through Docker's Golang API. Instead of installing the docker-compose toolset, we [use a docker-compose image](https://bobheadxi.github.io/dockerception/#docker-compose-in-docker) to build and deploy user projects. Inertia also supports projects configured for Heroku buildpacks using the [gliderlabs/herokuish](https://github.com/gliderlabs/herokuish) Docker image for builds and deployments.
 
 The team has made a few presentations about Inertia that go over its design in a bit more detail:
-- [First UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
-- [Vancouver DevOpsDays 2018: Building a Simple, Self-hosted Continuous Deployment Application](https://drive.google.com/open?id=1DV2NR_YXpUZai-S7ttGcwrhWJXL7BcwiIrBJn69-IJg)
+- [UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
+- [Vancouver DevOpsDays 2018](https://docs.google.com/presentation/d/e/2PACX-1vRJXUnRmxpegHNVTgn_Kd8VFyeuiIwzDQl9c0oQqi1QSnIjFUIIjawsvLdu2RfHAXv_5T8kvSgSWGuq/pub?start=false&loop=false&delayms=15000) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
 
 # :books: Contributing
 
-Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for more details and development tips.
+Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! 
+
+Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for contribution guidelines and a detailed guide to help you get started with Inertia's codebase.

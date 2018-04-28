@@ -9,9 +9,32 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 )
+
+func cleanupContainers(cli *docker.Client) error {
+	ctx := context.Background()
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Take down all containers except the testvps
+	for _, container := range containers {
+		if container.Names[0] != "/testvps" {
+			err := cli.ContainerKill(ctx, container.ID, "SIGKILL")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Prune images
+	_, err = cli.ContainersPrune(ctx, filters.Args{})
+	return err
+}
 
 func TestDockerComposeIntegration(t *testing.T) {
 	if testing.Short() {
@@ -20,6 +43,10 @@ func TestDockerComposeIntegration(t *testing.T) {
 	cli, err := docker.NewEnvClient()
 	assert.Nil(t, err)
 	defer cli.Close()
+
+	// Set up
+	err = cleanupContainers(cli)
+	assert.Nil(t, err)
 
 	testProjectDir := path.Join(
 		os.Getenv("GOPATH"),
@@ -31,7 +58,6 @@ func TestDockerComposeIntegration(t *testing.T) {
 		project:   testProjectName,
 		buildType: "docker-compose",
 	}
-	d.Down(cli, os.Stdout)
 
 	// Execute build
 	err = dockerCompose(d, cli, os.Stdout)
@@ -40,6 +66,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 	// Arbitrary wait for containers to start
 	time.Sleep(5 * time.Second)
 
+	// Check for containers
 	containers, err := cli.ContainerList(
 		context.Background(),
 		types.ContainerListOptions{},
@@ -58,7 +85,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 
 	// try again if project no up (workaround for Travis)
 	if !foundP {
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 		containers, err = cli.ContainerList(
 			context.Background(),
 			types.ContainerListOptions{},
@@ -74,7 +101,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 	assert.True(t, foundDC, "docker-compose container should be active")
 	assert.True(t, foundP, "project container should be active")
 
-	err = d.Down(cli, os.Stdout)
+	err = cleanupContainers(cli)
 	assert.Nil(t, err)
 }
 
@@ -86,6 +113,9 @@ func TestDockerBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
+	err = cleanupContainers(cli)
+	assert.Nil(t, err)
+
 	testProjectDir := path.Join(
 		os.Getenv("GOPATH"),
 		"/src/github.com/ubclaunchpad/inertia/test/build/dockerfile",
@@ -96,7 +126,6 @@ func TestDockerBuildIntegration(t *testing.T) {
 		project:   testProjectName,
 		buildType: "dockerfile",
 	}
-	d.Down(cli, os.Stdout)
 
 	// Execute build
 	err = dockerBuild(d, cli, os.Stdout)
@@ -118,7 +147,7 @@ func TestDockerBuildIntegration(t *testing.T) {
 	}
 	assert.True(t, foundP, "project container should be active")
 
-	err = d.Down(cli, os.Stdout)
+	err = cleanupContainers(cli)
 	assert.Nil(t, err)
 }
 
@@ -130,6 +159,9 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
+	err = cleanupContainers(cli)
+	assert.Nil(t, err)
+
 	testProjectDir := path.Join(
 		os.Getenv("GOPATH"),
 		"/src/github.com/ubclaunchpad/inertia/test/build/herokuish",
@@ -140,7 +172,6 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 		project:   testProjectName,
 		buildType: "herokuish",
 	}
-	d.Down(cli, os.Stdout)
 
 	// Execute build
 	err = herokuishBuild(d, cli, os.Stdout)
@@ -162,6 +193,6 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	}
 	assert.True(t, foundP, "project container should be active")
 
-	// err = d.Down(cli, os.Stdout)
-	// assert.Nil(t, err)
+	err = cleanupContainers(cli)
+	assert.Nil(t, err)
 }

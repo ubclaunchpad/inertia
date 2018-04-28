@@ -39,7 +39,7 @@ before_install:
 script:
   - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
   - make testdaemon SSH_PORT=69   # Send test daemon to testVPS
-  - go test -v -race -coverprofile=coverage.out ./...  # Execute tests
+  - go test -race -coverprofile=coverage.out ./...  # Execute tests
   - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
   - make lint                     # Static code analysis
 

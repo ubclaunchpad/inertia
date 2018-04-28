@@ -43,7 +43,9 @@ export default class App extends React.Component {
 
     const history = createHistory();
     history.listen(() => {
-      this.setState({ loading: true, authenticated: false });
+      this.setState({
+        loading: true,
+      });
       this.isAuthenticated().then((authenticated) => {
         this.setState({
           loading: false,
@@ -54,12 +56,7 @@ export default class App extends React.Component {
   }
 
   async isAuthenticated() {
-    const params = {
-      headers: { 'Accept': 'application/json' },
-    };
-    const response = await this.props.client._get(
-      '/user/validate', params
-    );
+    const response = await this.props.client.validate();
     return (response.status === 200);
   }
 

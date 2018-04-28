@@ -30,6 +30,10 @@ body {
   font-family: 'Roboto', sans-serif;
 }
 
+code {
+  font-family: 'Ubuntu Mono', monospace;
+}
+
 #app {
   height: 100%;
   width: 100%;

@@ -20,8 +20,10 @@ var (
 
 // LogOptions is used to configure retrieved container logs
 type LogOptions struct {
-	Container string
-	Stream    bool
+	Container    string
+	Stream       bool
+	Detailed     bool
+	NoTimestamps bool
 }
 
 // ContainerLogs get logs ;)
@@ -31,7 +33,8 @@ func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     opts.Stream,
-		Timestamps: true,
+		Timestamps: !opts.NoTimestamps,
+		Details:    opts.Detailed,
 	})
 }
 

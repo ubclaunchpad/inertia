@@ -8,8 +8,8 @@ import (
 
 var (
 	errSameUsernamePassword = errors.New("Username and password must be different")
-	errInvalidUsername      = errors.New("Only letters, numbers, underscores, and dashes are allowed in usernames, and username must be at least 3 characters")
-	errInvalidPassword      = errors.New("Only letters, numbers, underscores, and dashes are allowed in passwords, and password must be at least 5 characters")
+	errInvalidUsername      = errors.New("Username must be at least 3 characters and only letters, numbers, underscores, and dashes are allowed")
+	errInvalidPassword      = errors.New("Password must be at least 5 characters and only letters, numbers, underscores, and dashes are allowed")
 )
 
 // hashPassword generates a bcrypt-encrypted hash from given password
@@ -44,7 +44,7 @@ func validateCredentialValues(username, password string) error {
 // isLegalString returns true if `str` only contains characters [A-Z], [a-z], or '_' or '-'
 func isLegalString(str string) bool {
 	for _, c := range str {
-		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && c != '_' && c != '-' {
+		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && (c < 48 || c > 57) && c != '_' && c != '-' {
 			return false
 		}
 	}

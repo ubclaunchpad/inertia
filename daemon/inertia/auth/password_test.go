@@ -30,6 +30,9 @@ func TestValidateCredentialValues(t *testing.T) {
 	err := validateCredentialValues("finasdfsdfe", "okaasdfasdy")
 	assert.Nil(t, err)
 
+	err = validateCredentialValues("0123456789a", "0123456789")
+	assert.Nil(t, err)
+
 	err = validateCredentialValues("ohnoitsme", "ohnoitsme")
 	assert.Equal(t, errSameUsernamePassword, err)
 

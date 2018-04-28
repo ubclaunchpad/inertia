@@ -21,7 +21,7 @@ type Deployer interface {
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
 
-	GetStatus(*docker.Client) (*DeploymentStatus, error)
+	GetStatus(*docker.Client) (*common.DeploymentStatus, error)
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
@@ -159,18 +159,8 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 	return common.RemoveContents(d.directory)
 }
 
-// DeploymentStatus lists details about the deployed project
-type DeploymentStatus struct {
-	Branch               string
-	CommitHash           string
-	CommitMessage        string
-	BuildType            string
-	Containers           []string
-	BuildContainerActive bool
-}
-
 // GetStatus returns the status of the deployment
-func (d *Deployment) GetStatus(cli *docker.Client) (*DeploymentStatus, error) {
+func (d *Deployment) GetStatus(cli *docker.Client) (*common.DeploymentStatus, error) {
 	// Get repository status
 	head, err := d.repo.Head()
 	if err != nil {
@@ -202,7 +192,7 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*DeploymentStatus, error) {
 		}
 	}
 
-	return &DeploymentStatus{
+	return &common.DeploymentStatus{
 		Branch:               strings.TrimSpace(head.Name().Short()),
 		CommitHash:           strings.TrimSpace(head.Hash().String()),
 		CommitMessage:        strings.TrimSpace(commit.Message),
