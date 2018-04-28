@@ -44,7 +44,8 @@ func validateCredentialValues(username, password string) error {
 // isLegalString returns true if `str` only contains characters [A-Z], [a-z], or '_' or '-'
 func isLegalString(str string) bool {
 	for _, c := range str {
-		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && c != '_' && c != '-' {
+		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && (c < 49 || c > 57) && c != '_' && c != '-' {
+			println(c)
 			return false
 		}
 	}
