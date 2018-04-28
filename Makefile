@@ -6,7 +6,7 @@ VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = canary
 
-all: bootstrap deps inertia
+all: deps bootstrap inertia
 
 # List all commands
 ls:
@@ -14,6 +14,7 @@ ls:
 
 # Sets up all dependencies
 deps:
+	go get -u github.com/jteeuwen/go-bindata/...
 	dep ensure
 	make web-deps
 	bash test/deps.sh
