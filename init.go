@@ -7,8 +7,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/local"
 )
 
 var initCmd = &cobra.Command{
@@ -44,7 +44,7 @@ to succeed.`,
 		}
 
 		// Hello world config file!
-		err = client.InitializeInertiaProject(version, buildType)
+		err = local.InitializeInertiaProject(version, buildType)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -73,7 +73,7 @@ var resetCmd = &cobra.Command{
 		if response != "y" {
 			log.Fatal("aborting")
 		}
-		path, err := client.GetConfigFilePath()
+		path, err := local.GetConfigFilePath()
 		if err != nil {
 			log.Fatal(err)
 		}

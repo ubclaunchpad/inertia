@@ -10,8 +10,11 @@ import (
 )
 
 // addRemoteWalkthough is the command line walkthrough that asks
-// users for RemoteVPS details
-func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, config *client.Config) error {
+// users for RemoteVPS details. It is up to the caller to save config.
+func addRemoteWalkthrough(
+	in io.Reader, config *client.Config,
+	name, port, sshPort, currBranch string,
+) error {
 	homeEnvVar := os.Getenv("HOME")
 	sshDir := filepath.Join(homeEnvVar, ".ssh")
 	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
@@ -69,5 +72,5 @@ func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, 
 			Secret:  secret,
 		},
 	})
-	return config.Write()
+	return nil
 }

@@ -1,10 +1,8 @@
 package client
 
 import (
-	"bytes"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -14,9 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestConfig(writer io.Writer) *Config {
+func getTestConfig() *Config {
 	config := &Config{
-		Writer:  writer,
 		Version: "test",
 	}
 	return config
@@ -98,9 +95,8 @@ func TestBootstrap(t *testing.T) {
 	assert.Nil(t, err)
 	daemonScript := fmt.Sprintf(string(script), "test", "8081", "127.0.0.1")
 
-	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}
-	err = remote.Bootstrap(&session, "gcloud", getTestConfig(&writer))
+	err = remote.Bootstrap(&session, "gcloud", "1")
 	assert.Nil(t, err)
 
 	// Make sure all commands are formatted correctly
@@ -117,8 +113,7 @@ func TestBootstrapIntegration(t *testing.T) {
 
 	remote := getTestRemote()
 	session := &SSHRunner{r: remote}
-	var writer bytes.Buffer
-	err := remote.Bootstrap(session, "testvps", getTestConfig(&writer))
+	err := remote.Bootstrap(session, "testvps", "1")
 	assert.Nil(t, err)
 
 	// Daemon setup takes a bit of time - do a crude wait

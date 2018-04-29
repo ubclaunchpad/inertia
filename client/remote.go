@@ -40,7 +40,7 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
 // for the user.
-func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Config) error {
+func (remote *RemoteVPS) Bootstrap(runner SSHSession, version, name string) error {
 	println("Setting up remote \"" + name + "\" at " + remote.IP)
 
 	println(">> Step 1/4: Installing docker...")
@@ -64,21 +64,17 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	if err != nil {
 		return err
 	}
-	err = remote.DaemonUp(runner, config.Version, remote.IP, remote.Daemon.Port)
+	err = remote.DaemonUp(runner, version, remote.IP, remote.Daemon.Port)
 	if err != nil {
 		return err
 	}
 
 	println("\n>> Step 4/4: Fetching daemon API token...")
-	token, err := remote.getDaemonAPIToken(runner, config.Version)
+	token, err := remote.getDaemonAPIToken(runner, version)
 	if err != nil {
 		return err
 	}
 	remote.Daemon.Token = token
-	err = config.Write()
-	if err != nil {
-		return err
-	}
 
 	println("\nInertia has been set up and daemon is running on remote!")
 	println("You may have to wait briefly for Inertia to set up some dependencies.")
