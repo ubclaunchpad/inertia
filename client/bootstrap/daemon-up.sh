@@ -16,7 +16,7 @@ IMAGE=ubclaunchpad/inertia:$DAEMON_RELEASE
 
 # It doesn't matter what port the daemon runs on in the container
 # as long as it is mapped to the correct DAEMON_PORT.
-CONTAINER_PORT=8081
+CONTAINER_PORT=4303
 
 # Set up directories.
 mkdir -p $HOME/project
