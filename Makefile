@@ -49,16 +49,19 @@ test-all:
 	make lint
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
+	go clean -testcache
 	go test ./... -ldflags "-X main.Version=test" --cover
 
 # Run integration tests verbosely - creates fresh test VPS and test daemon beforehand
 test-integration:
+	go clean -testcache
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
 
 # Run integration tests verbosely without recreating test VPS
 test-integration-fast:
+	go clean -testcache
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
 
