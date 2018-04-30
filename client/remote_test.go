@@ -96,7 +96,7 @@ func TestBootstrap(t *testing.T) {
 	daemonScript := fmt.Sprintf(string(script), "test", "8081", "127.0.0.1")
 
 	session := mockSSHRunner{r: remote}
-	err = remote.Bootstrap(&session, "gcloud", "1")
+	err = remote.Bootstrap(&session, "test", "gcloud")
 	assert.Nil(t, err)
 
 	// Make sure all commands are formatted correctly
@@ -113,7 +113,7 @@ func TestBootstrapIntegration(t *testing.T) {
 
 	remote := getTestRemote()
 	session := &SSHRunner{r: remote}
-	err := remote.Bootstrap(session, "testvps", "1")
+	err := remote.Bootstrap(session, "test", "testvps")
 	assert.Nil(t, err)
 
 	// Daemon setup takes a bit of time - do a crude wait
