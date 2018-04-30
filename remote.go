@@ -11,12 +11,6 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-var (
-	errInvalidUser    = errors.New("invalid user")
-	errInvalidAddress = errors.New("invalid IP address")
-	errInvalidSecret  = errors.New("invalid secret")
-)
-
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
 	Short: "Configure the local settings for a remote VPS instance",
@@ -160,6 +154,6 @@ func init() {
 	remoteCmd.AddCommand(showCmd)
 
 	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
-	addCmd.Flags().StringP("port", "p", "8081", "Daemon port")
+	addCmd.Flags().StringP("port", "p", "4303", "Daemon port")
 	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }

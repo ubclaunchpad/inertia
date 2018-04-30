@@ -18,7 +18,7 @@ var runCmd = &cobra.Command{
 	Version: getVersion(),
 	Use:     "run",
 	Short:   "Run the daemon",
-	Long: `Run the daemon on a port, default 8081. Requires
+	Long: `Run the daemon on a port, default 4303. Requires
 host address as an argument.
 
 Example:
@@ -70,7 +70,7 @@ func getVersion() string {
 func init() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(tokenCmd)
-	runCmd.Flags().StringP("port", "p", "8081", "Set port for daemon to run on")
+	runCmd.Flags().StringP("port", "p", "4303", "Set port for daemon to run on")
 }
 
 func main() {
