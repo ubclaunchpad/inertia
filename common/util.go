@@ -3,6 +3,8 @@ package common
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +12,16 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+// GenerateRandomString creates a rand.Reader-generated
+// string for use with simple secrets and identifiers
+func GenerateRandomString() (string, error) {
+	b := make([]byte, 32)
+	if _, err := io.ReadFull(rand.Reader, b); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
+}
 
 // CheckForDockerCompose returns error if current directory is a
 // not a docker-compose project

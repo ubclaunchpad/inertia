@@ -11,12 +11,6 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-var (
-	errInvalidUser    = errors.New("invalid user")
-	errInvalidAddress = errors.New("invalid IP address")
-	errInvalidSecret  = errors.New("invalid secret")
-)
-
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
 	Short: "Configure the local settings for a remote VPS instance",

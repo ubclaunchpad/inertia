@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"sync"
 	"time"
+
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 // session are properties associated with session,
@@ -70,7 +72,7 @@ func (s *sessionManager) Close() {
 // and adding session to memory
 func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r *http.Request) error {
 	expiration := time.Now().Add(s.cookieTimeout)
-	id, err := generateSessionID()
+	id, err := common.GenerateRandomString()
 	if err != nil {
 		return errors.New("Failed to begin session for " + username + ": " + err.Error())
 	}
