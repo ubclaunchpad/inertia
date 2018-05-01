@@ -14,6 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGenerateRandomString(t *testing.T) {
+	randString, err := GenerateRandomString()
+	assert.Nil(t, err)
+	assert.Equal(t, len(randString), 44)
+}
+
 func TestCheckForDockerCompose(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.Nil(t, err)

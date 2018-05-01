@@ -102,7 +102,7 @@ $> inertia $VPS_NAME up --stream
 
 Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
 
-Inertia also offers a web application - this can be accessed at `https://$ADDRESS:8081/web` once users have been added through the `inertia $VPS_NAME user` commands.
+Inertia also offers a web application - this can be accessed at `https://$ADDRESS:4303/web` once users have been added through the `inertia $VPS_NAME user` commands.
 
 ## Continuous Deployment
 
@@ -110,7 +110,7 @@ To enable continuous deployment, you need the webhook URL that is printed during
 
 ```bash
 GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
-http://myhost.com:8081/webhook
+http://myhost.com:4303/webhook
 Github WebHook Secret: inertia
 ``` 
 

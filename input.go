@@ -1,12 +1,20 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/ubclaunchpad/inertia/common"
+
 	"github.com/ubclaunchpad/inertia/client"
+)
+
+var (
+	errInvalidUser    = errors.New("invalid user")
+	errInvalidAddress = errors.New("invalid IP address")
 )
 
 // addRemoteWalkthough is the command line walkthrough that asks
@@ -41,10 +49,13 @@ func addRemoteWalkthrough(
 	}
 	address := response
 
-	fmt.Println("Enter webhook secret:")
+	fmt.Println("Enter webhook secret (leave blank to generate one):")
 	n, err = fmt.Fscanln(in, &response)
 	if err != nil || n == 0 {
-		return errInvalidSecret
+		response, err = common.GenerateRandomString()
+		if err != nil {
+			return err
+		}
 	}
 	secret := response
 
