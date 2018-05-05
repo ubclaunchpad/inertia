@@ -151,18 +151,18 @@ var setCmd = &cobra.Command{
 
 		remote, found := config.GetRemote(args[0])
 		if found {
-			success := config.SetProperty(args[1],args[2])
-			if success{
+			success := config.SetProperty(args[1], args[2])
+			if success {
 				println("Configuration has been updated.")
 				config.PrintConfigDetails()
 				printRemoteDetails(remote)
 
-			}else{
-				success := remote.SetRemoteProperty(args[1],args[2])
-				if success{
+			} else {
+				success := remote.SetRemoteProperty(args[1], args[2])
+				if success {
 					println("Remote '" + args[0] + "' has been updated.")
 					printRemoteDetails(remote)
-				}else{
+				} else {
 					// invalid input
 					println("Remote setting '" + args[1] + "' not found.")
 				}
@@ -182,7 +182,6 @@ func printRemoteDetails(remote *client.RemoteVPS) {
 	fmt.Printf("Run 'inertia %s status' for more details.\n", remote.Name)
 }
 
-
 func init() {
 	rootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
@@ -190,8 +189,6 @@ func init() {
 	remoteCmd.AddCommand(removeCmd)
 	remoteCmd.AddCommand(showCmd)
 	remoteCmd.AddCommand(setCmd)
-
-
 
 	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("port", "p", "4303", "Daemon port")

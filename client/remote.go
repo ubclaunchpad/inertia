@@ -190,7 +190,7 @@ func (remote *RemoteVPS) getDaemonAPIToken(session SSHSession, daemonVersion str
 	return strings.TrimSuffix(stdout.String(), "\n"), nil
 }
 
-func (remote *RemoteVPS) SetRemoteProperty(name string,value string) (bool) {
+func (remote *RemoteVPS) SetRemoteProperty(name string, value string) bool {
 	f := reflect.ValueOf(remote).Elem().FieldByName(name)
 	if f.IsValid() {
 		fmt.Println("valid field")

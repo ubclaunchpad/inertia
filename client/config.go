@@ -10,8 +10,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/ubclaunchpad/inertia/common"
 	"fmt"
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 var (
@@ -73,8 +73,7 @@ func (config *Config) RemoveRemote(name string) bool {
 	}
 	return false
 }
-func (config *Config) SetProperty(name string,value string) (bool) {
-
+func (config *Config) SetProperty(name string, value string) bool {
 	f := reflect.ValueOf(config).Elem().FieldByName(name)
 	if f.IsValid() {
 		fmt.Println("valid config field")
@@ -87,7 +86,6 @@ func (config *Config) SetProperty(name string,value string) (bool) {
 	}
 	return false
 }
-
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
