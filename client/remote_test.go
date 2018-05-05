@@ -12,13 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestConfig() *Config {
-	config := &Config{
-		Version: "test",
-	}
-	return config
-}
-
 func getTestRemote() *RemoteVPS {
 	remote := &RemoteVPS{
 		IP:   "127.0.0.1",
