@@ -65,7 +65,7 @@ func (c *Client) BootstrapRemote() error {
 	if err != nil {
 		return err
 	}
-	err = c.DaemonUp(c.sshRunner, c.version, c.IP, c.Daemon.Port)
+	err = c.DaemonUp(c.version, c.IP, c.Daemon.Port)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ key to enable continuous deployment.`)
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (c *Client) DaemonUp(session SSHSession, daemonVersion, host, daemonPort string) error {
+func (c *Client) DaemonUp(daemonVersion, host, daemonPort string) error {
 	scriptBytes, err := Asset("client/bootstrap/daemon-up.sh")
 	if err != nil {
 		return err
@@ -111,17 +111,17 @@ func (c *Client) DaemonUp(session SSHSession, daemonVersion, host, daemonPort st
 
 	// Run inertia daemon.
 	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion, daemonPort, host)
-	return session.RunStream(daemonCmdStr, false)
+	return c.sshRunner.RunStream(daemonCmdStr, false)
 }
 
 // DaemonDown brings the daemon down on the remote instance
-func (c *Client) DaemonDown(session SSHSession) error {
+func (c *Client) DaemonDown() error {
 	scriptBytes, err := Asset("client/bootstrap/daemon-down.sh")
 	if err != nil {
 		return err
 	}
 
-	_, stderr, err := session.Run(string(scriptBytes))
+	_, stderr, err := c.sshRunner.Run(string(scriptBytes))
 	if err != nil {
 		println(stderr.String())
 		return err
