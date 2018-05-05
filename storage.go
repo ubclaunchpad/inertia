@@ -1,4 +1,4 @@
-package local
+package main
 
 import (
 	"errors"
@@ -16,7 +16,7 @@ const configFileName = ".inertia.toml"
 // createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
 func createConfigFile(version, buildType string) error {
-	configFilePath, err := GetConfigFilePath()
+	configFilePath, err := getConfigFilePath()
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func createConfigFile(version, buildType string) error {
 			Remotes:   make([]*client.RemoteVPS, 0),
 		}
 
-		path, err := GetConfigFilePath()
+		path, err := getConfigFilePath()
 		if err != nil {
 			return err
 		}
@@ -58,7 +58,7 @@ func createConfigFile(version, buildType string) error {
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func InitializeInertiaProject(version, buildType string) error {
+func initializeInertiaProject(version, buildType string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -71,10 +71,10 @@ func InitializeInertiaProject(version, buildType string) error {
 	return createConfigFile(version, buildType)
 }
 
-// GetProjectConfigFromDisk returns the current project's configuration.
+// getProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
-func GetProjectConfigFromDisk() (*client.Config, string, error) {
-	configFilePath, err := GetConfigFilePath()
+func getProjectConfigFromDisk() (*client.Config, string, error) {
+	configFilePath, err := getConfigFilePath()
 	if err != nil {
 		return nil, "", err
 	}
@@ -97,11 +97,38 @@ func GetProjectConfigFromDisk() (*client.Config, string, error) {
 	return &cfg, configFilePath, err
 }
 
-// GetConfigFilePath returns the absolute path of the config file.
-func GetConfigFilePath() (string, error) {
+// getConfigFilePath returns the absolute path of the config file.
+func getConfigFilePath() (string, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 	return filepath.Join(path, configFileName), nil
+}
+
+// getDeployment returns a local deployment setup
+func getDeployment(name string) (*client.Deployment, error) {
+	config, _, err := getProjectConfigFromDisk()
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err := common.GetLocalRepo()
+	if err != nil {
+		return nil, err
+	}
+
+	remote, found := config.GetRemote(name)
+	if !found {
+		return nil, errors.New("Remote not found")
+	}
+	auth := remote.Daemon.Token
+
+	return &client.Deployment{
+		RemoteVPS:  remote,
+		Repository: repo,
+		Auth:       auth,
+		BuildType:  config.BuildType,
+		Project:    config.Project,
+	}, nil
 }

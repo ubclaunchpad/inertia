@@ -8,7 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/local"
 )
 
 var remoteCmd = &cobra.Command{
@@ -36,7 +35,7 @@ file. Specify a VPS name.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk()
+		config, path, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,7 +79,7 @@ var listCmd = &cobra.Command{
 	Long:  `Lists all currently configured remotes.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		config, _, err := local.GetProjectConfigFromDisk()
+		config, _, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -101,7 +100,7 @@ var removeCmd = &cobra.Command{
 	Long:  `Remove a remote from Inertia's configuration file.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, path, err := local.GetProjectConfigFromDisk()
+		config, path, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -127,7 +126,7 @@ var showCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, _, err := local.GetProjectConfigFromDisk()
+		config, _, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -1,4 +1,4 @@
-package local
+package main
 
 import (
 	"os"
@@ -11,7 +11,7 @@ import (
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	err := createConfigFile("", "")
 	assert.Nil(t, err)
-	config, path, err := GetProjectConfigFromDisk()
+	config, path, err := getProjectConfigFromDisk()
 	assert.Nil(t, err)
 	config.AddRemote(&client.RemoteVPS{
 		Name: "test",
@@ -36,12 +36,12 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	err = config.Write(path)
 	assert.Nil(t, err)
 
-	readConfig, _, err := GetProjectConfigFromDisk()
+	readConfig, _, err := getProjectConfigFromDisk()
 	assert.Nil(t, err)
 	assert.Equal(t, config.Remotes[0], readConfig.Remotes[0])
 	assert.Equal(t, config.Remotes[1], readConfig.Remotes[1])
 
-	path, err = GetConfigFilePath()
+	path, err = getConfigFilePath()
 	assert.Nil(t, err)
 	err = os.Remove(path)
 	assert.Nil(t, err)

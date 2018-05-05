@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/local"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -25,7 +24,7 @@ var deploymentUpCmd = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetDeployment(remoteName)
+		deployment, err := getDeployment(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -81,7 +80,7 @@ var deploymentDownCmd = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetDeployment(remoteName)
+		deployment, err := getDeployment(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -118,7 +117,7 @@ var deploymentStatusCmd = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetDeployment(remoteName)
+		deployment, err := getDeployment(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -165,7 +164,7 @@ var deploymentLogsCmd = &cobra.Command{
 	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetDeployment(remoteName)
+		deployment, err := getDeployment(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -220,7 +219,7 @@ var deploymentSSHCmd = &cobra.Command{
 	Long:  `Starts up an interact SSH session with your remote.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetDeployment(remoteName)
+		deployment, err := getDeployment(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -245,7 +244,7 @@ for updates to this repository's remote master branch.`,
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 
 		// Bootstrap needs to write to configuration.
-		config, path, err := local.GetProjectConfigFromDisk()
+		config, path, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -273,7 +272,7 @@ remote. Requires Inertia daemon to be active on your remote - do this by
 running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetDeployment(remoteName)
+		deployment, err := getDeployment(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -300,7 +299,7 @@ running 'inertia [REMOTE] init'`,
 }
 
 func init() {
-	config, _, err := local.GetProjectConfigFromDisk()
+	config, _, err := getProjectConfigFromDisk()
 	if err != nil {
 		return
 	}
