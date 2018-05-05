@@ -193,7 +193,6 @@ func (remote *RemoteVPS) getDaemonAPIToken(session SSHSession, daemonVersion str
 func (remote *RemoteVPS) SetRemoteProperty(name string, value string) bool {
 	f := reflect.ValueOf(remote).Elem().FieldByName(name)
 	if f.IsValid() {
-		fmt.Println("valid field")
 		if f.Kind() == reflect.String {
 			f.SetString(value)
 			return true

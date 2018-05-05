@@ -76,7 +76,6 @@ func (config *Config) RemoveRemote(name string) bool {
 func (config *Config) SetProperty(name string, value string) bool {
 	f := reflect.ValueOf(config).Elem().FieldByName(name)
 	if f.IsValid() {
-		fmt.Println("valid config field")
 		if f.CanSet() {
 			if f.Kind() == reflect.String {
 				f.SetString(value)
