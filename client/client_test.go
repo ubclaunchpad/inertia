@@ -67,6 +67,7 @@ func getIntegrationClient() *Client {
 		remote.Daemon.SSHPort = "22"
 	}
 	return &Client{
+		version:   "test",
 		RemoteVPS: remote,
 	}
 }
