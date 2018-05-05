@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"reflect"
 )
 
 // RemoteVPS contains parameters for the VPS
@@ -187,4 +188,16 @@ func (remote *RemoteVPS) getDaemonAPIToken(session SSHSession, daemonVersion str
 
 	// There may be a newline, remove it.
 	return strings.TrimSuffix(stdout.String(), "\n"), nil
+}
+
+func (remote *RemoteVPS) SetRemoteProperty(name string,value string) (bool) {
+	f := reflect.ValueOf(remote).Elem().FieldByName(name)
+	if f.IsValid() {
+		fmt.Println("valid field")
+		if f.Kind() == reflect.String {
+			f.SetString(value)
+			return true
+		}
+	}
+	return false
 }

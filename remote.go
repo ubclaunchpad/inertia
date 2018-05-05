@@ -137,6 +137,42 @@ var showCmd = &cobra.Command{
 	},
 }
 
+var setCmd = &cobra.Command{
+	Use:   "set [REMOTE] [Property] [value]",
+	Short: "Set details about remote.",
+	Long:  `Set details about the given remote.`,
+	Args:  cobra.MinimumNArgs(3),
+	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		config, err := client.GetProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		remote, found := config.GetRemote(args[0])
+		if found {
+			success := config.SetProperty(args[1],args[2])
+			if success{
+				println("Configuration has been updated.")
+				config.PrintConfigDetails()
+				printRemoteDetails(remote)
+
+			}else{
+				success := remote.SetRemoteProperty(args[1],args[2])
+				if success{
+					println("Remote '" + args[0] + "' has been updated.")
+					printRemoteDetails(remote)
+				}else{
+					// invalid input
+					println("Remote setting '" + args[1] + "' not found.")
+				}
+			}
+		} else {
+			println("No remote '" + args[0] + "' currently set up.")
+		}
+	},
+}
+
 func printRemoteDetails(remote *client.RemoteVPS) {
 	fmt.Printf("Remote %s: \n", remote.Name)
 	fmt.Printf(" - Deployed Branch:   %s\n", remote.Branch)
@@ -146,12 +182,16 @@ func printRemoteDetails(remote *client.RemoteVPS) {
 	fmt.Printf("Run 'inertia %s status' for more details.\n", remote.Name)
 }
 
+
 func init() {
 	rootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
 	remoteCmd.AddCommand(listCmd)
 	remoteCmd.AddCommand(removeCmd)
 	remoteCmd.AddCommand(showCmd)
+	remoteCmd.AddCommand(setCmd)
+
+
 
 	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("port", "p", "4303", "Daemon port")

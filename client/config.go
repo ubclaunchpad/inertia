@@ -6,10 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/BurntSushi/toml"
 
 	"github.com/ubclaunchpad/inertia/common"
+	"fmt"
 )
 
 var (
@@ -71,6 +73,21 @@ func (config *Config) RemoveRemote(name string) bool {
 	}
 	return false
 }
+func (config *Config) SetProperty(name string,value string) (bool) {
+
+	f := reflect.ValueOf(config).Elem().FieldByName(name)
+	if f.IsValid() {
+		fmt.Println("valid config field")
+		if f.CanSet() {
+			if f.Kind() == reflect.String {
+				f.SetString(value)
+				return true
+			}
+		}
+	}
+	return false
+}
+
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
@@ -174,4 +191,10 @@ func GetConfigFilePath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(path, configFileName), nil
+}
+
+func (config *Config) PrintConfigDetails() {
+	fmt.Printf(" - Version:   %s\n", config.Version)
+	fmt.Printf(" - Project Name:        %s\n", config.Project)
+	fmt.Printf(" - Build Type:          %s\n", config.BuildType)
 }
