@@ -38,8 +38,8 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 
 	readConfig, _, err := getProjectConfigFromDisk()
 	assert.Nil(t, err)
-	assert.Equal(t, config.Remotes[0], readConfig.Remotes[0])
-	assert.Equal(t, config.Remotes[1], readConfig.Remotes[1])
+	assert.Equal(t, config.GetRemotes()[0], readConfig.GetRemotes()[0])
+	assert.Equal(t, config.GetRemotes()[1], readConfig.GetRemotes()[1])
 
 	path, err = getConfigFilePath()
 	assert.Nil(t, err)

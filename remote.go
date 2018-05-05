@@ -84,7 +84,7 @@ var listCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		for _, remote := range config.Remotes {
+		for _, remote := range config.GetRemotes() {
 			if verbose {
 				fmt.Println(formatRemoteDetails(remote))
 			} else {

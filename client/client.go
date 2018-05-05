@@ -22,6 +22,19 @@ type Client struct {
 	buildType string
 }
 
+// NewClient sets up a client to communicate to the daemon at
+// the given named remote.
+func NewClient(remoteName string, config *Config) (*Client, bool) {
+	remote, found := config.GetRemote(remoteName)
+	if !found {
+		return nil, false
+	}
+
+	return &Client{
+		RemoteVPS: remote,
+	}, false
+}
+
 // BootstrapRemote configures a remote vps for continuous deployment
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information

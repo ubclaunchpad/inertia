@@ -7,7 +7,7 @@ import (
 )
 
 func TestConfigGetRemote(t *testing.T) {
-	config := &Config{Remotes: make([]*RemoteVPS, 0)}
+	config := &Config{remotes: make([]*RemoteVPS, 0)}
 	testRemote := &RemoteVPS{
 		Name: "test",
 		IP:   "12343",
@@ -28,7 +28,7 @@ func TestConfigGetRemote(t *testing.T) {
 }
 
 func TestConfigRemoteRemote(t *testing.T) {
-	config := &Config{Remotes: make([]*RemoteVPS, 0)}
+	config := &Config{remotes: make([]*RemoteVPS, 0)}
 	testRemote := &RemoteVPS{
 		Name: "test",
 		IP:   "12343",

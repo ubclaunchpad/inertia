@@ -34,12 +34,7 @@ func createConfigFile(version, buildType string) error {
 
 	// Directory exists. Make sure configuration file exists.
 	if os.IsNotExist(fileErr) {
-		config := client.Config{
-			Project:   filepath.Base(cwd),
-			Version:   version,
-			BuildType: buildType,
-			Remotes:   make([]*client.RemoteVPS, 0),
-		}
+		config := client.NewConfig(version, filepath.Base(cwd), buildType)
 
 		path, err := getConfigFilePath()
 		if err != nil {
@@ -113,7 +108,7 @@ func getClient(name string) (*client.Client, error) {
 		return nil, err
 	}
 
-	client, found := config.NewClient(name)
+	client, found := client.NewClient(name, config)
 	if !found {
 		return nil, errors.New("Remote not found")
 	}

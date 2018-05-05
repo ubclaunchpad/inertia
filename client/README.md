@@ -12,19 +12,19 @@ package main
 import "github.com/ubclaunchpad/inertia/client"
 
 func main() {
-    remote := &client.RemoteVPS{
-		Name: "gcloud",
-		/* ... */
-	}
-	config := &client.Config{
-		Version:   "0.3.0",
-		Project:   "inertia-deploy-test",
-		BuildType: "docker-compose",
-		Remotes:   []*client.RemoteVPS{remote},
-	}
+    // Set up Inertia
+    config := client.NewConfig(
+        "0.3.0", "inertia-deploy-test", "docker-compose",
+    )
 
-	client, _ := config.NewClient("gcloud")
-	client.BootstrapRemote()
-	client.Up("git@github.com:ubclaunchpad/inertia.git", "", false)
+    // Add your remote
+    config.AddRemote(&client.RemoteVPS{
+		Name: "gcloud", // ...params
+	})
+
+    // Set up client, remote, and deploy your project
+	cli, _ := client.NewClient("gcloud", config)
+	cli.BootstrapRemote()
+	cli.Up("git@github.com:ubclaunchpad/inertia.git", "", false)
 }
 ```

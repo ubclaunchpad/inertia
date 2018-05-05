@@ -11,7 +11,7 @@ import (
 )
 
 func TestRemoteAddWalkthrough(t *testing.T) {
-	config := &client.Config{Remotes: make([]*client.RemoteVPS, 0)}
+	config := client.NewConfig("", "", "")
 	in, err := ioutil.TempFile("", "")
 	assert.Nil(t, err)
 	defer in.Close()
@@ -34,7 +34,7 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 }
 
 func TestRemoteAddWalkthroughFailure(t *testing.T) {
-	config := &client.Config{Remotes: make([]*client.RemoteVPS, 0)}
+	config := client.NewConfig("", "", "")
 	in, err := ioutil.TempFile("", "")
 	assert.Nil(t, err)
 	defer in.Close()
