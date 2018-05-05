@@ -72,15 +72,15 @@ func addRemoteWalkthrough(
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
 	config.AddRemote(&client.RemoteVPS{
-		Name:   name,
-		IP:     address,
-		User:   user,
-		PEM:    pemLoc,
-		Branch: branch,
+		Name:    name,
+		IP:      address,
+		User:    user,
+		PEM:     pemLoc,
+		Branch:  branch,
+		SSHPort: sshPort,
 		Daemon: &client.DaemonConfig{
-			Port:    port,
-			SSHPort: sshPort,
-			Secret:  secret,
+			Port:   port,
+			Secret: secret,
 		},
 	})
 	return nil

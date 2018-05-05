@@ -235,7 +235,7 @@ var deploymentSSHCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		session := client.NewSSHRunner(deployment)
+		session := client.NewSSHRunner(deployment.RemoteVPS)
 		if err = session.RunSession(); err != nil {
 			log.Fatal(err.Error())
 		}
@@ -261,8 +261,7 @@ for updates to this repository's remote master branch.`,
 		}
 		remote, found := client.NewClient(remoteName, config)
 		if found {
-			session := client.NewSSHRunner(remote)
-			err = remote.BootstrapRemote(session)
+			err = remote.BootstrapRemote()
 			if err != nil {
 				log.Fatal(err)
 			}

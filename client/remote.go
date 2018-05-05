@@ -10,20 +10,20 @@ import (
 
 // RemoteVPS contains parameters for the VPS
 type RemoteVPS struct {
-	Name   string        `toml:"name"`
-	IP     string        `toml:"IP"`
-	User   string        `toml:"user"`
-	PEM    string        `toml:"pemfile"`
-	Branch string        `toml:"branch"`
-	Daemon *DaemonConfig `toml:"daemon"`
+	Name    string        `toml:"name"`
+	IP      string        `toml:"IP"`
+	User    string        `toml:"user"`
+	PEM     string        `toml:"pemfile"`
+	Branch  string        `toml:"branch"`
+	SSHPort string        `toml:"ssh_port"`
+	Daemon  *DaemonConfig `toml:"daemon"`
 }
 
 // DaemonConfig contains parameters for the Daemon
 type DaemonConfig struct {
-	Port    string `toml:"port"`
-	SSHPort string `toml:"ssh_port"`
-	Token   string `toml:"token"`
-	Secret  string `toml:"secret"`
+	Port   string `toml:"port"`
+	Token  string `toml:"token"`
+	Secret string `toml:"secret"`
 }
 
 // GetHost creates the user@IP string.

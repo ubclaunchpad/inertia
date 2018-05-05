@@ -20,7 +20,7 @@ var (
 	fakeAuth = "ubclaunchpad"
 )
 
-func getMockClient(ts *httptest.Server) *Client {
+func getMockClient(ts *httptest.Server, mockRunner *mockSSHRunner) *Client {
 	var (
 		url  string
 		port string
@@ -48,6 +48,7 @@ func getMockClient(ts *httptest.Server) *Client {
 	return &Client{
 		RemoteVPS: mockRemote,
 		project:   "test_project",
+		sshRunner: mockRunner,
 	}
 }
 
@@ -62,13 +63,14 @@ func getIntegrationClient() *Client {
 	}
 	travis := os.Getenv("TRAVIS")
 	if travis != "" {
-		remote.Daemon.SSHPort = "69"
+		remote.SSHPort = "69"
 	} else {
-		remote.Daemon.SSHPort = "22"
+		remote.SSHPort = "22"
 	}
 	return &Client{
 		version:   "test",
 		RemoteVPS: remote,
+		sshRunner: NewSSHRunner(remote),
 	}
 }
 
@@ -131,7 +133,7 @@ func TestBootstrap(t *testing.T) {
 	daemonScript := fmt.Sprintf(string(script), "test", "4303", "127.0.0.1")
 
 	session := mockSSHRunner{c: remote}
-	err = remote.BootstrapRemote(&session)
+	err = remote.BootstrapRemote()
 	assert.Nil(t, err)
 
 	// Make sure all commands are formatted correctly
@@ -146,16 +148,15 @@ func TestBootstrapIntegration(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	remote := getIntegrationClient()
-	session := &SSHRunner{c: remote}
-	err := remote.BootstrapRemote(session)
+	cli := getIntegrationClient()
+	err := cli.BootstrapRemote()
 	assert.Nil(t, err)
 
 	// Daemon setup takes a bit of time - do a crude wait
 	time.Sleep(3 * time.Second)
 
 	// Check if daemon is online following bootstrap
-	host := "https://" + remote.GetIPAndPort()
+	host := "https://" + cli.GetIPAndPort()
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -195,7 +196,7 @@ func TestUp(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := getMockClient(testServer, nil)
 	resp, err := d.Up("myremote.git", "docker-compose", false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -217,7 +218,7 @@ func TestDown(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := getMockClient(testServer, nil)
 	resp, err := d.Down()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -239,14 +240,14 @@ func TestStatus(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := getMockClient(testServer, nil)
 	resp, err := d.Status()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func TestStatusFail(t *testing.T) {
-	d := getMockClient(nil)
+	d := getMockClient(nil, nil)
 	_, err := d.Status()
 	assert.Contains(t, err.Error(), "appears offline")
 }
@@ -267,7 +268,7 @@ func TestReset(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := getMockClient(testServer, nil)
 	resp, err := d.Reset()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -299,7 +300,7 @@ func TestLogs(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := getMockClient(testServer, nil)
 	resp, err := d.Logs(true, "docker-compose")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

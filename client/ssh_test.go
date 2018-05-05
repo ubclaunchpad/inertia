@@ -28,7 +28,7 @@ func (runner *mockSSHRunner) RunSession() error {
 }
 
 func TestRun(t *testing.T) {
-	session := mockSSHRunner{c: getMockClient(nil)}
+	session := mockSSHRunner{c: getMockClient(nil, nil)}
 	cmd := "ls -lsa"
 
 	_, _, err := session.Run(cmd)
@@ -37,7 +37,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestRunInteractive(t *testing.T) {
-	session := mockSSHRunner{c: getMockClient(nil)}
+	session := mockSSHRunner{c: getMockClient(nil, nil)}
 	cmd := "ls -lsa"
 
 	err := session.RunStream(cmd, true)

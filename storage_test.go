@@ -14,23 +14,23 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	config, path, err := getProjectConfigFromDisk()
 	assert.Nil(t, err)
 	config.AddRemote(&client.RemoteVPS{
-		Name: "test",
-		IP:   "1234",
-		User: "bobheadxi",
-		PEM:  "/some/pem/file",
+		Name:    "test",
+		IP:      "1234",
+		User:    "bobheadxi",
+		PEM:     "/some/pem/file",
+		SSHPort: "22",
 		Daemon: &client.DaemonConfig{
-			Port:    "8080",
-			SSHPort: "22",
+			Port: "8080",
 		},
 	})
 	config.AddRemote(&client.RemoteVPS{
-		Name: "test2",
-		IP:   "12343",
-		User: "bobheadxi234",
-		PEM:  "/some/pem/file234",
+		Name:    "test2",
+		IP:      "12343",
+		User:    "bobheadxi234",
+		PEM:     "/some/pem/file234",
+		SSHPort: "222",
 		Daemon: &client.DaemonConfig{
-			Port:    "80801",
-			SSHPort: "222",
+			Port: "80801",
 		},
 	})
 	err = config.Write(path)

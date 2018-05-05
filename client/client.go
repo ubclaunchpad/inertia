@@ -20,6 +20,7 @@ type Client struct {
 	version   string
 	project   string
 	buildType string
+	sshRunner SSHSession
 }
 
 // NewClient sets up a client to communicate to the daemon at
@@ -32,6 +33,7 @@ func NewClient(remoteName string, config *Config) (*Client, bool) {
 
 	return &Client{
 		RemoteVPS: remote,
+		sshRunner: NewSSHRunner(remote),
 	}, false
 }
 
@@ -39,11 +41,11 @@ func NewClient(remoteName string, config *Config) (*Client, bool) {
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
 // for the user.
-func (c *Client) BootstrapRemote(runner SSHSession) error {
+func (c *Client) BootstrapRemote() error {
 	println("Setting up remote \"" + c.Name + "\" at " + c.IP)
 
 	println(">> Step 1/4: Installing docker...")
-	err := c.installDocker(runner)
+	err := c.installDocker(c.sshRunner)
 	if err != nil {
 		return err
 	}
@@ -52,7 +54,7 @@ func (c *Client) BootstrapRemote(runner SSHSession) error {
 	if err != nil {
 		return err
 	}
-	pub, err := c.keyGen(runner)
+	pub, err := c.keyGen(c.sshRunner)
 	if err != nil {
 		return err
 	}
@@ -63,13 +65,13 @@ func (c *Client) BootstrapRemote(runner SSHSession) error {
 	if err != nil {
 		return err
 	}
-	err = c.DaemonUp(runner, c.version, c.IP, c.Daemon.Port)
+	err = c.DaemonUp(c.sshRunner, c.version, c.IP, c.Daemon.Port)
 	if err != nil {
 		return err
 	}
 
 	println("\n>> Step 4/4: Fetching daemon API token...")
-	token, err := c.getDaemonAPIToken(runner, c.version)
+	token, err := c.getDaemonAPIToken(c.sshRunner, c.version)
 	if err != nil {
 		return err
 	}
