@@ -19,17 +19,17 @@ type SSHSession interface {
 
 // SSHRunner runs commands over SSH and captures results.
 type SSHRunner struct {
-	r *RemoteVPS
+	c *Client
 }
 
 // NewSSHRunner returns a new SSHRunner
-func NewSSHRunner(r *RemoteVPS) *SSHRunner {
-	return &SSHRunner{r: r}
+func NewSSHRunner(c *Client) *SSHRunner {
+	return &SSHRunner{c: c}
 }
 
 // Run runs a command remotely.
 func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
-	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
+	session, err := getSSHSession(runner.c.PEM, runner.c.IP, runner.c.Daemon.SSHPort, runner.c.User)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -47,7 +47,7 @@ func (runner *SSHRunner) Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error) {
 // RunStream remotely executes given command, streaming its output
 // and opening up an optionally interactive session
 func (runner *SSHRunner) RunStream(cmd string, interactive bool) error {
-	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
+	session, err := getSSHSession(runner.c.PEM, runner.c.IP, runner.c.Daemon.SSHPort, runner.c.User)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (runner *SSHRunner) RunStream(cmd string, interactive bool) error {
 
 // RunSession sets up a SSH shell to the remote
 func (runner *SSHRunner) RunSession() error {
-	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
+	session, err := getSSHSession(runner.c.PEM, runner.c.IP, runner.c.Daemon.SSHPort, runner.c.User)
 	if err != nil {
 		return err
 	}

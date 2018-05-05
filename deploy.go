@@ -24,12 +24,13 @@ var deploymentUpCmd = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		stream, err := cmd.Flags().GetBool("stream")
 
+		// Get flags
+		stream, err := cmd.Flags().GetBool("stream")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -37,7 +38,17 @@ var deploymentUpCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp, err := deployment.Up(buildType, stream)
+
+		repo, err := common.GetLocalRepo()
+		if err != nil {
+			log.Fatal(err)
+		}
+		// TODO: support other remotes
+		origin, err := repo.Remote("origin")
+		if err != nil {
+			log.Fatal(err)
+		}
+		resp, err := deployment.Up(origin.Config().URLs[0], buildType, stream)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,7 +91,7 @@ var deploymentDownCmd = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -117,7 +128,7 @@ var deploymentStatusCmd = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -164,7 +175,7 @@ var deploymentLogsCmd = &cobra.Command{
 	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -219,12 +230,12 @@ var deploymentSSHCmd = &cobra.Command{
 	Long:  `Starts up an interact SSH session with your remote.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		session := client.NewSSHRunner(deployment.RemoteVPS)
+		session := client.NewSSHRunner(deployment)
 		if err = session.RunSession(); err != nil {
 			log.Fatal(err.Error())
 		}
@@ -248,10 +259,10 @@ for updates to this repository's remote master branch.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-		remote, found := config.GetRemote(remoteName)
+		remote, found := config.NewClient(remoteName)
 		if found {
 			session := client.NewSSHRunner(remote)
-			err = remote.Bootstrap(session, remoteName, config.Version)
+			err = remote.BootstrapRemote(session)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -272,7 +283,7 @@ remote. Requires Inertia daemon to be active on your remote - do this by
 running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}

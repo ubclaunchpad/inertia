@@ -106,29 +106,17 @@ func getConfigFilePath() (string, error) {
 	return filepath.Join(path, configFileName), nil
 }
 
-// getDeployment returns a local deployment setup
-func getDeployment(name string) (*client.Deployment, error) {
+// getClient returns a local deployment setup
+func getClient(name string) (*client.Client, error) {
 	config, _, err := getProjectConfigFromDisk()
 	if err != nil {
 		return nil, err
 	}
 
-	repo, err := common.GetLocalRepo()
-	if err != nil {
-		return nil, err
-	}
-
-	remote, found := config.GetRemote(name)
+	client, found := config.NewClient(name)
 	if !found {
 		return nil, errors.New("Remote not found")
 	}
-	auth := remote.Daemon.Token
 
-	return &client.Deployment{
-		RemoteVPS:  remote,
-		Repository: repo,
-		Auth:       auth,
-		BuildType:  config.BuildType,
-		Project:    config.Project,
-	}, nil
+	return client, nil
 }

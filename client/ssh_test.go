@@ -9,7 +9,7 @@ import (
 
 // mockSSHRunner is a mocked out implementation of SSHSession
 type mockSSHRunner struct {
-	r     *RemoteVPS
+	c     *Client
 	Calls []string
 }
 
@@ -28,8 +28,7 @@ func (runner *mockSSHRunner) RunSession() error {
 }
 
 func TestRun(t *testing.T) {
-	remote := getTestRemote()
-	session := mockSSHRunner{r: remote}
+	session := mockSSHRunner{c: getMockClient(nil)}
 	cmd := "ls -lsa"
 
 	_, _, err := session.Run(cmd)
@@ -38,8 +37,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestRunInteractive(t *testing.T) {
-	remote := getTestRemote()
-	session := mockSSHRunner{r: remote}
+	session := mockSSHRunner{c: getMockClient(nil)}
 	cmd := "ls -lsa"
 
 	err := session.RunStream(cmd, true)

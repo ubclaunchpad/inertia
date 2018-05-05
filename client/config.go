@@ -21,6 +21,18 @@ type Config struct {
 	Remotes   []*RemoteVPS `toml:"remote"`
 }
 
+// NewClient sets up a new Inertia client
+func (config *Config) NewClient(name string) (*Client, bool) {
+	remote, found := config.GetRemote(name)
+	if !found {
+		return nil, false
+	}
+
+	return &Client{
+		RemoteVPS: remote,
+	}, false
+}
+
 // Write writes configuration to Inertia config file at path. Optionally
 // takes io.Writers.
 func (config *Config) Write(path string, writers ...io.Writer) error {

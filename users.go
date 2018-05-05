@@ -30,7 +30,7 @@ Use the --admin flag to create an admin user.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,7 +79,7 @@ deployment from the web app.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -116,7 +116,7 @@ from the web app.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -150,7 +150,7 @@ var deploymentUsersListCmd = &cobra.Command{
 	Long:  `List all users with access to Inertia Web on your remote.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := getDeployment(remoteName)
+		deployment, err := getClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
 		}
