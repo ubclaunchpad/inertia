@@ -27,20 +27,15 @@ func createConfigFile(version, buildType string) error {
 		return errors.New("inertia already properly configured in this folder")
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	// Directory exists. Make sure configuration file exists.
+	// If file does not exist, create new configuration file.
 	if os.IsNotExist(fileErr) {
-		config := client.NewConfig(version, filepath.Base(cwd), buildType)
-
-		path, err := getConfigFilePath()
+		cwd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
-		f, err := os.Create(path)
+		config := client.NewConfig(version, filepath.Base(cwd), buildType)
+
+		f, err := os.Create(configFilePath)
 		if err != nil {
 			return err
 		}
@@ -75,7 +70,6 @@ func getProjectConfigFromDisk() (*client.Config, string, error) {
 	}
 
 	raw, err := ioutil.ReadFile(configFilePath)
-
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, configFilePath, errors.New("config file doesnt exist, try inertia init")

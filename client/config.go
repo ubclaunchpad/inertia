@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,10 +16,10 @@ var (
 
 // Config represents the current projects configuration.
 type Config struct {
-	Version   string       `toml:"inertia"`
+	Version   string       `toml:"version"`
 	Project   string       `toml:"project-name"`
 	BuildType string       `toml:"build-type"`
-	remotes   []*RemoteVPS `toml:"remote"`
+	Remotes   []*RemoteVPS `toml:"remote"`
 }
 
 // NewConfig sets up Inertia configuration with given properties
@@ -27,17 +28,21 @@ func NewConfig(version, project, buildType string) *Config {
 		Version:   version,
 		Project:   project,
 		BuildType: buildType,
-		remotes:   make([]*RemoteVPS, 0),
+		Remotes:   make([]*RemoteVPS, 0),
 	}
 }
 
 // Write writes configuration to Inertia config file at path. Optionally
 // takes io.Writers.
 func (config *Config) Write(path string, writers ...io.Writer) error {
+	if len(writers) == 0 && path == "" {
+		return errors.New("nothing to write to")
+	}
+
 	var writer io.Writer
 
 	// If io.Writers are given, attach all writers
-	if len(writers) != 0 {
+	if len(writers) > 0 {
 		writer = io.MultiWriter(writers...)
 	}
 
@@ -47,11 +52,20 @@ func (config *Config) Write(path string, writers ...io.Writer) error {
 		if err != nil {
 			return err
 		}
+
 		// Overwrite file if file exists
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			ioutil.WriteFile(path, []byte(""), 0644)
+		} else if err != nil {
+			return err
 		}
-		writer = io.MultiWriter(writer, w)
+
+		// Set writer
+		if writer != nil {
+			writer = io.MultiWriter(writer, w)
+		} else {
+			writer = w
+		}
 	}
 
 	// Write configuration to writers
@@ -59,14 +73,9 @@ func (config *Config) Write(path string, writers ...io.Writer) error {
 	return encoder.Encode(config)
 }
 
-// GetRemotes returns all remotes attached to this configuration
-func (config *Config) GetRemotes() []*RemoteVPS {
-	return config.remotes
-}
-
 // GetRemote retrieves a remote by name
 func (config *Config) GetRemote(name string) (*RemoteVPS, bool) {
-	for _, remote := range config.remotes {
+	for _, remote := range config.Remotes {
 		if remote.Name == name {
 			return remote, true
 		}
@@ -76,15 +85,15 @@ func (config *Config) GetRemote(name string) (*RemoteVPS, bool) {
 
 // AddRemote adds a remote to configuration
 func (config *Config) AddRemote(remote *RemoteVPS) {
-	config.remotes = append(config.remotes, remote)
+	config.Remotes = append(config.Remotes, remote)
 }
 
 // RemoveRemote removes remote with given name
 func (config *Config) RemoveRemote(name string) bool {
-	for index, remote := range config.remotes {
+	for index, remote := range config.Remotes {
 		if remote.Name == name {
 			remote = nil
-			config.remotes = append(config.remotes[:index], config.remotes[index+1:]...)
+			config.Remotes = append(config.Remotes[:index], config.Remotes[index+1:]...)
 			return true
 		}
 	}
