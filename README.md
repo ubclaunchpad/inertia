@@ -25,6 +25,8 @@
   </a>
 </p>
 
+<br>
+
 ----------------
 
 Inertia is a simple cross-platform command line application that enables effortless setup and management of continuous, automated deployment on any virtual private server. It is built and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
@@ -46,13 +48,16 @@ Inertia is a simple cross-platform command line application that enables effortl
 
 ----------------
 
-- [Getting Started](#package-getting-started)
+#### Contents
+- **[Getting Started](#package-getting-started)**
   - [Setup](#setup)
   - [Continuous Deployment](#continuous-deployment)
   - [Deployment Management](#deployment-management)
   - [Release Streams](#release-streams)
-- [Motivation and Design](#bulb-motivation-and-design)
-- [Contributing](#books-contributing)
+- **[Motivation and Design](#bulb-motivation-and-design)**
+- **[Contributing](#books-contributing)**
+
+<br>
 
 # :package: Getting Started
 
@@ -130,25 +135,27 @@ The daemon component of an Inertia release can be patched separately from the CL
 
 ## Swag
 
-Add some bling to your Inertia-deployed project :sunglasses:
+Add some bling to your Inertia-deployed project :sunglasses: 
+
+[![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 
 ```
 [![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 ```
 
-[![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
+<br><br>
 
 # :bulb: Motivation and Design
 
 [UBC Launch Pad](http://www.ubclaunchpad.com) is a student-run software engineering club at the University of British Columbia that aims to provide students with a community where they can work together to build a all sorts of cool projects, ranging from mobile apps and web services to cryptocurrencies and machine learning applications.
 
-Many of our projects rely on hosting providers for deployment. Unfortunately we frequently change hosting providers based on available funding and sponsorship, meaning our projects often need to be redeployed. Inertia is a project to develop an in-house deployment system to make setting up continuously deployed applications simple and painless, regardless of the hosting provider.
+Many of our projects rely on hosting providers for deployment. Unfortunately we frequently change hosting providers based on available funding and sponsorship, meaning our projects often need to be redeployed. On top of that, deployment itself can already be a frustrating task, especially for students with little to no experience setting up applications on remote hosts. Inertia is a project we started to address these problems, with the goal of developing an in-house deployment system that can make setting up continuously deployed applications simple and painless, regardless of the hosting provider.
 
-The primary design goals of Inertia are to:
+There is a [Medium post](https://medium.com/ubc-launch-pad-software-engineering-blog/building-continuous-deployment-87a2bd8eedbe) that goes over the project, its motivations, the design choices we made, and Inertia's implementation - but in summary, the primary design goals of Inertia are to:
 
 * minimize setup time for new projects
 * maximimise compatibility across different client and VPS platforms
-* offer a convenient interface for managing the deployed application
+* offer an easy-to-learn interface for managing deployed applications
 
 ## How It Works
 
@@ -166,8 +173,12 @@ The team has made a few presentations about Inertia that go over its design in a
 - [UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
 - [Vancouver DevOpsDays 2018](https://docs.google.com/presentation/d/e/2PACX-1vRJXUnRmxpegHNVTgn_Kd8VFyeuiIwzDQl9c0oQqi1QSnIjFUIIjawsvLdu2RfHAXv_5T8kvSgSWGuq/pub?start=false&loop=false&delayms=15000) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
 
+<br><br>
+
 # :books: Contributing
 
 Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! 
 
 Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for contribution guidelines and a detailed guide to help you get started with Inertia's codebase.
+
+<br>
