@@ -151,21 +151,13 @@ var setCmd = &cobra.Command{
 
 		remote, found := config.GetRemote(args[0])
 		if found {
-			success := config.SetProperty(args[1], args[2])
+			success := client.SetProperty(args[1], args[2],remote)
 			if success {
-				println("Configuration has been updated.")
-				config.PrintConfigDetails()
+				println("Remote '" + args[0] + "' has been updated.")
 				printRemoteDetails(remote)
-
 			} else {
-				success := remote.SetRemoteProperty(args[1], args[2])
-				if success {
-					println("Remote '" + args[0] + "' has been updated.")
-					printRemoteDetails(remote)
-				} else {
-					// invalid input
-					println("Remote setting '" + args[1] + "' not found.")
-				}
+				// invalid input
+				println("Remote setting '" + args[1] + "' not found.")
 			}
 		} else {
 			println("No remote '" + args[0] + "' currently set up.")

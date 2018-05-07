@@ -10,7 +10,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"fmt"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -73,18 +72,31 @@ func (config *Config) RemoveRemote(name string) bool {
 	}
 	return false
 }
-func (config *Config) SetProperty(name string, value string) bool {
-	f := reflect.ValueOf(config).Elem().FieldByName(name)
-	if f.IsValid() {
-		if f.CanSet() {
-			if f.Kind() == reflect.String {
-				f.SetString(value)
-				return true
+func SetProperty(name string, value string,structObject interface{}) bool {
+	val := reflect.ValueOf(structObject)
+
+	if val.Kind() != reflect.Ptr {
+		println("Interal error: invalid interface.Must be a ptr to struct")
+		return false
+	}
+	structVal := val.Elem()
+	for i := 0; i < structVal.NumField(); i++ {
+		valueField := structVal.Field(i)
+		typeField := structVal.Type().Field(i)
+		if typeField.Tag.Get("toml") == name{
+			if valueField.IsValid() {
+				if valueField.CanSet() {
+					if valueField.Kind() == reflect.String {
+						valueField.SetString(value)
+						return true
+					}
+				}
 			}
 		}
 	}
 	return false
 }
+
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
@@ -190,8 +202,3 @@ func GetConfigFilePath() (string, error) {
 	return filepath.Join(path, configFileName), nil
 }
 
-func (config *Config) PrintConfigDetails() {
-	fmt.Printf(" - Version:   %s\n", config.Version)
-	fmt.Printf(" - Project Name:        %s\n", config.Project)
-	fmt.Printf(" - Build Type:          %s\n", config.BuildType)
-}
