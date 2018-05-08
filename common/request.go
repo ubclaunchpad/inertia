@@ -1,14 +1,8 @@
 package common
 
 const (
-	// DefaultSecret used for some verification
-	DefaultSecret = "inertia"
-
 	// MsgDaemonOK is the OK response upon successfully reaching daemon
 	MsgDaemonOK = "I'm a little Webhook, short and stout!"
-
-	// DefaultPort defines the standard daemon port
-	DefaultPort = "8081"
 )
 
 // DaemonRequest is the configurable body of a request to the daemon.
@@ -25,4 +19,12 @@ type DaemonRequest struct {
 type GitOptions struct {
 	RemoteURL string `json:"remote"`
 	Branch    string `json:"branch"`
+}
+
+// UserRequest is used for logging in or modifying users
+type UserRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	Admin    bool   `json:"admin"`
 }

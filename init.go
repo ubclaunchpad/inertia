@@ -7,7 +7,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -33,13 +32,18 @@ to succeed.`,
 		if err != nil {
 			log.Fatal(err)
 		}
+		// docker-compose projects will usually have Dockerfiles,
+		// so check for that first, then check for Dockerfile
 		if common.CheckForDockerCompose(cwd) {
 			println("docker-compose project detected")
 			buildType = "docker-compose"
+		} else if common.CheckForDockerfile(cwd) {
+			println("Dockerfile project detected")
+			buildType = "dockerfile"
 		}
 
 		// Hello world config file!
-		err = client.InitializeInertiaProject(version, buildType)
+		err = initializeInertiaProject(version, buildType)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -68,7 +72,7 @@ var resetCmd = &cobra.Command{
 		if response != "y" {
 			log.Fatal("aborting")
 		}
-		path, err := client.GetConfigFilePath()
+		path, err := getConfigFilePath()
 		if err != nil {
 			log.Fatal(err)
 		}

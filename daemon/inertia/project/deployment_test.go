@@ -7,6 +7,24 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
+func TestSetConfig(t *testing.T) {
+	deployment := &Deployment{}
+	deployment.SetConfig(DeploymentConfig{
+		ProjectName: "wow",
+		Branch:      "amazing",
+		BuildType:   "best",
+	})
+
+	assert.Equal(t, "wow", deployment.project)
+	assert.Equal(t, "amazing", deployment.branch)
+	assert.Equal(t, "best", deployment.buildType)
+}
+
+func TestGetBranch(t *testing.T) {
+	deployment := &Deployment{branch: "master"}
+	assert.Equal(t, "master", deployment.GetBranch())
+}
+
 func TestCompareRemotes(t *testing.T) {
 	// Traverse back down to root directory of repository
 	repo, err := git.PlainOpen("../../../")

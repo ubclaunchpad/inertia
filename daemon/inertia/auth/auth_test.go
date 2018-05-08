@@ -1,94 +1,57 @@
 package auth
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path"
 	"testing"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 var (
-	testPrivateKey = []byte("very_sekrit_key")
-	testToken      = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.AqFWnFeY9B8jj7-l3z0a9iaZdwIca7xhUF3fuaJjU90"
+	testPrivateKey     = []byte("very_sekrit_key")
+	testToken          = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.AqFWnFeY9B8jj7-l3z0a9iaZdwIca7xhUF3fuaJjU90"
+	testInertiaKeyPath = path.Join(os.Getenv("GOPATH"), "/src/github.com/ubclaunchpad/inertia/test/keys/id_rsa")
 )
 
+// Helper function that implements jwt.keyFunc
 func getFakeAPIKey(tok *jwt.Token) (interface{}, error) {
 	return testPrivateKey, nil
 }
+
+func TestGetAPIPrivateKey(t *testing.T) {
+	key, err := getAPIPrivateKeyFromPath(nil, testInertiaKeyPath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(key.([]byte)), "user: git, name: ssh-public-keys")
+}
+
+func TestGetGithubKey(t *testing.T) {
+	pemFile, err := os.Open(testInertiaKeyPath)
+	assert.Nil(t, err)
+	_, err = GetGithubKey(pemFile)
+	assert.Nil(t, err)
+}
+
 func TestGenerateToken(t *testing.T) {
 	token, err := GenerateToken(testPrivateKey)
 	assert.Nil(t, err, "generateToken must not fail")
 	assert.Equal(t, token, testToken)
-}
 
-func TestAuthorizationOK(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/health-check", nil)
-
-	// Set the token for authorization.
-	bearerTokenString := fmt.Sprintf("Bearer %s", testToken)
-	req.Header.Set("Authorization", bearerTokenString)
-	rr := httptest.NewRecorder()
-
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
-	handler.ServeHTTP(rr, req)
-
-	assert.Equal(t, rr.Code, http.StatusOK)
-	assert.Equal(t, rr.Body.String(), common.MsgDaemonOK)
-}
-
-func TestAuthorizationMalformedBearerString(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/health-check", nil)
-
-	// Set the token for authorization.
-	req.Header.Set("Authorization", "Beare")
-	rr := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
-	handler.ServeHTTP(rr, req)
-
-	assert.Equal(t, rr.Code, http.StatusForbidden)
-	assert.Equal(t, rr.Body.String(), malformedAuthStringErrorMsg+"\n")
-}
-
-func TestAuthorizationTooManySegments(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/health-check", nil)
-
-	// Set the token for authorization.
-	req.Header.Set("Authorization", "Bearer a.b.c.d")
-	rr := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
-	handler.ServeHTTP(rr, req)
-
-	assert.Equal(t, rr.Code, http.StatusForbidden)
-}
-
-func TestAuthorizationSignatureInvalid(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/health-check", nil)
-
-	// Break the last component of the token (signature).
-	bearerTokenString := fmt.Sprintf("Bearer %s", testToken+"0")
-	req.Header.Set("Authorization", bearerTokenString)
-	rr := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(Authorized(HealthCheckHandler, getFakeAPIKey))
-	handler.ServeHTTP(rr, req)
-
-	assert.Equal(t, rr.Code, http.StatusForbidden)
-}
-
-func TestGetGithubKey(t *testing.T) {
-	inertiaKeyPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/ubclaunchpad/inertia/test/keys/id_rsa")
-	pemFile, err := os.Open(inertiaKeyPath)
+	otherToken, err := GenerateToken([]byte("another_sekrit_key"))
 	assert.Nil(t, err)
-	_, err = GetGithubKey(pemFile)
-	assert.Nil(t, err)
+	assert.NotEqual(t, token, otherToken)
+}
+
+func TestGitAuthFailedErr(t *testing.T) {
+	err := GitAuthFailedErr(testInertiaKeyPath)
+	assert.NotNil(t, err)
+	// Check for a substring of public key
+	assert.Contains(t, err.Error(), "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDD")
+}
+
+func TestGitAuthFailedErrFailed(t *testing.T) {
+	err := GitAuthFailedErr("wow")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Error reading key")
 }

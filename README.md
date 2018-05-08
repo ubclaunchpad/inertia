@@ -9,11 +9,15 @@
 <p align="center">
   <a href="https://travis-ci.org/ubclaunchpad/inertia">
     <img src="https://travis-ci.org/ubclaunchpad/inertia.svg?branch=master"
-      alt="Built Status" />
+      alt="Build Status" />
   </a>
 
   <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
+  </a>
+
+  <a href="https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md">
+    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
   </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases">
@@ -23,25 +27,42 @@
 
 ----------------
 
-Inertia is a cross-platform command line tool that simplifies setup and management of automated project deployment on any virtual private server. It aims to provide the ease and flexibility of services like Heroku without the complexity of Kubernetes while still giving users full control over their projects.
+Inertia is a simple cross-platform command line application that enables effortless setup and management of continuous, automated deployment on any virtual private server. It is built and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
 
-- [Usage](#package-usage)
+<p align="center">
+    <img src="/.static/inertia-init.png" width="45%" />
+</p>
+
+|   | Main Features  |
+----|-----------------
+🚀  | Simple setup from your computer without ever having to manually SSH into your remote
+🍰  | Use any Linux-based remote virtual private server platform you want
+⚒  | Deploy a wide range of supported project types (including Dockerfile, docker-compose, and Heroku projects)
+🚄  | Have your project automatically updated, rebuilt, and deployed as soon as you `git push`
+🛂  | Start up, shut down, and monitor your deployment with ease
+🏷  | Configure deployment to your liking with branch settings and more
+🌐  | Add users and check on your deployment anywhere through Inertia Web
+🔑  | Secured with tokens and HTTPS across the board
+
+----------------
+
+- [Getting Started](#package-getting-started)
   - [Setup](#setup)
   - [Continuous Deployment](#continuous-deployment)
   - [Deployment Management](#deployment-management)
   - [Release Streams](#release-streams)
 - [Motivation and Design](#bulb-motivation-and-design)
-- [Development](#construction-development)
+- [Contributing](#books-contributing)
 
-# :package: Usage
+# :package: Getting Started
 
-All you need to get started is a docker-compose project, the Inertia CLI, and access to a virtual private server. To install the CLI using [Homebrew](https://brew.sh):
+All you need to get started is a [compatible project](https://github.com/ubclaunchpad/inertia/wiki/Project-Compatibility), the Inertia CLI, and access to a virtual private server. The CLI can be installed using [Homebrew](https://brew.sh):
 
 ```bash
 $> brew install ubclaunchpad/tap/inertia
 ```
 
-For other platforms, you can also [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases) or [install Inertia from source](#installing-from-source).
+For other platforms, you can [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases).
 
 ## Setup
 
@@ -81,13 +102,15 @@ $> inertia $VPS_NAME up --stream
 
 Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
 
+Inertia also offers a web application - this can be accessed at `https://$ADDRESS:4303/web` once users have been added through the `inertia $VPS_NAME user` commands.
+
 ## Continuous Deployment
 
 To enable continuous deployment, you need the webhook URL that is printed during `inertia $VPS_NAME init`:
 
 ```bash
 GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
-http://myhost.com:8081
+http://myhost.com:4303/webhook
 Github WebHook Secret: inertia
 ``` 
 
@@ -117,7 +140,9 @@ Add some bling to your Inertia-deployed project :sunglasses:
 
 # :bulb: Motivation and Design
 
-At [UBC Launch Pad](http://www.ubclaunchpad.com), we are frequently changing hosting providers based on available funding and sponsorship. Inertia is a project to develop an in-house continuous deployment system to make deploying applications simple and painless, regardless of the hosting provider.
+[UBC Launch Pad](http://www.ubclaunchpad.com) is a student-run software engineering club at the University of British Columbia that aims to provide students with a community where they can work together to build a all sorts of cool projects, ranging from mobile apps and web services to cryptocurrencies and machine learning applications.
+
+Many of our projects rely on hosting providers for deployment. Unfortunately we frequently change hosting providers based on available funding and sponsorship, meaning our projects often need to be redeployed. Inertia is a project to develop an in-house deployment system to make setting up continuously deployed applications simple and painless, regardless of the hosting provider.
 
 The primary design goals of Inertia are to:
 
@@ -129,144 +154,20 @@ The primary design goals of Inertia are to:
 
 Inertia consists of two major components: a deployment daemon and a command line interface.
 
-The deployment daemon runs persistently in the background on the server, receiving webhook events from GitHub whenever new commits are pushed. The CLI provides an interface to adjust settings and manage the deployment - this is done through requests to the daemon, authenticated using JSON web tokens generated by the daemon. Remote configuration is stored locally in `.inertia.toml`.
+The deployment daemon runs persistently in the background on the server, receiving webhook events from GitHub whenever new commits are pushed. The CLI provides an interface to adjust settings and manage the deployment - this is done through HTTPS requests to the daemon, authenticated using JSON web tokens generated by the daemon. Remote configuration is stored locally in `.inertia.toml`.
 
 <p align="center">
-<img src="https://bobheadxi.github.io/assets/images/posts/inertia-diagram.png" width="70%" />
+  <img src="https://bobheadxi.github.io/assets/images/posts/inertia-diagram.png" width="70%" />
 </p>
 
-Inertia is set up serverside by executing a script over SSH that installs Docker and starts an Inertia daemon image with [access to the host Docker socket](https://bobheadxi.github.io/dockerception/#docker-in-docker). This Docker-in-Docker configuration gives the daemon the ability to start up other containers *alongside* it, rather than *within* it, as required. Once the daemon is set up, we avoid using further SSH commands and execute Docker commands through Docker's Golang API. Instead of installing the docker-compose toolset, we [use a docker-compose image](https://bobheadxi.github.io/dockerception/#docker-compose-in-docker) to build and deploy user projects.
+Inertia is set up serverside by executing a script over SSH that installs Docker and starts an Inertia daemon image with [access to the host Docker socket](https://bobheadxi.github.io/dockerception/#docker-in-docker). This Docker-in-Docker configuration gives the daemon the ability to start up other containers *alongside* it, rather than *within* it, as required. Once the daemon is set up, we avoid using further SSH commands and execute Docker commands through Docker's Golang API. Instead of installing the docker-compose toolset, we [use a docker-compose image](https://bobheadxi.github.io/dockerception/#docker-compose-in-docker) to build and deploy user projects. Inertia also supports projects configured for Heroku buildpacks using the [gliderlabs/herokuish](https://github.com/gliderlabs/herokuish) Docker image for builds and deployments.
 
-# :construction: Development
+The team has made a few presentations about Inertia that go over its design in a bit more detail:
+- [UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
+- [Vancouver DevOpsDays 2018](https://docs.google.com/presentation/d/e/2PACX-1vRJXUnRmxpegHNVTgn_Kd8VFyeuiIwzDQl9c0oQqi1QSnIjFUIIjawsvLdu2RfHAXv_5T8kvSgSWGuq/pub?start=false&loop=false&delayms=15000) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
 
-This section outlines the various tools available to help you get started developing Inertia. Run `make ls` to list all the Makefile shortcuts available.
+# :books: Contributing
 
-If you would like to contribute, feel free to comment on an issue or make one and open up a pull request!
+Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! 
 
-## Installing from Source
-
-First, [install Go](https://golang.org/doc/install#install) and grab Inertia's source code:
-
-```bash
-$> go get -u github.com/ubclaunchpad/inertia
-```
-
-We use [dep](https://github.com/golang/dep) for managing Golang dependencies, and [npm](https://www.npmjs.com) to manage dependencies for Inertia's React web app. Make sure both are installed before running the following commands.
-
-```bash
-$> dep ensure     # Inertia CLI and daemon dependencies
-$> make web-deps  # Inertia Web dependencies
-```
-
-For usage, it is highly recommended that you use a [tagged build](https://github.com/ubclaunchpad/inertia/releases) to ensure compatibility between the CLI and your Inertia daemon.
-
-```bash
-$> git checkout $VERSION
-$> make inertia-tagged    # installs a tagged version of Inertia
-$> inertia --version      # check what version you have installed
-```
-
-Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
-
-Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to go back to using an Inertia CLI installed using Homebrew. To go back to a `go install`ed version of Inertia, you need to run `brew uninstall inertia`.
-
-For development, you should install a build tagged as `test` so that you can make use `make testdaemon` for local development. See the next section for more details.
-
-```bash
-$> make RELEASE=test    # installs current Inertia build and mark as "test"
-```
-
-## Testing and Locally Deploying
-
-You will need Docker installed and running to run the Inertia test suite, which includes a number of integration tests.
-
-```bash
-$> make test-all                              # test against ubuntu:latest
-$> make test-all VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
-```
-
-You can also manually start a container that sets up a mock VPS for testing:
-
-```bash
-$> make testenv VPS_OS=ubuntu VERSION=16.04
-# This defaults to ubuntu:lastest without args.
-# Note the location of the key that is printed and use that when
-# adding your local remote.
-```
-
-You can [SSH into this testvps container](https://bobheadxi.github.io/dockerception/#ssh-services-in-docker) and otherwise treat it just as you would treat a real VPS:
-
-```bash
-$> cd /path/to/my/dockercompose/project
-$> inertia init
-$> inertia remote add local
-# PEM file: inertia/test/keys/id_rsa, User: 'root', Address: 0.0.0.0
-$> inertia local init
-$> inertia local status
-```
-
-The above steps will pull and use a daemon image from Docker Hub based on the version in your `.inertia.toml`.
-
-### Daemon
-
-To use a daemon compiled from source, set your Inertia version in `.inertia.toml` to `test` and run:
-
-```bash
-$> make testdaemon
-$> inertia local init
-```
-
-This will build a daemon image and `scp` it over to the test VPS, and use that image for the daemon when setting up `testvps` using `inertia local init`
-
-If you run into this error when deploying onto the `testvps`:
-
-```bash
-docker: Error response from daemon: error creating aufs mount to /var/lib/docker/aufs/mnt/fed036790dfcc73da5f7c74a7264e617a2889ccf06f61dc4d426cf606de2f374-init: invalid argument.
-```
-
-You probably need to go into your Docker settings and add this line to the Docker daemon configuration file:
-
-```js
-{
-  ...
-  "storage-driver" : "aufs"
-}
-```
-
-This sneaky configuration file can be found under `Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
-
-### Web App
-
-Inertia Web is a React application. To run a local instance of Inertia Web:
-
-```bash
-$> make web-run
-```
-
-Make sure you have a local daemon set up for this web app to work - see the previous section for more details.
-
-## Compiling Bash Scripts
-
-To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary. So we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our go executables.
-
-```bash
-$> go get -u github.com/jteeuwen/go-bindata/...
-```
-
-If you make changes to the bootstrapping shell scripts in `client/bootstrap/`, convert them to `Assets` by running:
-
-```bash
-$> make bootstrap
-```
-
-Then use your asset!
-
-```go
-shellScriptData, err := Asset("cmd/bootstrap/myshellscript.sh")
-if err != nil {
-  log.Fatal("No asset with that name")
-}
-
-// Optionally run shell script over SSH.
-result, _ := remote.RunSSHCommand(string(shellScriptData))
-```
+Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for contribution guidelines and a detailed guide to help you get started with Inertia's codebase.

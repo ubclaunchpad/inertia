@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 
 	log "github.com/sirupsen/logrus"
@@ -14,14 +13,16 @@ import (
 // Version is the current build of Inertia
 var Version string
 
-// runCmd represents the daemon run command
+// runCmd starts the daemon
 var runCmd = &cobra.Command{
-	Use:   "run",
-	Short: "Run the daemon",
-	Long: `Run the daemon on a port.
-Example:
+	Version: getVersion(),
+	Use:     "run",
+	Short:   "Run the daemon",
+	Long: `Run the daemon on a port, default 4303. Requires
+host address as an argument.
 
-inertia daemon run -p 8081`,
+Example:
+    inertia daemon run 0.0.0.0 -p 8081`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetString("port")
@@ -32,12 +33,12 @@ inertia daemon run -p 8081`,
 	},
 }
 
-// tokenCmd represents the daemon run command
+// tokenCmd retrieves the daemon token
 var tokenCmd = &cobra.Command{
 	Use:   "token",
 	Short: "Produce an API token to use with the daemon",
 	Long: `Produce an API token to use with the daemon,
-	Created using an RSA private key.`,
+Created using an RSA private key.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		keyBytes, err := auth.GetAPIPrivateKey(nil)
 		if err != nil {
@@ -69,7 +70,7 @@ func getVersion() string {
 func init() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(tokenCmd)
-	runCmd.Flags().StringP("port", "p", common.DefaultPort, "Set port for daemon to run on")
+	runCmd.Flags().StringP("port", "p", "4303", "Set port for daemon to run on")
 }
 
 func main() {

@@ -3,23 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-var (
-	errInvalidUser    = errors.New("invalid user")
-	errInvalidAddress = errors.New("invalid IP address")
-	errInvalidSecret  = errors.New("invalid secret")
-)
-
-// remoteCmd represents the remote command
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
 	Short: "Configure the local settings for a remote VPS instance",
@@ -36,7 +26,6 @@ inerta remote status gcloud`,
 	Args: cobra.MinimumNArgs(1),
 }
 
-// addCmd represents the remote add command
 var addCmd = &cobra.Command{
 	Use:   "add [REMOTE]",
 	Short: "Add a reference to a remote VPS instance",
@@ -46,7 +35,7 @@ file. Specify a VPS name.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, err := client.GetProjectConfigFromDisk()
+		config, path, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -69,7 +58,11 @@ file. Specify a VPS name.`,
 		}
 		branch := head.Name().Short()
 
-		err = addRemoteWalkthrough(os.Stdin, args[0], port, sshPort, branch, config)
+		err = addRemoteWalkthrough(os.Stdin, config, args[0], port, sshPort, branch)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = config.Write(path)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,83 +73,20 @@ file. Specify a VPS name.`,
 	},
 }
 
-// addRemoteWalkthough is the walkthrough that asks users for RemoteVPS details
-func addRemoteWalkthrough(in io.Reader, name, port, sshPort, currBranch string, config *client.Config) error {
-	homeEnvVar := os.Getenv("HOME")
-	sshDir := filepath.Join(homeEnvVar, ".ssh")
-	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
-
-	var response string
-	fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'):")
-	_, err := fmt.Fscanln(in, &response)
-	if err != nil {
-		response = defaultSSHLoc
-	}
-	pemLoc := response
-
-	fmt.Println("Enter user:")
-	n, err := fmt.Fscanln(in, &response)
-	if err != nil || n == 0 {
-		return errInvalidUser
-	}
-	user := response
-
-	fmt.Println("Enter IP address of remote:")
-	n, err = fmt.Fscanln(in, &response)
-	if err != nil || n == 0 {
-		return errInvalidAddress
-	}
-	address := response
-
-	fmt.Println("Enter webhook secret:")
-	n, err = fmt.Fscanln(in, &response)
-	if err != nil || n == 0 {
-		return errInvalidSecret
-	}
-	secret := response
-
-	branch := currBranch
-	fmt.Println("Enter project branch to deploy (leave blank for current branch):")
-	n, err = fmt.Fscanln(in, &response)
-	if err == nil && n != 0 {
-		branch = response
-	}
-
-	fmt.Println("\nPort " + port + " will be used as the daemon port.")
-	fmt.Println("Port " + sshPort + " will be used as the SSH port.")
-	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
-	fmt.Println("of the -ssh flag to set a custom SSH port.")
-
-	config.AddRemote(&client.RemoteVPS{
-		Name:   name,
-		IP:     address,
-		User:   user,
-		PEM:    pemLoc,
-		Branch: branch,
-		Daemon: &client.DaemonConfig{
-			Port:    port,
-			SSHPort: sshPort,
-			Secret:  secret,
-		},
-	})
-	return config.Write()
-}
-
-// listCmd represents the inertia list command
 var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List currently configured remotes",
 	Long:  `Lists all currently configured remotes.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		config, err := client.GetProjectConfigFromDisk()
+		config, _, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		for _, remote := range config.Remotes {
 			if verbose {
-				printRemoteDetails(remote)
+				fmt.Println(formatRemoteDetails(remote))
 			} else {
 				fmt.Println(remote.Name)
 			}
@@ -164,14 +94,13 @@ var listCmd = &cobra.Command{
 	},
 }
 
-// removeCmd represents the inertia list command
 var removeCmd = &cobra.Command{
 	Use:   "rm [REMOTE]",
 	Short: "Remove a remote.",
 	Long:  `Remove a remote from Inertia's configuration file.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := client.GetProjectConfigFromDisk()
+		config, path, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -179,7 +108,7 @@ var removeCmd = &cobra.Command{
 		_, found := config.GetRemote(args[0])
 		if found {
 			config.RemoveRemote(args[0])
-			err = config.Write()
+			err = config.Write(path)
 			if err != nil {
 				log.Fatal("Failed to remove remote: " + err.Error())
 			}
@@ -197,27 +126,18 @@ var showCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, err := client.GetProjectConfigFromDisk()
+		config, _, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		remote, found := config.GetRemote(args[0])
 		if found {
-			printRemoteDetails(remote)
+			fmt.Println(formatRemoteDetails(remote))
 		} else {
 			println("No remote '" + args[0] + "' currently set up.")
 		}
 	},
-}
-
-func printRemoteDetails(remote *client.RemoteVPS) {
-	fmt.Printf("Remote %s: \n", remote.Name)
-	fmt.Printf(" - Deployed Branch:   %s\n", remote.Branch)
-	fmt.Printf(" - IP Address:        %s\n", remote.IP)
-	fmt.Printf(" - VPS User:          %s\n", remote.User)
-	fmt.Printf(" - PEM File Location: %s\n", remote.PEM)
-	fmt.Printf("Run 'inertia %s status' for more details.\n", remote.Name)
 }
 
 func init() {
@@ -227,15 +147,7 @@ func init() {
 	remoteCmd.AddCommand(removeCmd)
 	remoteCmd.AddCommand(showCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// remoteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
 	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
-	addCmd.Flags().StringP("port", "p", common.DefaultPort, "Daemon port")
+	addCmd.Flags().StringP("port", "p", "4303", "Daemon port")
 	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }

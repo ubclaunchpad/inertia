@@ -1,15 +1,10 @@
 /* eslint-disable */
 const webpack = require('webpack');
-const MinifyPlugin = require('babel-minify-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const HtmlWebpackPluginConfig = new HtmlWebpackPlugin({
-  template: './index.html',
-  filename: 'index.html',
-  inject: 'body',
-})
 
 const config = {
-  entry: './index.js',
+  mode: 'development',
+  entry: ['babel-polyfill', './index.js'],
   output: {
     path: `${__dirname}/public/`,
     filename: 'bundle.js',
@@ -18,25 +13,47 @@ const config = {
     port: 7900,
     inline: true,
     contentBase: './public',
-    publicPath: '/',
+    publicPath: '/web/',
   },
   devtool: 'inline-source-map',
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.jsx?$/,
-        exclude: '/node_modules/',
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015', 'react'],
-        },
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['es2015', 'stage-3', 'react'],
+            },
+          }
+        ],
       },
+      {
+        test: /\.css/,
+        exclude: /node_modules/,
+        use: ['style-loader', 'css-loader'],
+      }
     ],
   },
   plugins: [
-    new webpack.EnvironmentPlugin(['NODE_ENV']),
-    HtmlWebpackPluginConfig,
+    new webpack.DefinePlugin({
+      'process.env': {
+        // define environment variables here
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+      }
+    }),
+    new webpack.DefinePlugin({
+      // suppress react devtools console warning
+      '__REACT_DEVTOOLS_GLOBAL_HOOK__': '({ isDisabled: true })'
+    }),
+    new HtmlWebpackPlugin({
+      template: './index.html',
+      filename: 'index.html',
+      inject: 'body'
+    })
   ]
 };
 
-module.exports = env => config;
+module.exports = config;

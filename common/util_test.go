@@ -14,6 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGenerateRandomString(t *testing.T) {
+	randString, err := GenerateRandomString()
+	assert.Nil(t, err)
+	assert.Equal(t, len(randString), 44)
+}
+
 func TestCheckForDockerCompose(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.Nil(t, err)
@@ -40,6 +46,25 @@ func TestCheckForDockerCompose(t *testing.T) {
 	b = CheckForDockerCompose(cwd)
 	assert.True(t, b)
 	os.Remove(yamlPath)
+}
+
+func TestCheckForDockerfile(t *testing.T) {
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+
+	path := path.Join(cwd, "/Dockerfile")
+
+	// No!
+	b := CheckForDockerfile(cwd)
+	assert.False(t, b)
+
+	// Yes!
+	file, err := os.Create(path)
+	assert.Nil(t, err)
+	file.Close()
+	b = CheckForDockerfile(cwd)
+	assert.True(t, b)
+	os.Remove(path)
 }
 
 func TestFlushRoutine(t *testing.T) {

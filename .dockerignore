@@ -1,25 +1,25 @@
 # Misc
-.github
-.scripts
-.static
 Makefile
+Dockerfile
 
 # Test environment
 test
 
 # Documentation
-README.md
+*.md
 
-# Repository config files
-.coveralls.yml
-.travis.yml
-
-# Docker config files
-Dockerfile
+# All hidden things
+.github
+.scripts
+.static
 .dockerignore
+.travis.yml
+.eslintrc
+.gometalinter.json
 
 # Non-daemon source code
 client
+*_test.go
 
-# Node depedencies
-node_modules
+# Dependencies
+bin

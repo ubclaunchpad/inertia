@@ -1,43 +1,51 @@
-# Basic script for bringing up the daemon.
+#!/bin/sh
+
+# Basic script for setting up Inertia requirements (directories, etc)
+# and brining the daemon online.
 
 set -e
 
+# User arguments.
 DAEMON_RELEASE=%[1]s
 DAEMON_PORT=%[2]s
 HOST_ADDRESS=%[3]s
 
+# Inertia image details.
 DAEMON_NAME=inertia-daemon
 IMAGE=ubclaunchpad/inertia:$DAEMON_RELEASE
-CONTAINER_PORT=8081
 
-# Set up directories
+# It doesn't matter what port the daemon runs on in the container
+# as long as it is mapped to the correct DAEMON_PORT.
+CONTAINER_PORT=4303
+
+# Set up directories.
 mkdir -p $HOME/project
-mkdir -p $HOME/ssl
+mkdir -p $HOME/.inertia
+mkdir -p $HOME/.inertia/.ssl
 
 # Check if already running and take down existing daemon.
 ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`
 if [ ! -z "$ALREADY_RUNNING" ]; then
-    echo "Killing existing container..."
-    sudo docker rm -f $ALREADY_RUNNING
+    echo "Putting existing Inertia daemon to sleep"
+    sudo docker rm -f $ALREADY_RUNNING > /dev/null 2>&1
 fi;
 
-# Prepare appropriate daemon image.
 if [ "$DAEMON_RELEASE" != "test" ]; then
-    # Pull the inertia daemon.
-    echo "Pulling Inertia daemon..."
-    sudo docker pull $IMAGE
+    # Download requested daemon image.
+    echo "Downloading $IMAGE"
+    sudo docker pull $IMAGE > /dev/null 2>&1
 else
-    echo "Loading existing Inertia daemon image..."
-    sudo docker load --quiet -i /daemon-image
+    # Load test build that should have been scp'd into
+    # the VPS at /daemon-image.
+    echo "Loading $IMAGE"
+    sudo docker load -i /daemon-image > /dev/null 2>&1
 fi
 
-# Run container with access to the host docker socket and relevant directories -
-# this is necessary because we want the daemon to be able start
-# and stop containers on the host. It's also controversial,
-# https://www.lvh.io/posts/dont-expose-the-docker-socket-not-even-to-a-container.html
-# It's also recommended,
-# https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
-# As a result, this container has root access on the remote vps.
+# Run container with access to the host docker socket and 
+# relevant host directories to allow for container control.
+# See the README for more details on how this works:
+# https://github.com/ubclaunchpad/inertia#how-it-works
+echo "Running daemon on port $DAEMON_PORT"
 sudo docker run -d --rm \
     -p "$DAEMON_PORT":"$CONTAINER_PORT" \
     -v /var/run/docker.sock:/var/run/docker.sock \
@@ -45,4 +53,4 @@ sudo docker run -d --rm \
     -e HOME="$HOME" \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     --name "$DAEMON_NAME" \
-    "$IMAGE" "$HOST_ADDRESS"
+    "$IMAGE" "$HOST_ADDRESS" > /dev/null 2>&1
