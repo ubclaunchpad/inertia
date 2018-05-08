@@ -205,14 +205,8 @@ func TestLogs(t *testing.T) {
 		assert.Equal(t, "/logs", endpoint)
 
 		// Check body
-		body, err := ioutil.ReadAll(req.Body)
-		assert.Nil(t, err)
 		defer req.Body.Close()
-		var upReq common.DaemonRequest
-		err = json.Unmarshal(body, &upReq)
-		assert.Nil(t, err)
-		assert.Equal(t, "docker-compose", upReq.Container)
-		assert.Equal(t, true, upReq.Stream)
+		assert.Equal(t, "Container=docker-compose&Stream=true", req.URL.RawQuery)
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
