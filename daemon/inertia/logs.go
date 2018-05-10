@@ -15,7 +15,6 @@ import (
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
 	// Get container name and stream from request query params
-	//var upReq common.DaemonRequest
 	q := r.URL.Query()
 
 	container := q.Get("Container")
