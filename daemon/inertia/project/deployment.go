@@ -71,15 +71,21 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	}
 
 	return &Deployment{
+		// Properties
 		directory: directory,
 		project:   cfg.ProjectName,
 		branch:    cfg.Branch,
 		buildType: cfg.BuildType,
+
+		// Functions
 		builders: map[string]Builder{
 			"herokuish":      herokuishBuild,
 			"dockerfile":     dockerBuild,
 			"docker-compose": dockerCompose,
 		},
+		containerStopper: stopActiveContainers,
+
+		// Repository
 		auth: authMethod,
 		repo: repo,
 	}, nil
