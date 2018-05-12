@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"reflect"
 )
 
 // RemoteVPS contains parameters for the VPS

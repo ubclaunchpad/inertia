@@ -138,7 +138,7 @@ var showCmd = &cobra.Command{
 }
 
 var setCmd = &cobra.Command{
-	Use:   "set [REMOTE] [Property] [value]",
+	Use:   "set [REMOTE] [Property] [VALUE]",
 	Short: "Set details about remote.",
 	Long:  `Set details about the given remote.`,
 	Args:  cobra.MinimumNArgs(3),

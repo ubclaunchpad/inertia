@@ -82,9 +82,9 @@ var resetCmd = &cobra.Command{
 	},
 }
 var setConfigCmd = &cobra.Command{
-	Use:   "set [config property] [config value]",
+	Use:   "set [PROPERTY] [VALUE]",
 	Short: "Set configuration property of the project",
-	Long: `Set configuration property of the project. This will modify local toml file.`,
+	Long:  `Set configuration property of the project. This will modify local toml file.`,
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
@@ -92,10 +92,10 @@ var setConfigCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		success := client.SetProperty(args[0], args[1],config)
+		success := client.SetProperty(args[0], args[1], config)
 		if success {
 			println("Configuration setting '" + args[0] + "' has been updated..")
-		}else{
+		} else {
 			println("Configuration setting '" + args[0] + "' not found.")
 		}
 
@@ -106,7 +106,6 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(resetCmd)
 	rootCmd.AddCommand(setConfigCmd)
-
 
 	// Here you will define your flags and configuration settings.
 
