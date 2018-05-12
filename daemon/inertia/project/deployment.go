@@ -35,6 +35,8 @@ type Deployment struct {
 	branch    string
 	buildType string
 
+	builders map[string]Builder
+
 	repo *git.Repository
 	auth ssh.AuthMethod
 	mux  sync.Mutex
@@ -72,8 +74,13 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 		project:   cfg.ProjectName,
 		branch:    cfg.Branch,
 		buildType: cfg.BuildType,
-		auth:      authMethod,
-		repo:      repo,
+		builders: map[string]Builder{
+			"herokuish":      herokuishBuild,
+			"dockerfile":     dockerBuild,
+			"docker-compose": dockerCompose,
+		},
+		auth: authMethod,
+		repo: repo,
 	}, nil
 }
 
@@ -110,25 +117,28 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOption
 		}
 	}
 
+	// Use the appropriate build method
+	builder, found := d.builders[strings.ToLower(d.buildType)]
+	if !found {
+		// @todo: attempt a guess at project type instead
+		fmt.Println(out, "Unknown project type "+d.buildType)
+		fmt.Println(out, "Defaulting to docker-compose build")
+		builder = dockerCompose
+	}
+
 	// Kill active project containers if there are any
 	err := stopActiveContainers(cli, out)
 	if err != nil {
 		return err
 	}
 
-	// Use the appropriate build method
-	switch d.buildType {
-	case "herokuish":
-		return herokuishBuild(d, cli, out)
-	case "dockerfile":
-		return dockerBuild(d, cli, out)
-	case "docker-compose":
-		return dockerCompose(d, cli, out)
-	default:
-		fmt.Println(out, "Unknown project type "+d.buildType)
-		fmt.Println(out, "Defaulting to docker-compose build")
-		return dockerCompose(d, cli, out)
+	// Deploy project
+	deploy, err := builder(d, cli, out)
+	if err != nil {
+		return err
 	}
+
+	return deploy()
 }
 
 // Down shuts down the deployment

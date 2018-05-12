@@ -60,7 +60,11 @@ func TestDockerComposeIntegration(t *testing.T) {
 	}
 
 	// Execute build
-	err = dockerCompose(d, cli, os.Stdout)
+	deploy, err := dockerCompose(d, cli, os.Stdout)
+	assert.Nil(t, err)
+
+	// Execute deploy
+	err = deploy()
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
@@ -128,7 +132,11 @@ func TestDockerBuildIntegration(t *testing.T) {
 	}
 
 	// Execute build
-	err = dockerBuild(d, cli, os.Stdout)
+	deploy, err := dockerBuild(d, cli, os.Stdout)
+	assert.Nil(t, err)
+
+	// Execute deploy
+	err = deploy()
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
@@ -174,7 +182,11 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	}
 
 	// Execute build
-	err = herokuishBuild(d, cli, os.Stdout)
+	deploy, err := herokuishBuild(d, cli, os.Stdout)
+	assert.Nil(t, err)
+
+	// Execute deploy
+	err = deploy()
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
