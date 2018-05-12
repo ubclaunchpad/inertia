@@ -24,7 +24,11 @@ func TestSetConfig(t *testing.T) {
 	assert.Equal(t, "best", deployment.buildType)
 }
 
-func TestDeploySkipUpdate(t *testing.T) {
+func TestDeployMockSkipUpdateIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	buildCalled := false
 	stopCalled := false
 	d := Deployment{
@@ -54,7 +58,11 @@ func TestDeploySkipUpdate(t *testing.T) {
 	assert.True(t, stopCalled)
 }
 
-func TestDown(t *testing.T) {
+func TestDownIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	called := false
 	d := Deployment{
 		directory: "./test/",
@@ -77,7 +85,11 @@ func TestDown(t *testing.T) {
 	assert.True(t, called)
 }
 
-func TestGetStatus(t *testing.T) {
+func TestGetStatusIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	// Traverse back down to root directory of repository
 	repo, err := git.PlainOpen("../../../")
 	assert.Nil(t, err)
