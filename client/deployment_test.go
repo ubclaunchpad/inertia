@@ -206,7 +206,9 @@ func TestLogs(t *testing.T) {
 
 		// Check body
 		defer req.Body.Close()
-		assert.Equal(t, "Container=docker-compose&Stream=true", req.URL.RawQuery)
+		q := req.URL.Query()
+		assert.Equal(t, "docker-compose", q.Get(common.Container))
+		assert.Equal(t, "true", q.Get(common.Stream))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))

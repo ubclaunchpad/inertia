@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
 	git "gopkg.in/src-d/go-git.v4"
-	"strconv"
 )
 
 // Deployment manages a deployment
@@ -103,13 +103,9 @@ func (d *Deployment) Reset() (*http.Response, error) {
 
 // Logs get logs of given container
 func (d *Deployment) Logs(stream bool, container string) (*http.Response, error) {
-	//reqContent := &common.DaemonRequest{
-	//	Stream:    stream,
-	//	Container: container,
-	//}
 	reqContent := map[string]string{
-		"Stream": strconv.FormatBool(stream),
-		"Container": container,
+		common.Stream:    strconv.FormatBool(stream),
+		common.Container: container,
 	}
 
 	return d.get("/logs", reqContent)
@@ -143,16 +139,8 @@ func (d *Deployment) ListUsers() (*http.Response, error) {
 
 // Sends a GET request. "queries" contains query string arguments.
 func (d *Deployment) get(endpoint string, queries map[string]string) (*http.Response, error) {
-	// Assemble URL
-	url, err := url.Parse("https://" + d.RemoteVPS.GetIPAndPort())
-	if err != nil {
-		return nil, err
-	}
-	url.Path = path.Join(url.Path, endpoint)
-	urlString := url.String()
-
 	// Assemble request
-	req, err := http.NewRequest("GET", urlString, nil)
+	req, err := d.buildRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -166,32 +154,12 @@ func (d *Deployment) get(endpoint string, queries map[string]string) (*http.Resp
 		req.URL.RawQuery = q.Encode()
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+d.Auth)
-
-	// Make HTTPS request
-	tr := &http.Transport{
-		// Our certificates are self-signed, so will raise
-		// a warning - currently, we ask our client to ignore
-		// this warning.
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
-	}
-	client := &http.Client{Transport: tr}
+	client := buildHTTPSClient()
 	return client.Do(req)
 }
 
 func (d *Deployment) post(endpoint string, requestBody interface{}) (*http.Response, error) {
-	// Assemble URL
-	url, err := url.Parse("https://" + d.RemoteVPS.GetIPAndPort())
-	if err != nil {
-		return nil, err
-	}
-	url.Path = path.Join(url.Path, endpoint)
-	urlString := url.String()
-
-	// Assemble request
+	// Assemble payload
 	var payload io.Reader
 	if requestBody != nil {
 		body, err := json.Marshal(requestBody)
@@ -202,13 +170,39 @@ func (d *Deployment) post(endpoint string, requestBody interface{}) (*http.Respo
 	} else {
 		payload = nil
 	}
-	req, err := http.NewRequest("POST", urlString, payload)
+
+	// Assemble request
+	req, err := d.buildRequest("POST", endpoint, payload)
 	if err != nil {
 		return nil, err
 	}
+
+	client := buildHTTPSClient()
+	return client.Do(req)
+}
+
+func (d *Deployment) buildRequest(method string, endpoint string, payload io.Reader) (*http.Request, error) {
+	// Assemble URL
+	url, err := url.Parse("https://" + d.RemoteVPS.GetIPAndPort())
+	if err != nil {
+		return nil, err
+	}
+	url.Path = path.Join(url.Path, endpoint)
+	urlString := url.String()
+
+	// Assemble request
+	req, err := http.NewRequest(method, urlString, payload)
+	if err != nil {
+		return nil, err
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+d.Auth)
 
+	return req, nil
+}
+
+func buildHTTPSClient() *http.Client {
 	// Make HTTPS request
 	tr := &http.Transport{
 		// Our certificates are self-signed, so will raise
@@ -218,6 +212,5 @@ func (d *Deployment) post(endpoint string, requestBody interface{}) (*http.Respo
 			InsecureSkipVerify: true,
 		},
 	}
-	client := &http.Client{Transport: tr}
-	return client.Do(req)
+	return &http.Client{Transport: tr}
 }

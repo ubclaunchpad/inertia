@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
-	"strconv"
 )
 
 // logHandler handles requests for container logs
@@ -17,8 +17,8 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	// Get container name and stream from request query params
 	q := r.URL.Query()
 
-	container := q.Get("Container")
-	stream, err := strconv.ParseBool(q.Get("Stream"))
+	container := q.Get("container")
+	stream, err := strconv.ParseBool(q.Get("stream"))
 	if err != nil {
 		println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
