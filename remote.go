@@ -151,7 +151,7 @@ var setCmd = &cobra.Command{
 
 		remote, found := config.GetRemote(args[0])
 		if found {
-			success := client.SetProperty(args[1], args[2],remote)
+			success := client.SetProperty(args[1], args[2], remote)
 			if success {
 				println("Remote '" + args[0] + "' has been updated.")
 				printRemoteDetails(remote)

@@ -2,13 +2,12 @@ package client
 
 import (
 	"errors"
+	"github.com/BurntSushi/toml"
+	"github.com/ubclaunchpad/inertia/common"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-
-	"github.com/ubclaunchpad/inertia/common"
-	"github.com/BurntSushi/toml"
 	"reflect"
 )
 
@@ -178,7 +177,7 @@ func GetConfigFilePath() (string, error) {
 
 // SetProperty takes a struct pointer and searches for its "toml" tag with a search key
 // and set property value with the tag
-func SetProperty(name string, value string,structObject interface{}) bool {
+func SetProperty(name string, value string, structObject interface{}) bool {
 	val := reflect.ValueOf(structObject)
 
 	if val.Kind() != reflect.Ptr {
@@ -188,8 +187,8 @@ func SetProperty(name string, value string,structObject interface{}) bool {
 	for i := 0; i < structVal.NumField(); i++ {
 		valueField := structVal.Field(i)
 		typeField := structVal.Type().Field(i)
-		if typeField.Tag.Get("toml") == name{
-			if (valueField.IsValid() && valueField.CanSet() && valueField.Kind() == reflect.String){
+		if typeField.Tag.Get("toml") == name {
+			if valueField.IsValid() && valueField.CanSet() && valueField.Kind() == reflect.String {
 				valueField.SetString(value)
 				return true
 			}
