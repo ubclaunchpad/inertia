@@ -58,6 +58,8 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 	return containers, nil
 }
 
+type containerStopper func(*docker.Client, io.Writer) error
+
 // stopActiveContainers kills all active project containers (ie not including daemon)
 func stopActiveContainers(cli *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Shutting down active containers...")
