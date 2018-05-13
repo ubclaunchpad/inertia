@@ -9,7 +9,8 @@
   "scripts": {
     "start": "NODE_ENV=development webpack-dev-server --host=127.0.0.1",
     "build": "NODE_ENV=production webpack --config webpack.prod.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ignore-pattern public/"
   },
   "dependencies": {
     "babel-core": "^6.26.3",
@@ -20,6 +21,7 @@
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-3": "^6.24.1",
     "css-loader": "^0.28.11",
+    "history": "^4.7.2",
     "html-webpack-plugin": "^3.2.0",
     "prop-types": "^15.6.1",
     "react": "^16.3.2",

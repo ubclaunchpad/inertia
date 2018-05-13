@@ -1,4 +1,4 @@
-import React from 'react';
+/* global Request:true, fetch:true */
 
 export default class InertiaClient {
   constructor(url) {
@@ -9,29 +9,29 @@ export default class InertiaClient {
     const endpoint = '/user/logout';
     const params = {
       headers: {
-        'Accept': 'application/json'
-      }
+        Accept: 'application/json',
+      },
     };
-    return this._post(endpoint, params);
+    return this.post(endpoint, params);
   }
 
   async login(username, password) {
     const endpoint = '/user/login';
     const params = {
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded'
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: JSON.stringify({
-        username: username,
-        password: password,
-      })
+        username,
+        password,
+      }),
     };
-    return this._post(endpoint, params);
+    return this.post(endpoint, params);
   }
 
   async validate() {
-    return this._get('/user/validate', {});
+    return this.get('/user/validate', {});
   }
 
   async getContainerLogs(container = '/inertia-daemon') {
@@ -42,10 +42,10 @@ export default class InertiaClient {
       },
       body: JSON.stringify({
         stream: true,
-        container: container,
-      })
+        container,
+      }),
     };
-    return this._post(endpoint, params);
+    return this.post(endpoint, params);
   }
 
   async getRemoteStatus() {
@@ -53,10 +53,10 @@ export default class InertiaClient {
     const params = {
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
+        Accept: 'application/json',
+      },
     };
-    return this._get(endpoint, params);
+    return this.get(endpoint, params);
   }
 
   /**
@@ -65,9 +65,13 @@ export default class InertiaClient {
    * @param {Object} params
    */
   async _get(endpoint, params) {
-    params.method = 'GET';
-    params.credentials = 'include';
-    const request = new Request(this.url + endpoint, params);
+    const newParams = {
+      ...params,
+      method: 'GET',
+      credentials: 'include',
+    };
+
+    const request = new Request(this.url + endpoint, newParams);
 
     try {
       return await fetch(request);
@@ -82,9 +86,14 @@ export default class InertiaClient {
    * @param {Object} params
    */
   async _post(endpoint, params) {
-    params.method = 'POST';
-    params.credentials = 'include';
-    const request = new Request(this.url + endpoint, params);
+    const newParams = {
+      ...params,
+      method: 'POST',
+      credentials: 'include',
+    };
+
+    const request = new Request(this.url + endpoint, newParams);
+
     try {
       return await fetch(request);
     } catch (e) {
