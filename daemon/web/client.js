@@ -1,5 +1,3 @@
-/* global Request:true, fetch:true */
-
 export default class InertiaClient {
   constructor(url) {
     this.url = 'https://' + url;
