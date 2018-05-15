@@ -29,7 +29,7 @@
 
 ----------------
 
-Inertia is a simple cross-platform command line application that enables effortless setup and management of continuous, automated deployment all sorts of projects on any virtual private server. It is built and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
+Inertia is a simple cross-platform command line application that enables quick and easy setup and management of continuous, automated deployment of a variety of project types on any virtual private server. It is used, built, and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
 
 <p align="center">
     <img src="/.static/inertia-init.png" width="45%" />
@@ -63,13 +63,13 @@ Inertia is a simple cross-platform command line application that enables effortl
 
 All you need to get started is a [compatible project](https://github.com/ubclaunchpad/inertia/wiki/Project-Compatibility), the Inertia CLI, and access to a virtual private server. 
 
-**MacOS** - the CLI can be installed using [Homebrew](https://brew.sh):
+MacOS users can install the CLI using [Homebrew](https://brew.sh):
 
 ```bash
 $> brew install ubclaunchpad/tap/inertia
 ```
 
-**Windows** - the CLI can be installed using [Scoop](http://scoop.sh):
+Windows users can install the CLI using [Scoop](http://scoop.sh):
 
 ```bash
 $> scoop bucket add ubclaunchpad https://github.com/ubclaunchpad/scoop-bucket
