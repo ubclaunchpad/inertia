@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
@@ -132,7 +133,7 @@ func (c *Client) DaemonDown() error {
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (c *Client) Up(gitRemote, buildType string, stream bool) (*http.Response, error) {
+func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response, error) {
 	if buildType == "" {
 		buildType = c.buildType
 	}
@@ -141,24 +142,24 @@ func (c *Client) Up(gitRemote, buildType string, stream bool) (*http.Response, e
 		Stream:    stream,
 		Project:   c.project,
 		BuildType: buildType,
-		Secret:    c.Daemon.Secret,
+		Secret:    c.RemoteVPS.Daemon.Secret,
 		GitOptions: &common.GitOptions{
-			RemoteURL: common.GetSSHRemoteURL(gitRemote),
+			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
 			Branch:    c.Branch,
 		},
 	}
-	return c.request("POST", "/up", reqContent)
+	return c.post("/up", reqContent)
 }
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
 func (c *Client) Down() (*http.Response, error) {
-	return c.request("POST", "/down", nil)
+	return c.post("/down", nil)
 }
 
 // Status lists the currently active containers on the remote VPS instance
 func (c *Client) Status() (*http.Response, error) {
-	resp, err := c.request("GET", "/status", nil)
+	resp, err := c.get("/status", nil)
 	if err != nil &&
 		(strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "refused")) {
 		return nil, fmt.Errorf("daemon on remote %s appears offline or inaccessible", c.Name)
@@ -169,16 +170,17 @@ func (c *Client) Status() (*http.Response, error) {
 // Reset shuts down deployment and deletes the contents of the deployment's
 // project directory
 func (c *Client) Reset() (*http.Response, error) {
-	return c.request("POST", "/reset", nil)
+	return c.post("/reset", nil)
 }
 
 // Logs get logs of given container
 func (c *Client) Logs(stream bool, container string) (*http.Response, error) {
-	reqContent := &common.DaemonRequest{
-		Stream:    stream,
-		Container: container,
+	reqContent := map[string]string{
+		common.Stream:    strconv.FormatBool(stream),
+		common.Container: container,
 	}
-	return c.request("GET", "/logs", reqContent)
+
+	return c.get("/logs", reqContent)
 }
 
 // AddUser adds an authorized user for access to Inertia Web
@@ -188,35 +190,48 @@ func (c *Client) AddUser(username, password string, admin bool) (*http.Response,
 		Password: password,
 		Admin:    admin,
 	}
-	return c.request("POST", "/user/adduser", reqContent)
+	return c.post("/user/adduser", reqContent)
 }
 
 // RemoveUser prevents a user from accessing Inertia Web
 func (c *Client) RemoveUser(username string) (*http.Response, error) {
 	reqContent := &common.UserRequest{Username: username}
-	return c.request("POST", "/user/removeuser", reqContent)
+	return c.post("/user/removeuser", reqContent)
 }
 
 // ResetUsers resets all users on the remote.
 func (c *Client) ResetUsers() (*http.Response, error) {
-	return c.request("POST", "/user/resetusers", nil)
+	return c.post("/user/resetusers", nil)
 }
 
 // ListUsers lists all users on the remote.
 func (c *Client) ListUsers() (*http.Response, error) {
-	return c.request("GET", "/user/listusers", nil)
+	return c.get("/user/listusers", nil)
 }
 
-func (c *Client) request(method, endpoint string, requestBody interface{}) (*http.Response, error) {
-	// Assemble URL
-	url, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
+// Sends a GET request. "queries" contains query string arguments.
+func (c *Client) get(endpoint string, queries map[string]string) (*http.Response, error) {
+	// Assemble request
+	req, err := c.buildRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
-	url.Path = path.Join(url.Path, endpoint)
-	urlString := url.String()
 
-	// Assemble request
+	// Add query strings
+	if queries != nil {
+		q := req.URL.Query()
+		for k, v := range queries {
+			q.Add(k, v)
+		}
+		req.URL.RawQuery = q.Encode()
+	}
+
+	client := buildHTTPSClient()
+	return client.Do(req)
+}
+
+func (c *Client) post(endpoint string, requestBody interface{}) (*http.Response, error) {
+	// Assemble payload
 	var payload io.Reader
 	if requestBody != nil {
 		body, err := json.Marshal(requestBody)
@@ -227,13 +242,39 @@ func (c *Client) request(method, endpoint string, requestBody interface{}) (*htt
 	} else {
 		payload = nil
 	}
+
+	// Assemble request
+	req, err := c.buildRequest("POST", endpoint, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	client := buildHTTPSClient()
+	return client.Do(req)
+}
+
+func (c *Client) buildRequest(method string, endpoint string, payload io.Reader) (*http.Request, error) {
+	// Assemble URL
+	url, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
+	if err != nil {
+		return nil, err
+	}
+	url.Path = path.Join(url.Path, endpoint)
+	urlString := url.String()
+
+	// Assemble request
 	req, err := http.NewRequest(method, urlString, payload)
 	if err != nil {
 		return nil, err
 	}
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.Daemon.Token)
 
+	return req, nil
+}
+
+func buildHTTPSClient() *http.Client {
 	// Make HTTPS request
 	tr := &http.Transport{
 		// Our certificates are self-signed, so will raise
@@ -243,6 +284,5 @@ func (c *Client) request(method, endpoint string, requestBody interface{}) (*htt
 			InsecureSkipVerify: true,
 		},
 	}
-	client := &http.Client{Transport: tr}
-	return client.Do(req)
+	return &http.Client{Transport: tr}
 }
