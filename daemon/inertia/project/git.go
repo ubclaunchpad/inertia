@@ -12,7 +12,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 var (
@@ -33,10 +32,10 @@ func SimplifyGitErr(err error) error {
 }
 
 // initializeRepository sets up a project repository for the first time
-func initializeRepository(remoteURL, branch string, authMethod ssh.AuthMethod, w io.Writer) (*git.Repository, error) {
+func initializeRepository(directory, remoteURL, branch string, authMethod transport.AuthMethod, w io.Writer) (*git.Repository, error) {
 	fmt.Fprintln(w, "Setting up project...")
 	// Clone project
-	repo, err := clone(Directory, remoteURL, branch, authMethod, w)
+	repo, err := clone(directory, remoteURL, branch, authMethod, w)
 	if err != nil {
 		if err == ErrInvalidGitAuthentication {
 			return nil, auth.GitAuthFailedErr()
@@ -48,7 +47,7 @@ func initializeRepository(remoteURL, branch string, authMethod ssh.AuthMethod, w
 
 // clone wraps git.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
-func clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+func clone(directory, remoteURL, branch string, auth transport.AuthMethod, out io.Writer) (*git.Repository, error) {
 	fmt.Fprintf(out, "Cloning branch %s from %s...\n", branch, remoteURL)
 	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
 	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
@@ -72,7 +71,7 @@ func clone(directory, remoteURL, branch string, auth ssh.AuthMethod, out io.Writ
 
 // forcePull deletes the project directory and makes a fresh clone of given repo
 // git.Worktree.Pull() only supports merges that can be resolved as a fast-forward
-func forcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out io.Writer) (*git.Repository, error) {
+func forcePull(directory string, repo *git.Repository, auth transport.AuthMethod, out io.Writer) (*git.Repository, error) {
 	fmt.Fprintln(out, "Making a force pull...")
 	remotes, err := repo.Remotes()
 	if err != nil {
@@ -97,7 +96,7 @@ func forcePull(directory string, repo *git.Repository, auth ssh.AuthMethod, out 
 }
 
 // updateRepository pulls and checkouts given branch from repository
-func updateRepository(directory string, repo *git.Repository, branch string, auth ssh.AuthMethod, out io.Writer) error {
+func updateRepository(directory string, repo *git.Repository, branch string, auth transport.AuthMethod, out io.Writer) error {
 	tree, err := repo.Worktree()
 	if err != nil {
 		return err

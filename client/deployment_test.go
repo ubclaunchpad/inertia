@@ -20,9 +20,19 @@ var (
 )
 
 func getMockDeployment(ts *httptest.Server, s *memory.Storage) (*Deployment, error) {
-	wholeURL := strings.Split(ts.URL, ":")
-	url := strings.Trim(wholeURL[1], "/")
-	port := wholeURL[2]
+	var (
+		url  string
+		port string
+	)
+	if ts != nil {
+		wholeURL := strings.Split(ts.URL, ":")
+		url = strings.Trim(wholeURL[1], "/")
+		port = wholeURL[2]
+	} else {
+		url = "0.0.0.0"
+		port = "8080"
+	}
+
 	mockRemote := &RemoteVPS{
 		User: "",
 		IP:   url,
@@ -123,7 +133,7 @@ func TestStatus(t *testing.T) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
-		assert.Equal(t, "POST", req.Method)
+		assert.Equal(t, "GET", req.Method)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
@@ -143,6 +153,17 @@ func TestStatus(t *testing.T) {
 	resp, err := d.Status()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestStatusFail(t *testing.T) {
+	memory := memory.NewStorage()
+	defer func() { memory = nil }()
+
+	d, err := getMockDeployment(nil, memory)
+	assert.Nil(t, err)
+
+	_, err = d.Status()
+	assert.Contains(t, err.Error(), "appears offline")
 }
 
 func TestReset(t *testing.T) {
@@ -177,21 +198,17 @@ func TestLogs(t *testing.T) {
 		rw.WriteHeader(http.StatusOK)
 
 		// Check request method
-		assert.Equal(t, "POST", req.Method)
+		assert.Equal(t, "GET", req.Method)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
 		assert.Equal(t, "/logs", endpoint)
 
 		// Check body
-		body, err := ioutil.ReadAll(req.Body)
-		assert.Nil(t, err)
 		defer req.Body.Close()
-		var upReq common.DaemonRequest
-		err = json.Unmarshal(body, &upReq)
-		assert.Nil(t, err)
-		assert.Equal(t, "docker-compose", upReq.Container)
-		assert.Equal(t, true, upReq.Stream)
+		q := req.URL.Query()
+		assert.Equal(t, "docker-compose", q.Get(common.Container))
+		assert.Equal(t, "true", q.Get(common.Stream))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))

@@ -42,9 +42,8 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // public-private key-pair. It outputs configuration information
 // for the user.
 func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Config) error {
-	println("Setting up remote " + name + " at " + remote.IP)
+	println("Setting up remote \"" + name + "\" at " + remote.IP)
 
-	// Generate a session for each command.
 	println(">> Step 1/4: Installing docker...")
 	err := remote.installDocker(runner)
 	if err != nil {
@@ -60,6 +59,8 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 		return err
 	}
 
+	// This step needs to run before any other commands that rely on
+	// the daemon image, since the daemon is loaded here.
 	println("\n>> Step 3/4: Starting daemon...")
 	if err != nil {
 		return err
@@ -95,8 +96,8 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 	println(pub.String())
 
 	// Output Webhook url to user.
+	println("WebHook Address:  https://" + remote.IP + ":" + remote.Daemon.Port + "/webhook")
 	println(">> GitHub WebHook URL (add to https://www.github.com/" + projectName + "/settings/hooks/new): ")
-	println("WebHook Address:  https://" + remote.IP + ":" + remote.Daemon.Port)
 	println("WebHook Secret:   " + remote.Daemon.Secret)
 	println(`Note that you will have to disable SSH verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't

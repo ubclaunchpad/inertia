@@ -4,6 +4,7 @@ import (
 	"io"
 
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
@@ -19,11 +20,10 @@ type FakeDeployment struct {
 	DestroyFunc        func(in1 *docker.Client, in2 io.Writer) error
 	DownFunc           func(in1 *docker.Client, in2 io.Writer) error
 	GetBranchFunc      func() string
-	GetStatusFunc      func(in1 *docker.Client) (*project.DeploymentStatus, error)
-	LogsFunc           func(in1 project.LogOptions, in2 *docker.Client) (io.ReadCloser, error)
+	GetStatusFunc      func(in1 *docker.Client) (*common.DeploymentStatus, error)
 }
 
-func (f *FakeDeployment) Deploy(o project.DeployOptions, c *docker.Client, w io.Writer) error {
+func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) error {
 	return f.DeployFunc(o, c, w)
 }
 
@@ -35,11 +35,7 @@ func (f *FakeDeployment) Destroy(c *docker.Client, w io.Writer) error {
 	return f.DestroyFunc(c, w)
 }
 
-func (f *FakeDeployment) Logs(o project.LogOptions, c *docker.Client) (io.ReadCloser, error) {
-	return f.LogsFunc(o, c)
-}
-
-func (f *FakeDeployment) GetStatus(c *docker.Client) (*project.DeploymentStatus, error) {
+func (f *FakeDeployment) GetStatus(c *docker.Client) (*common.DeploymentStatus, error) {
 	return f.GetStatusFunc(c)
 }
 

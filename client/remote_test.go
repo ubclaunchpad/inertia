@@ -24,11 +24,11 @@ func getTestConfig(writer io.Writer) *Config {
 
 func getTestRemote() *RemoteVPS {
 	remote := &RemoteVPS{
-		IP:   "0.0.0.0",
+		IP:   "127.0.0.1",
 		PEM:  "../test/keys/id_rsa",
 		User: "root",
 		Daemon: &DaemonConfig{
-			Port: "8081",
+			Port: "4303",
 		},
 	}
 	travis := os.Getenv("TRAVIS")
@@ -55,13 +55,13 @@ func TestDaemonUp(t *testing.T) {
 	remote := getTestRemote()
 	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
-	actualCommand := fmt.Sprintf(string(script), "latest", "8081", "0.0.0.0")
+	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
 
 	// Make sure the right command is run.
 	session := mockSSHRunner{r: remote}
 
 	// Make sure the right command is run.
-	err = remote.DaemonUp(&session, "latest", "0.0.0.0", "8081")
+	err = remote.DaemonUp(&session, "latest", "0.0.0.0", "4303")
 	assert.Nil(t, err)
 	println(actualCommand)
 	assert.Equal(t, actualCommand, session.Calls[0])
@@ -96,7 +96,7 @@ func TestBootstrap(t *testing.T) {
 
 	script, err = ioutil.ReadFile("bootstrap/daemon-up.sh")
 	assert.Nil(t, err)
-	daemonScript := fmt.Sprintf(string(script), "test", "8081", "0.0.0.0")
+	daemonScript := fmt.Sprintf(string(script), "test", "4303", "127.0.0.1")
 
 	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}

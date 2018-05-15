@@ -31,22 +31,17 @@ matrix:
   fast_finish: true
 
 before_install:
-  - go get honnef.co/go/tools/cmd/megacheck                  
-  - go get github.com/fzipp/gocyclo
-  - go get github.com/mattn/goveralls
-  - go get github.com/golang/dep/cmd/dep
-  - dep ensure
+  - go get -u github.com/mattn/goveralls
+  - go get -u github.com/golang/dep/cmd/dep
+  - make deps
 
 # Build daemon, run tests, and make various code quality checks
 script:
   - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
-  - make testdaemon SSH_PORT=69     # Send test daemon to test VPS
-  - go test -v -race -coverprofile=coverage.out ./...
+  - make testdaemon SSH_PORT=69   # Send test daemon to testVPS
+  - go test -race -coverprofile=coverage.out ./...  # Execute tests
   - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
-  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
-  - gocyclo -over 19 $GO_FILES      # Forbid code with huge functions
-  - go vet ./...                    # Report suspicious constructs
-  - megacheck ./...                 # Static analysis
+  - make lint                     # Static code analysis
 
 # Push version-tagged Docker image and build platform binaries
 before_deploy:
@@ -60,10 +55,10 @@ jobs:
     - env: VPS_OS=centos VERSION=latest
   include:
     - stage: Daemon build for "latest"
-      if: (branch = master) AND (type = push)
+      if: (branch = master) AND (type = push) AND (type != pull_request)
       script: docker login -u $DOCKER_USER -p $DOCKER_KEY ; make daemon RELEASE=latest
     - stage: Release
-      if: tag IS present
+      if: (tag IS present) AND (type != pull_request)
       script: skip
       deploy:
         provider: releases
@@ -74,5 +69,5 @@ jobs:
         file: inertia.*
         go: "1.10"
         on:
-          tags: true
           branch: master
+          repo: ubclaunchpad/inertia

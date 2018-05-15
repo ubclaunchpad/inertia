@@ -2,9 +2,10 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
@@ -13,24 +14,21 @@ import (
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	// Get container name from request
-	body, err := ioutil.ReadAll(r.Body)
+	// Get container name and stream from request query params
+	q := r.URL.Query()
+
+	container := q.Get("container")
+	stream, err := strconv.ParseBool(q.Get("stream"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusLengthRequired)
-		return
-	}
-	defer r.Body.Close()
-	var upReq common.DaemonRequest
-	err = json.Unmarshal(body, &upReq)
-	if err != nil {
+		println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	container := upReq.Container
-	logger := newLogger(upReq.Stream, w)
+
+	logger := newLogger(stream, w)
 	defer logger.Close()
 
-	if container != "/inertia-daemon" && deployment == nil {
+	if !strings.Contains(container, "inertia-daemon") && deployment == nil {
 		logger.Err(msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
@@ -42,10 +40,10 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	logs, err := deployment.Logs(project.LogOptions{
-		Container: upReq.Container,
-		Stream:    upReq.Stream,
-	}, cli)
+	logs, err := project.ContainerLogs(cli, project.LogOptions{
+		Container: container,
+		Stream:    stream,
+	})
 	if err != nil {
 		if docker.IsErrContainerNotFound(err) {
 			logger.Err(err.Error(), http.StatusNotFound)
@@ -56,12 +54,15 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer logs.Close()
 
-	if upReq.Stream {
+	if stream {
 		stop := make(chan struct{})
 		common.FlushRoutine(w, logs, stop)
+		defer close(stop)
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)
-		logger.Success(buf.String(), http.StatusOK)
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, buf.String())
 	}
 }

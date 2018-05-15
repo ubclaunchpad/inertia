@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -17,6 +18,26 @@ var (
 	ErrNoContainers = errors.New("There are currently no active containers")
 )
 
+// LogOptions is used to configure retrieved container logs
+type LogOptions struct {
+	Container    string
+	Stream       bool
+	Detailed     bool
+	NoTimestamps bool
+}
+
+// ContainerLogs get logs ;)
+func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
+	ctx := context.Background()
+	return cli.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     opts.Stream,
+		Timestamps: !opts.NoTimestamps,
+		Details:    opts.Detailed,
+	})
+}
+
 // getActiveContainers returns all active containers and returns and error
 // if the Daemon is the only active container
 func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
@@ -28,13 +49,16 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 		return nil, err
 	}
 
-	// Error if only one container (daemon) is active
-	if len(containers) <= 1 {
+	// Error if only daemon is active
+	if len(containers) == 0 || (len(containers) == 1 &&
+		strings.Contains(containers[0].Names[0], "intertia-daemon")) {
 		return nil, ErrNoContainers
 	}
 
 	return containers, nil
 }
+
+type containerStopper func(*docker.Client, io.Writer) error
 
 // stopActiveContainers kills all active project containers (ie not including daemon)
 func stopActiveContainers(cli *docker.Client, out io.Writer) error {

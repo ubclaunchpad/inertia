@@ -1,12 +1,28 @@
 package common
 
 import (
+	"archive/tar"
+	"compress/gzip"
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"regexp"
 )
+
+// GenerateRandomString creates a rand.Reader-generated
+// string for use with simple secrets and identifiers
+func GenerateRandomString() (string, error) {
+	b := make([]byte, 32)
+	if _, err := io.ReadFull(rand.Reader, b); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
+}
 
 // CheckForDockerCompose returns error if current directory is a
 // not a docker-compose project
@@ -18,6 +34,15 @@ func CheckForDockerCompose(cwd string) bool {
 	_, err = os.Stat(dockerComposeYAML)
 	YAMLnotPresent := os.IsNotExist(err)
 	return !(YMLnotPresent && YAMLnotPresent)
+}
+
+// CheckForDockerfile returns error if current directory is a
+// not a Dockerfile project
+func CheckForDockerfile(cwd string) bool {
+	dockerfilePath := filepath.Join(cwd, "Dockerfile")
+	_, err := os.Stat(dockerfilePath)
+	dockerfileNotPresent := os.IsNotExist(err)
+	return !dockerfileNotPresent
 }
 
 // RemoveContents removes all files within given directory, returns nil if successful
@@ -79,6 +104,63 @@ func Flush(w io.Writer, rc io.ReadCloser, buffer []byte) error {
 		buffer[i] = 0
 	}
 	return nil
+}
+
+// BuildTar takes a source and variable writers and walks 'source' writing each file
+// found to the tar writer; the purpose for accepting multiple writers is to allow
+// for multiple outputs (for example a file, or md5 hash)
+// Sourced from https://gist.github.com/sdomino/e6bc0c98f87843bc26bb#file-targz-go
+func BuildTar(dir string, outputs ...io.Writer) error {
+
+	// ensure the src actually exists before trying to tar it
+	if _, err := os.Stat(dir); err != nil {
+		return fmt.Errorf("Unable to tar files - %v", err.Error())
+	}
+
+	mw := io.MultiWriter(outputs...)
+
+	gzw := gzip.NewWriter(mw)
+	defer gzw.Close()
+
+	tw := tar.NewWriter(gzw)
+	defer tw.Close()
+
+	return filepath.Walk(dir, func(file string, fi os.FileInfo, err error) error {
+		// return on any error
+		if err != nil {
+			return err
+		}
+
+		// create a new dir/file header
+		header, err := tar.FileInfoHeader(fi, fi.Name())
+		if err != nil {
+			return err
+		}
+
+		// update the name to correctly reflect the desired destination when untaring
+		header.Name = strings.TrimPrefix(strings.Replace(file, dir, "", -1), string(filepath.Separator))
+
+		// write the header
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		// return on non-regular files
+		if !fi.Mode().IsRegular() {
+			return nil
+		}
+
+		// open files for taring
+		f, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		// copy file data into tar writer
+		_, err = io.Copy(tw, f)
+		return err
+	})
 }
 
 // Extract gets the project name from its URL in the form [username]/[project]
