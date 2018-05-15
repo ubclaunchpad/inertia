@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/BurntSushi/toml"
-
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -174,4 +174,26 @@ func GetConfigFilePath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(path, configFileName), nil
+}
+
+// SetProperty takes a struct pointer and searches for its "toml" tag with a search key
+// and set property value with the tag
+func SetProperty(name string, value string, structObject interface{}) bool {
+	val := reflect.ValueOf(structObject)
+
+	if val.Kind() != reflect.Ptr {
+		return false
+	}
+	structVal := val.Elem()
+	for i := 0; i < structVal.NumField(); i++ {
+		valueField := structVal.Field(i)
+		typeField := structVal.Type().Field(i)
+		if typeField.Tag.Get("toml") == name {
+			if valueField.IsValid() && valueField.CanSet() && valueField.Kind() == reflect.String {
+				valueField.SetString(value)
+				return true
+			}
+		}
+	}
+	return false
 }
