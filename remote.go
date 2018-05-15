@@ -147,17 +147,18 @@ var setCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, err := client.GetProjectConfigFromDisk()
+		config, path, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		remote, found := config.GetRemote(args[0])
 		if found {
-			success := client.SetProperty(args[1], args[2], remote)
+			success := setProperty(args[1], args[2], remote)
 			if success {
+				config.Write(path)
 				println("Remote '" + args[0] + "' has been updated.")
-				printRemoteDetails(remote)
+				println(formatRemoteDetails(remote))
 			} else {
 				// invalid input
 				println("Remote setting '" + args[1] + "' not found.")
@@ -167,6 +168,7 @@ var setCmd = &cobra.Command{
 		}
 	},
 }
+
 func init() {
 	rootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
