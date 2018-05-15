@@ -89,15 +89,15 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 	repo, err := common.GetLocalRepo()
 	origin, err := repo.Remote("origin")
-	projectName := common.Extract(common.GetSSHRemoteURL(origin.Config().URLs[0]))
+	repoName := common.Extract(common.GetSSHRemoteURL(origin.Config().URLs[0]))
 
 	// Output deploy key to user.
-	println(">> GitHub Deploy Key (add to https://www.github.com/" + projectName + "/settings/keys/new): ")
+	println(">> GitHub Deploy Key (add to https://www.github.com/" + repoName + "/settings/keys/new): ")
 	println(pub.String())
 
 	// Output Webhook url to user.
+	println(">> GitHub WebHook URL (add to https://www.github.com/" + repoName + "/settings/hooks/new): ")
 	println("WebHook Address:  https://" + remote.IP + ":" + remote.Daemon.Port + "/webhook")
-	println(">> GitHub WebHook URL (add to https://www.github.com/" + projectName + "/settings/hooks/new): ")
 	println("WebHook Secret:   " + remote.Daemon.Secret)
 	println(`Note that you will have to disable SSH verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
