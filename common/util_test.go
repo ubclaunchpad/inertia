@@ -115,6 +115,6 @@ func TestFlushRoutine(t *testing.T) {
 
 func TestExtract(t *testing.T) {
 	for _, url := range remoteURLVariations {
-		assert.Equal(t, "ubclaunchpad/inertia", Extract(url))
+		assert.Equal(t, "ubclaunchpad/inertia", ExtractRepository(url))
 	}
 }

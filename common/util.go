@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"regexp"
+	"strings"
 )
 
 // GenerateRandomString creates a rand.Reader-generated
@@ -163,8 +163,11 @@ func BuildTar(dir string, outputs ...io.Writer) error {
 	})
 }
 
-// Extract gets the project name from its URL in the form [username]/[project]
-func Extract(URL string) string {
-	r, _ := regexp.Compile(".com(/|:)(\\w+/\\w+)")
+// ExtractRepository gets the project name from its URL in the form [username]/[project]
+func ExtractRepository(URL string) string {
+	r, err := regexp.Compile(`.com(/|:)(\w+/\w+)`)
+	if err != nil {
+		return ""
+	}
 	return r.FindStringSubmatch(URL)[2]
 }

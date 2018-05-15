@@ -251,7 +251,18 @@ for updates to this repository's remote master branch.`,
 		remote, found := config.GetRemote(remoteName)
 		if found {
 			session := client.NewSSHRunner(remote)
-			err = remote.Bootstrap(session, remoteName, config)
+
+			repo, err := common.GetLocalRepo()
+			if err != nil {
+				log.Fatal(err)
+			}
+			origin, err := repo.Remote("origin")
+			if err != nil {
+				log.Fatal(err)
+			}
+			repoName := common.ExtractRepository(common.GetSSHRemoteURL(origin.Config().URLs[0]))
+
+			err = remote.Bootstrap(session, repoName, config)
 			if err != nil {
 				log.Fatal(err)
 			}
