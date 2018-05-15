@@ -2,13 +2,14 @@ package client
 
 import (
 	"errors"
-	"github.com/BurntSushi/toml"
-	"github.com/ubclaunchpad/inertia/common"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
+
+	"github.com/BurntSushi/toml"
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 var (
