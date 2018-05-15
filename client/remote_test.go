@@ -24,6 +24,7 @@ func getTestConfig(writer io.Writer) *Config {
 
 func getTestRemote() *RemoteVPS {
 	remote := &RemoteVPS{
+		Name: "gcloud",
 		IP:   "127.0.0.1",
 		PEM:  "../test/keys/id_rsa",
 		User: "root",
@@ -100,7 +101,7 @@ func TestBootstrap(t *testing.T) {
 
 	var writer bytes.Buffer
 	session := mockSSHRunner{r: remote}
-	err = remote.Bootstrap(&session, "gcloud", getTestConfig(&writer))
+	err = remote.Bootstrap(&session, "ubclaunchpad/inertia", getTestConfig(&writer))
 	assert.Nil(t, err)
 
 	// Make sure all commands are formatted correctly
@@ -118,7 +119,7 @@ func TestBootstrapIntegration(t *testing.T) {
 	remote := getTestRemote()
 	session := &SSHRunner{r: remote}
 	var writer bytes.Buffer
-	err := remote.Bootstrap(session, "testvps", getTestConfig(&writer))
+	err := remote.Bootstrap(session, "ubclaunchpad/inertia", getTestConfig(&writer))
 	assert.Nil(t, err)
 
 	// Daemon setup takes a bit of time - do a crude wait

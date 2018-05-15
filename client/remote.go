@@ -40,8 +40,8 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
 // for the user.
-func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Config) error {
-	println("Setting up remote \"" + name + "\" at " + remote.IP)
+func (remote *RemoteVPS) Bootstrap(runner SSHSession, repoName string, config *Config) error {
+	println("Setting up remote \"" + remote.Name + "\" at " + remote.IP)
 
 	println(">> Step 1/4: Installing docker...")
 	err := remote.installDocker(runner)
@@ -82,16 +82,16 @@ func (remote *RemoteVPS) Bootstrap(runner SSHSession, name string, config *Confi
 
 	println("\nInertia has been set up and daemon is running on remote!")
 	println("You may have to wait briefly for Inertia to set up some dependencies.")
-	fmt.Printf("Use 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", name)
+	fmt.Printf("Use 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", remote.Name)
 
 	println("=============================\n")
 
 	// Output deploy key to user.
-	println(">> GitHub Deploy Key (add to https://www.github.com/<your_repo>/settings/keys/new): ")
+	println(">> GitHub Deploy Key (add to https://www.github.com/" + repoName + "/settings/keys/new): ")
 	println(pub.String())
 
 	// Output Webhook url to user.
-	println(">> GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println(">> GitHub WebHook URL (add to https://www.github.com/" + repoName + "/settings/hooks/new): ")
 	println("WebHook Address:  https://" + remote.IP + ":" + remote.Daemon.Port + "/webhook")
 	println("WebHook Secret:   " + remote.Daemon.Secret)
 	println(`Note that you will have to disable SSH verification in your webhook
@@ -100,7 +100,7 @@ be able to verify.` + "\n")
 
 	println(`Inertia daemon successfully deployed! Add your webhook url and deploy
 key to enable continuous deployment.`)
-	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", name)
+	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", remote.Name)
 
 	return nil
 }

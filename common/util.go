@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -160,4 +161,13 @@ func BuildTar(dir string, outputs ...io.Writer) error {
 		_, err = io.Copy(tw, f)
 		return err
 	})
+}
+
+// ExtractRepository gets the project name from its URL in the form [username]/[project]
+func ExtractRepository(URL string) string {
+	r, err := regexp.Compile(`.com(/|:)(\w+/\w+)`)
+	if err != nil {
+		return ""
+	}
+	return r.FindStringSubmatch(URL)[2]
 }
