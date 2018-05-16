@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -173,7 +172,7 @@ func ExtractRepository(URL string) (string, error) {
 
 	remoteString := r.FindStringSubmatch(URL)
 	if len(remoteString) != 3 {
-		return "", errors.New("Failed to extract repository name")
+		return "", fmt.Errorf("Failed to extract repository name with remote url %s", URL)
 	}
 	return remoteString[2], nil
 }
