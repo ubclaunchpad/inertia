@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -164,10 +165,15 @@ func BuildTar(dir string, outputs ...io.Writer) error {
 }
 
 // ExtractRepository gets the project name from its URL in the form [username]/[project]
-func ExtractRepository(URL string) string {
+func ExtractRepository(URL string) (string, error) {
 	r, err := regexp.Compile(`.com(/|:)(\w+/\w+)`)
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return r.FindStringSubmatch(URL)[2]
+
+	remoteString := r.FindStringSubmatch(URL)
+	if len(remoteString) != 3 {
+		return "", errors.New("Failed to extract repository name")
+	}
+	return remoteString[2], nil
 }
