@@ -139,7 +139,7 @@ func TestBootstrap(t *testing.T) {
 	assert.Nil(t, err)
 	daemonScript := fmt.Sprintf(string(script), "test", "4303", "127.0.0.1")
 
-	err = client.BootstrapRemote()
+	err = client.BootstrapRemote("ubclaunchpad/inertia")
 	assert.Nil(t, err)
 
 	// Make sure all commands are formatted correctly
@@ -155,7 +155,7 @@ func TestBootstrapIntegration(t *testing.T) {
 	}
 
 	cli := getIntegrationClient(nil)
-	err := cli.BootstrapRemote()
+	err := cli.BootstrapRemote("")
 	assert.Nil(t, err)
 
 	// Daemon setup takes a bit of time - do a crude wait

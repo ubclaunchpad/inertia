@@ -42,7 +42,7 @@ func NewClient(remoteName string, config *Config) (*Client, bool) {
 // by installing docker, starting the daemon and building a
 // public-private key-pair. It outputs configuration information
 // for the user.
-func (c *Client) BootstrapRemote() error {
+func (c *Client) BootstrapRemote(repoName string) error {
 	println("Setting up remote \"" + c.Name + "\" at " + c.IP)
 
 	println(">> Step 1/4: Installing docker...")
@@ -85,11 +85,11 @@ func (c *Client) BootstrapRemote() error {
 	println("=============================\n")
 
 	// Output deploy key to user.
-	println(">> GitHub Deploy Key (add to https://www.github.com/<your_repo>/settings/keys/new): ")
+	println(">> GitHub Deploy Key (add to https://www.github.com/" + repoName + "/settings/keys/new): ")
 	println(pub.String())
 
 	// Output Webhook url to user.
-	println(">> GitHub WebHook URL (add to https://www.github.com/<your_repo>/settings/hooks/new): ")
+	println(">> GitHub WebHook URL (add to https://www.github.com/" + repoName + "/settings/hooks/new): ")
 	println("WebHook Address:  https://" + c.IP + ":" + c.Daemon.Port + "/webhook")
 	println("WebHook Secret:   " + c.Daemon.Secret)
 	println(`Note that you will have to disable SSH verification in your webhook

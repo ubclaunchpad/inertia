@@ -259,10 +259,8 @@ for updates to this repository's remote master branch.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-		remote, found := client.NewClient(remoteName, config)
+		cli, found := client.NewClient(remoteName, config)
 		if found {
-			session := client.NewSSHRunner(remote)
-
 			repo, err := common.GetLocalRepo()
 			if err != nil {
 				log.Fatal(err)
@@ -273,7 +271,7 @@ for updates to this repository's remote master branch.`,
 			}
 			repoName := common.ExtractRepository(common.GetSSHRemoteURL(origin.Config().URLs[0]))
 
-			err = remote.Bootstrap(session, repoName, config)
+			err = cli.BootstrapRemote(repoName)
 			if err != nil {
 				log.Fatal(err)
 			}
