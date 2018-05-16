@@ -115,6 +115,24 @@ func TestFlushRoutine(t *testing.T) {
 
 func TestExtract(t *testing.T) {
 	for _, url := range remoteURLVariations {
-		assert.Equal(t, "ubclaunchpad/inertia", ExtractRepository(url))
+		repoName, err := ExtractRepository(url)
+		assert.Nil(t, err)
+		assert.Equal(t, "ubclaunchpad/inertia", repoName)
 	}
+
+	repoNameWithHyphens, err := ExtractRepository("git@github.com:ubclaunchpad/inertia-deploy-test.git")
+	assert.Nil(t, err)
+	assert.Equal(t, "ubclaunchpad/inertia-deploy-test", repoNameWithHyphens)
+
+	repoNameWithDots, err := ExtractRepository("git@github.com:ubclaunchpad/inertia.deploy.test.git")
+	assert.Nil(t, err)
+	assert.Equal(t, "ubclaunchpad/inertia.deploy.test", repoNameWithDots)
+
+	repoNameWithMixed, err := ExtractRepository("git@github.com:ubclaunchpad/inertia-deploy.test.git")
+	assert.Nil(t, err)
+	assert.Equal(t, "ubclaunchpad/inertia-deploy.test", repoNameWithMixed)
+
+	repoNameWithErr, err := ExtractRepository("asdfasda")
+	assert.NotNil(t, err)
+	assert.Equal(t, "$YOUR_REPOSITORY", repoNameWithErr)
 }

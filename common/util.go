@@ -164,10 +164,16 @@ func BuildTar(dir string, outputs ...io.Writer) error {
 }
 
 // ExtractRepository gets the project name from its URL in the form [username]/[project]
-func ExtractRepository(URL string) string {
-	r, err := regexp.Compile(`.com(/|:)(\w+/\w+)`)
+func ExtractRepository(URL string) (string, error) {
+	const defaultName = "$YOUR_REPOSITORY"
+	r, err := regexp.Compile(`.com(/|:)(.+/.+)`)
 	if err != nil {
-		return ""
+		return defaultName, err
 	}
-	return r.FindStringSubmatch(URL)[2]
+
+	remoteString := r.FindStringSubmatch(URL)
+	if len(remoteString) != 3 {
+		return defaultName, fmt.Errorf("Failed to extract repository name with remote url %s", URL)
+	}
+	return strings.Split(remoteString[2], ".git")[0], nil
 }
