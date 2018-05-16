@@ -4,9 +4,11 @@ const (
 	// MsgDaemonOK is the OK response upon successfully reaching daemon
 	MsgDaemonOK = "I'm a little Webhook, short and stout!"
 
-	// Constants used in HTTP GET query strings
+	// Container is a constant used in HTTP GET query strings
 	Container = "container"
-	Stream    = "stream"
+
+	// Stream is a constant used in HTTP GET query strings
+	Stream = "stream"
 )
 
 // DaemonRequest is the configurable body of a request to the daemon.
