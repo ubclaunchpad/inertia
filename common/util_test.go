@@ -131,4 +131,8 @@ func TestExtract(t *testing.T) {
 	repoNameWithMixed, err := ExtractRepository("git@github.com:ubclaunchpad/inertia-deploy.test.git")
 	assert.Nil(t, err)
 	assert.Equal(t, "ubclaunchpad/inertia-deploy.test", repoNameWithMixed)
+
+	repoNameWithErr, err := ExtractRepository("asdfasda")
+	assert.NotNil(t, err)
+	assert.Equal(t, "$YOUR_REPOSITORY", repoNameWithErr)
 }

@@ -262,7 +262,7 @@ for updates to this repository's remote master branch.`,
 			}
 			repoName, err := common.ExtractRepository(common.GetSSHRemoteURL(origin.Config().URLs[0]))
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 
 			err = remote.Bootstrap(session, repoName, config)
