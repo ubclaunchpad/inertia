@@ -69,5 +69,6 @@ jobs:
         file: inertia.*
         go: "1.10"
         on:
+          tags: true
           branch: master
           repo: ubclaunchpad/inertia
