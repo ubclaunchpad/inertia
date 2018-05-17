@@ -1,62 +1,78 @@
 package client
 
 import (
+	"bytes"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := createConfigFile("", "")
+func TestNewConfig(t *testing.T) {
+	cfg := NewConfig("test", "best-project", "docker-compose")
+	assert.Equal(t, cfg.Version, "test")
+}
+
+func TestWriteFailed(t *testing.T) {
+	cfg := NewConfig("test", "best-project", "docker-compose")
+	err := cfg.Write("")
+	assert.NotNil(t, err)
+	assert.Contains(t, "nothing to write to", err.Error())
+}
+
+func TestWriteToPath(t *testing.T) {
+	configPath := "/test-config.toml"
+	cfg := NewConfig("test", "best-project", "docker-compose")
+
+	cwd, err := os.Getwd()
 	assert.Nil(t, err)
-	config, err := GetProjectConfigFromDisk()
-	assert.Nil(t, err)
-	config.AddRemote(&RemoteVPS{
-		Name: "test",
-		IP:   "1234",
-		User: "bobheadxi",
-		PEM:  "/some/pem/file",
-		Daemon: &DaemonConfig{
-			Port:    "8080",
-			SSHPort: "22",
-		},
-	})
-	config.AddRemote(&RemoteVPS{
-		Name: "test2",
-		IP:   "12343",
-		User: "bobheadxi234",
-		PEM:  "/some/pem/file234",
-		Daemon: &DaemonConfig{
-			Port:    "80801",
-			SSHPort: "222",
-		},
-	})
-	err = config.Write()
+	absPath := filepath.Join(cwd, configPath)
+	defer os.RemoveAll(absPath)
+
+	err = cfg.Write(absPath)
 	assert.Nil(t, err)
 
-	readConfig, err := GetProjectConfigFromDisk()
+	writtenConfigContents, err := ioutil.ReadFile(absPath)
 	assert.Nil(t, err)
-	assert.Equal(t, config.Remotes[0], readConfig.Remotes[0])
-	assert.Equal(t, config.Remotes[1], readConfig.Remotes[1])
+	assert.Contains(t, string(writtenConfigContents), "best-project")
+	assert.Contains(t, string(writtenConfigContents), "docker-compose")
+}
 
-	path, err := GetConfigFilePath()
+func TestWriteToWritersAndFile(t *testing.T) {
+	configPath := "/test-config.toml"
+	cfg := NewConfig("test", "best-project", "docker-compose")
+
+	cwd, err := os.Getwd()
 	assert.Nil(t, err)
-	println(path)
-	err = os.Remove(path)
+	absPath := filepath.Join(cwd, configPath)
+	defer os.RemoveAll(absPath)
+
+	buffer1 := bytes.NewBuffer(nil)
+	buffer2 := bytes.NewBuffer(nil)
+
+	err = cfg.Write(absPath, buffer1, buffer2)
 	assert.Nil(t, err)
+
+	writtenConfigContents, err := ioutil.ReadFile(absPath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(writtenConfigContents), "best-project")
+	assert.Contains(t, string(writtenConfigContents), "docker-compose")
+	assert.Contains(t, buffer1.String(), "best-project")
+	assert.Contains(t, buffer2.String(), "best-project")
 }
 
 func TestConfigGetRemote(t *testing.T) {
 	config := &Config{Remotes: make([]*RemoteVPS, 0)}
 	testRemote := &RemoteVPS{
-		Name: "test",
-		IP:   "12343",
-		User: "bobheadxi",
-		PEM:  "/some/pem/file",
+		Name:    "test",
+		IP:      "12343",
+		User:    "bobheadxi",
+		PEM:     "/some/pem/file",
+		SSHPort: "22",
 		Daemon: &DaemonConfig{
-			Port:    "8080",
-			SSHPort: "22",
+			Port: "8080",
 		},
 	}
 	config.AddRemote(testRemote)
@@ -68,27 +84,27 @@ func TestConfigGetRemote(t *testing.T) {
 	assert.False(t, found)
 }
 
-func TestConfigRemoteRemote(t *testing.T) {
+func TestConfigRemoveRemote(t *testing.T) {
 	config := &Config{Remotes: make([]*RemoteVPS, 0)}
 	testRemote := &RemoteVPS{
-		Name: "test",
-		IP:   "12343",
-		User: "bobheadxi",
-		PEM:  "/some/pem/file",
+		Name:    "test",
+		IP:      "12343",
+		User:    "bobheadxi",
+		PEM:     "/some/pem/file",
+		SSHPort: "22",
 		Daemon: &DaemonConfig{
-			Port:    "8080",
-			SSHPort: "22",
+			Port: "8080",
 		},
 	}
 	config.AddRemote(testRemote)
 	config.AddRemote(&RemoteVPS{
-		Name: "test2",
-		IP:   "12343",
-		User: "bobheadxi234",
-		PEM:  "/some/pem/file234",
+		Name:    "test2",
+		IP:      "12343",
+		User:    "bobheadxi234",
+		PEM:     "/some/pem/file234",
+		SSHPort: "222",
 		Daemon: &DaemonConfig{
-			Port:    "80801",
-			SSHPort: "222",
+			Port: "80801",
 		},
 	})
 	removed := config.RemoveRemote("test2")
@@ -99,31 +115,4 @@ func TestConfigRemoteRemote(t *testing.T) {
 	remote, found := config.GetRemote("test")
 	assert.True(t, found)
 	assert.Equal(t, testRemote, remote)
-}
-
-func TestSetProperty(t *testing.T) {
-
-	testDaemonConfig := &DaemonConfig{
-		Port:    "8080",
-		SSHPort: "22",
-	}
-
-	testRemote := &RemoteVPS{
-		Name:   "testName",
-		IP:     "1234",
-		User:   "testUser",
-		PEM:    "/some/pem/file",
-		Daemon: testDaemonConfig,
-	}
-	a := SetProperty("name", "newTestName", testRemote)
-	assert.True(t, a)
-	assert.Equal(t, "newTestName", testRemote.Name)
-
-	b := SetProperty("wrongtag", "otherTestName", testRemote)
-	assert.False(t, b)
-	assert.Equal(t, "newTestName", testRemote.Name)
-
-	c := SetProperty("port", "8000", testDaemonConfig)
-	assert.True(t, c)
-	assert.Equal(t, "8000", testDaemonConfig.Port)
 }

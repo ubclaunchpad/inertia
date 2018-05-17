@@ -2,9 +2,6 @@ package client
 
 import (
 	"bytes"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 // mockSSHRunner is a mocked out implementation of SSHSession
@@ -25,24 +22,4 @@ func (runner *mockSSHRunner) RunStream(cmd string, interactive bool) error {
 
 func (runner *mockSSHRunner) RunSession() error {
 	return nil
-}
-
-func TestRun(t *testing.T) {
-	remote := getTestRemote()
-	session := mockSSHRunner{r: remote}
-	cmd := "ls -lsa"
-
-	_, _, err := session.Run(cmd)
-	assert.Nil(t, err)
-	assert.Equal(t, cmd, session.Calls[0])
-}
-
-func TestRunInteractive(t *testing.T) {
-	remote := getTestRemote()
-	session := mockSSHRunner{r: remote}
-	cmd := "ls -lsa"
-
-	err := session.RunStream(cmd, true)
-	assert.Nil(t, err)
-	assert.Equal(t, cmd, session.Calls[0])
 }

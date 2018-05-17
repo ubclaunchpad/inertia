@@ -5,43 +5,71 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"reflect"
 
 	"github.com/BurntSushi/toml"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 var (
 	// NoInertiaRemote is used to warn about missing inertia remote
 	NoInertiaRemote = "No inertia remote"
-	configFileName  = ".inertia.toml"
 )
 
 // Config represents the current projects configuration.
 type Config struct {
-	Version   string       `toml:"inertia"`
+	Version   string       `toml:"version"`
 	Project   string       `toml:"project-name"`
 	BuildType string       `toml:"build-type"`
 	Remotes   []*RemoteVPS `toml:"remote"`
-	Writer    io.Writer    `toml:"-"`
 }
 
-// Write writes configuration to Inertia config file.
-func (config *Config) Write() error {
-	if config.Writer == nil {
-		return nil
+// NewConfig sets up Inertia configuration with given properties
+func NewConfig(version, project, buildType string) *Config {
+	return &Config{
+		Version:   version,
+		Project:   project,
+		BuildType: buildType,
+		Remotes:   make([]*RemoteVPS, 0),
 	}
-	path, err := GetConfigFilePath()
-	if err != nil {
-		return err
+}
+
+// Write writes configuration to Inertia config file at path. Optionally
+// takes io.Writers.
+func (config *Config) Write(filePath string, writers ...io.Writer) error {
+	if len(writers) == 0 && filePath == "" {
+		return errors.New("nothing to write to")
 	}
-	// Overwrite file if file exists
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		ioutil.WriteFile(path, []byte(""), 0644)
+
+	var writer io.Writer
+
+	// If io.Writers are given, attach all writers
+	if len(writers) > 0 {
+		writer = io.MultiWriter(writers...)
 	}
-	// Write configuration to file
-	encoder := toml.NewEncoder(config.Writer)
+
+	// If path is given, attach file writer
+	if filePath != "" {
+		w, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			return err
+		}
+
+		// Overwrite file if file exists
+		if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+			ioutil.WriteFile(filePath, []byte(""), 0644)
+		} else if err != nil {
+			return err
+		}
+
+		// Set writer
+		if writer != nil {
+			writer = io.MultiWriter(writer, w)
+		} else {
+			writer = w
+		}
+	}
+
+	// Write configuration to writers
+	encoder := toml.NewEncoder(writer)
 	return encoder.Encode(config)
 }
 
@@ -67,132 +95,6 @@ func (config *Config) RemoveRemote(name string) bool {
 			remote = nil
 			config.Remotes = append(config.Remotes[:index], config.Remotes[index+1:]...)
 			return true
-		}
-	}
-	return false
-}
-
-// InitializeInertiaProject creates the inertia config folder and
-// returns an error if we're not in a git project.
-func InitializeInertiaProject(version, buildType string) error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	err = common.CheckForGit(cwd)
-	if err != nil {
-		return err
-	}
-
-	return createConfigFile(version, buildType)
-}
-
-// createConfigFile returns an error if the config directory
-// already exists (the project is already initialized).
-func createConfigFile(version, buildType string) error {
-	configFilePath, err := GetConfigFilePath()
-	if err != nil {
-		return err
-	}
-
-	// Check if Inertia is already set up.
-	s, fileErr := os.Stat(configFilePath)
-	if s != nil {
-		return errors.New("inertia already properly configured in this folder")
-	}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	// Directory exists. Make sure configuration file exists.
-	if os.IsNotExist(fileErr) {
-		config := Config{
-			Project:   filepath.Base(cwd),
-			Version:   version,
-			BuildType: buildType,
-			Remotes:   make([]*RemoteVPS, 0),
-		}
-
-		path, err := GetConfigFilePath()
-		if err != nil {
-			return err
-		}
-		f, err := os.Create(path)
-		if err != nil {
-			return err
-		}
-		writer, err := os.OpenFile(configFilePath, os.O_WRONLY, os.ModePerm)
-		if err != nil {
-			return err
-		}
-		config.Writer = writer
-		defer f.Close()
-		config.Write()
-	}
-
-	return nil
-}
-
-// GetProjectConfigFromDisk returns the current project's configuration.
-// If an .inertia folder is not found, it returns an error.
-func GetProjectConfigFromDisk() (*Config, error) {
-	configFilePath, err := GetConfigFilePath()
-	if err != nil {
-		return nil, err
-	}
-
-	raw, err := ioutil.ReadFile(configFilePath)
-
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, errors.New("config file doesnt exist, try inertia init")
-		}
-		return nil, err
-	}
-
-	var result Config
-	err = toml.Unmarshal(raw, &result)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add writer to object for writing/testing.
-	result.Writer, err = os.OpenFile(configFilePath, os.O_WRONLY, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, err
-}
-
-// GetConfigFilePath returns the absolute path of the config file.
-func GetConfigFilePath() (string, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(path, configFileName), nil
-}
-
-// SetProperty takes a struct pointer and searches for its "toml" tag with a search key
-// and set property value with the tag
-func SetProperty(name string, value string, structObject interface{}) bool {
-	val := reflect.ValueOf(structObject)
-
-	if val.Kind() != reflect.Ptr {
-		return false
-	}
-	structVal := val.Elem()
-	for i := 0; i < structVal.NumField(); i++ {
-		valueField := structVal.Field(i)
-		typeField := structVal.Type().Field(i)
-		if typeField.Tag.Get("toml") == name {
-			if valueField.IsValid() && valueField.CanSet() && valueField.Kind() == reflect.String {
-				valueField.SetString(value)
-				return true
-			}
 		}
 	}
 	return false

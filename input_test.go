@@ -11,7 +11,7 @@ import (
 )
 
 func TestRemoteAddWalkthrough(t *testing.T) {
-	config := &client.Config{Remotes: make([]*client.RemoteVPS, 0)}
+	config := client.NewConfig("", "", "")
 	in, err := ioutil.TempFile("", "")
 	assert.Nil(t, err)
 	defer in.Close()
@@ -24,7 +24,7 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", config)
+	err = addRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	r, found := config.GetRemote("inertia-rocks")
 	assert.True(t, found)
 	assert.Equal(t, "pemfile", r.PEM)
@@ -34,7 +34,7 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 }
 
 func TestRemoteAddWalkthroughFailure(t *testing.T) {
-	config := &client.Config{Remotes: make([]*client.RemoteVPS, 0)}
+	config := client.NewConfig("", "", "")
 	in, err := ioutil.TempFile("", "")
 	assert.Nil(t, err)
 	defer in.Close()
@@ -45,13 +45,13 @@ func TestRemoteAddWalkthroughFailure(t *testing.T) {
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", config)
+	err = addRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	assert.Equal(t, errInvalidUser, err)
 
 	in.WriteAt([]byte("pemfile\nuser\n\n"), 0)
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, "inertia-rocks", "8080", "22", "dev", config)
+	err = addRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	assert.Equal(t, errInvalidAddress, err)
 }

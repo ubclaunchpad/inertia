@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -41,4 +44,14 @@ func formatStatus(s *common.DeploymentStatus) string {
 	}
 	statusString += activeContainers
 	return statusString
+}
+
+func formatRemoteDetails(remote *client.RemoteVPS) string {
+	remoteString := fmt.Sprintf("Remote %s: \n", remote.Name)
+	remoteString += fmt.Sprintf(" - Deployed Branch:   %s\n", remote.Branch)
+	remoteString += fmt.Sprintf(" - IP Address:        %s\n", remote.IP)
+	remoteString += fmt.Sprintf(" - VPS User:          %s\n", remote.User)
+	remoteString += fmt.Sprintf(" - PEM File Location: %s\n", remote.PEM)
+	remoteString += fmt.Sprintf("Run 'inertia %s status' for more details.\n", remote.Name)
+	return remoteString
 }

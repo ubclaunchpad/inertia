@@ -13,7 +13,7 @@ function encodeURL(params) {
   const result = [];
 
   const keys = Object.keys(params);
-  for (let k of keys) {
+  for (const k of keys) {
     const v = params[k];
 
     if (typeof v !== 'string') {
@@ -23,7 +23,7 @@ function encodeURL(params) {
     result.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
   }
 
-  return result.join('&')
+  return result.join('&');
 }
 
 module.exports = encodeURL;
