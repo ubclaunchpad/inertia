@@ -1,10 +1,67 @@
 package client
 
 import (
+	"bytes"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestNewConfig(t *testing.T) {
+	cfg := NewConfig("test", "best-project", "docker-compose")
+	assert.Equal(t, cfg.Version, "test")
+}
+
+func TestWriteFailed(t *testing.T) {
+	cfg := NewConfig("test", "best-project", "docker-compose")
+	err := cfg.Write("")
+	assert.NotNil(t, err)
+	assert.Contains(t, "nothing to write to", err.Error())
+}
+
+func TestWriteToPath(t *testing.T) {
+	configPath := "/test-config.toml"
+	cfg := NewConfig("test", "best-project", "docker-compose")
+
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+	absPath := filepath.Join(cwd, configPath)
+	defer os.RemoveAll(absPath)
+
+	err = cfg.Write(absPath)
+	assert.Nil(t, err)
+
+	writtenConfigContents, err := ioutil.ReadFile(absPath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(writtenConfigContents), "best-project")
+	assert.Contains(t, string(writtenConfigContents), "docker-compose")
+}
+
+func TestWriteToWritersAndFile(t *testing.T) {
+	configPath := "/test-config.toml"
+	cfg := NewConfig("test", "best-project", "docker-compose")
+
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+	absPath := filepath.Join(cwd, configPath)
+	defer os.RemoveAll(absPath)
+
+	buffer1 := bytes.NewBuffer(nil)
+	buffer2 := bytes.NewBuffer(nil)
+
+	err = cfg.Write(absPath, buffer1, buffer2)
+	assert.Nil(t, err)
+
+	writtenConfigContents, err := ioutil.ReadFile(absPath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(writtenConfigContents), "best-project")
+	assert.Contains(t, string(writtenConfigContents), "docker-compose")
+	assert.Contains(t, buffer1.String(), "best-project")
+	assert.Contains(t, buffer2.String(), "best-project")
+}
 
 func TestConfigGetRemote(t *testing.T) {
 	config := &Config{Remotes: make([]*RemoteVPS, 0)}
