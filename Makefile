@@ -32,12 +32,13 @@ inertia-tagged:
 # Remove Inertia binaries
 .PHONY: clean
 clean:
-	rm -f ./inertia 
+	rm -f ./inertia
 	find . -type f -name inertia.\* -exec rm {} \;
 
 .PHONY: lint
 lint:
 	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=60s ./...'
+	(cd ./daemon/web; npm run lint)
 
 # Run unit test suite
 .PHONY: test

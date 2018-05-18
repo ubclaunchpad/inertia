@@ -11,9 +11,9 @@
  */
 function encodeURL(params) {
   const result = [];
-
   const keys = Object.keys(params);
-  for (const k of keys) {
+
+  keys.forEach((k) => {
     const v = params[k];
 
     if (typeof v !== 'string') {
@@ -21,7 +21,7 @@ function encodeURL(params) {
     }
 
     result.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
-  }
+  });
 
   return result.join('&');
 }

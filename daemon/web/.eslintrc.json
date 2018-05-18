@@ -1,0 +1,22 @@
+{
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "extends": "airbnb",
+  "rules": {
+    "prefer-template": 0,
+    "react/jsx-filename-extension": 0,
+    "react/require-default-props": 0,
+    "react/jsx-closing-bracket-location": 0,
+    "object-curly-newline": 0,
+    "arrow-body-style": [2, "as-needed"],
+    "comma-dangle": ["error", "always-multiline", {
+      "arrays": "always",
+      "objects": "always",
+      "imports": "always",
+      "exports": "always",
+      "functions": "never"
+    }]
+  }
+}
