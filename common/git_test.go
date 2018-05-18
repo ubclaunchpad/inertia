@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var urlVariations = []string{
+var remoteURLVariations = []string{
 	"git@github.com:ubclaunchpad/inertia.git",
 	"https://github.com/ubclaunchpad/inertia.git",
 	"git://github.com/ubclaunchpad/inertia.git",
@@ -24,8 +24,8 @@ func TestCheckForGit(t *testing.T) {
 }
 
 func TestGetSSHRemoteURL(t *testing.T) {
-	for _, url := range urlVariations {
-		assert.Equal(t, urlVariations[0], GetSSHRemoteURL(url))
+	for _, url := range remoteURLVariations {
+		assert.Equal(t, remoteURLVariations[0], GetSSHRemoteURL(url))
 	}
 }
 

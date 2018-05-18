@@ -7,7 +7,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -36,7 +35,7 @@ file. Specify a VPS name.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, err := client.GetProjectConfigFromDisk()
+		config, path, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -59,7 +58,11 @@ file. Specify a VPS name.`,
 		}
 		branch := head.Name().Short()
 
-		err = addRemoteWalkthrough(os.Stdin, args[0], port, sshPort, branch, config)
+		err = addRemoteWalkthrough(os.Stdin, config, args[0], port, sshPort, branch)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = config.Write(path)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -76,14 +79,14 @@ var listCmd = &cobra.Command{
 	Long:  `Lists all currently configured remotes.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		config, err := client.GetProjectConfigFromDisk()
+		config, _, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		for _, remote := range config.Remotes {
 			if verbose {
-				printRemoteDetails(remote)
+				fmt.Println(formatRemoteDetails(remote))
 			} else {
 				fmt.Println(remote.Name)
 			}
@@ -97,7 +100,7 @@ var removeCmd = &cobra.Command{
 	Long:  `Remove a remote from Inertia's configuration file.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := client.GetProjectConfigFromDisk()
+		config, path, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -105,7 +108,7 @@ var removeCmd = &cobra.Command{
 		_, found := config.GetRemote(args[0])
 		if found {
 			config.RemoveRemote(args[0])
-			err = config.Write()
+			err = config.Write(path)
 			if err != nil {
 				log.Fatal("Failed to remove remote: " + err.Error())
 			}
@@ -123,27 +126,47 @@ var showCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, err := client.GetProjectConfigFromDisk()
+		config, _, err := getProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		remote, found := config.GetRemote(args[0])
 		if found {
-			printRemoteDetails(remote)
+			fmt.Println(formatRemoteDetails(remote))
 		} else {
 			println("No remote '" + args[0] + "' currently set up.")
 		}
 	},
 }
 
-func printRemoteDetails(remote *client.RemoteVPS) {
-	fmt.Printf("Remote %s: \n", remote.Name)
-	fmt.Printf(" - Deployed Branch:   %s\n", remote.Branch)
-	fmt.Printf(" - IP Address:        %s\n", remote.IP)
-	fmt.Printf(" - VPS User:          %s\n", remote.User)
-	fmt.Printf(" - PEM File Location: %s\n", remote.PEM)
-	fmt.Printf("Run 'inertia %s status' for more details.\n", remote.Name)
+var setCmd = &cobra.Command{
+	Use:   "set [REMOTE] [Property] [VALUE]",
+	Short: "Set details about remote.",
+	Long:  `Set details about the given remote.`,
+	Args:  cobra.MinimumNArgs(3),
+	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		config, path, err := getProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		remote, found := config.GetRemote(args[0])
+		if found {
+			success := setProperty(args[1], args[2], remote)
+			if success {
+				config.Write(path)
+				println("Remote '" + args[0] + "' has been updated.")
+				println(formatRemoteDetails(remote))
+			} else {
+				// invalid input
+				println("Remote setting '" + args[1] + "' not found.")
+			}
+		} else {
+			println("No remote '" + args[0] + "' currently set up.")
+		}
+	},
 }
 
 func init() {
@@ -152,6 +175,7 @@ func init() {
 	remoteCmd.AddCommand(listCmd)
 	remoteCmd.AddCommand(removeCmd)
 	remoteCmd.AddCommand(showCmd)
+	remoteCmd.AddCommand(setCmd)
 
 	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("port", "p", "4303", "Daemon port")

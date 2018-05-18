@@ -1,3 +1,5 @@
+import encodeURL from './common/encodeURL';
+
 export default class InertiaClient {
   constructor(url) {
     this.url = 'https://' + url;
@@ -34,16 +36,17 @@ export default class InertiaClient {
 
   async getContainerLogs(container = '/inertia-daemon') {
     const endpoint = '/logs';
+    const queryParams = {
+      stream: 'true',
+      container,
+    };
     const params = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        stream: true,
-        container,
-      }),
     };
-    return this.post(endpoint, params);
+
+    return this.post(endpoint, params, queryParams);
   }
 
   async getRemoteStatus() {
@@ -61,15 +64,18 @@ export default class InertiaClient {
    * Makes a GET request to the given API endpoint with the given params.
    * @param {String} endpoint
    * @param {Object} params
+   * @param {{[key]: string}} queryParams
    */
-  async _get(endpoint, params) {
+  async get(endpoint, params, queryParams) {
     const newParams = {
       ...params,
       method: 'GET',
       credentials: 'include',
     };
+    const queryString = queryParams ? encodeURL(queryParams) : '';
+    const url = this.url + endpoint + queryString;
 
-    const request = new Request(this.url + endpoint, newParams);
+    const request = new Request(url, newParams);
 
     try {
       return await fetch(request);
@@ -83,7 +89,7 @@ export default class InertiaClient {
    * @param {String} endpoint
    * @param {Object} params
    */
-  async _post(endpoint, params) {
+  async post(endpoint, params) {
     const newParams = {
       ...params,
       method: 'POST',

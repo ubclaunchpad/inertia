@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Simple, self-hosted continuous deployment.
+  Effortless, self-hosted continuous deployment.
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 
 ----------------
 
-Inertia is a simple cross-platform command line application that enables effortless setup and management of continuous, automated deployment on any virtual private server. It is built and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
+Inertia is a simple cross-platform command line application that enables quick and easy setup and management of continuous, automated deployment of a variety of project types on any virtual private server. It is used, built, and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
 
 <p align="center">
     <img src="/.static/inertia-init.png" width="45%" />
@@ -49,22 +49,31 @@ Inertia is a simple cross-platform command line application that enables effortl
 ----------------
 
 ### Contents
-- **[Getting Started](#package-getting-started)**
+- [Getting Started](#package-getting-started)
   - [Setup](#setup)
   - [Continuous Deployment](#continuous-deployment)
   - [Deployment Management](#deployment-management)
   - [Release Streams](#release-streams)
-- **[Motivation and Design](#bulb-motivation-and-design)**
-- **[Contributing](#books-contributing)**
+- [Motivation and Design](#bulb-motivation-and-design)
+- [Contributing](#books-contributing)
 
 <br>
 
 # :package: Getting Started
 
-All you need to get started is a [compatible project](https://github.com/ubclaunchpad/inertia/wiki/Project-Compatibility), the Inertia CLI, and access to a virtual private server. The CLI can be installed using [Homebrew](https://brew.sh):
+All you need to get started is a [compatible project](https://github.com/ubclaunchpad/inertia/wiki/Project-Compatibility), the Inertia CLI, and access to a virtual private server. 
+
+MacOS users can install the CLI using [Homebrew](https://brew.sh):
 
 ```bash
 $> brew install ubclaunchpad/tap/inertia
+```
+
+Windows users can install the CLI using [Scoop](http://scoop.sh):
+
+```bash
+$> scoop bucket add ubclaunchpad https://github.com/ubclaunchpad/scoop-bucket
+$> scoop install inertia
 ```
 
 For other platforms, you can [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases).
@@ -179,6 +188,6 @@ Inertia is set up serverside by executing a script over SSH that installs Docker
 
 Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! 
 
-Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for contribution guidelines and a detailed guide to help you get started with Inertia's codebase.
+Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for contribution guidelines as well as a detailed guide to help you get started with Inertia's codebase.
 
 <br>

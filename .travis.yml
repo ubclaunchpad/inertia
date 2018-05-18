@@ -71,3 +71,4 @@ jobs:
         on:
           tags: true
           branch: master
+          repo: ubclaunchpad/inertia

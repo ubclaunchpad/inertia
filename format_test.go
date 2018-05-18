@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -44,4 +45,18 @@ func TestFormatStatusNoDeployment(t *testing.T) {
 	})
 	assert.Contains(t, output, "inertia daemon 9000")
 	assert.Contains(t, output, msgNoDeployment)
+}
+
+func TestFormatRemoteDetails(t *testing.T) {
+	client := &client.RemoteVPS{
+		Name:   "bob",
+		Branch: "great",
+		User:   "tree",
+		PEM:    "/wow/amaze",
+	}
+	output := formatRemoteDetails(client)
+	assert.Contains(t, output, "bob")
+	assert.Contains(t, output, "great")
+	assert.Contains(t, output, "tree")
+	assert.Contains(t, output, "/wow/amaze")
 }
