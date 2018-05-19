@@ -1,4 +1,3 @@
-/* eslint-disable */
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
@@ -27,7 +26,7 @@ const config = {
             options: {
               presets: ['es2015', 'stage-3', 'react'],
             },
-          }
+          },
         ],
       },
       {
@@ -42,18 +41,18 @@ const config = {
       'process.env': {
         // define environment variables here
         NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-      }
+      },
     }),
     new webpack.DefinePlugin({
       // suppress react devtools console warning
-      '__REACT_DEVTOOLS_GLOBAL_HOOK__': '({ isDisabled: true })'
+      __REACT_DEVTOOLS_GLOBAL_HOOK__: '({ isDisabled: true })',
     }),
     new HtmlWebpackPlugin({
       template: './index.html',
       filename: 'index.html',
-      inject: 'body'
-    })
-  ]
+      inject: 'body',
+    }),
+  ],
 };
 
 module.exports = config;

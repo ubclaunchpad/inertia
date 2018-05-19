@@ -8,7 +8,5 @@ import './index.sass';
 // Define where the Inertia daemon is hosted.
 const daemonAddress = (process.env.NODE_ENV === 'development') ? '127.0.0.1:4303' : window.location.host;
 const client = new InertiaClient(daemonAddress);
-ReactDOM.render(
-    <App client={client} />,
-    document.getElementById('app')
-);
+
+ReactDOM.render(<App client={client} />, document.getElementById('app'));
