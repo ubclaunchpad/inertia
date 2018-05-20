@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const styles = {
   innerContainer: {
@@ -59,5 +60,5 @@ export default class LogView extends React.Component {
 }
 
 LogView.propTypes = {
-  logs: React.PropTypes.arrayOf(React.PropTypes.string),
+  logs: PropTypes.arrayOf(PropTypes.string),
 };
