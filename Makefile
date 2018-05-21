@@ -2,22 +2,26 @@ TAG = `git describe --tags`
 SSH_PORT = 22
 VPS_VERSION = latest
 VPS_OS = ubuntu
-RELEASE = canary
+RELEASE = test
 
-all: deps bootstrap inertia
+all: prod-deps inertia
 
 # List all commands
 .PHONY: ls
 ls:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
-# Sets up all dependencies
-.PHONY: deps
-deps:
-	go get -u github.com/jteeuwen/go-bindata/...
+# Sets up production dependencies
+.PHONY: prod-deps
+prod-deps:
 	dep ensure
 	make web-deps
-	bash test/deps.sh
+
+# Sets up test dependencies
+.PHONY: dev-deps
+dev-deps:
+	go get -u github.com/jteeuwen/go-bindata/...
+	bash test/deps.sh	
 
 # Install Inertia with release version
 .PHONY: inertia
