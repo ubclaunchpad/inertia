@@ -133,14 +133,14 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOption
 		builder = dockerCompose
 	}
 
-	// Build project
-	deploy, err := builder(d, cli, out)
+	// Kill active project containers if there are any
+	err := d.containerStopper(cli, out)
 	if err != nil {
 		return err
 	}
 
-	// Kill active project containers if there are any
-	err = d.containerStopper(cli, out)
+	// Deploy project
+	deploy, err := builder(d, cli, out)
 	if err != nil {
 		return err
 	}
