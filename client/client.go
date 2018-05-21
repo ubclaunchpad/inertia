@@ -34,6 +34,9 @@ func NewClient(remoteName string, config *Config) (*Client, bool) {
 
 	return &Client{
 		RemoteVPS: remote,
+		version:   config.Version,
+		project:   config.Project,
+		buildType: config.BuildType,
 		sshRunner: NewSSHRunner(remote),
 	}, true
 }
