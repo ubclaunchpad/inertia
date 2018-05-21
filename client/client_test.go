@@ -81,6 +81,28 @@ func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
 	}
 }
 
+func TestGetNewClient(t *testing.T) {
+	config := &Config{Remotes: make([]*RemoteVPS, 0)}
+	testRemote := &RemoteVPS{
+		Name:    "test",
+		IP:      "12343",
+		User:    "bobheadxi",
+		PEM:     "/some/pem/file",
+		SSHPort: "22",
+		Daemon: &DaemonConfig{
+			Port: "8080",
+		},
+	}
+	config.AddRemote(testRemote)
+
+	cli, found := NewClient("tst", config)
+	assert.False(t, found)
+
+	cli, found = NewClient("test", config)
+	assert.True(t, found)
+	assert.Equal(t, "/some/pem/file", cli.RemoteVPS.PEM)
+}
+
 func TestInstallDocker(t *testing.T) {
 	session := &mockSSHRunner{}
 	client := getIntegrationClient(session)
