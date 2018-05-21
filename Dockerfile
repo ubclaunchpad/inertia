@@ -7,9 +7,7 @@ ENV BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia/daemon/web
 ADD ./daemon/web ${BUILD_HOME}
 WORKDIR ${BUILD_HOME}
 # Build and minify client.
-RUN if [ ! -d "node_modules" ]; then \
-    npm install --production; \
-    fi
+RUN npm install --production
 RUN npm run build
 
 ### Part 2 - Building the Inertia daemon
