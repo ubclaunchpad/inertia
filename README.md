@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Effortless, self-hosted continuous deployment.
+  An effortless, self-hosted continuous deployment platform.
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
   <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
   </a>
-
+  
   <a href="https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md">
     <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
   </a>
@@ -27,13 +27,21 @@
 
 <br>
 
-----------------
+<p align="center">
+  <a href="#package-getting-started"><strong>Getting Started</strong></a> · 
+  <a href="#bulb-motivation-and-design"><strong>Motivation & Design</strong></a> · 
+  <a href="#books-contributing"><strong>Contributing</strong></a>
+</p>
 
-Inertia is a simple cross-platform command line application that enables quick and easy setup and management of continuous, automated deployment of a variety of project types on any virtual private server. It is used, built, and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
+<br>
 
 <p align="center">
     <img src="/.static/inertia-init.png" width="45%" />
 </p>
+
+<br>
+
+Inertia is a simple cross-platform command line application that enables quick and easy setup and management of continuous, automated deployment of a variety of project types on any virtual private server. The project is used, built, and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
 
 |   | Main Features  |
 ----|-----------------
@@ -45,17 +53,6 @@ Inertia is a simple cross-platform command line application that enables quick a
 🏷  | Configure deployment to your liking with branch settings and more
 🌐  | Add users and check on your deployment anywhere through Inertia Web
 🔑  | Secured with tokens and HTTPS across the board
-
-----------------
-
-### Contents
-- [Getting Started](#package-getting-started)
-  - [Setup](#setup)
-  - [Continuous Deployment](#continuous-deployment)
-  - [Deployment Management](#deployment-management)
-  - [Release Streams](#release-streams)
-- [Motivation and Design](#bulb-motivation-and-design)
-- [Contributing](#books-contributing)
 
 <br>
 
