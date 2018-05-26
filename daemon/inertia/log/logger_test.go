@@ -1,4 +1,4 @@
-package main
+package log
 
 import (
 	"bytes"
@@ -9,28 +9,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDaemonWriter(t *testing.T) {
-	var b1 bytes.Buffer
-	var b2 bytes.Buffer
-	writer := daemonWriter{
-		strWriter: &b1,
-		stdWriter: &b2,
-	}
-	writer.Write([]byte("whoah!"))
-	assert.Equal(t, "whoah!", b1.String())
-	assert.Equal(t, "whoah!", b2.String())
+type mockSocketWriter struct {
+	bytes.Buffer
 }
 
+func (m *mockSocketWriter) Close() error { return nil }
+func (m *mockSocketWriter) WriteMessage(t int, bytes []byte) error {
+	_, err := m.Buffer.Write(bytes)
+	return err
+}
+func (m *mockSocketWriter) getWrittenBytes() *bytes.Buffer { return &m.Buffer }
+
 func TestNewLogger(t *testing.T) {
-	w := httptest.NewRecorder()
-	logger := newLogger(true, w)
-	_, ok := logger.GetWriter().(*daemonWriter)
-	assert.True(t, ok)
+	logger := NewLogger(nil, nil, nil)
+	assert.NotNil(t, logger)
+}
+
+func TestWrite(t *testing.T) {
+	var b1 bytes.Buffer
+	socketWriter := &mockSocketWriter{}
+	writer := NewLogger(&b1, socketWriter, nil)
+	writer.Write([]byte("whoah!"))
+	assert.Equal(t, "whoah!", b1.String())
+	assert.Equal(t, "whoah!", socketWriter.getWrittenBytes().String())
 }
 
 func TestPrintln(t *testing.T) {
 	var b bytes.Buffer
-	logger := &daemonLogger{writer: &b}
+	logger := &DaemonLogger{Writer: &b}
 	logger.Println("what???")
 	assert.Equal(t, "what???\n", b.String())
 }
@@ -40,17 +46,17 @@ func TestErr(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// Test streaming
-	logger := &daemonLogger{
+	logger := &DaemonLogger{
 		stream:     true,
-		writer:     &b,
+		Writer:     &b,
 		httpWriter: w,
 	}
-	logger.Err("Wee!", 200)
+	logger.WriteErr("Wee!", 200)
 	assert.Equal(t, "[ERROR 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.stream = false
-	logger.Err("Wee!", 200)
+	logger.WriteErr("Wee!", 200)
 	body, err := ioutil.ReadAll(w.Body)
 	assert.Nil(t, err)
 	assert.Equal(t, "Wee!\n", string(body))
@@ -62,17 +68,17 @@ func TestSuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// Test streaming
-	logger := &daemonLogger{
+	logger := &DaemonLogger{
 		stream:     true,
-		writer:     &b,
 		httpWriter: w,
+		Writer:     &b,
 	}
-	logger.Success("Wee!", 200)
+	logger.WriteSuccess("Wee!", 200)
 	assert.Equal(t, "[SUCCESS 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.stream = false
-	logger.Success("Wee!", 200)
+	logger.WriteSuccess("Wee!", 200)
 	body, err := ioutil.ReadAll(w.Body)
 	assert.Nil(t, err)
 	assert.Equal(t, "Wee!\n", string(body))

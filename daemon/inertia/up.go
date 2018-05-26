@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
@@ -26,8 +28,21 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	logger := newLogger(upReq.Stream, w)
 	gitOpts := upReq.GitOptions
+
+	// Upgrade to websocket connection if required
+	var logger *log.DaemonLogger
+	if upReq.Stream {
+		socket, err := socketUpgrader.Upgrade(w, r, nil)
+		if err != nil {
+			println(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		logger = log.NewLogger(os.Stdout, socket, w)
+	} else {
+		logger = log.NewLogger(os.Stdout, nil, w)
+	}
 	defer logger.Close()
 
 	webhookSecret = upReq.Secret
@@ -42,9 +57,9 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			RemoteURL:   gitOpts.RemoteURL,
 			Branch:      gitOpts.Branch,
 			PemFilePath: auth.DaemonGithubKeyLocation,
-		}, logger.GetWriter())
+		}, logger)
 		if err != nil {
-			logger.Err(err.Error(), http.StatusPreconditionFailed)
+			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 			return
 		}
 		deployment = d
@@ -56,7 +71,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	// Check for matching remotes
 	err = deployment.CompareRemotes(gitOpts.RemoteURL)
 	if err != nil {
-		logger.Err(err.Error(), http.StatusPreconditionFailed)
+		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 		return
 	}
 
@@ -69,17 +84,17 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	// Deploy project
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		logger.Err(err.Error(), http.StatusInternalServerError)
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
-	err = deployment.Deploy(cli, logger.GetWriter(), project.DeployOptions{
+	err = deployment.Deploy(cli, logger, project.DeployOptions{
 		SkipUpdate: skipUpdate,
 	})
 	if err != nil {
-		logger.Err(err.Error(), http.StatusInternalServerError)
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	logger.Success("Project startup initiated!", http.StatusCreated)
+	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
 }

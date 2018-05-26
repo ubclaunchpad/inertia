@@ -8,6 +8,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
+	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
@@ -18,6 +19,9 @@ var (
 
 	// deployment is the currently deployed project on this remote
 	deployment project.Deployer
+
+	// socketUpgrader specifies parameters for upgrading an HTTP connection to a WebSocket connection
+	socketUpgrader = websocket.Upgrader{}
 )
 
 const (

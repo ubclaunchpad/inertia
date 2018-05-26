@@ -4,38 +4,55 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/gorilla/websocket"
+	"github.com/ubclaunchpad/inertia/daemon/inertia/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
 )
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	// Get container name and stream from request query params
-	q := r.URL.Query()
+	var (
+		logger *log.DaemonLogger
+		socket *websocket.Conn
+	)
 
-	container := q.Get("container")
-	stream, err := strconv.ParseBool(q.Get("stream"))
+	// Get container name and stream from request query params
+	params := r.URL.Query()
+	container := params.Get("container")
+	stream, err := strconv.ParseBool(params.Get("stream"))
 	if err != nil {
 		println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	logger := newLogger(stream, w)
+	// Upgrade to websocket connection if required
+	if stream {
+		socket, err := socketUpgrader.Upgrade(w, r, nil)
+		if err != nil {
+			println(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		logger = log.NewLogger(os.Stdout, socket, w)
+	} else {
+		logger = log.NewLogger(os.Stdout, nil, w)
+	}
 	defer logger.Close()
 
 	if !strings.Contains(container, "inertia-daemon") && deployment == nil {
-		logger.Err(msgNoDeployment, http.StatusPreconditionFailed)
+		logger.WriteErr(msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
 
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		logger.Err(err.Error(), http.StatusInternalServerError)
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
@@ -46,9 +63,9 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if docker.IsErrContainerNotFound(err) {
-			logger.Err(err.Error(), http.StatusNotFound)
+			logger.WriteErr(err.Error(), http.StatusNotFound)
 		} else {
-			logger.Err(err.Error(), http.StatusInternalServerError)
+			logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
@@ -56,7 +73,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 
 	if stream {
 		stop := make(chan struct{})
-		common.FlushRoutine(w, logs, stop)
+		log.FlushRoutine(log.NewWebSocketTextWriter(socket), logs, stop)
 		defer close(stop)
 	} else {
 		buf := new(bytes.Buffer)
