@@ -104,7 +104,7 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 
 ### Daemon
 
-The Inertia daemon package manages all serverside functionality and is the core of the Inertia platform. The daemon codebase is in `./daemon/inertia/`.
+The Inertia daemon package manages all serverside functionality and is the core of the Inertia platform. The daemon codebase is in `./daemon/inertiad/`.
 
 To locally test a daemon compiled from source, set your Inertia version in `.inertia.toml` to `test` and run:
 

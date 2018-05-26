@@ -10,5 +10,5 @@ sudo docker run --rm \
     -v $HOME:/app/host \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     -e HOME=$HOME \
-    --entrypoint=inertia \
+    --entrypoint=inertiad \
     ubclaunchpad/inertia:$RELEASE token
