@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Script for starting up testvps and neatly outputting 
 # information about the testvps
 

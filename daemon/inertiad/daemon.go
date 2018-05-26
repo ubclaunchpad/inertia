@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"sync"
 
 	"github.com/docker/docker/api/types"
@@ -20,18 +22,32 @@ var (
 	deployment project.Deployer
 )
 
+var (
+	// specify location of SSL certificate
+	sslDirectory = "/app/host/.inertia/.ssl/"
+)
+
 const (
 	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
-
-	// specify location of SSL certificate
-	sslDirectory  = "/app/host/.inertia/.ssl/"
-	daemonSSLCert = sslDirectory + "daemon.cert"
-	daemonSSLKey  = sslDirectory + "daemon.key"
 )
 
 // run starts the daemon
-func run(host, port, version string) {
+func run(host, port, version, keyPath, certDir, userDir string) {
 	daemonVersion = version
+	if keyPath != "" {
+		auth.DaemonGithubKeyLocation = keyPath
+	}
+	if certDir != "" {
+		sslDirectory = certDir
+	}
+	if userDir != "" {
+		auth.UserDatabasePath = userDir
+	}
+
+	var (
+		daemonSSLCert = path.Join(sslDirectory, "daemon.cert")
+		daemonSSLKey  = path.Join(sslDirectory, "daemon.key")
+	)
 
 	// Download build tools
 	cli, err := docker.NewEnvClient()
@@ -49,10 +65,9 @@ func run(host, port, version string) {
 	certNotPresent := os.IsNotExist(err)
 	_, err = os.Stat(daemonSSLKey)
 	keyNotPresent := os.IsNotExist(err)
-	sslRequirementsPresent := !(keyNotPresent && certNotPresent)
 
 	// If they are not available, generate new ones.
-	if !sslRequirementsPresent {
+	if !(keyNotPresent && certNotPresent) {
 		println("No certificates found - generating new ones...")
 		err = auth.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
 		if err != nil {
@@ -96,7 +111,7 @@ func run(host, port, version string) {
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)
-	println(http.ListenAndServeTLS(
+	fmt.Println(http.ListenAndServeTLS(
 		":"+port,
 		daemonSSLCert,
 		daemonSSLKey,

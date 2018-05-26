@@ -114,8 +114,7 @@ testdaemon:
 # Run a test daemon locally
 .PHONY: localdaemon
 localdaemon:
-	go run ./daemon/inertia/cmd.go token
-	go run ./daemon/inertia/cmd.go run
+	bash ./test/start_local_daemon.sh
 
 # Creates a daemon release and pushes it to Docker Hub repository.
 # Requires access to the UBC Launch Pad Docker Hub.

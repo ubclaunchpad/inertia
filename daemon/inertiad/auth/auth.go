@@ -10,10 +10,12 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
-const (
+var (
 	// DaemonGithubKeyLocation is the default path of the deploy key
 	DaemonGithubKeyLocation = "/app/host/.ssh/id_rsa_inertia_deploy"
+)
 
+const (
 	tokenInvalidErrorMsg = "Token invalid"
 )
 
