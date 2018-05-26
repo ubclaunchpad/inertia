@@ -5,6 +5,7 @@
 *.dylib
 /inertia.*
 /inertia
+/inertiad
 /bin
 
 # Test binary, build with `go test -c`
