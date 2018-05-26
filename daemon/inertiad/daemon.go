@@ -67,7 +67,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 	keyNotPresent := os.IsNotExist(err)
 
 	// If they are not available, generate new ones.
-	if !(keyNotPresent && certNotPresent) {
+	if keyNotPresent && certNotPresent {
 		println("No certificates found - generating new ones...")
 		err = auth.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
 		if err != nil {
