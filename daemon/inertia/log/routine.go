@@ -1,47 +1,31 @@
 package log
 
 import (
+	"bufio"
 	"io"
-	"net/http"
 )
 
 // FlushRoutine continuously writes everything in given ReadCloser
-// to a ResponseWriter. Use this as a goroutine.
+// to an io.Writer. Use this as a goroutine.
 func FlushRoutine(w io.Writer, rc io.ReadCloser, stop chan struct{}) {
-	buffer := make([]byte, 100)
+	reader := bufio.NewReader(rc)
 ROUTINE:
 	for {
 		select {
 		case <-stop:
-			Flush(w, rc, buffer)
+			line, err := reader.ReadBytes('\n')
+			if err == nil {
+				w.Write(line)
+			}
 			break ROUTINE
 		default:
 			// Read from pipe then write to ResponseWriter and flush it,
 			// sending the copied content to the client.
-			err := Flush(w, rc, buffer)
+			line, err := reader.ReadBytes('\n')
 			if err != nil {
 				break ROUTINE
 			}
+			w.Write(line)
 		}
 	}
-}
-
-// Flush emptires reader into buffer and flushes it to writer
-func Flush(w io.Writer, rc io.ReadCloser, buffer []byte) error {
-	n, err := rc.Read(buffer)
-	if err != nil {
-		rc.Close()
-		return err
-	}
-	data := buffer[0:n]
-	w.Write(data)
-	if f, ok := w.(http.Flusher); ok {
-		f.Flush()
-	}
-
-	// Clear the buffer.
-	for i := 0; i < n; i++ {
-		buffer[i] = 0
-	}
-	return nil
 }

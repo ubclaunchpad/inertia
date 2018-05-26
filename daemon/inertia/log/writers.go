@@ -8,15 +8,14 @@ type SocketWriter interface {
 	Close() error
 }
 
-// WebSocketWriter waps a SocketWriter in an io.Writer
+// WebSocketWriter wraps a SocketWriter in an io.Writer
 type WebSocketWriter struct {
 	messageType  int
 	socketWriter SocketWriter
 }
 
 func (d *WebSocketWriter) Write(p []byte) (int, error) {
-	err := d.socketWriter.WriteMessage(d.messageType, p)
-	return len(p), err
+	return len(p), d.socketWriter.WriteMessage(d.messageType, p)
 }
 
 // NewWebSocketTextWriter returns an io.Writer version of SocketWriter
