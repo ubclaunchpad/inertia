@@ -5,8 +5,8 @@ import (
 	"os"
 
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/log"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // downHandler tries to take the deployment offline

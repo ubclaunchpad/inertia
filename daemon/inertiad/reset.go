@@ -5,7 +5,7 @@ import (
 	"os"
 
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
 // resetHandler shuts down and wipes the project directory

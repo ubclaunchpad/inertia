@@ -10,8 +10,8 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/log"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // logHandler handles requests for container logs

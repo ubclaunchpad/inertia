@@ -14,7 +14,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
 const (

@@ -111,6 +111,11 @@ testdaemon:
 		root@0.0.0.0:/daemon-image
 	rm -f ./inertia-daemon-image
 
+# Run a test daemon locally
+.PHONY: localdaemon
+localdaemon:
+	bash ./test/start_local_daemon.sh
+
 # Creates a daemon release and pushes it to Docker Hub repository.
 # Requires access to the UBC Launch Pad Docker Hub.
 .PHONY: daemon
