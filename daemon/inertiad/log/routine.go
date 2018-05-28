@@ -3,6 +3,7 @@ package log
 import (
 	"bufio"
 	"io"
+	"net/http"
 )
 
 // FlushRoutine continuously writes everything in given ReadCloser
@@ -13,19 +14,31 @@ ROUTINE:
 	for {
 		select {
 		case <-stop:
-			line, err := reader.ReadBytes('\n')
-			if err == nil {
-				w.Write(line)
-			}
+			WriteAndFlush(w, reader)
 			break ROUTINE
 		default:
 			// Read from pipe then write to ResponseWriter and flush it,
 			// sending the copied content to the client.
-			line, err := reader.ReadBytes('\n')
+			err := WriteAndFlush(w, reader)
 			if err != nil {
 				break ROUTINE
 			}
-			w.Write(line)
 		}
 	}
+}
+
+// WriteAndFlush reads from buffer, writes to writer, and flushes if possible
+func WriteAndFlush(w io.Writer, reader *bufio.Reader) error {
+	line, err := reader.ReadBytes('\n')
+	if err != nil {
+		return err
+	}
+
+	// Write to writer, and flush as well if it is a flusher
+	w.Write(line)
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
+
+	return nil
 }
