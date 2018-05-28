@@ -21,14 +21,21 @@ func (m *mockSocketWriter) WriteMessage(t int, bytes []byte) error {
 func (m *mockSocketWriter) getWrittenBytes() *bytes.Buffer { return &m.Buffer }
 
 func TestNewLogger(t *testing.T) {
-	logger := NewLogger(nil, nil, nil)
+	logger := NewLogger(LoggerOptions{})
 	assert.NotNil(t, logger)
 }
 
 func TestWrite(t *testing.T) {
+	var b bytes.Buffer
+	writer := NewLogger(LoggerOptions{Stdout: &b})
+	writer.Write([]byte("whoah!"))
+	assert.Equal(t, "whoah!", b.String())
+}
+
+func TestWriteMulti(t *testing.T) {
 	var b1 bytes.Buffer
 	socketWriter := &mockSocketWriter{}
-	writer := NewLogger(&b1, socketWriter, nil)
+	writer := NewLogger(LoggerOptions{Stdout: &b1, Socket: socketWriter})
 	writer.Write([]byte("whoah!"))
 	assert.Equal(t, "whoah!", b1.String())
 	assert.Equal(t, "whoah!", socketWriter.getWrittenBytes().String())

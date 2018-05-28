@@ -39,9 +39,16 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		logger = log.NewLogger(os.Stdout, socket, w)
+		logger = log.NewLogger(log.LoggerOptions{
+			Stdout:     os.Stdout,
+			Socket:     socket,
+			HTTPWriter: w,
+		})
 	} else {
-		logger = log.NewLogger(os.Stdout, nil, w)
+		logger = log.NewLogger(log.LoggerOptions{
+			Stdout:     os.Stdout,
+			HTTPWriter: w,
+		})
 	}
 	defer logger.Close()
 

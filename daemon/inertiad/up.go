@@ -30,18 +30,17 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	gitOpts := upReq.GitOptions
 
-	// Upgrade to websocket connection if required
+	// Configure logger
 	var logger *log.DaemonLogger
 	if upReq.Stream {
-		socket, err := socketUpgrader.Upgrade(w, r, nil)
-		if err != nil {
-			println(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		logger = log.NewLogger(os.Stdout, socket, w)
+		logger = log.NewLogger(log.LoggerOptions{
+			Stdout:     os.Stdout,
+			HTTPWriter: w,
+		})
 	} else {
-		logger = log.NewLogger(os.Stdout, nil, w)
+		logger = log.NewLogger(log.LoggerOptions{
+			Stdout: os.Stdout,
+		})
 	}
 	defer logger.Close()
 

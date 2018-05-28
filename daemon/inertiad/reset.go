@@ -15,7 +15,10 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger := log.NewLogger(os.Stdout, nil, w)
+	logger := log.NewLogger(log.LoggerOptions{
+		Stdout:     os.Stdout,
+		HTTPWriter: w,
+	})
 	defer logger.Close()
 
 	cli, err := docker.NewEnvClient()

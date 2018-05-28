@@ -16,12 +16,30 @@ type DaemonLogger struct {
 	io.Writer
 }
 
+// LoggerOptions defines configuration for a daemon logger
+type LoggerOptions struct {
+	Stdout     io.Writer
+	Socket     SocketWriter
+	HTTPWriter http.ResponseWriter
+}
+
 // NewLogger creates a new logger
-func NewLogger(stdout io.Writer, conn SocketWriter, httpWriter http.ResponseWriter) *DaemonLogger {
+func NewLogger(opts LoggerOptions) *DaemonLogger {
+	var w io.Writer
+	if opts.Stdout == nil && opts.Socket == nil {
+		w = nil
+	} else if opts.Stdout != nil && opts.Socket == nil {
+		w = opts.Stdout
+	} else if opts.Stdout == nil && opts.Socket != nil {
+		w = NewWebSocketTextWriter(opts.Socket)
+	} else {
+		w = io.MultiWriter(opts.Stdout, NewWebSocketTextWriter(opts.Socket))
+	}
+
 	return &DaemonLogger{
-		socket:     conn,
-		httpWriter: httpWriter,
-		Writer:     io.MultiWriter(stdout, NewWebSocketTextWriter(conn)),
+		httpWriter: opts.HTTPWriter,
+		socket:     opts.Socket,
+		Writer:     w,
 	}
 }
 
