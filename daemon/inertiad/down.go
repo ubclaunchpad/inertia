@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // downHandler tries to take the deployment offline

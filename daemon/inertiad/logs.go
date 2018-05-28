@@ -9,7 +9,7 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // logHandler handles requests for container logs

@@ -8,7 +8,7 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-github/github"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 var webhookSecret = "inertia"
