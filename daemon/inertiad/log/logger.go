@@ -10,7 +10,6 @@ import (
 // DaemonLogger is a multilogger used by the daemon to pipe
 // output to multiple places depending on context.
 type DaemonLogger struct {
-	stream     bool
 	httpWriter http.ResponseWriter
 	socket     SocketWriter
 	io.Writer
@@ -51,7 +50,7 @@ func (l *DaemonLogger) Println(a interface{}) {
 // WriteErr directs message and status to http.Error when appropriate
 func (l *DaemonLogger) WriteErr(msg string, status int) {
 	fmt.Fprintf(l.Writer, "[ERROR %s] %s\n", strconv.Itoa(status), msg)
-	if !l.stream {
+	if l.socket == nil {
 		http.Error(l.httpWriter, msg, status)
 	}
 }

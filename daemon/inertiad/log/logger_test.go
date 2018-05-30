@@ -54,15 +54,15 @@ func TestErr(t *testing.T) {
 
 	// Test streaming
 	logger := &DaemonLogger{
-		stream:     true,
 		Writer:     &b,
 		httpWriter: w,
+		socket:     &mockSocketWriter{},
 	}
 	logger.WriteErr("Wee!", 200)
 	assert.Equal(t, "[ERROR 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
-	logger.stream = false
+	logger.socket = nil
 	logger.WriteErr("Wee!", 200)
 	body, err := ioutil.ReadAll(w.Body)
 	assert.Nil(t, err)
@@ -76,15 +76,15 @@ func TestSuccess(t *testing.T) {
 
 	// Test streaming
 	logger := &DaemonLogger{
-		stream:     true,
 		httpWriter: w,
 		Writer:     &b,
+		socket:     &mockSocketWriter{},
 	}
 	logger.WriteSuccess("Wee!", 200)
 	assert.Equal(t, "[SUCCESS 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
-	logger.stream = false
+	logger.socket = nil
 	logger.WriteSuccess("Wee!", 200)
 	body, err := ioutil.ReadAll(w.Body)
 	assert.Nil(t, err)
