@@ -2,7 +2,9 @@
 
 Inertia is the command line interface that helps you set up your remote for
 continuous deployment and allows you to manage your deployment through
-configuration options and various commands. It can be installed in several ways:
+configuration options and various commands.
+
+It can be installed in several ways:
 
 	# Mac users
 	brew install ubclaunchpad/inertia
@@ -54,5 +56,4 @@ More documentation on Inertia, how it works, and how to use it can be found
 in the project repository: https://github.com/ubclaunchpad/inertia/tree/master
 
 */
-
 package main
