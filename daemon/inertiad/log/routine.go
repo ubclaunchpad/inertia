@@ -8,7 +8,7 @@ import (
 
 // FlushRoutine continuously writes everything in given ReadCloser
 // to an io.Writer. Use this as a goroutine.
-func FlushRoutine(w io.Writer, rc io.ReadCloser, stop chan struct{}) {
+func FlushRoutine(w io.Writer, rc io.Reader, stop chan struct{}) {
 	reader := bufio.NewReader(rc)
 ROUTINE:
 	for {
