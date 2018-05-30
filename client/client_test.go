@@ -323,7 +323,6 @@ func TestLogs(t *testing.T) {
 		defer req.Body.Close()
 		q := req.URL.Query()
 		assert.Equal(t, "docker-compose", q.Get(common.Container))
-		assert.Equal(t, "true", q.Get(common.Stream))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -331,7 +330,7 @@ func TestLogs(t *testing.T) {
 	defer testServer.Close()
 
 	d := getMockClient(testServer)
-	resp, err := d.Logs(true, "docker-compose")
+	resp, err := d.Logs("docker-compose")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

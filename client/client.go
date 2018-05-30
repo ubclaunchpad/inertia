@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 
+	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -177,13 +178,29 @@ func (c *Client) Reset() (*http.Response, error) {
 }
 
 // Logs get logs of given container
-func (c *Client) Logs(stream bool, container string) (*http.Response, error) {
+func (c *Client) Logs(container string) (*http.Response, error) {
 	reqContent := map[string]string{
-		common.Stream:    strconv.FormatBool(stream),
 		common.Container: container,
 	}
 
 	return c.get("/logs", reqContent)
+}
+
+// LogsWebSocket opens a websocket connection to given container's logs
+func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
+	host, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
+	if err != nil {
+		return nil, err
+	}
+	url := &url.URL{Scheme: "ws", Host: host.Host, Path: "/logs"}
+
+	header := http.Header{}
+	header.Set("Authorization", "Bearer "+c.Daemon.Token)
+	socket, _, err := websocket.DefaultDialer.Dial(url.String(), header)
+	if err != nil {
+		log.Fatal("dial:", err)
+	}
+	return socket, nil
 }
 
 // AddUser adds an authorized user for access to Inertia Web
@@ -222,11 +239,7 @@ func (c *Client) get(endpoint string, queries map[string]string) (*http.Response
 
 	// Add query strings
 	if queries != nil {
-		q := req.URL.Query()
-		for k, v := range queries {
-			q.Add(k, v)
-		}
-		req.URL.RawQuery = q.Encode()
+		encodeQuery(req.URL, queries)
 	}
 
 	client := buildHTTPSClient()
@@ -288,4 +301,12 @@ func buildHTTPSClient() *http.Client {
 		},
 	}
 	return &http.Client{Transport: tr}
+}
+
+func encodeQuery(url *url.URL, queries map[string]string) {
+	q := url.Query()
+	for k, v := range queries {
+		q.Add(k, v)
+	}
+	url.RawQuery = q.Encode()
 }
