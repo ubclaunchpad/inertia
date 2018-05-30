@@ -15,13 +15,13 @@
   <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
   </a>
-
-  <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
-    <img src="https://godoc.org/github.com/golang/gddo?status.svg">
-  </a>
   
   <a href="https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md">
     <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
+  </a>
+
+  <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
+    <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg">
   </a>
   
   <a href="https://microbadger.com/images/ubclaunchpad/inertia">
