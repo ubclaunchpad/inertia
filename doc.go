@@ -26,7 +26,7 @@ flag on any command:
 Documentation can also be triggered by simply entering a command without the
 prerequisite arguments or additional commands:
 
-	inertia remote        # documentation about remote configuration commands
+	inertia remote               # documentation about remote configuration
 
 Inertia has two "core" sets of commands - one that primarily handles local
 configuration, and one that allows you to control your remote VPS instances and
