@@ -66,6 +66,7 @@ export default class InertiaClient {
    * @param {Object} params
    * @param {{[key]: string}} queryParams
    */
+  // eslint-disable-next-line
   async get(endpoint, params, queryParams) {
     const newParams = {
       ...params,
@@ -89,6 +90,7 @@ export default class InertiaClient {
    * @param {String} endpoint
    * @param {Object} params
    */
+  // eslint-disable-next-line
   async post(endpoint, params) {
     const newParams = {
       ...params,
