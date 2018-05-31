@@ -73,7 +73,7 @@ export default class InertiaClient {
       credentials: 'include',
     };
     const queryString = queryParams ? encodeURL(queryParams) : '';
-    const url = this.url + endpoint + queryString;
+    const url = endpoint + queryString;
 
     const request = new Request(url, newParams);
 
@@ -96,7 +96,7 @@ export default class InertiaClient {
       credentials: 'include',
     };
 
-    const request = new Request(this.url + endpoint, newParams);
+    const request = new Request(endpoint, newParams);
 
     try {
       return await fetch(request);
