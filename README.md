@@ -20,6 +20,14 @@
     <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
   </a>
 
+  <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
+    <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg">
+  </a>
+  
+  <a href="https://microbadger.com/images/ubclaunchpad/inertia">
+    <img src="https://img.shields.io/microbadger/image-size/ubclaunchpad/inertia.svg" />
+  </a>
+
   <a href="https://github.com/ubclaunchpad/inertia/releases">
     <img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg" />
   </a>
@@ -41,7 +49,7 @@
 
 <br>
 
-Inertia is a simple cross-platform command line application that enables quick and easy setup and management of continuous, automated deployment of a variety of project types on any virtual private server. The project is used, built, and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/).
+Inertia is a simple cross-platform command line application that enables quick and easy setup and management of continuous, automated deployment of a variety of project types on any virtual private server. The project is used, built, and maintained with :heart: by [UBC Launch Pad](https://www.ubclaunchpad.com/), UBC's student-run software engineering club.
 
 |   | Main Features  |
 ----|-----------------
