@@ -19,6 +19,10 @@
   <a href="https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md">
     <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
   </a>
+
+  <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
+    <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg">
+  </a>
   
   <a href="https://microbadger.com/images/ubclaunchpad/inertia">
     <img src="https://img.shields.io/microbadger/image-size/ubclaunchpad/inertia.svg" />

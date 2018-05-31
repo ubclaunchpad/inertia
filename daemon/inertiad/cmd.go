@@ -64,7 +64,7 @@ Created using an RSA private key.`,
 }
 
 var rootCmd = &cobra.Command{
-	Use:     "inertia",
+	Use:     "inertiad",
 	Short:   "The inertia daemon CLI",
 	Version: getVersion(),
 }
