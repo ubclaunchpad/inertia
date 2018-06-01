@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -192,13 +191,22 @@ func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	url := &url.URL{Scheme: "ws", Host: host.Host, Path: "/logs"}
 
+	// Set up request
+	url := &url.URL{Scheme: "wss", Host: host.Host, Path: "/logs"}
+	encodeQuery(url, map[string]string{
+		common.Container: container,
+		common.Stream:    "true",
+	})
+
+	// Set up authorization
 	header := http.Header{}
 	header.Set("Authorization", "Bearer "+c.Daemon.Token)
-	socket, _, err := websocket.DefaultDialer.Dial(url.String(), header)
-	if err != nil {
-		log.Fatal("dial:", err)
+
+	// Attempt websocket connection
+	socket, resp, err := buildWebSocketDialer().Dial(url.String(), header)
+	if err == websocket.ErrBadHandshake {
+		return nil, fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
 	}
 	return socket, nil
 }
@@ -291,16 +299,22 @@ func (c *Client) buildRequest(method string, endpoint string, payload io.Reader)
 }
 
 func buildHTTPSClient() *http.Client {
-	// Make HTTPS request
-	tr := &http.Transport{
+	return &http.Client{Transport: &http.Transport{
 		// Our certificates are self-signed, so will raise
 		// a warning - currently, we ask our client to ignore
 		// this warning.
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
+	}}
+}
+
+func buildWebSocketDialer() *websocket.Dialer {
+	return &websocket.Dialer{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	}
-	return &http.Client{Transport: tr}
 }
 
 func encodeQuery(url *url.URL, queries map[string]string) {

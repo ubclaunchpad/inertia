@@ -41,7 +41,6 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	if stream {
 		socket, err := socketUpgrader.Upgrade(w, r, nil)
 		if err != nil {
-			println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
