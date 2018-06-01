@@ -31,17 +31,11 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	gitOpts := upReq.GitOptions
 
 	// Configure logger
-	var logger *log.DaemonLogger
-	if upReq.Stream {
-		logger = log.NewLogger(log.LoggerOptions{
-			Stdout:     os.Stdout,
-			HTTPWriter: w,
-		})
-	} else {
-		logger = log.NewLogger(log.LoggerOptions{
-			Stdout: os.Stdout,
-		})
-	}
+	logger := log.NewLogger(log.LoggerOptions{
+		Stdout:     os.Stdout,
+		HTTPWriter: w,
+		HTTPStream: upReq.Stream,
+	})
 	defer logger.Close()
 
 	webhookSecret = upReq.Secret

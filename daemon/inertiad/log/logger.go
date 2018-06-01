@@ -1,6 +1,7 @@
 package log
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 // output to multiple places depending on context.
 type DaemonLogger struct {
 	httpWriter http.ResponseWriter
+	httpStream bool
 	socket     SocketWriter
 	io.Writer
 }
@@ -20,26 +22,50 @@ type LoggerOptions struct {
 	Stdout     io.Writer
 	Socket     SocketWriter
 	HTTPWriter http.ResponseWriter
+	HTTPStream bool
 }
 
 // NewLogger creates a new logger
 func NewLogger(opts LoggerOptions) *DaemonLogger {
 	var w io.Writer
-	if opts.Stdout == nil && opts.Socket == nil {
-		w = nil
-	} else if opts.Stdout != nil && opts.Socket == nil {
-		w = opts.Stdout
-	} else if opts.Stdout == nil && opts.Socket != nil {
-		w = NewWebSocketTextWriter(opts.Socket)
+	if !opts.HTTPStream {
+		// Attempt to create a writer with websocket
+		if opts.Stdout == nil && opts.Socket == nil {
+			w = nil
+		} else if opts.Stdout != nil && opts.Socket == nil {
+			w = opts.Stdout
+		} else if opts.Stdout == nil && opts.Socket != nil {
+			w = NewWebSocketTextWriter(opts.Socket)
+		} else {
+			w = io.MultiWriter(opts.Stdout, NewWebSocketTextWriter(opts.Socket))
+		}
 	} else {
-		w = io.MultiWriter(opts.Stdout, NewWebSocketTextWriter(opts.Socket))
+		// Attempt to create a writer with HTTPWriter
+		if opts.Stdout == nil && opts.HTTPWriter == nil {
+			w = nil
+		} else if opts.Stdout != nil && opts.HTTPWriter == nil {
+			w = opts.Stdout
+		} else if opts.Stdout == nil && opts.HTTPWriter != nil {
+			w = opts.HTTPWriter
+		} else {
+			w = io.MultiWriter(opts.Stdout, opts.HTTPWriter)
+		}
 	}
 
 	return &DaemonLogger{
 		httpWriter: opts.HTTPWriter,
+		httpStream: opts.HTTPStream,
 		socket:     opts.Socket,
 		Writer:     w,
 	}
+}
+
+// GetSocketWriter retrieves the socketwriter as an io.Writer
+func (l *DaemonLogger) GetSocketWriter() (io.Writer, error) {
+	if l.socket != nil {
+		return NewWebSocketTextWriter(l.socket), nil
+	}
+	return nil, errors.New("no websocket active")
 }
 
 // Println prints to logger's standard writer
@@ -50,7 +76,7 @@ func (l *DaemonLogger) Println(a interface{}) {
 // WriteErr directs message and status to http.Error when appropriate
 func (l *DaemonLogger) WriteErr(msg string, status int) {
 	fmt.Fprintf(l.Writer, "[ERROR %s] %s\n", strconv.Itoa(status), msg)
-	if l.socket == nil {
+	if l.socket == nil && !l.httpStream {
 		http.Error(l.httpWriter, msg, status)
 	}
 }
@@ -58,7 +84,7 @@ func (l *DaemonLogger) WriteErr(msg string, status int) {
 // WriteSuccess directs status to Header and sets content type when appropriate
 func (l *DaemonLogger) WriteSuccess(msg string, status int) {
 	fmt.Fprintf(l.Writer, "[SUCCESS %s] %s\n", strconv.Itoa(status), msg)
-	if l.socket == nil {
+	if l.socket == nil && !l.httpStream {
 		l.httpWriter.Header().Set("Content-Type", "text/html")
 		l.httpWriter.WriteHeader(status)
 		fmt.Fprintln(l.httpWriter, msg)
@@ -67,7 +93,7 @@ func (l *DaemonLogger) WriteSuccess(msg string, status int) {
 
 // Close shuts down the logger
 func (l *DaemonLogger) Close() {
-	if l.socket != nil {
+	if l.socket != nil && !l.httpStream {
 		l.socket.Close()
 	}
 }

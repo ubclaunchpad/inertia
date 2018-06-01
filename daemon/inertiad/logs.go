@@ -87,7 +87,11 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 
 	if stream {
 		stop := make(chan struct{})
-		log.FlushRoutine(logger, logs, stop)
+		socket, err := logger.GetSocketWriter()
+		if err != nil {
+			logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		}
+		log.FlushRoutine(socket, logs, stop)
 		defer close(stop)
 	} else {
 		buf := new(bytes.Buffer)
