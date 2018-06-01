@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	docker "github.com/docker/docker/client"
-	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
@@ -18,20 +17,27 @@ import (
 func logHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		logger *log.DaemonLogger
-		socket *websocket.Conn
+		stream bool
 	)
 
 	// Get container name and stream from request query params
 	params := r.URL.Query()
 	container := params.Get("container")
-	stream, err := strconv.ParseBool(params.Get("stream"))
-	if err != nil {
-		println(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	streamParam := params.Get("stream")
+	if streamParam != "" {
+		s, err := strconv.ParseBool(streamParam)
+		if err != nil {
+			println(err.Error())
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		stream = s
+	} else {
+		stream = false
 	}
 
-	// Upgrade to websocket connection if required
+	// Upgrade to websocket connection if required, otherwise just set up a
+	// standard logger
 	if stream {
 		socket, err := socketUpgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -52,7 +58,9 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer logger.Close()
 
-	if !strings.Contains(container, "inertia-daemon") && deployment == nil {
+	// If no deployment is online, error unless the client is requesting for
+	// the daemon's logs
+	if deployment == nil && !strings.Contains(container, "inertia-daemon") {
 		logger.WriteErr(msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
@@ -80,7 +88,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 
 	if stream {
 		stop := make(chan struct{})
-		log.FlushRoutine(log.NewWebSocketTextWriter(socket), logs, stop)
+		log.FlushRoutine(logger, logs, stop)
 		defer close(stop)
 	} else {
 		buf := new(bytes.Buffer)
