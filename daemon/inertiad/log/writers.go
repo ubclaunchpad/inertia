@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"net/http"
 
 	"github.com/gorilla/websocket"
 )
@@ -33,27 +34,30 @@ func NewWebSocketTextWriter(socket SocketWriter) *WebSocketWriter {
 	}
 }
 
-// TwoWriter writes to two writers without caring whether one fails
-type TwoWriter struct {
-	writer1 io.Writer
-	writer2 io.Writer
+// MultiWriter writes to list of writers without caring whether one fails, and
+// flushes if writer is flushable
+type MultiWriter struct {
+	writers []io.Writer
 }
 
-func (t *TwoWriter) Write(p []byte) (int, error) {
+func (m *MultiWriter) Write(p []byte) (int, error) {
 	var (
-		len1 int
-		len2 int
-		err1 error
-		err2 error
+		lastLen int
+		lastErr error
 	)
-	if t.writer1 != nil {
-		len1, err1 = t.writer1.Write(p)
+	for _, writer := range m.writers {
+		if writer == nil {
+			continue
+		}
+		len, err := writer.Write(p)
+		if err != nil {
+			lastErr = err
+		} else {
+			lastLen = len
+			if f, ok := writer.(http.Flusher); ok {
+				f.Flush()
+			}
+		}
 	}
-	if t.writer2 != nil {
-		len2, err2 = t.writer2.Write(p)
-	}
-	if err1 != nil {
-		return len1, err1
-	}
-	return len2, err2
+	return lastLen, lastErr
 }
