@@ -1,6 +1,10 @@
 package log
 
-import "github.com/gorilla/websocket"
+import (
+	"io"
+
+	"github.com/gorilla/websocket"
+)
 
 // SocketWriter is an interface for writing to websocket connections
 type SocketWriter interface {
@@ -27,4 +31,29 @@ func NewWebSocketTextWriter(socket SocketWriter) *WebSocketWriter {
 		messageType:  websocket.TextMessage,
 		socketWriter: socket,
 	}
+}
+
+// TwoWriter writes to two writers without caring whether one fails
+type TwoWriter struct {
+	writer1 io.Writer
+	writer2 io.Writer
+}
+
+func (t *TwoWriter) Write(p []byte) (int, error) {
+	var (
+		len1 int
+		len2 int
+		err1 error
+		err2 error
+	)
+	if t.writer1 != nil {
+		len1, err1 = t.writer1.Write(p)
+	}
+	if t.writer2 != nil {
+		len2, err2 = t.writer2.Write(p)
+	}
+	if err1 != nil {
+		return len1, err1
+	}
+	return len2, err2
 }

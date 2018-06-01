@@ -30,26 +30,10 @@ func NewLogger(opts LoggerOptions) *DaemonLogger {
 	var w io.Writer
 	if !opts.HTTPStream {
 		// Attempt to create a writer with websocket
-		if opts.Stdout == nil && opts.Socket == nil {
-			w = nil
-		} else if opts.Stdout != nil && opts.Socket == nil {
-			w = opts.Stdout
-		} else if opts.Stdout == nil && opts.Socket != nil {
-			w = NewWebSocketTextWriter(opts.Socket)
-		} else {
-			w = io.MultiWriter(opts.Stdout, NewWebSocketTextWriter(opts.Socket))
-		}
+		w = &TwoWriter{opts.Stdout, NewWebSocketTextWriter(opts.Socket)}
 	} else {
 		// Attempt to create a writer with HTTPWriter
-		if opts.Stdout == nil && opts.HTTPWriter == nil {
-			w = nil
-		} else if opts.Stdout != nil && opts.HTTPWriter == nil {
-			w = opts.Stdout
-		} else if opts.Stdout == nil && opts.HTTPWriter != nil {
-			w = opts.HTTPWriter
-		} else {
-			w = io.MultiWriter(opts.Stdout, opts.HTTPWriter)
-		}
+		w = &TwoWriter{opts.Stdout, opts.HTTPWriter}
 	}
 
 	return &DaemonLogger{
