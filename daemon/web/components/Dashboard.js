@@ -58,9 +58,9 @@ export default class Dashboard extends React.Component {
     try {
       let resp;
       if (!this.props.container) {
-        resp = await this.props.client.getContainerLogs();
+        resp = await InertiaClient.getContainerLogs();
       } else {
-        resp = await this.props.client.getContainerLogs(this.props.container);
+        resp = await InertiaClient.getContainerLogs(this.props.container);
       }
       if (resp.status !== 200) {
         this.setState({
@@ -124,5 +124,4 @@ export default class Dashboard extends React.Component {
 }
 Dashboard.propTypes = {
   container: PropTypes.string,
-  client: PropTypes.instanceOf(InertiaClient),
 };

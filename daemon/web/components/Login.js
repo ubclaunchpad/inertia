@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import InertiaClient from '../client';
 
 const styles = {
   container: {
@@ -39,7 +40,7 @@ export default class Login extends React.Component {
   }
 
   async handleLoginSubmit() {
-    const response = await this.props.client.login(
+    const response = await InertiaClient.login(
       this.state.username,
       this.state.password,
     );
@@ -84,6 +85,5 @@ export default class Login extends React.Component {
   }
 }
 Login.propTypes = {
-  client: PropTypes.func,
   history: PropTypes.func,
 };
