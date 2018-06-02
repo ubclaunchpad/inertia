@@ -4,38 +4,69 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	// Get container name and stream from request query params
-	q := r.URL.Query()
+	var (
+		logger *log.DaemonLogger
+		stream bool
+	)
 
-	container := q.Get("container")
-	stream, err := strconv.ParseBool(q.Get("stream"))
-	if err != nil {
-		println(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	// Get container name and stream from request query params
+	params := r.URL.Query()
+	container := params.Get("container")
+	streamParam := params.Get("stream")
+	if streamParam != "" {
+		s, err := strconv.ParseBool(streamParam)
+		if err != nil {
+			println(err.Error())
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		stream = s
+	} else {
+		stream = false
 	}
 
-	logger := newLogger(stream, w)
+	// Upgrade to websocket connection if required, otherwise just set up a
+	// standard logger
+	if stream {
+		socket, err := socketUpgrader.Upgrade(w, r, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		logger = log.NewLogger(log.LoggerOptions{
+			Stdout:     os.Stdout,
+			Socket:     socket,
+			HTTPWriter: w,
+		})
+	} else {
+		logger = log.NewLogger(log.LoggerOptions{
+			Stdout:     os.Stdout,
+			HTTPWriter: w,
+		})
+	}
 	defer logger.Close()
 
-	if !strings.Contains(container, "inertia-daemon") && deployment == nil {
-		logger.Err(msgNoDeployment, http.StatusPreconditionFailed)
+	// If no deployment is online, error unless the client is requesting for
+	// the daemon's logs
+	if deployment == nil && !strings.Contains(container, "inertia-daemon") {
+		logger.WriteErr(msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
 
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		logger.Err(err.Error(), http.StatusInternalServerError)
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
@@ -46,9 +77,9 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if docker.IsErrContainerNotFound(err) {
-			logger.Err(err.Error(), http.StatusNotFound)
+			logger.WriteErr(err.Error(), http.StatusNotFound)
 		} else {
-			logger.Err(err.Error(), http.StatusInternalServerError)
+			logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
@@ -56,7 +87,11 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 
 	if stream {
 		stop := make(chan struct{})
-		common.FlushRoutine(w, logs, stop)
+		socket, err := logger.GetSocketWriter()
+		if err != nil {
+			logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		}
+		log.FlushRoutine(socket, logs, stop)
 		defer close(stop)
 	} else {
 		buf := new(bytes.Buffer)

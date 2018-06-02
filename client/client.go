@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 
+	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -177,13 +177,38 @@ func (c *Client) Reset() (*http.Response, error) {
 }
 
 // Logs get logs of given container
-func (c *Client) Logs(stream bool, container string) (*http.Response, error) {
+func (c *Client) Logs(container string) (*http.Response, error) {
 	reqContent := map[string]string{
-		common.Stream:    strconv.FormatBool(stream),
 		common.Container: container,
 	}
 
 	return c.get("/logs", reqContent)
+}
+
+// LogsWebSocket opens a websocket connection to given container's logs
+func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
+	host, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
+	if err != nil {
+		return nil, err
+	}
+
+	// Set up request
+	url := &url.URL{Scheme: "wss", Host: host.Host, Path: "/logs"}
+	encodeQuery(url, map[string]string{
+		common.Container: container,
+		common.Stream:    "true",
+	})
+
+	// Set up authorization
+	header := http.Header{}
+	header.Set("Authorization", "Bearer "+c.Daemon.Token)
+
+	// Attempt websocket connection
+	socket, resp, err := buildWebSocketDialer().Dial(url.String(), header)
+	if err == websocket.ErrBadHandshake {
+		return nil, fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
+	}
+	return socket, nil
 }
 
 // AddUser adds an authorized user for access to Inertia Web
@@ -222,11 +247,7 @@ func (c *Client) get(endpoint string, queries map[string]string) (*http.Response
 
 	// Add query strings
 	if queries != nil {
-		q := req.URL.Query()
-		for k, v := range queries {
-			q.Add(k, v)
-		}
-		req.URL.RawQuery = q.Encode()
+		encodeQuery(req.URL, queries)
 	}
 
 	client := buildHTTPSClient()
@@ -278,14 +299,28 @@ func (c *Client) buildRequest(method string, endpoint string, payload io.Reader)
 }
 
 func buildHTTPSClient() *http.Client {
-	// Make HTTPS request
-	tr := &http.Transport{
+	return &http.Client{Transport: &http.Transport{
 		// Our certificates are self-signed, so will raise
 		// a warning - currently, we ask our client to ignore
 		// this warning.
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
+	}}
+}
+
+func buildWebSocketDialer() *websocket.Dialer {
+	return &websocket.Dialer{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	}
-	return &http.Client{Transport: tr}
+}
+
+func encodeQuery(url *url.URL, queries map[string]string) {
+	q := url.Query()
+	for k, v := range queries {
+		q.Add(k, v)
+	}
+	url.RawQuery = q.Encode()
 }

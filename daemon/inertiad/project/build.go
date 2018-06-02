@@ -14,7 +14,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
 const (
@@ -101,7 +101,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 		return nil, err
 	}
 	stop := make(chan struct{})
-	go common.FlushRoutine(out, reader, stop)
+	go log.FlushRoutine(out, reader, stop)
 	status, err := cli.ContainerWait(ctx, resp.ID)
 	close(stop)
 	reader.Close()
@@ -157,7 +157,7 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error
 	fmt.Fprintln(out, "Building Dockerfile project...")
 	ctx := context.Background()
 	buildCtx := bytes.NewBuffer(nil)
-	err := common.BuildTar(d.directory, buildCtx)
+	err := buildTar(d.directory, buildCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error
 
 	// Output build progress
 	stop := make(chan struct{})
-	common.FlushRoutine(out, buildResp.Body, stop)
+	log.FlushRoutine(out, buildResp.Body, stop)
 	close(stop)
 	buildResp.Body.Close()
 
@@ -258,7 +258,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() er
 		return nil, err
 	}
 	stop := make(chan struct{})
-	go common.FlushRoutine(out, reader, stop)
+	go log.FlushRoutine(out, reader, stop)
 	status, err := cli.ContainerWait(ctx, resp.ID)
 	close(stop)
 	reader.Close()

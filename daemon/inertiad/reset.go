@@ -2,8 +2,10 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
 // resetHandler shuts down and wipes the project directory
@@ -13,23 +15,26 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger := newLogger(false, w)
+	logger := log.NewLogger(log.LoggerOptions{
+		Stdout:     os.Stdout,
+		HTTPWriter: w,
+	})
 	defer logger.Close()
 
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		logger.Err(err.Error(), http.StatusInternalServerError)
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
 
 	// Goodbye deployment
-	err = deployment.Destroy(cli, logger.GetWriter())
+	err = deployment.Destroy(cli, logger)
 	if err != nil {
-		logger.Err(err.Error(), http.StatusInternalServerError)
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	deployment = nil
 
-	logger.Success("Project removed from remote.", http.StatusOK)
+	logger.WriteSuccess("Project removed from remote.", http.StatusOK)
 }
