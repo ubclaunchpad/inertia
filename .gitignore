@@ -5,7 +5,11 @@
 *.dylib
 /inertia.*
 /inertia
+/inertiad
 /bin
+
+# Assets
+users.db
 
 # Test binary, build with `go test -c`
 *.test

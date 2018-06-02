@@ -259,9 +259,22 @@ for updates to this repository's remote master branch.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-		remote, found := client.NewClient(remoteName, config)
+		cli, found := client.NewClient(remoteName, config)
 		if found {
-			err = remote.BootstrapRemote()
+			repo, err := common.GetLocalRepo()
+			if err != nil {
+				log.Fatal(err)
+			}
+			origin, err := repo.Remote("origin")
+			if err != nil {
+				log.Fatal(err)
+			}
+			repoName, err := common.ExtractRepository(common.GetSSHRemoteURL(origin.Config().URLs[0]))
+			if err != nil {
+				log.Println(err)
+			}
+
+			err = cli.BootstrapRemote(repoName)
 			if err != nil {
 				log.Fatal(err)
 			}

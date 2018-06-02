@@ -28,6 +28,10 @@ const (
 	BuildStageName = "build"
 )
 
+// Builder builds projects and returns a callback that can be used to deploy the project.
+// No relation to Bob the Builder, though a Bob did write this.
+type Builder func(*Deployment, *docker.Client, io.Writer) (func() error, error)
+
 // getTrueDirectory converts given filepath to host-based filepath
 // if applicable - Docker commands are sent to the mounted Docker
 // socket and hence are executed on the host, using the host's filepaths,
@@ -51,7 +55,7 @@ func getTrueDirectory(path string) string {
 // separate from the daemon and the user's project, and is the
 // second container to require access to the docker socket.
 // See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
-func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
+func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
 
@@ -73,19 +77,19 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 		}, nil, BuildStageName,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(resp.Warnings) > 0 {
 		fmt.Fprintln(out, "Warnings encountered on docker-compose build.")
 		warnings := strings.Join(resp.Warnings, "\n")
-		return errors.New(warnings)
+		return nil, errors.New(warnings)
 	}
 
 	// Start container to build project
 	fmt.Fprintln(out, "Building project...")
 	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Attach logs and report build progress until container exits
@@ -94,7 +98,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 		NoTimestamps: true,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	stop := make(chan struct{})
 	go common.FlushRoutine(out, reader, stop)
@@ -102,10 +106,10 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 	close(stop)
 	reader.Close()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if status != 0 {
-		return errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+		return nil, errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
 	}
 	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
 
@@ -135,25 +139,27 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) error {
 		}, nil, "docker-compose",
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(resp.Warnings) > 0 {
 		warnings := strings.Join(resp.Warnings, "\n")
-		return errors.New(warnings)
+		return nil, errors.New(warnings)
 	}
 
-	fmt.Fprintln(out, "Starting up project...")
-	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	return func() error {
+		fmt.Fprintln(out, "Starting up project...")
+		return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	}, nil
 }
 
-// dockerBuild builds project from Dockerfile and deploys it
-func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
+// dockerBuild builds project from Dockerfile, and returns a callback function to deploy it
+func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Building Dockerfile project...")
 	ctx := context.Background()
 	buildCtx := bytes.NewBuffer(nil)
 	err := common.BuildTar(d.directory, buildCtx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// @TODO: support configuration
@@ -170,7 +176,7 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 		},
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Output build progress
@@ -192,22 +198,24 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "No such image") {
-			return errors.New("Image build was unsuccessful")
+			return nil, errors.New("Image build was unsuccessful")
 		}
-		return err
+		return nil, err
 	}
 	if len(containerResp.Warnings) > 0 {
 		warnings := strings.Join(containerResp.Warnings, "\n")
-		return errors.New(warnings)
+		return nil, errors.New(warnings)
 	}
 
-	fmt.Fprintln(out, "Starting up project in container "+d.project+"...")
-	return cli.ContainerStart(ctx, containerResp.ID, types.ContainerStartOptions{})
+	return func() error {
+		fmt.Fprintln(out, "Starting up project in container "+d.project+"...")
+		return cli.ContainerStart(ctx, containerResp.ID, types.ContainerStartOptions{})
+	}, nil
 }
 
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
 // to build the user project.
-func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
+func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Setting up herokuish...")
 	ctx := context.Background()
 
@@ -226,19 +234,19 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 		}, nil, BuildStageName,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(resp.Warnings) > 0 {
 		fmt.Fprintln(out, "Warnings encountered on herokuish setup.")
 		warnings := strings.Join(resp.Warnings, "\n")
-		return errors.New(warnings)
+		return nil, errors.New(warnings)
 	}
 
 	// Start the herokuish container to build project
 	fmt.Fprintln(out, "Building project...")
 	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Attach logs and report build progress until container exits
@@ -247,7 +255,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 		NoTimestamps: true,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	stop := make(chan struct{})
 	go common.FlushRoutine(out, reader, stop)
@@ -255,10 +263,10 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 	close(stop)
 	reader.Close()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if status != 0 {
-		return errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+		return nil, errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
 	}
 	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
 
@@ -269,7 +277,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 		Reference: imgName,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resp, err = cli.ContainerCreate(ctx, &container.Config{
 		Image: imgName + ":latest",
@@ -278,14 +286,16 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) error {
 		Cmd: []string{"/start", "web"},
 	}, nil, nil, d.project)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(resp.Warnings) > 0 {
 		fmt.Fprintln(out, "Warnings encountered on herokuish startup.")
 		warnings := strings.Join(resp.Warnings, "\n")
-		return errors.New(warnings)
+		return nil, errors.New(warnings)
 	}
 
 	fmt.Fprintln(out, "Starting up project in container "+d.project+"...")
-	return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	return func() error {
+		return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	}, nil
 }

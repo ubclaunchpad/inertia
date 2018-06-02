@@ -1,5 +1,5 @@
 import React from 'react';
-import { Redirect, HashRouter, Route } from 'react-router-dom';
+import { HashRouter, Redirect, Route } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import createHistory from 'history/createBrowserHistory';
 
@@ -7,21 +7,42 @@ import InertiaClient from '../client';
 import Login from './Login';
 import Home from './Home';
 
+const styles = {
+  container: {
+    display: 'flex',
+    height: '100%',
+    width: '100%',
+  },
+};
+
 // render a route component that requires authentication
 const AuthRoute = ({ authenticated, component: Component, props, ...rest }) => (
-  <Route {...rest} render={(routeProps) => (
-    authenticated
-      ? <Component {...Object.assign({}, routeProps, props)} />
-      : <Redirect to="/login" />
+  <Route
+    {...rest}
+    render={routeProps => (
+      authenticated
+        ? <Component {...Object.assign({}, routeProps, props)} />
+        : <Redirect to="/login" />
   )} />
 );
+AuthRoute.propTypes = {
+  authenticated: PropTypes.bool,
+  component: PropTypes.node,
+  props: PropTypes.shape(),
+};
+
 
 // render a route component with props
 const PropsRoute = ({ component: Component, props, ...rest }) => (
-  <Route {...rest} render={(routeProps) => (
-    <Component {...Object.assign({}, routeProps, props)} />
+  <Route
+    {...rest}
+    render={routeProps => (<Component {...Object.assign({}, routeProps, props)} />
   )} />
 );
+PropsRoute.propTypes = {
+  component: PropTypes.node,
+  props: PropTypes.shape(),
+};
 
 export default class App extends React.Component {
   constructor(props) {
@@ -34,24 +55,24 @@ export default class App extends React.Component {
 
     this.isAuthenticated = this.isAuthenticated.bind(this);
 
-    this.isAuthenticated().then((authenticated) => {
-      this.setState({
-        loading: false,
-        authenticated: authenticated,
+    this.isAuthenticated()
+      .then((authenticated) => {
+        this.setState({
+          loading: false,
+          authenticated,
+        });
       });
-    });
 
     const history = createHistory();
     history.listen(() => {
-      this.setState({
-        loading: true,
-      });
-      this.isAuthenticated().then((authenticated) => {
-        this.setState({
-          loading: false,
-          authenticated: authenticated,
+      this.setState({ loading: true });
+      this.isAuthenticated()
+        .then((authenticated) => {
+          this.setState({
+            loading: false,
+            authenticated,
+          });
         });
-      });
     });
   }
 
@@ -61,42 +82,35 @@ export default class App extends React.Component {
   }
 
   render() {
-    const { component: Component, ...rest } = this.props;
     if (this.state.loading) {
       return (
-        <p align="center" >
+        <p align="center">
           Loading...
         </p>
       );
-    } else {
-      return (
-        <HashRouter>
-          <div style={styles.container}>
-            <Route exact path="/"
-              component={() => <Redirect to="/login" />} />
-            <PropsRoute path="/login"
-              component={Login}
-              props={this.props} />
-            <AuthRoute path="/home"
-              authenticated={this.state.authenticated}
-              component={Home} props={this.props} />
-          </div>
-        </HashRouter>
-      );
     }
+
+    return (
+      <HashRouter>
+        <div style={styles.container}>
+          <Route
+            exact
+            path="/"
+            component={() => <Redirect to="/login" />} />
+          <PropsRoute
+            path="/login"
+            component={Login}
+            props={this.props} />
+          <AuthRoute
+            path="/home"
+            authenticated={this.state.authenticated}
+            component={Home}
+            props={this.props} />
+        </div>
+      </HashRouter>
+    );
   }
 }
-
 App.propTypes = {
   client: PropTypes.instanceOf(InertiaClient),
-  authenticated: PropTypes.instanceOf(Boolean),
-  loading: PropTypes.instanceOf(Boolean),
-};
-
-const styles = {
-  container: {
-    display: 'flex',
-    height: '100%',
-    width: '100%'
-  }
 };

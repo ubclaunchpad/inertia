@@ -55,10 +55,10 @@ jobs:
     - env: VPS_OS=centos VERSION=latest
   include:
     - stage: Daemon build for "latest"
-      if: (branch = master) AND (type = push)
+      if: (branch = master) AND (type = push) AND (type != pull_request)
       script: docker login -u $DOCKER_USER -p $DOCKER_KEY ; make daemon RELEASE=latest
     - stage: Release
-      if: tag IS present
+      if: (tag IS present) AND (type != pull_request)
       script: skip
       deploy:
         provider: releases
@@ -71,3 +71,4 @@ jobs:
         on:
           tags: true
           branch: master
+          repo: ubclaunchpad/inertia

@@ -10,7 +10,7 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
@@ -34,6 +34,9 @@ type Deployment struct {
 	project   string
 	branch    string
 	buildType string
+
+	builders map[string]Builder
+	containerStopper
 
 	repo *git.Repository
 	auth ssh.AuthMethod
@@ -68,12 +71,23 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	}
 
 	return &Deployment{
+		// Properties
 		directory: directory,
 		project:   cfg.ProjectName,
 		branch:    cfg.Branch,
 		buildType: cfg.BuildType,
-		auth:      authMethod,
-		repo:      repo,
+
+		// Functions
+		builders: map[string]Builder{
+			"herokuish":      herokuishBuild,
+			"dockerfile":     dockerBuild,
+			"docker-compose": dockerCompose,
+		},
+		containerStopper: stopActiveContainers,
+
+		// Repository
+		auth: authMethod,
+		repo: repo,
 	}, nil
 }
 
@@ -110,25 +124,28 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOption
 		}
 	}
 
+	// Use the appropriate build method
+	builder, found := d.builders[strings.ToLower(d.buildType)]
+	if !found {
+		// @todo: attempt a guess at project type instead
+		fmt.Println(out, "Unknown project type "+d.buildType)
+		fmt.Println(out, "Defaulting to docker-compose build")
+		builder = dockerCompose
+	}
+
 	// Kill active project containers if there are any
-	err := stopActiveContainers(cli, out)
+	err := d.containerStopper(cli, out)
 	if err != nil {
 		return err
 	}
 
-	// Use the appropriate build method
-	switch d.buildType {
-	case "herokuish":
-		return herokuishBuild(d, cli, out)
-	case "dockerfile":
-		return dockerBuild(d, cli, out)
-	case "docker-compose":
-		return dockerCompose(d, cli, out)
-	default:
-		fmt.Println(out, "Unknown project type "+d.buildType)
-		fmt.Println(out, "Defaulting to docker-compose build")
-		return dockerCompose(d, cli, out)
+	// Deploy project
+	deploy, err := builder(d, cli, out)
+	if err != nil {
+		return err
 	}
+
+	return deploy()
 }
 
 // Down shuts down the deployment
@@ -141,13 +158,13 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	// active
 	_, err := getActiveContainers(cli)
 	if err != nil {
-		killErr := stopActiveContainers(cli, out)
+		killErr := d.containerStopper(cli, out)
 		if killErr != nil {
 			println(err)
 		}
 		return err
 	}
-	return stopActiveContainers(cli, out)
+	return d.containerStopper(cli, out)
 }
 
 // Destroy shuts down the deployment and removes the repository

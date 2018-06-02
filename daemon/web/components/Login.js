@@ -1,4 +1,29 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
+const styles = {
+  container: {
+    display: 'flex',
+    flexFlow: 'column',
+    justifyContent: 'center',
+    height: '100%',
+    width: '100%',
+  },
+
+  login: {
+    position: 'relative',
+    display: 'flex',
+    flexFlow: 'column',
+    alignItems: 'center',
+    margin: '0.5rem 0',
+    marginBottom: '10rem',
+  },
+
+  loginAlert: {
+    position: 'absolute',
+    top: '105%',
+  },
+};
 
 export default class Login extends React.Component {
   constructor(props) {
@@ -6,7 +31,7 @@ export default class Login extends React.Component {
     this.state = {
       username: '',
       password: '',
-      loginAlert: ''
+      loginAlert: '',
     };
     this.handleLoginSubmit = this.handleLoginSubmit.bind(this);
     this.handleUsernameBlur = this.handleUsernameBlur.bind(this);
@@ -16,7 +41,7 @@ export default class Login extends React.Component {
   async handleLoginSubmit() {
     const response = await this.props.client.login(
       this.state.username,
-      this.state.password
+      this.state.password,
     );
     if (response.status !== 200) {
       this.setState({ loginAlert: 'Username and/or password is incorrect' });
@@ -38,12 +63,19 @@ export default class Login extends React.Component {
       <div style={styles.container}>
         <p align="center">
           <img
+            alt="logo"
             src="https://github.com/ubclaunchpad/inertia/blob/master/.static/inertia-with-name.png?raw=true"
-            width="20%" />
+            width="20%"
+          />
         </p>
         <div style={styles.login}>
           <input onBlur={this.handleUsernameBlur} placeholder="Username" />
-          <input type='password'　style={{ marginBottom: '0.5rem' }} onBlur={this.handlePasswordBlur} placeholder="Password" />
+          <input
+            type="password"
+            style={{ marginBottom: '0.5rem' }}
+            onBlur={this.handlePasswordBlur}
+            placeholder="Password"
+          />
           <button onClick={this.handleLoginSubmit}>Login</button>
           <p style={styles.loginAlert}>{this.state.loginAlert}</p>
         </div>
@@ -51,28 +83,7 @@ export default class Login extends React.Component {
     );
   }
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexFlow: 'column',
-    justifyContent: 'center',
-    height: '100%',
-    width: '100%'
-  },
-
-  login: {
-    position: 'relative',
-    display: 'flex',
-    flexFlow: 'column',
-    alignItems: 'center',
-    margin: '0.5rem 0',
-    marginBottom: '10rem'
-  },
-
-  loginAlert: {
-    position: 'absolute',
-    top: '105%'
-  }
+Login.propTypes = {
+  client: PropTypes.func,
+  history: PropTypes.func,
 };
-

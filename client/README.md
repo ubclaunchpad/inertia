@@ -1,6 +1,6 @@
 # Client
 
-[![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/ubclaunchpad/inertia/client)
+[![GoDoc](https://godoc.org/github.com/ubclaunchpad/inertia?status.svg)](https://godoc.org/github.com/ubclaunchpad/inertia/client)
 
 This package contains Inertia's clientside configuration and interface to remote Inertia daemons. It can be imported for use if you don't like the CLI - for example:
 

@@ -16,7 +16,7 @@ However, please do a quick search of past issues before opening a ticket. If you
 
 # Submitting a Pull Request
 
-👍 Contributions of any size are very much appreciated.
+👍 Contributions of any size and scope are very much appreciated!
 
 All pull requests should be connected to one or more issues. Please try to fill out the pull request template to the best of your ability and use a clear, descriptive title.
 
@@ -30,8 +30,8 @@ Read on for a comprehensive guide on how to get started with Inertia's codebase!
 
 Please free free to open up a ticket if any of these instructions are unclear or straight up do not work on your platform!
 
-- [Setup](#setup)
-- [Overview](#overview)
+- [Installation and Setup](#installation-and-setup)
+- [Project Overview](#project-overview)
 - [Testing Environment](#setting-up-a-testing-environment)
 
 ## Setup
@@ -59,7 +59,7 @@ Inertia uses:
 Make sure all of the above are installed before running:
 
 ```bash
-$> make RELEASE=test  # installs dependencies and an Inertia 
+$> make               # installs dependencies and an Inertia 
                       # build tagged as "test" to gopath
 $> inertia --version  # check what version you have installed
 ```
@@ -68,11 +68,17 @@ A build tagged as `test` allows you to use `make testdaemon` for local developme
 
 Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to use an Inertia CLI installed using Homebrew. To go back to a `go install`ed version of Inertia, you need to run `brew uninstall inertia`.
 
-## Overview
+## Project Overview
+
+[![GoDoc](https://godoc.org/github.com/ubclaunchpad/inertia?status.svg)](https://godoc.org/github.com/ubclaunchpad/inertia)
+
+The Inertia codebase is split up into several components - this section gives a quick introduction on how to work with each.
 
 ### CLI
 
-The codebase for the CLI is in the root directory. This code should only include the CLI user interface - all client-based logic and functionality should go into the `client` package.
+Inertia's command line application is in the root directory. It is built on top of [cobra](https://github.com/spf13/cobra), a library for building command line applications.
+
+This code should only include the CLI user interface and code used to manage local assets, such as configuration files - core client logic, functionality, and daemon API interactions should go into the `client` package.
 
 ### Client
 
@@ -98,12 +104,13 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 
 ### Daemon
 
-The Inertia daemon package manages all serverside functionality. The daemon codebase is in `./daemon/inertia/`.
+The Inertia daemon package manages all serverside functionality and is the core of the Inertia platform. The daemon codebase is in `./daemon/inertiad/`.
 
-To use a daemon compiled from source, set your Inertia version in `.inertia.toml` to `test` and run:
+To locally test a daemon compiled from source, set your Inertia version in `.inertia.toml` to `test` and run:
 
 ```bash
 $> make testdaemon
+# In your test project directory:
 $> inertia local init
 ```
 
@@ -144,6 +151,7 @@ Make sure you have a local daemon set up for this web app to work - see the prev
 You will need Docker installed and running to run whole the Inertia test suite, which includes a number of integration tests.
 
 ```bash
+$> make dev-deps                              # install various development dependencies
 $> make test-all                              # test against ubuntu:latest
 $> make test-all VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 ```
@@ -166,7 +174,7 @@ You can [SSH into this testvps container](https://bobheadxi.github.io/dockercept
 2. **Compile and install Inertia**
 
 ```bash
-$> make RELEASE=test
+$> make
 ```
 
 3. **Build and deliver Inertia daemon to the `testvps`**
@@ -201,4 +209,4 @@ $> inertia local status
 $> inertia local logs
 ```
 
-Please free free to open up an Issue if any of these steps are no clear or don't work!
+Please free free to open up an Issue if any of these steps are not clear or don't work!

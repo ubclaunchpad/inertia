@@ -34,8 +34,8 @@ func NewConfig(version, project, buildType string) *Config {
 
 // Write writes configuration to Inertia config file at path. Optionally
 // takes io.Writers.
-func (config *Config) Write(path string, writers ...io.Writer) error {
-	if len(writers) == 0 && path == "" {
+func (config *Config) Write(filePath string, writers ...io.Writer) error {
+	if len(writers) == 0 && filePath == "" {
 		return errors.New("nothing to write to")
 	}
 
@@ -47,15 +47,15 @@ func (config *Config) Write(path string, writers ...io.Writer) error {
 	}
 
 	// If path is given, attach file writer
-	if path != "" {
-		w, err := os.OpenFile(path, os.O_WRONLY, os.ModePerm)
+	if filePath != "" {
+		w, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
 		}
 
 		// Overwrite file if file exists
-		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			ioutil.WriteFile(path, []byte(""), 0644)
+		if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+			ioutil.WriteFile(filePath, []byte(""), 0644)
 		} else if err != nil {
 			return err
 		}

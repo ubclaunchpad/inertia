@@ -81,6 +81,34 @@ func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
 	}
 }
 
+func TestGetNewClient(t *testing.T) {
+	config := &Config{
+		Version: "test",
+		Project: "robert-writes-bad-code",
+		Remotes: make([]*RemoteVPS, 0),
+	}
+	testRemote := &RemoteVPS{
+		Name:    "test",
+		IP:      "12343",
+		User:    "bobheadxi",
+		PEM:     "/some/pem/file",
+		SSHPort: "22",
+		Daemon: &DaemonConfig{
+			Port: "8080",
+		},
+	}
+	config.AddRemote(testRemote)
+
+	_, found := NewClient("tst", config)
+	assert.False(t, found)
+
+	cli, found := NewClient("test", config)
+	assert.True(t, found)
+	assert.Equal(t, "/some/pem/file", cli.RemoteVPS.PEM)
+	assert.Equal(t, "test", cli.version)
+	assert.Equal(t, "robert-writes-bad-code", cli.project)
+}
+
 func TestInstallDocker(t *testing.T) {
 	session := &mockSSHRunner{}
 	client := getIntegrationClient(session)
@@ -139,7 +167,7 @@ func TestBootstrap(t *testing.T) {
 	assert.Nil(t, err)
 	daemonScript := fmt.Sprintf(string(script), "test", "4303", "127.0.0.1")
 
-	err = client.BootstrapRemote()
+	err = client.BootstrapRemote("ubclaunchpad/inertia")
 	assert.Nil(t, err)
 
 	// Make sure all commands are formatted correctly
@@ -155,7 +183,7 @@ func TestBootstrapIntegration(t *testing.T) {
 	}
 
 	cli := getIntegrationClient(nil)
-	err := cli.BootstrapRemote()
+	err := cli.BootstrapRemote("")
 	assert.Nil(t, err)
 
 	// Daemon setup takes a bit of time - do a crude wait
@@ -292,14 +320,10 @@ func TestLogs(t *testing.T) {
 		assert.Equal(t, "/logs", endpoint)
 
 		// Check body
-		body, err := ioutil.ReadAll(req.Body)
-		assert.Nil(t, err)
 		defer req.Body.Close()
-		var upReq common.DaemonRequest
-		err = json.Unmarshal(body, &upReq)
-		assert.Nil(t, err)
-		assert.Equal(t, "docker-compose", upReq.Container)
-		assert.Equal(t, true, upReq.Stream)
+		q := req.URL.Query()
+		assert.Equal(t, "docker-compose", q.Get(common.Container))
+		assert.Equal(t, "true", q.Get(common.Stream))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))

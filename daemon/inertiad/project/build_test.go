@@ -2,6 +2,7 @@ package project
 
 import (
 	"context"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -14,7 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func cleanupContainers(cli *docker.Client) error {
+// killTestContainers is a helper for tests - it implements project.ContainerStopper
+func killTestContainers(cli *docker.Client, w io.Writer) error {
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
@@ -45,7 +47,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 	defer cli.Close()
 
 	// Set up
-	err = cleanupContainers(cli)
+	err = killTestContainers(cli, nil)
 	assert.Nil(t, err)
 
 	testProjectDir := path.Join(
@@ -57,10 +59,21 @@ func TestDockerComposeIntegration(t *testing.T) {
 		directory: testProjectDir,
 		project:   testProjectName,
 		buildType: "docker-compose",
+
+		builders: map[string]Builder{
+			"herokuish":      herokuishBuild,
+			"dockerfile":     dockerBuild,
+			"docker-compose": dockerCompose,
+		},
+		containerStopper: killTestContainers,
 	}
 
 	// Execute build
-	err = dockerCompose(d, cli, os.Stdout)
+	deploy, err := dockerCompose(d, cli, os.Stdout)
+	assert.Nil(t, err)
+
+	// Execute deploy
+	err = deploy()
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
@@ -85,7 +98,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 
 	// try again if project no up (workaround for Travis)
 	if !foundP {
-		time.Sleep(10 * time.Second)
+		time.Sleep(20 * time.Second)
 		containers, err = cli.ContainerList(
 			context.Background(),
 			types.ContainerListOptions{},
@@ -101,7 +114,46 @@ func TestDockerComposeIntegration(t *testing.T) {
 	assert.True(t, foundDC, "docker-compose container should be active")
 	assert.True(t, foundP, "project container should be active")
 
-	err = cleanupContainers(cli)
+	// Attempt another deploy using Deployment
+	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	assert.Nil(t, err)
+
+	// Arbitrary wait for containers to start again
+	time.Sleep(5 * time.Second)
+
+	// Check for containers
+	containers, err = cli.ContainerList(
+		context.Background(),
+		types.ContainerListOptions{},
+	)
+	assert.Nil(t, err)
+	foundDC = false
+	foundP = false
+	for _, c := range containers {
+		if strings.Contains(c.Names[0], "docker-compose") {
+			foundDC = true
+		}
+		if strings.Contains(c.Names[0], testProjectName) {
+			foundP = true
+		}
+	}
+
+	// try again if project no up (workaround for Travis)
+	if !foundP {
+		time.Sleep(20 * time.Second)
+		containers, err = cli.ContainerList(
+			context.Background(),
+			types.ContainerListOptions{},
+		)
+		assert.Nil(t, err)
+		for _, c := range containers {
+			if strings.Contains(c.Names[0], testProjectName) {
+				foundP = true
+			}
+		}
+	}
+
+	err = killTestContainers(cli, nil)
 	assert.Nil(t, err)
 }
 
@@ -113,7 +165,7 @@ func TestDockerBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	err = cleanupContainers(cli)
+	err = killTestContainers(cli, nil)
 	assert.Nil(t, err)
 
 	testProjectDir := path.Join(
@@ -125,10 +177,21 @@ func TestDockerBuildIntegration(t *testing.T) {
 		directory: testProjectDir,
 		project:   testProjectName,
 		buildType: "dockerfile",
+
+		builders: map[string]Builder{
+			"herokuish":      herokuishBuild,
+			"dockerfile":     dockerBuild,
+			"docker-compose": dockerCompose,
+		},
+		containerStopper: killTestContainers,
 	}
 
 	// Execute build
-	err = dockerBuild(d, cli, os.Stdout)
+	deploy, err := dockerBuild(d, cli, os.Stdout)
+	assert.Nil(t, err)
+
+	// Execute deploy
+	err = deploy()
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
@@ -147,7 +210,27 @@ func TestDockerBuildIntegration(t *testing.T) {
 	}
 	assert.True(t, foundP, "project container should be active")
 
-	err = cleanupContainers(cli)
+	// Attempt another deploy using Deployment
+	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	assert.Nil(t, err)
+
+	// Arbitrary wait for containers to start
+	time.Sleep(5 * time.Second)
+
+	containers, err = cli.ContainerList(
+		context.Background(),
+		types.ContainerListOptions{},
+	)
+	assert.Nil(t, err)
+	foundP = false
+	for _, c := range containers {
+		if strings.Contains(c.Names[0], testProjectName) {
+			foundP = true
+		}
+	}
+	assert.True(t, foundP, "project container should be active")
+
+	err = killTestContainers(cli, nil)
 	assert.Nil(t, err)
 }
 
@@ -159,7 +242,7 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	err = cleanupContainers(cli)
+	err = killTestContainers(cli, nil)
 	assert.Nil(t, err)
 
 	testProjectDir := path.Join(
@@ -171,10 +254,21 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 		directory: testProjectDir,
 		project:   testProjectName,
 		buildType: "herokuish",
+
+		builders: map[string]Builder{
+			"herokuish":      herokuishBuild,
+			"dockerfile":     dockerBuild,
+			"docker-compose": dockerCompose,
+		},
+		containerStopper: killTestContainers,
 	}
 
 	// Execute build
-	err = herokuishBuild(d, cli, os.Stdout)
+	deploy, err := herokuishBuild(d, cli, os.Stdout)
+	assert.Nil(t, err)
+
+	// Execute deploy
+	err = deploy()
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
@@ -193,6 +287,26 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	}
 	assert.True(t, foundP, "project container should be active")
 
-	err = cleanupContainers(cli)
+	// Attempt another deploy using Deployment
+	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	assert.Nil(t, err)
+
+	// Arbitrary wait for containers to start
+	time.Sleep(5 * time.Second)
+
+	containers, err = cli.ContainerList(
+		context.Background(),
+		types.ContainerListOptions{},
+	)
+	assert.Nil(t, err)
+	foundP = false
+	for _, c := range containers {
+		if strings.Contains(c.Names[0], testProjectName) {
+			foundP = true
+		}
+	}
+	assert.True(t, foundP, "project container should be active")
+
+	err = killTestContainers(cli, nil)
 	assert.Nil(t, err)
 }

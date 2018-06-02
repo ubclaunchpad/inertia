@@ -7,9 +7,7 @@ ENV BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia/daemon/web
 ADD ./daemon/web ${BUILD_HOME}
 WORKDIR ${BUILD_HOME}
 # Build and minify client.
-RUN if [ ! -d "node_modules" ]; then \
-    npm install --production; \
-    fi
+RUN npm install --production
 RUN npm run build
 
 ### Part 2 - Building the Inertia daemon
@@ -27,18 +25,18 @@ RUN if [ ! -d "vendor" ]; then \
     dep ensure; \
     fi
 # Build daemon binary.
-RUN go build -o /bin/inertia \
+RUN go build -o /bin/inertiad \
     -ldflags "-X main.Version=$INERTIA_VERSION" \
-    ./daemon/inertia
+    ./daemon/inertiad
 
 ### Part 3 - Copy builds into combined image
 FROM alpine
 LABEL maintainer "UBC Launchpad team@ubclaunchpad.com"
 WORKDIR /app
-COPY --from=daemon-build-env /bin/inertia /usr/local/bin
+COPY --from=daemon-build-env /bin/inertiad /usr/local/bin
 COPY --from=web-build-env \
     /go/src/github.com/ubclaunchpad/inertia/daemon/web/public/ \
     /app/inertia-web
 
 # Serve the daemon by default.
-ENTRYPOINT ["inertia", "run"]
+ENTRYPOINT ["inertiad", "run"]

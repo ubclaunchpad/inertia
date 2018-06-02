@@ -140,12 +140,42 @@ var showCmd = &cobra.Command{
 	},
 }
 
+var setCmd = &cobra.Command{
+	Use:   "set [REMOTE] [PROPERTY] [VALUE]",
+	Short: "Set details about remote.",
+	Long:  `Set details about the given remote.`,
+	Args:  cobra.MinimumNArgs(3),
+	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		config, path, err := getProjectConfigFromDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		remote, found := config.GetRemote(args[0])
+		if found {
+			success := setProperty(args[1], args[2], remote)
+			if success {
+				config.Write(path)
+				println("Remote '" + args[0] + "' has been updated.")
+				println(formatRemoteDetails(remote))
+			} else {
+				// invalid input
+				println("Remote setting '" + args[1] + "' not found.")
+			}
+		} else {
+			println("No remote '" + args[0] + "' currently set up.")
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(remoteCmd)
 	remoteCmd.AddCommand(addCmd)
 	remoteCmd.AddCommand(listCmd)
 	remoteCmd.AddCommand(removeCmd)
 	remoteCmd.AddCommand(showCmd)
+	remoteCmd.AddCommand(setCmd)
 
 	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
 	addCmd.Flags().StringP("port", "p", "4303", "Daemon port")

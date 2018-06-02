@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ubclaunchpad/inertia/daemon/inertia/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -16,7 +16,7 @@ var Version string
 // runCmd starts the daemon
 var runCmd = &cobra.Command{
 	Version: getVersion(),
-	Use:     "run",
+	Use:     "run [host] [key path] [ssl directory] [userdb dir]",
 	Short:   "Run the daemon",
 	Long: `Run the daemon on a port, default 4303. Requires
 host address as an argument.
@@ -29,7 +29,12 @@ Example:
 		if err != nil {
 			log.WithError(err)
 		}
-		run(args[0], port, Version)
+
+		if len(args) == 4 {
+			run(args[0], port, Version, args[1], args[2], args[3])
+		} else {
+			run(args[0], port, Version, "", "", "")
+		}
 	},
 }
 
@@ -40,6 +45,10 @@ var tokenCmd = &cobra.Command{
 	Long: `Produce an API token to use with the daemon,
 Created using an RSA private key.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 1 {
+			auth.DaemonGithubKeyLocation = args[0]
+		}
+
 		keyBytes, err := auth.GetAPIPrivateKey(nil)
 		if err != nil {
 			log.Fatal(err)
@@ -55,7 +64,7 @@ Created using an RSA private key.`,
 }
 
 var rootCmd = &cobra.Command{
-	Use:     "inertia",
+	Use:     "inertiad",
 	Short:   "The inertia daemon CLI",
 	Version: getVersion(),
 }

@@ -2,36 +2,30 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertia/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	// Get container name from request
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		println(err.Error())
-		http.Error(w, err.Error(), http.StatusLengthRequired)
-		return
-	}
-	defer r.Body.Close()
-	var upReq common.DaemonRequest
-	err = json.Unmarshal(body, &upReq)
+	// Get container name and stream from request query params
+	q := r.URL.Query()
+
+	container := q.Get("container")
+	stream, err := strconv.ParseBool(q.Get("stream"))
 	if err != nil {
 		println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	container := upReq.Container
-	logger := newLogger(upReq.Stream, w)
+
+	logger := newLogger(stream, w)
 	defer logger.Close()
 
 	if !strings.Contains(container, "inertia-daemon") && deployment == nil {
@@ -47,8 +41,8 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	defer cli.Close()
 
 	logs, err := project.ContainerLogs(cli, project.LogOptions{
-		Container: upReq.Container,
-		Stream:    upReq.Stream,
+		Container: container,
+		Stream:    stream,
 	})
 	if err != nil {
 		if docker.IsErrContainerNotFound(err) {
@@ -60,7 +54,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer logs.Close()
 
-	if upReq.Stream {
+	if stream {
 		stop := make(chan struct{})
 		common.FlushRoutine(w, logs, stop)
 		defer close(stop)
