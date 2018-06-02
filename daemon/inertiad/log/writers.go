@@ -19,8 +19,13 @@ type WebSocketWriter struct {
 	socketWriter SocketWriter
 }
 
-func (d *WebSocketWriter) Write(p []byte) (int, error) {
-	return len(p), d.socketWriter.WriteMessage(d.messageType, p)
+func (w *WebSocketWriter) Write(p []byte) (int, error) {
+	return len(p), w.socketWriter.WriteMessage(w.messageType, p)
+}
+
+// Close closes the socket writer's websocket.
+func (w *WebSocketWriter) Close() error {
+	return w.socketWriter.Close()
 }
 
 // NewWebSocketTextWriter returns an io.Writer version of SocketWriter
@@ -45,7 +50,8 @@ func (m *MultiWriter) Write(p []byte) (int, error) {
 		lastLen int
 		lastErr error
 	)
-	for _, writer := range m.writers {
+	for i := 0; i < len(m.writers); i++ {
+		writer := m.writers[i]
 		if writer == nil {
 			continue
 		}
