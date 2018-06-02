@@ -119,7 +119,7 @@ func (runner *SSHRunner) CopyFile(fileReader io.Reader, remotePath string, permi
 	contentsBytes, _ := ioutil.ReadAll(fileReader)
 	reader := bytes.NewReader(contentsBytes)
 
-	session, err := getSSHSession(runner.r.PEM, runner.r.IP, runner.r.Daemon.SSHPort, runner.r.User)
+	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
 	if err != nil {
 		return err
 	}
