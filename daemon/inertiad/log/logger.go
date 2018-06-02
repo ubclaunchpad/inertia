@@ -30,8 +30,12 @@ func NewLogger(opts LoggerOptions) *DaemonLogger {
 	var w io.Writer
 	if !opts.HTTPStream {
 		// Attempt to create a writer with websocket
-		w = &MultiWriter{
-			writers: []io.Writer{opts.Stdout, NewWebSocketTextWriter(opts.Socket)},
+		if opts.Socket != nil {
+			w = &MultiWriter{
+				writers: []io.Writer{opts.Stdout, NewWebSocketTextWriter(opts.Socket)},
+			}
+		} else {
+			w = opts.Stdout
 		}
 	} else {
 		// Attempt to create a writer with HTTPWriter
