@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -88,19 +87,6 @@ func (h *PermissionsHandler) Close() error {
 
 // nolint: gocyclo
 func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// CORS for development
-	origin, err := url.Parse(r.Header.Get("Origin"))
-	if err == nil && origin.Hostname() == "127.0.0.1" {
-		allowedOrigin := "http://" + origin.Host
-		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Allow-Methods", "POST OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		if r.Method == "OPTIONS" {
-			return
-		}
-	}
-
 	// http.StripPrefix removes the leading slash, but in the interest
 	// of maintaining similar behaviour to stdlib handler functions,
 	// we manually add a leading "/" here instead of having users not add

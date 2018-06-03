@@ -151,7 +151,7 @@ export default class Home extends React.Component {
   }
 
   async handleLogout() {
-    const response = await this.props.client.logout();
+    const response = await InertiaClient.logout();
     if (response.status !== 200) {
       // TODO: Log Error
       return;
@@ -160,7 +160,7 @@ export default class Home extends React.Component {
   }
 
   async handleGetStatus() {
-    const response = await this.props.client.getRemoteStatus();
+    const response = await InertiaClient.getRemoteStatus();
     if (response.status !== 200) return new Error('bad response: ' + response);
     const status = await response.json();
     this.setState({
@@ -240,7 +240,7 @@ export default class Home extends React.Component {
           <div style={styles.main}>
             <Dashboard
               container={this.state.viewContainer}
-              client={this.props.client} />
+            />
           </div>
         </div>
       </div>
@@ -248,6 +248,5 @@ export default class Home extends React.Component {
   }
 }
 Home.propTypes = {
-  client: PropTypes.instanceOf(InertiaClient),
   history: PropTypes.func,
 };

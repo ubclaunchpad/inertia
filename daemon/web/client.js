@@ -5,17 +5,17 @@ export default class InertiaClient {
     this.url = 'https://' + url;
   }
 
-  async logout() {
+  static async logout() {
     const endpoint = '/user/logout';
     const params = {
       headers: {
         Accept: 'application/json',
       },
     };
-    return this.post(endpoint, params);
+    return InertiaClient.post(endpoint, params);
   }
 
-  async login(username, password) {
+  static async login(username, password) {
     const endpoint = '/user/login';
     const params = {
       headers: {
@@ -27,14 +27,14 @@ export default class InertiaClient {
         password,
       }),
     };
-    return this.post(endpoint, params);
+    return InertiaClient.post(endpoint, params);
   }
 
-  async validate() {
-    return this.get('/user/validate', {});
+  static async validate() {
+    return InertiaClient.get('/user/validate', {});
   }
 
-  async getContainerLogs(container = '/inertia-daemon') {
+  static async getContainerLogs(container = '/inertia-daemon') {
     const endpoint = '/logs';
     const queryParams = {
       stream: 'true',
@@ -46,10 +46,10 @@ export default class InertiaClient {
       },
     };
 
-    return this.post(endpoint, params, queryParams);
+    return InertiaClient.post(endpoint, params, queryParams);
   }
 
-  async getRemoteStatus() {
+  static async getRemoteStatus() {
     const endpoint = '/status';
     const params = {
       headers: {
@@ -57,7 +57,7 @@ export default class InertiaClient {
         Accept: 'application/json',
       },
     };
-    return this.get(endpoint, params);
+    return InertiaClient.get(endpoint, params);
   }
 
   /**
@@ -66,14 +66,14 @@ export default class InertiaClient {
    * @param {Object} params
    * @param {{[key]: string}} queryParams
    */
-  async get(endpoint, params, queryParams) {
+  static async get(endpoint, params, queryParams) {
     const newParams = {
       ...params,
       method: 'GET',
       credentials: 'include',
     };
     const queryString = queryParams ? encodeURL(queryParams) : '';
-    const url = this.url + endpoint + queryString;
+    const url = endpoint + queryString;
 
     const request = new Request(url, newParams);
 
@@ -89,14 +89,14 @@ export default class InertiaClient {
    * @param {String} endpoint
    * @param {Object} params
    */
-  async post(endpoint, params) {
+  static async post(endpoint, params) {
     const newParams = {
       ...params,
       method: 'POST',
       credentials: 'include',
     };
 
-    const request = new Request(this.url + endpoint, newParams);
+    const request = new Request(endpoint, newParams);
 
     try {
       return await fetch(request);

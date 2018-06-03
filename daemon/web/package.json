@@ -6,6 +6,7 @@
   "author": "UBC Launch Pad",
   "license": "MIT",
   "main": "index.js",
+  "proxy": "https://127.0.0.1:4303",
   "scripts": {
     "start": "NODE_ENV=development webpack-dev-server --host=127.0.0.1",
     "build": "NODE_ENV=production webpack --config webpack.prod.js",

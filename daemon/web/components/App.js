@@ -45,6 +45,11 @@ PropsRoute.propTypes = {
 };
 
 export default class App extends React.Component {
+  static async isAuthenticated() {
+    const response = await InertiaClient.validate();
+    return (response.status === 200);
+  }
+
   constructor(props) {
     super(props);
 
@@ -53,7 +58,7 @@ export default class App extends React.Component {
       authenticated: false,
     };
 
-    this.isAuthenticated = this.isAuthenticated.bind(this);
+    this.isAuthenticated = App.isAuthenticated.bind(this);
 
     this.isAuthenticated()
       .then((authenticated) => {
@@ -74,11 +79,6 @@ export default class App extends React.Component {
           });
         });
     });
-  }
-
-  async isAuthenticated() {
-    const response = await this.props.client.validate();
-    return (response.status === 200);
   }
 
   render() {
@@ -111,6 +111,4 @@ export default class App extends React.Component {
     );
   }
 }
-App.propTypes = {
-  client: PropTypes.instanceOf(InertiaClient),
-};
+
