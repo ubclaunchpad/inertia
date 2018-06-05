@@ -1,6 +1,6 @@
 # Daemon
 
-[![GoDoc](https://godoc.org/github.com/ubclaunchpad/inertia?status.svg)](https://godoc.org/github.com/ubclaunchpad/inertia/daemon/)
+[![GoDoc](https://godoc.org/github.com/ubclaunchpad/inertia?status.svg)](https://godoc.org/github.com/ubclaunchpad/inertia/daemon/inertiad)
 
 This directory contains the Inertia daemon's two components:
 

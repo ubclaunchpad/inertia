@@ -13,6 +13,9 @@ const config = {
     inline: true,
     contentBase: './public',
     publicPath: '/web/',
+    proxy: {
+      '/': { target: 'https://127.0.0.1:4303', secure: false },
+    },
   },
   devtool: 'inline-source-map',
   module: {

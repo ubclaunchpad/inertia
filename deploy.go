@@ -267,13 +267,13 @@ var cmdDeploymentLogs = &cobra.Command{
 			container = args[0]
 		}
 
-		resp, err := deployment.Logs(stream, container)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer resp.Body.Close()
-
 		if !stream {
+			resp, err := deployment.Logs(container)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
+
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
@@ -290,11 +290,16 @@ var cmdDeploymentLogs = &cobra.Command{
 					resp.StatusCode, body)
 			}
 		} else {
-			reader := bufio.NewReader(resp.Body)
+			socket, err := deployment.LogsWebSocket(container)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer socket.Close()
+
 			for {
-				line, err := reader.ReadBytes('\n')
+				_, line, err := socket.ReadMessage()
 				if err != nil {
-					break
+					log.Fatal(err)
 				}
 				fmt.Print(string(line))
 			}
