@@ -25,6 +25,6 @@ func (runner *mockSSHRunner) RunSession() error {
 	return nil
 }
 
-func (runner *mockSSHRunner) CopyFile(r io.Reader, remotePath string, permissions string, size int64) error {
+func (runner *mockSSHRunner) CopyFile(f io.Reader, remotePath string, permissions string) error {
 	return nil
 }

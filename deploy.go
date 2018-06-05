@@ -333,6 +333,10 @@ deployment. Provide a relative path to your file.`,
 			log.Fatal(err)
 		}
 
+		if deployment.ProjectDirectory == "" {
+			log.Fatal(errors.New("no project directory set - add 'project_dir' to your remote configuration"))
+		}
+
 		// Get premissions to copy file with
 		permissions, err := cmd.Flags().GetString("permissions")
 		if err != nil {
@@ -349,12 +353,17 @@ deployment. Provide a relative path to your file.`,
 			log.Fatal(err.Error())
 		}
 
+		// Destination path
+		remotePath := path.Join(deployment.ProjectDirectory, args[0])
+
 		// Initiate copy
 		session := client.NewSSHRunner(deployment.RemoteVPS)
-		err = session.CopyFile(f, deployment.ProjectDirectory, permissions, 0)
+		err = session.CopyFile(f, remotePath, permissions)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+
+		fmt.Println("File", args[0], "has been copied to", deployment.ProjectDirectory, "on remote", remoteName)
 	},
 }
 
