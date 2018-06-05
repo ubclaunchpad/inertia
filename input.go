@@ -78,6 +78,8 @@ func addRemoteWalkthrough(
 		PEM:     pemLoc,
 		Branch:  branch,
 		SSHPort: sshPort,
+		// ProjectDirectory is temporary - allow user configuration later
+		ProjectDirectory: "/app/host/project",
 		Daemon: &client.DaemonConfig{
 			Port:   port,
 			Secret: secret,

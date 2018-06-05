@@ -10,13 +10,14 @@ import (
 
 // RemoteVPS contains parameters for the VPS
 type RemoteVPS struct {
-	Name    string        `toml:"name"`
-	IP      string        `toml:"IP"`
-	User    string        `toml:"user"`
-	PEM     string        `toml:"pemfile"`
-	Branch  string        `toml:"branch"`
-	SSHPort string        `toml:"ssh_port"`
-	Daemon  *DaemonConfig `toml:"daemon"`
+	Name             string        `toml:"name"`
+	IP               string        `toml:"IP"`
+	User             string        `toml:"user"`
+	PEM              string        `toml:"pemfile"`
+	Branch           string        `toml:"branch"`
+	SSHPort          string        `toml:"ssh_port"`
+	ProjectDirectory string        `toml:"project_directory"`
+	Daemon           *DaemonConfig `toml:"daemon"`
 }
 
 // DaemonConfig contains parameters for the Daemon

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
@@ -71,6 +73,10 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 
 		ssh := deepCopy(cmdDeploymentSSH)
 		cmd.AddCommand(ssh)
+
+		send := deepCopy(cmdDeploymentSendFile)
+		send.Flags().StringP("permissions", "p", "0655", "Permissions settings for file")
+		cmd.AddCommand(send)
 
 		init := deepCopy(cmdDeploymentInit)
 		cmd.AddCommand(init)
@@ -309,6 +315,44 @@ var cmdDeploymentSSH = &cobra.Command{
 
 		session := client.NewSSHRunner(deployment.RemoteVPS)
 		if err = session.RunSession(); err != nil {
+			log.Fatal(err.Error())
+		}
+	},
+}
+
+var cmdDeploymentSendFile = &cobra.Command{
+	Use:   "send",
+	Short: "Send a file to your Inertia deployment",
+	Long: `Send a file, such as a configuration or .env file, to your Inertia
+deployment. Provide a relative path to your file.`,
+	Args: cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		deployment, err := getClient(remoteName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Get premissions to copy file with
+		permissions, err := cmd.Flags().GetString("permissions")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		// Open file with given name
+		cwd, err := os.Getwd()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		f, err := os.Open(path.Join(cwd, args[0]))
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		// Initiate copy
+		session := client.NewSSHRunner(deployment.RemoteVPS)
+		err = session.CopyFile(f, deployment.ProjectDirectory, permissions, 0)
+		if err != nil {
 			log.Fatal(err.Error())
 		}
 	},

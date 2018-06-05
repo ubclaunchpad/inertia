@@ -123,6 +123,7 @@ func (runner *SSHRunner) CopyFile(fileReader io.Reader, remotePath string, permi
 	if err != nil {
 		return err
 	}
+	defer session.Close()
 
 	filename := path.Base(remotePath)
 	directory := path.Dir(remotePath)
@@ -135,8 +136,7 @@ func (runner *SSHRunner) CopyFile(fileReader io.Reader, remotePath string, permi
 		fmt.Fprintln(w, "\x00")
 	}()
 
-	session.Run("/usr/bin/scp -t " + directory)
-	return nil
+	return session.Run("/usr/bin/scp -t " + directory)
 }
 
 // Stubbed out for testing.
