@@ -12,13 +12,13 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-var deploymentUserCmd = &cobra.Command{
+var cmdDeploymentUser = &cobra.Command{
 	Use:   "user",
 	Short: "Configure user access to Inertia Web",
 	Long:  `Configure user access to the Inertia Web application.`,
 }
 
-var deploymentUserAddCmd = &cobra.Command{
+var cmdDeploymentAddUser = &cobra.Command{
 	Use:   "add",
 	Short: "Create a user with access to Inertia Web",
 	Long: `Create a user with access to the Inertia Web application.
@@ -69,7 +69,7 @@ Use the --admin flag to create an admin user.`,
 	},
 }
 
-var deploymentUserRemoveCmd = &cobra.Command{
+var cmdDeploymentRemoveUser = &cobra.Command{
 	Use:   "rm",
 	Short: "Remove a user with access to Inertia Web",
 	Long: `Remove a user with access to the Inertia Web application.
@@ -107,7 +107,7 @@ deployment from the web app.`,
 	},
 }
 
-var deploymentUsersResetCmd = &cobra.Command{
+var cmdDeploymentResetUsers = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset user database on your remote.",
 	Long: `Removes all users credentials on your remote. All users will
@@ -144,7 +144,7 @@ from the web app.`,
 	},
 }
 
-var deploymentUsersListCmd = &cobra.Command{
+var cmdDeploymentListUsers = &cobra.Command{
 	Use:   "ls",
 	Short: "List all users registered on your remote.",
 	Long:  `List all users with access to Inertia Web on your remote.`,

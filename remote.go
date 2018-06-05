@@ -10,7 +10,21 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-var remoteCmd = &cobra.Command{
+// Initialize 'inertia remote [COMMAND]' commands
+func init() {
+	cmdRoot.AddCommand(cmdRemote)
+	cmdRemote.AddCommand(cmdAddRemote)
+	cmdRemote.AddCommand(cmdListRemotes)
+	cmdRemote.AddCommand(cmdRemoveRemote)
+	cmdRemote.AddCommand(cmdShowRemote)
+	cmdRemote.AddCommand(cmdSetRemoteProperty)
+
+	cmdListRemotes.Flags().BoolP("verbose", "v", false, "Verbose output")
+	cmdAddRemote.Flags().StringP("port", "p", "4303", "Daemon port")
+	cmdAddRemote.Flags().StringP("sshPort", "s", "22", "SSH port")
+}
+
+var cmdRemote = &cobra.Command{
 	Use:   "remote",
 	Short: "Configure the local settings for a remote VPS instance",
 	Long: `Remote is a low level command for interacting with this VPS
@@ -26,7 +40,7 @@ inerta remote status gcloud`,
 	Args: cobra.MinimumNArgs(1),
 }
 
-var addCmd = &cobra.Command{
+var cmdAddRemote = &cobra.Command{
 	Use:   "add [REMOTE]",
 	Short: "Add a reference to a remote VPS instance",
 	Long: `Add a reference to a remote VPS instance. Requires 
@@ -73,7 +87,7 @@ file. Specify a VPS name.`,
 	},
 }
 
-var listCmd = &cobra.Command{
+var cmdListRemotes = &cobra.Command{
 	Use:   "ls",
 	Short: "List currently configured remotes",
 	Long:  `Lists all currently configured remotes.`,
@@ -94,7 +108,7 @@ var listCmd = &cobra.Command{
 	},
 }
 
-var removeCmd = &cobra.Command{
+var cmdRemoveRemote = &cobra.Command{
 	Use:   "rm [REMOTE]",
 	Short: "Remove a remote.",
 	Long:  `Remove a remote from Inertia's configuration file.`,
@@ -119,7 +133,7 @@ var removeCmd = &cobra.Command{
 	},
 }
 
-var showCmd = &cobra.Command{
+var cmdShowRemote = &cobra.Command{
 	Use:   "show [REMOTE]",
 	Short: "Show details about remote.",
 	Long:  `Show details about the given remote.`,
@@ -140,7 +154,7 @@ var showCmd = &cobra.Command{
 	},
 }
 
-var setCmd = &cobra.Command{
+var cmdSetRemoteProperty = &cobra.Command{
 	Use:   "set [REMOTE] [PROPERTY] [VALUE]",
 	Short: "Set details about remote.",
 	Long:  `Set details about the given remote.`,
@@ -167,17 +181,4 @@ var setCmd = &cobra.Command{
 			println("No remote '" + args[0] + "' currently set up.")
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(remoteCmd)
-	remoteCmd.AddCommand(addCmd)
-	remoteCmd.AddCommand(listCmd)
-	remoteCmd.AddCommand(removeCmd)
-	remoteCmd.AddCommand(showCmd)
-	remoteCmd.AddCommand(setCmd)
-
-	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
-	addCmd.Flags().StringP("port", "p", "4303", "Daemon port")
-	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }
