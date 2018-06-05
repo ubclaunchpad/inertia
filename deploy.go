@@ -342,7 +342,7 @@ deployment. Provide a relative path to your file.`,
 			log.Fatal(errors.New("no project directory set - add 'project_dir' to your remote configuration"))
 		}
 
-		// Get premissions to copy file with
+		// Get permissions to copy file with
 		permissions, err := cmd.Flags().GetString("permissions")
 		if err != nil {
 			log.Fatal(err.Error())
