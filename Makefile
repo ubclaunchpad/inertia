@@ -128,7 +128,7 @@ daemon:
 # modified.
 .PHONY: bootstrap
 bootstrap:
-	go-bindata -o client/bootstrap.go -pkg client client/bootstrap/...
+	go-bindata -o client/internal/compiled.go -pkg client client/scripts/...
 
 # Install Inertia Web dependencies. Use PACKAGE to install something.
 .PHONY: web-deps

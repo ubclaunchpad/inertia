@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/websocket"
+	internal "github.com/ubclaunchpad/inertia/client/internal"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -108,7 +109,7 @@ key to enable continuous deployment.`)
 
 // DaemonUp brings the daemon up on the remote instance.
 func (c *Client) DaemonUp(daemonVersion, host, daemonPort string) error {
-	scriptBytes, err := Asset("client/bootstrap/daemon-up.sh")
+	scriptBytes, err := internal.Asset("client/bootstrap/daemon-up.sh")
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,7 @@ func (c *Client) DaemonUp(daemonVersion, host, daemonPort string) error {
 
 // DaemonDown brings the daemon down on the remote instance
 func (c *Client) DaemonDown() error {
-	scriptBytes, err := Asset("client/bootstrap/daemon-down.sh")
+	scriptBytes, err := internal.Asset("client/bootstrap/daemon-down.sh")
 	if err != nil {
 		return err
 	}
