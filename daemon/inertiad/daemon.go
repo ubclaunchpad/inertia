@@ -94,7 +94,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 	handler.AttachPublicHandler(
 		webPrefix,
 		http.StripPrefix(
-			webPrefix, http.FileServer(http.Dir("/app/inertia-web")),
+			webPrefix, http.FileServer(http.Dir("/daemon/inertia-web")),
 		),
 	)
 
