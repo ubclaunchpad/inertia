@@ -18,10 +18,16 @@ IMAGE=ubclaunchpad/inertia:$DAEMON_RELEASE
 # as long as it is mapped to the correct DAEMON_PORT.
 CONTAINER_PORT=4303
 
-# Set up directories.
-mkdir -p $HOME/project
-mkdir -p $HOME/.inertia
-mkdir -p $HOME/.inertia/.ssl
+# User project
+mkdir -p $HOME/inertia
+mkdir -p $HOME/inertia/project
+
+# Inertia data
+mkdir -p $HOME/inertia/data
+
+# Configuration
+mkdir -p $HOME/inertia/config
+mkdir -p $HOME/inertia/config/ssl
 
 # Check if already running and take down existing daemon.
 ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`

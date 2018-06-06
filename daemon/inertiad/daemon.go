@@ -28,7 +28,7 @@ var (
 
 var (
 	// specify location of SSL certificate
-	sslDirectory = "/app/host/.inertia/.ssl/"
+	sslDirectory = "/app/host/inertia/config/ssl/"
 )
 
 const (

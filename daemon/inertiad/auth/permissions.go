@@ -12,7 +12,7 @@ import (
 )
 
 // UserDatabasePath is the default location for storing users.
-var UserDatabasePath = "/app/host/.inertia/users.db"
+var UserDatabasePath = "/app/host/inertia/data/users.db"
 
 // PermissionsHandler handles users, permissions, and sessions on top
 // of an http.ServeMux. It is used for Inertia Web.
