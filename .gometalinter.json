@@ -9,6 +9,6 @@
         "vet"
     ],
     "Exclude": [
-        "client/bootstrap.go"
+        "client/internal/compiled.go"
     ]
 }
