@@ -112,18 +112,19 @@ func TestGetNewClient(t *testing.T) {
 func TestInstallDocker(t *testing.T) {
 	session := &mockSSHRunner{}
 	client := getIntegrationClient(session)
-	script, err := ioutil.ReadFile("bootstrap/docker.sh")
+	script, err := ioutil.ReadFile("scripts/docker.sh")
 	assert.Nil(t, err)
 
 	// Make sure the right command is run.
-	client.installDocker(session)
+	err = client.installDocker(session)
+	assert.Nil(t, err)
 	assert.Equal(t, string(script), session.Calls[0])
 }
 
 func TestDaemonUp(t *testing.T) {
 	session := &mockSSHRunner{}
 	client := getIntegrationClient(session)
-	script, err := ioutil.ReadFile("bootstrap/daemon-up.sh")
+	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
 	assert.Nil(t, err)
 	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
 
@@ -137,11 +138,9 @@ func TestDaemonUp(t *testing.T) {
 func TestKeyGen(t *testing.T) {
 	session := &mockSSHRunner{}
 	remote := getIntegrationClient(session)
-	script, err := ioutil.ReadFile("bootstrap/token.sh")
+	script, err := ioutil.ReadFile("scripts/token.sh")
 	assert.Nil(t, err)
 	tokenScript := fmt.Sprintf(string(script), "test")
-
-	// Make sure the right command is run.
 
 	// Make sure the right command is run.
 	_, err = remote.getDaemonAPIToken(session, "test")
@@ -153,17 +152,17 @@ func TestBootstrap(t *testing.T) {
 	session := &mockSSHRunner{}
 	client := getIntegrationClient(session)
 
-	dockerScript, err := ioutil.ReadFile("bootstrap/docker.sh")
+	dockerScript, err := ioutil.ReadFile("scripts/docker.sh")
 	assert.Nil(t, err)
 
-	keyScript, err := ioutil.ReadFile("bootstrap/keygen.sh")
+	keyScript, err := ioutil.ReadFile("scripts/keygen.sh")
 	assert.Nil(t, err)
 
-	script, err := ioutil.ReadFile("bootstrap/token.sh")
+	script, err := ioutil.ReadFile("scripts/token.sh")
 	assert.Nil(t, err)
 	tokenScript := fmt.Sprintf(string(script), "test")
 
-	script, err = ioutil.ReadFile("bootstrap/daemon-up.sh")
+	script, err = ioutil.ReadFile("scripts/daemon-up.sh")
 	assert.Nil(t, err)
 	daemonScript := fmt.Sprintf(string(script), "test", "4303", "127.0.0.1")
 
