@@ -29,6 +29,9 @@ var (
 var (
 	// specify location of SSL certificate
 	sslDirectory = "/app/host/inertia/config/ssl/"
+
+	userDatabasePath       = "/app/host/inertia/data/users.db"
+	deploymentDatabasePath = "/app/host/inertia/data/deployments.db"
 )
 
 const (

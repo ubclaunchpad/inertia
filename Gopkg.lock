@@ -209,6 +209,8 @@
     "ed25519",
     "ed25519/internal/edwards25519",
     "internal/chacha20",
+    "nacl/box",
+    "nacl/secretbox",
     "openpgp",
     "openpgp/armor",
     "openpgp/elgamal",
@@ -216,6 +218,7 @@
     "openpgp/packet",
     "openpgp/s2k",
     "poly1305",
+    "salsa20/salsa",
     "ssh",
     "ssh/agent",
     "ssh/knownhosts",
@@ -323,6 +326,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e8a70832cdb09be7dc89743692f23ffb780bb73ad163532022cb87bb0b855a06"
+  inputs-digest = "e1c96c02d8a91f16586be41138a0989c9dc098b1dcc68e2af3fb207e507f3d90"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -15,8 +15,10 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
-// directory is the directory the user's deployed project is cloned in
-var directory = "/app/host/inertia/project"
+var (
+	// directory is the directory the user's deployed project is cloned in
+	directory = "/app/host/inertia/project"
+)
 
 // Deployer does great deploys
 type Deployer interface {
@@ -44,21 +46,25 @@ type Deployment struct {
 	repo *git.Repository
 	auth ssh.AuthMethod
 	mux  sync.Mutex
+
+	ConfigManager *ConfigManager
 }
 
 // DeploymentConfig is used to configure Deployment
 type DeploymentConfig struct {
-	ProjectName string
-	BuildType   string
-	RemoteURL   string
-	Branch      string
-	PemFilePath string
+	ProjectName  string
+	BuildType    string
+	RemoteURL    string
+	Branch       string
+	PemFilePath  string
+	DatabasePath string
 }
 
 // NewDeployment creates a new deployment
 func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	common.RemoveContents(directory)
 
+	// Set up git repository
 	pemFile, err := os.Open(cfg.PemFilePath)
 	if err != nil {
 		return nil, err
@@ -72,6 +78,13 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 		return nil, err
 	}
 
+	// Set up deployment database
+	manager, err := newConfigManager(cfg.DatabasePath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create deployment
 	return &Deployment{
 		// Properties
 		directory: directory,
@@ -90,6 +103,9 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 		// Repository
 		auth: authMethod,
 		repo: repo,
+
+		// Persistent configuration manager
+		ConfigManager: manager,
 	}, nil
 }
 
@@ -175,6 +191,10 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
+	err := d.ConfigManager.destroy()
+	if err != nil {
+		fmt.Fprint(out, "unable to clear database records: "+err.Error())
+	}
 	return common.RemoveContents(d.directory)
 }
 
