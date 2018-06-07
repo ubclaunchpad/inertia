@@ -3,7 +3,6 @@ package common
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -63,16 +62,12 @@ func RemoveContents(directory string) error {
 }
 
 // ExtractRepository gets the project name from its URL in the form [username]/[project]
-func ExtractRepository(URL string) (string, error) {
-	const defaultName = "$YOUR_REPOSITORY"
-	r, err := regexp.Compile(`.com(/|:)(.+/.+)`)
+func ExtractRepository(URL string) string {
+	const DefaultName = "$YOUR_REPOSITORY"
+	re, err := regexp.Compile(":|/")
 	if err != nil {
-		return defaultName, err
+		return DefaultName
 	}
-
-	remoteString := r.FindStringSubmatch(URL)
-	if len(remoteString) != 3 {
-		return defaultName, fmt.Errorf("Failed to extract repository name with remote url %s", URL)
-	}
-	return strings.Split(remoteString[2], ".git")[0], nil
+	r := re.Split(strings.TrimSuffix(URL, ".git"), -1)
+	return strings.Join(r[len(r)-2:], "/")
 }
