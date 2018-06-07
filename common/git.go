@@ -58,6 +58,12 @@ func GetSSHRemoteURL(url string) string {
 		sshURL = strings.Replace(sshURL, "/", ":", 1)
 	}
 
+	// special bitbucket https case?
+	lastIndex := strings.LastIndex(sshURL, "@")
+	if lastIndex > 3 {
+		sshURL = "git@" + sshURL[lastIndex+1:]
+	}
+
 	if !strings.HasSuffix(sshURL, ".git") {
 		sshURL = sshURL + ".git"
 	}
