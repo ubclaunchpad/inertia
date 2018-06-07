@@ -28,8 +28,10 @@ func TestCheckForGit(t *testing.T) {
 }
 
 func TestGetSSHRemoteURL(t *testing.T) {
+	validSSH := remoteURLVariations[0:3]
+	println(validSSH)
 	for _, url := range remoteURLVariations {
-		assert.Equal(t, remoteURLVariations[0], GetSSHRemoteURL(url))
+		assert.Contains(t, validSSH, GetSSHRemoteURL(url))
 	}
 }
 

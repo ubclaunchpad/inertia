@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	git "gopkg.in/src-d/go-git.v4"
@@ -47,10 +48,16 @@ func CheckForGit(cwd string) error {
 // GetSSHRemoteURL gets the URL of the given remote in the form
 // "git@github.com:[USER]/[REPOSITORY].git"
 func GetSSHRemoteURL(url string) string {
-	sshURL := strings.Replace(url, "https://github.com/", "git@github.com:", -1)
-	if sshURL == url {
-		sshURL = strings.Replace(url, "git://github.com/", "git@github.com:", -1)
+	re, err := regexp.Compile("(https://)|(git://)")
+	if err != nil {
+		println(err)
 	}
+
+	sshURL := re.ReplaceAllString(url, "git@")
+	if sshURL != url {
+		sshURL = strings.Replace(sshURL, "/", ":", 1)
+	}
+
 	if !strings.HasSuffix(sshURL, ".git") {
 		sshURL = sshURL + ".git"
 	}
