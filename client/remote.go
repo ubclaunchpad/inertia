@@ -39,7 +39,7 @@ func (remote *RemoteVPS) GetIPAndPort() string {
 
 // installDocker installs docker on a remote vps.
 func (remote *RemoteVPS) installDocker(session SSHSession) error {
-	installDockerSh, err := internal.Asset("client/bootstrap/docker.sh")
+	installDockerSh, err := internal.Asset("client/scripts/docker.sh")
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (remote *RemoteVPS) installDocker(session SSHSession) error {
 // keyGen creates a public-private key-pair on the remote vps
 // and returns the public key.
 func (remote *RemoteVPS) keyGen(session SSHSession) (*bytes.Buffer, error) {
-	scriptBytes, err := internal.Asset("client/bootstrap/keygen.sh")
+	scriptBytes, err := internal.Asset("client/scripts/keygen.sh")
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (remote *RemoteVPS) keyGen(session SSHSession) (*bytes.Buffer, error) {
 // getDaemonAPIToken returns the daemon API token for RESTful access
 // to the daemon.
 func (remote *RemoteVPS) getDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
-	scriptBytes, err := internal.Asset("client/bootstrap/token.sh")
+	scriptBytes, err := internal.Asset("client/scripts/token.sh")
 	if err != nil {
 		return "", err
 	}
