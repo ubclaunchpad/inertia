@@ -10,9 +10,13 @@ import (
 
 var remoteURLVariations = []string{
 	"git@github.com:ubclaunchpad/inertia.git",
+	"git@gitlab.com:ubclaunchpad/inertia.git",
+	"git@bitbucket.org:ubclaunchpad/inertia.git",
 	"https://github.com/ubclaunchpad/inertia.git",
+	"https://gitlab.com/ubclaunchpad/inertia.git",
+	"https://ubclaunchpad@bitbucket.org/ubclaunchpad/inertia.git",
 	"git://github.com/ubclaunchpad/inertia.git",
-	"git://github.com/ubclaunchpad/inertia",
+	"git://gitlab.com/ubclaunchpad/inertia.git",
 }
 
 func TestCheckForGit(t *testing.T) {
