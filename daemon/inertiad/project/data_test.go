@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfigManager_EnvVariableOperations(t *testing.T) {
+func TestDataManager_EnvVariableOperations(t *testing.T) {
 	type args struct {
 		name    string
 		value   string
@@ -30,7 +30,7 @@ func TestConfigManager_EnvVariableOperations(t *testing.T) {
 			assert.Nil(t, err)
 			defer os.RemoveAll(dir)
 
-			c, err := newConfigManager(path.Join(dir, "deployment.db"))
+			c, err := newDataManager(path.Join(dir, "deployment.db"))
 			assert.Nil(t, err)
 
 			err = c.AddEnvVariable(tt.args.name, tt.args.value, tt.args.encrypt)

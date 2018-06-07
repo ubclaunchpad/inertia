@@ -16,8 +16,8 @@ var (
 	envVariableBucket    = []byte("envVariables")
 )
 
-// ConfigManager stores persistent deployment configuration
-type ConfigManager struct {
+// DataManager stores persistent deployment configuration
+type DataManager struct {
 	// db is a boltdb database, which is an embedded
 	// key/value database where each "bucket" is a collection
 	db *bolt.DB
@@ -31,7 +31,7 @@ type ConfigManager struct {
 	decryptPrivateKey *[32]byte
 }
 
-func newConfigManager(dbPath string) (*ConfigManager, error) {
+func newDataManager(dbPath string) (*DataManager, error) {
 	db, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func newConfigManager(dbPath string) (*ConfigManager, error) {
 		return nil, err
 	}
 
-	return &ConfigManager{
+	return &DataManager{
 		db,
 		encryptPublicKey, encryptPrivateKey,
 		decryptPublicKey, decryptPrivateKey,
@@ -67,7 +67,7 @@ func newConfigManager(dbPath string) (*ConfigManager, error) {
 
 // AddEnvVariable adds a new environment variable that will be applied
 // to all project containers
-func (c *ConfigManager) AddEnvVariable(name, value string,
+func (c *DataManager) AddEnvVariable(name, value string,
 	encrypt bool) error {
 	if len(name) == 0 || len(value) == 0 {
 		return errors.New("invalid env configuration")
@@ -106,22 +106,22 @@ func (c *ConfigManager) AddEnvVariable(name, value string,
 }
 
 // RemoveEnvVariable removes a previously set env variable
-func (c *ConfigManager) RemoveEnvVariable(name, value string) error {
+func (c *DataManager) RemoveEnvVariable(name, value string) error {
 	return nil
 }
 
 // AddPersistentFile adds a new persistent file to place in the project
 // directory at buildtime
-func (c *ConfigManager) AddPersistentFile(path string) error {
+func (c *DataManager) AddPersistentFile(path string) error {
 	return nil
 }
 
 // RemovePersistentFile removes a persistent file
-func (c *ConfigManager) RemovePersistentFile(path string) error {
+func (c *DataManager) RemovePersistentFile(path string) error {
 	return nil
 }
 
-func (c *ConfigManager) getEnvVariables() (map[string]string, error) {
+func (c *DataManager) getEnvVariables() (map[string]string, error) {
 	env := map[string]string{}
 
 	err := c.db.View(func(tx *bolt.Tx) error {
@@ -163,11 +163,11 @@ func (c *ConfigManager) getEnvVariables() (map[string]string, error) {
 	return env, nil
 }
 
-func (c *ConfigManager) getPersistentFiles() ([]string, error) {
+func (c *DataManager) getPersistentFiles() ([]string, error) {
 	return nil, nil
 }
 
-func (c *ConfigManager) destroy() error {
+func (c *DataManager) destroy() error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return nil
 	})

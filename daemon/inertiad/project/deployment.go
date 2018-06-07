@@ -47,7 +47,7 @@ type Deployment struct {
 	auth ssh.AuthMethod
 	mux  sync.Mutex
 
-	ConfigManager *ConfigManager
+	DataManager *DataManager
 }
 
 // DeploymentConfig is used to configure Deployment
@@ -79,7 +79,7 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	}
 
 	// Set up deployment database
-	manager, err := newConfigManager(cfg.DatabasePath)
+	manager, err := newDataManager(cfg.DatabasePath)
 	if err != nil {
 		return nil, err
 	}
@@ -104,8 +104,8 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 		auth: authMethod,
 		repo: repo,
 
-		// Persistent configuration manager
-		ConfigManager: manager,
+		// Persistent data manager
+		DataManager: manager,
 	}, nil
 }
 
@@ -191,7 +191,7 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
-	err := d.ConfigManager.destroy()
+	err := d.DataManager.destroy()
 	if err != nil {
 		fmt.Fprint(out, "unable to clear database records: "+err.Error())
 	}

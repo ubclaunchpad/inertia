@@ -31,7 +31,7 @@ var (
 	sslDirectory = "/app/host/inertia/config/ssl/"
 
 	userDatabasePath       = "/app/host/inertia/data/users.db"
-	deploymentDatabasePath = "/app/host/inertia/data/deployments.db"
+	deploymentDatabasePath = "/app/host/inertia/data/project.db"
 )
 
 const (
@@ -48,7 +48,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 		sslDirectory = certDir
 	}
 	if userDir != "" {
-		auth.UserDatabasePath = userDir
+		userDatabasePath = userDir
 	}
 
 	var (
@@ -85,7 +85,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 
 	webPrefix := "/web/"
 	handler, err := auth.NewPermissionsHandler(
-		auth.UserDatabasePath, host, 120,
+		userDatabasePath, host, 120,
 	)
 	if err != nil {
 		println(err.Error())

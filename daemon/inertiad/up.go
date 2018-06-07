@@ -45,11 +45,12 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	if deployment == nil {
 		logger.Println("No deployment detected")
 		d, err := project.NewDeployment(project.DeploymentConfig{
-			ProjectName: upReq.Project,
-			BuildType:   upReq.BuildType,
-			RemoteURL:   gitOpts.RemoteURL,
-			Branch:      gitOpts.Branch,
-			PemFilePath: auth.DaemonGithubKeyLocation,
+			ProjectName:  upReq.Project,
+			BuildType:    upReq.BuildType,
+			RemoteURL:    gitOpts.RemoteURL,
+			Branch:       gitOpts.Branch,
+			PemFilePath:  auth.DaemonGithubKeyLocation,
+			DatabasePath: deploymentDatabasePath,
 		}, logger)
 		if err != nil {
 			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
