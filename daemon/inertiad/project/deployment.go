@@ -15,6 +15,9 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
+// directory is the directory the user's deployed project is cloned in
+var directory = "/app/host/inertia/project"
+
 // Deployer does great deploys
 type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) error
@@ -54,7 +57,6 @@ type DeploymentConfig struct {
 
 // NewDeployment creates a new deployment
 func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
-	directory := "/app/host/project"
 	common.RemoveContents(directory)
 
 	pemFile, err := os.Open(cfg.PemFilePath)

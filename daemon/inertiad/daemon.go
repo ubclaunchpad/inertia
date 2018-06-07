@@ -28,7 +28,7 @@ var (
 
 var (
 	// specify location of SSL certificate
-	sslDirectory = "/app/host/.inertia/.ssl/"
+	sslDirectory = "/app/host/inertia/config/ssl/"
 )
 
 const (
@@ -94,7 +94,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 	handler.AttachPublicHandler(
 		webPrefix,
 		http.StripPrefix(
-			webPrefix, http.FileServer(http.Dir("/app/inertia-web")),
+			webPrefix, http.FileServer(http.Dir("/daemon/inertia-web")),
 		),
 	)
 
