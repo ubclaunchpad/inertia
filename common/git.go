@@ -72,3 +72,13 @@ func GetBranchFromRef(ref string) string {
 	parts := strings.Split(ref, "/")
 	return parts[len(parts)-1]
 }
+
+// ExtractRepository gets the project name from its URL in the form [username]/[project]
+func ExtractRepository(URL string) string {
+	re, err := regexp.Compile(":|/")
+	if err != nil {
+		return "$YOUR_REPOSITORY"
+	}
+	r := re.Split(strings.TrimSuffix(URL, ".git"), -1)
+	return strings.Join(r[len(r)-2:], "/")
+}

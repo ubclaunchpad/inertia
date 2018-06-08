@@ -6,8 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 )
 
 // GenerateRandomString creates a rand.Reader-generated
@@ -59,15 +57,4 @@ func RemoveContents(directory string) error {
 		}
 	}
 	return nil
-}
-
-// ExtractRepository gets the project name from its URL in the form [username]/[project]
-func ExtractRepository(URL string) string {
-	const DefaultName = "$YOUR_REPOSITORY"
-	re, err := regexp.Compile(":|/")
-	if err != nil {
-		return DefaultName
-	}
-	r := re.Split(strings.TrimSuffix(URL, ".git"), -1)
-	return strings.Join(r[len(r)-2:], "/")
 }
