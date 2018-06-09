@@ -1,6 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import InertiaClient from '../client';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+
+// import InertiaClient from '../../common/client';
+import * as loginActions from '../../actions/login';
 
 const styles = {
   container: {
@@ -26,7 +30,7 @@ const styles = {
   },
 };
 
-export default class Login extends React.Component {
+class LoginWrapper extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -40,14 +44,18 @@ export default class Login extends React.Component {
   }
 
   async handleLoginSubmit() {
-    const response = await InertiaClient.login(
-      this.state.username,
-      this.state.password,
-    );
-    if (response.status !== 200) {
-      this.setState({ loginAlert: 'Username and/or password is incorrect' });
-      return;
-    }
+    // TODO: disable authentication until we get it working
+    console.log(this.state.username, this.state.password);
+    this.props.testAction();
+    // const response = await InertiaClient.login(
+    //   this.state.username,
+    //   this.state.password,
+    // );
+
+    // if (response.status !== 200) {
+    //   this.setState({ loginAlert: 'Username and/or password is incorrect' });
+    //   return;
+    // }
     this.props.history.push('/home');
   }
 
@@ -84,6 +92,21 @@ export default class Login extends React.Component {
     );
   }
 }
-Login.propTypes = {
-  history: PropTypes.func,
+LoginWrapper.propTypes = {
+  history: PropTypes.object,
+  testAction: PropTypes.func,
 };
+
+
+const mapStateToProps = ({ Login }) => {
+  return {
+    testState: Login.testState,
+  };
+};
+
+const mapDispatchToProps = dispatch => bindActionCreators({ ...loginActions }, dispatch);
+
+const Login = connect(mapStateToProps, mapDispatchToProps)(LoginWrapper);
+
+
+export default Login;

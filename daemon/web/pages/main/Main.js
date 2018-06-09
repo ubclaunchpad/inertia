@@ -1,8 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import {
+  Link,
+  Route,
+  Switch,
+} from 'react-router-dom';
 
-import InertiaClient from '../client';
-import Dashboard from './Dashboard';
+import InertiaClient from '../../common/client';
+import Containers from '../containers/containers';
+import Dashboard from '../dashboard/Dashboard';
+import * as mainActions from '../../actions/main';
 
 
 // hardcode all styles for now, until we flesh out UI
@@ -126,7 +135,7 @@ SidebarText.propTypes = {
   children: PropTypes.node,
 };
 
-export default class Home extends React.Component {
+class MainWrapper extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -221,6 +230,9 @@ export default class Home extends React.Component {
             }}>
             logout
           </button>
+
+          <Link to={`${this.props.match.url}/dashboard`}>Click to go to Dashboard</Link>
+          <Link to={`${this.props.match.url}/containers`}>Click to go to Containers</Link>
         </header>
 
         <div style={styles.innerContainer}>
@@ -238,15 +250,39 @@ export default class Home extends React.Component {
           </div>
 
           <div style={styles.main}>
-            <Dashboard
-              container={this.state.viewContainer}
-            />
+            <Switch>
+              <Route
+                exact
+                path={`${this.props.match.url}/dashboard`}
+                component={() => <Dashboard container={this.state.viewContainer} />}
+              />
+              <Route
+                exact
+                path={`${this.props.match.url}/containers`}
+                component={() => <Containers />}
+              />
+            </Switch>
           </div>
         </div>
       </div>
     );
   }
 }
-Home.propTypes = {
-  history: PropTypes.func,
+MainWrapper.propTypes = {
+  history: PropTypes.object,
+  match: PropTypes.object,
 };
+
+
+const mapStateToProps = ({ Main }) => {
+  return {
+    testState: Main.testState,
+  };
+};
+
+const mapDispatchToProps = dispatch => bindActionCreators({ ...mainActions }, dispatch);
+
+const Main = connect(mapStateToProps, mapDispatchToProps)(MainWrapper);
+
+
+export default Main;

@@ -1,4 +1,4 @@
-import encodeURL from './common/encodeURL';
+import encodeURL from './encodeURL';
 
 export default class InertiaClient {
   constructor(url) {

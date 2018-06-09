@@ -3,9 +3,9 @@ import { HashRouter, Redirect, Route } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import createHistory from 'history/createBrowserHistory';
 
-import InertiaClient from '../client';
-import Login from './Login';
-import Home from './Home';
+// import InertiaClient from '../../common/client';
+import Login from '../login/Login';
+import Main from '../main/Main';
 
 const styles = {
   container: {
@@ -27,7 +27,7 @@ const AuthRoute = ({ authenticated, component: Component, props, ...rest }) => (
 );
 AuthRoute.propTypes = {
   authenticated: PropTypes.bool,
-  component: PropTypes.node,
+  component: PropTypes.any,
   props: PropTypes.shape(),
 };
 
@@ -40,14 +40,16 @@ const PropsRoute = ({ component: Component, props, ...rest }) => (
   )} />
 );
 PropsRoute.propTypes = {
-  component: PropTypes.node,
+  component: PropTypes.any,
   props: PropTypes.shape(),
 };
 
 export default class App extends React.Component {
   static async isAuthenticated() {
-    const response = await InertiaClient.validate();
-    return (response.status === 200);
+    // TODO: disable route guards
+    // const response = await InertiaClient.validate();
+    // return (response.status === 200);
+    return true;
   }
 
   constructor(props) {
@@ -104,7 +106,7 @@ export default class App extends React.Component {
           <AuthRoute
             path="/home"
             authenticated={this.state.authenticated}
-            component={Home}
+            component={Main}
             props={this.props} />
         </div>
       </HashRouter>
