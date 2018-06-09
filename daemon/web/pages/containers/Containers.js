@@ -26,5 +26,4 @@ const mapDispatchToProps = () => { return {}; };
 
 const Containers = connect(mapStateToProps, mapDispatchToProps)(ContainersWrapper);
 
-
 export default Containers;
