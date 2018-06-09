@@ -12,8 +12,7 @@ import (
 
 var (
 	// database buckets
-	persistentFileBucket = []byte("persistentFiles")
-	envVariableBucket    = []byte("envVariables")
+	envVariableBucket = []byte("envVariables")
 )
 
 // DataManager stores persistent deployment configuration
@@ -38,10 +37,6 @@ func newDataManager(dbPath string) (*DataManager, error) {
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err = tx.CreateBucketIfNotExists(envVariableBucket)
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucketIfNotExists(persistentFileBucket)
 		return err
 	})
 	if err != nil {
@@ -110,17 +105,6 @@ func (c *DataManager) RemoveEnvVariable(name, value string) error {
 	return nil
 }
 
-// AddPersistentFile adds a new persistent file to place in the project
-// directory at buildtime
-func (c *DataManager) AddPersistentFile(path string) error {
-	return nil
-}
-
-// RemovePersistentFile removes a persistent file
-func (c *DataManager) RemovePersistentFile(path string) error {
-	return nil
-}
-
 func (c *DataManager) getEnvVariables() (map[string]string, error) {
 	env := map[string]string{}
 
@@ -162,10 +146,6 @@ func (c *DataManager) getEnvVariables() (map[string]string, error) {
 	}
 
 	return env, nil
-}
-
-func (c *DataManager) getPersistentFiles() ([]string, error) {
-	return nil, nil
 }
 
 func (c *DataManager) destroy() error {
