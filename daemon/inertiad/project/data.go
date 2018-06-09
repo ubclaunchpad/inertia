@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	// databse buckets
+	// database buckets
 	persistentFileBucket = []byte("persistentFiles")
 	envVariableBucket    = []byte("envVariables")
 )
@@ -137,8 +137,9 @@ func (c *DataManager) getEnvVariables() (map[string]string, error) {
 				env[string(name)] = string(variable.Value)
 			} else {
 				// Decrypt the message using decrypt private key and the
-				// encrypt public key. When you decrypt, you must use the same nonce you
-				// used to encrypt the message - this nonce is stored in the first 24 bytes.
+				// encrypt public key. When you decrypt, you must use the same
+				// nonce you used to encrypt the message - this nonce is stored
+				// in the first 24 bytes.
 				var decryptNonce [24]byte
 				copy(decryptNonce[:], variable.Value[:24])
 				decrypted, ok := box.Open(

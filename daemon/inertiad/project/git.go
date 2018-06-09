@@ -6,7 +6,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
@@ -69,32 +68,6 @@ func clone(directory, remoteURL, branch string, auth transport.AuthMethod, out i
 	return repo, nil
 }
 
-// forcePull deletes the project directory and makes a fresh clone of given repo
-// git.Worktree.Pull() only supports merges that can be resolved as a fast-forward
-func forcePull(directory string, repo *git.Repository, auth transport.AuthMethod, out io.Writer) (*git.Repository, error) {
-	fmt.Fprintln(out, "Making a force pull...")
-	remotes, err := repo.Remotes()
-	if err != nil {
-		return nil, err
-	}
-	head, err := repo.Head()
-	if err != nil {
-		return nil, err
-	}
-	remoteURL := common.GetSSHRemoteURL(remotes[0].Config().URLs[0])
-	branch := head.Name().Short()
-
-	err = common.RemoveContents(directory)
-	if err != nil {
-		return nil, err
-	}
-	repo, err = clone(directory, remoteURL, branch, auth, out)
-	if err != nil {
-		return nil, err
-	}
-	return repo, nil
-}
-
 // updateRepository pulls and checkouts given branch from repository
 func updateRepository(directory string, repo *git.Repository, branch string, auth transport.AuthMethod, out io.Writer) error {
 	tree, err := repo.Worktree()
@@ -129,19 +102,7 @@ func updateRepository(directory string, repo *git.Repository, branch string, aut
 		ReferenceName: ref,
 		Auth:          auth,
 		Progress:      out,
+		Force:         true,
 	})
-	err = SimplifyGitErr(err)
-	if err != nil {
-		if err == git.ErrForceNeeded {
-			// If pull fails, attempt a force pull before returning error
-			fmt.Fprintln(out, "Fast-forward failed - a force pull is required.")
-			_, err := forcePull(directory, repo, auth, out)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-	return nil
+	return SimplifyGitErr(err)
 }

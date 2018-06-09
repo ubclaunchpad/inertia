@@ -48,29 +48,6 @@ func TestCloneIntegration(t *testing.T) {
 	assert.Equal(t, "dev", head.Name().Short())
 }
 
-func TestForcePullIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
-	dir := "./test_force_pull/"
-	auth, err := getInertiaDeployTestKey()
-	assert.Nil(t, err)
-	repo, err := git.PlainClone(dir, false, &git.CloneOptions{
-		URL: inertiaDeployTest,
-	})
-	defer os.RemoveAll(dir)
-	assert.Nil(t, err)
-	forcePulledRepo, err := forcePull(dir, repo, auth, os.Stdout)
-	assert.Nil(t, err)
-
-	// Try switching branches
-	err = updateRepository(dir, forcePulledRepo, "dev", auth, os.Stdout)
-	assert.Nil(t, err)
-	err = updateRepository(dir, forcePulledRepo, "master", auth, os.Stdout)
-	assert.Nil(t, err)
-}
-
 func TestUpdateRepositoryIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
