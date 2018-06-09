@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import InertiaClient from '../../common/client';
+import InertiaAPI from '../../common/API';
 import LogView from '../../components/LogView';
 import * as dashboardActions from '../../actions/dashboard';
 
@@ -61,9 +61,9 @@ class DashboardWrapper extends React.Component {
     try {
       let resp;
       if (!this.props.container) {
-        resp = await InertiaClient.getContainerLogs();
+        resp = await InertiaAPI.getContainerLogs();
       } else {
-        resp = await InertiaClient.getContainerLogs(this.props.container);
+        resp = await InertiaAPI.getContainerLogs(this.props.container);
       }
       if (resp.status !== 200) {
         this.setState({

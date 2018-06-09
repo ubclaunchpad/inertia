@@ -3,7 +3,6 @@ import { HashRouter, Redirect, Route } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import createHistory from 'history/createBrowserHistory';
 
-// import InertiaClient from '../../common/client';
 import Login from '../login/Login';
 import Main from '../main/Main';
 
@@ -47,7 +46,7 @@ PropsRoute.propTypes = {
 export default class App extends React.Component {
   static async isAuthenticated() {
     // TODO: disable route guards
-    // const response = await InertiaClient.validate();
+    // const response = await InertiaAPI.validate();
     // return (response.status === 200);
     return true;
   }

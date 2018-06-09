@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
-// import InertiaClient from '../../common/client';
+// import InertiaAPI from '../../common/API';
 import * as loginActions from '../../actions/login';
 
 const styles = {
@@ -47,7 +47,7 @@ class LoginWrapper extends React.Component {
     // TODO: disable authentication until we get it working
     console.log(this.state.username, this.state.password);
     this.props.testAction();
-    // const response = await InertiaClient.login(
+    // const response = await InertiaAPI.login(
     //   this.state.username,
     //   this.state.password,
     // );

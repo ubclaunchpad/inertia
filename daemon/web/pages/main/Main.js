@@ -8,11 +8,10 @@ import {
   Switch,
 } from 'react-router-dom';
 
-import InertiaClient from '../../common/client';
-import Containers from '../containers/containers';
+import InertiaAPI from '../../common/API';
+import Containers from '../containers/Containers';
 import Dashboard from '../dashboard/Dashboard';
 import * as mainActions from '../../actions/main';
-
 
 // hardcode all styles for now, until we flesh out UI
 const styles = {
@@ -160,7 +159,7 @@ class MainWrapper extends React.Component {
   }
 
   async handleLogout() {
-    const response = await InertiaClient.logout();
+    const response = await InertiaAPI.logout();
     if (response.status !== 200) {
       // TODO: Log Error
       return;
@@ -169,7 +168,7 @@ class MainWrapper extends React.Component {
   }
 
   async handleGetStatus() {
-    const response = await InertiaClient.getRemoteStatus();
+    const response = await InertiaAPI.getRemoteStatus();
     if (response.status !== 200) return new Error('bad response: ' + response);
     const status = await response.json();
     this.setState({
