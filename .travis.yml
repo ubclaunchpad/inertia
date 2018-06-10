@@ -37,6 +37,7 @@ jobs:
       env: TEST=all VPS_OS=ubuntu VERSION=16.04
       before_script:
         - bash test/deps.sh
+        - npm install -g eslint
       script:
         - go test -race -coverprofile=coverage.out ./...
         - make lint
