@@ -93,23 +93,31 @@ testenv:
 		./test
 	bash ./test/start_vps.sh $(SSH_PORT) $(VPS_OS)vps
 
-# Create test daemon and scp the image to the test VPS for use.
-# Requires Inertia version to be "test"
-.PHONY: testdaemon
-testdaemon:
-	rm -f ./inertia-daemon-image
+# Builds test daemon image and saves as inertia-daemon-image
+.PHONY: testdaemon-image
+testdaemon-image:
+	mkdir -p ./images
+	rm -f ./images/inertia-daemon-image
 	docker build --build-arg INERTIA_VERSION=$(TAG) \
 		-t ubclaunchpad/inertia:test .
-	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
+	docker save -o ./images/inertia-daemon-image ubclaunchpad/inertia:test
 	docker rmi ubclaunchpad/inertia:test
+
+# Copies test daemon image to test VPS.
+.PHONY: testdaemon-scp
+testdaemon-scp:
 	chmod 400 ./test/keys/id_rsa
 	scp -i ./test/keys/id_rsa \
 		-o StrictHostKeyChecking=no \
 		-o UserKnownHostsFile=/dev/null \
 		-P $(SSH_PORT) \
-		./inertia-daemon-image \
+		./images/inertia-daemon-image \
 		root@0.0.0.0:/daemon-image
-	rm -f ./inertia-daemon-image
+
+# Create test daemon and scp the image to the test VPS for use.
+# Requires Inertia version to be "test"
+.PHONY: testdaemon
+testdaemon: testdaemon-image testdaemon-scp
 
 # Run a test daemon locally
 .PHONY: localdaemon
