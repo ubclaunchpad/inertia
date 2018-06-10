@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
@@ -92,7 +93,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 		return nil, err
 	}
 	stop := make(chan struct{})
-	go StreamContainerLogs(cli, resp.ID, out, stop)
+	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
 	status, err := cli.ContainerWait(ctx, resp.ID)
 	close(stop)
 	if err != nil {
@@ -241,7 +242,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() er
 
 	// Attach logs and report build progress until container exits
 	stop := make(chan struct{})
-	go StreamContainerLogs(cli, resp.ID, out, stop)
+	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
 	status, err := cli.ContainerWait(ctx, resp.ID)
 	close(stop)
 	if err != nil {

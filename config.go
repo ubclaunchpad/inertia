@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/local"
 )
 
 // Initialize "inertia" commands regarding basic configuration
@@ -52,7 +53,7 @@ to succeed.`,
 		}
 
 		// Hello world config file!
-		err = initializeInertiaProject(version, buildType)
+		err = local.InitializeInertiaProject(version, buildType)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -81,7 +82,7 @@ var cmdReset = &cobra.Command{
 		if response != "y" {
 			log.Fatal("aborting")
 		}
-		path, err := getConfigFilePath()
+		path, err := local.GetConfigFilePath()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -97,7 +98,7 @@ var cmdSetConfigProperty = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := getProjectConfigFromDisk()
+		config, path, err := local.GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}

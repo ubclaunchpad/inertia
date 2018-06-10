@@ -1,4 +1,4 @@
-package project
+package git
 
 import (
 	"errors"
@@ -6,8 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
-	git "gopkg.in/src-d/go-git.v4"
+	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
@@ -21,7 +20,7 @@ var (
 // SimplifyGitErr checks errors that involve git remote operations and simplifies them
 // to ErrInvalidGitAuthentication if possible
 func SimplifyGitErr(err error) error {
-	if err != nil && err != git.NoErrAlreadyUpToDate {
+	if err != nil && err != gogit.NoErrAlreadyUpToDate {
 		if err == transport.ErrInvalidAuthMethod || err == transport.ErrAuthorizationFailed || strings.Contains(err.Error(), "unable to authenticate") {
 			return ErrInvalidGitAuthentication
 		}
@@ -30,26 +29,26 @@ func SimplifyGitErr(err error) error {
 	return nil
 }
 
-// initializeRepository sets up a project repository for the first time
-func initializeRepository(directory, remoteURL, branch string, authMethod transport.AuthMethod, w io.Writer) (*git.Repository, error) {
+// InitializeRepository sets up a project repository for the first time
+func InitializeRepository(directory, remoteURL, branch string, authMethod transport.AuthMethod, w io.Writer) (*gogit.Repository, error) {
 	fmt.Fprintln(w, "Setting up project...")
 	// Clone project
 	repo, err := clone(directory, remoteURL, branch, authMethod, w)
 	if err != nil {
 		if err == ErrInvalidGitAuthentication {
-			return nil, auth.GitAuthFailedErr()
+			return nil, AuthFailedErr()
 		}
 		return nil, err
 	}
 	return repo, nil
 }
 
-// clone wraps git.PlainClone() and returns a more helpful error message
+// clone wraps gogit.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
-func clone(directory, remoteURL, branch string, auth transport.AuthMethod, out io.Writer) (*git.Repository, error) {
+func clone(directory, remoteURL, branch string, auth transport.AuthMethod, out io.Writer) (*gogit.Repository, error) {
 	fmt.Fprintf(out, "Cloning branch %s from %s...\n", branch, remoteURL)
 	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
-	repo, err := git.PlainClone(directory, false, &git.CloneOptions{
+	repo, err := gogit.PlainClone(directory, false, &gogit.CloneOptions{
 		URL:           remoteURL,
 		Auth:          auth,
 		Progress:      out,
@@ -68,15 +67,15 @@ func clone(directory, remoteURL, branch string, auth transport.AuthMethod, out i
 	return repo, nil
 }
 
-// updateRepository pulls and checkouts given branch from repository
-func updateRepository(directory string, repo *git.Repository, branch string, auth transport.AuthMethod, out io.Writer) error {
+// UpdateRepository pulls and checkouts given branch from repository
+func UpdateRepository(directory string, repo *gogit.Repository, branch string, auth transport.AuthMethod, out io.Writer) error {
 	tree, err := repo.Worktree()
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintln(out, "Fetching repository...")
-	err = repo.Fetch(&git.FetchOptions{
+	err = repo.Fetch(&gogit.FetchOptions{
 		Auth:     auth,
 		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
 		Progress: out,
@@ -88,7 +87,7 @@ func updateRepository(directory string, repo *git.Repository, branch string, aut
 
 	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
 	fmt.Fprintf(out, "Checking out %s...\n", ref)
-	err = tree.Checkout(&git.CheckoutOptions{
+	err = tree.Checkout(&gogit.CheckoutOptions{
 		Branch: ref,
 	})
 	err = SimplifyGitErr(err)
@@ -97,7 +96,7 @@ func updateRepository(directory string, repo *git.Repository, branch string, aut
 	}
 
 	fmt.Fprintln(out, "Pulling from origin...")
-	err = tree.Pull(&git.PullOptions{
+	err = tree.Pull(&gogit.PullOptions{
 		RemoteName:    "origin",
 		ReferenceName: ref,
 		Auth:          auth,

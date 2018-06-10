@@ -1,11 +1,10 @@
-package main
+package local
 
 import (
 	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 
 	"github.com/BurntSushi/toml"
 	"github.com/ubclaunchpad/inertia/client"
@@ -14,32 +13,10 @@ import (
 
 const configFileName = ".inertia.toml"
 
-// setProperty takes a struct pointer and searches for its "toml" tag with a search key
-// and set property value with the tag
-func setProperty(name string, value string, structObject interface{}) bool {
-	val := reflect.ValueOf(structObject)
-
-	if val.Kind() != reflect.Ptr {
-		return false
-	}
-	structVal := val.Elem()
-	for i := 0; i < structVal.NumField(); i++ {
-		valueField := structVal.Field(i)
-		typeField := structVal.Type().Field(i)
-		if typeField.Tag.Get("toml") == name {
-			if valueField.IsValid() && valueField.CanSet() && valueField.Kind() == reflect.String {
-				valueField.SetString(value)
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// createConfigFile returns an error if the config directory
+// CreateConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func createConfigFile(version, buildType string) error {
-	configFilePath, err := getConfigFilePath()
+func CreateConfigFile(version, buildType string) error {
+	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return err
 	}
@@ -71,7 +48,7 @@ func createConfigFile(version, buildType string) error {
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func initializeInertiaProject(version, buildType string) error {
+func InitializeInertiaProject(version, buildType string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -81,13 +58,13 @@ func initializeInertiaProject(version, buildType string) error {
 		return err
 	}
 
-	return createConfigFile(version, buildType)
+	return CreateConfigFile(version, buildType)
 }
 
-// getProjectConfigFromDisk returns the current project's configuration.
+// GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
-func getProjectConfigFromDisk() (*client.Config, string, error) {
-	configFilePath, err := getConfigFilePath()
+func GetProjectConfigFromDisk() (*client.Config, string, error) {
+	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return nil, "", err
 	}
@@ -109,8 +86,8 @@ func getProjectConfigFromDisk() (*client.Config, string, error) {
 	return &cfg, configFilePath, err
 }
 
-// getConfigFilePath returns the absolute path of the config file.
-func getConfigFilePath() (string, error) {
+// GetConfigFilePath returns the absolute path of the config file.
+func GetConfigFilePath() (string, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		return "", err
@@ -118,9 +95,9 @@ func getConfigFilePath() (string, error) {
 	return filepath.Join(path, configFileName), nil
 }
 
-// getClient returns a local deployment setup
-func getClient(name string) (*client.Client, error) {
-	config, _, err := getProjectConfigFromDisk()
+// GetClient returns a local deployment setup
+func GetClient(name string) (*client.Client, error) {
+	config, _, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return nil, err
 	}

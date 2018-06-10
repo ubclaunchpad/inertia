@@ -12,6 +12,7 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
@@ -76,7 +77,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 	// If they are not available, generate new ones.
 	if keyNotPresent && certNotPresent {
 		println("No certificates found - generating new ones...")
-		err = auth.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
+		err = crypto.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
 		if err != nil {
 			println(err.Error())
 			return

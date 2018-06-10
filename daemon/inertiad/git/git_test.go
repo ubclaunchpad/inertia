@@ -1,37 +1,16 @@
-package project
+package git
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 const (
 	inertiaDeployTest = "https://github.com/ubclaunchpad/inertia-deploy-test.git"
 )
-
-var urlVariations = []string{
-	"git@github.com:ubclaunchpad/inertia.git",
-	"https://github.com/ubclaunchpad/inertia.git",
-	"git://github.com/ubclaunchpad/inertia.git",
-	"git://github.com/ubclaunchpad/inertia",
-}
-
-func getInertiaDeployTestKey() (ssh.AuthMethod, error) {
-	pemFile, err := os.Open("../../../test/keys/id_rsa")
-	if err != nil {
-		return nil, err
-	}
-	bytes, err := ioutil.ReadAll(pemFile)
-	if err != nil {
-		return nil, err
-	}
-	return ssh.NewPublicKeys("git", bytes, "")
-}
 
 func TestCloneIntegration(t *testing.T) {
 	if testing.Short() {
@@ -61,8 +40,8 @@ func TestUpdateRepositoryIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Try switching branches
-	err = updateRepository(dir, repo, "master", nil, os.Stdout)
+	err = UpdateRepository(dir, repo, "master", nil, os.Stdout)
 	assert.Nil(t, err)
-	err = updateRepository(dir, repo, "dev", nil, os.Stdout)
+	err = UpdateRepository(dir, repo, "dev", nil, os.Stdout)
 	assert.Nil(t, err)
 }

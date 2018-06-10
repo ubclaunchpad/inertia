@@ -11,7 +11,9 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
-	git "gopkg.in/src-d/go-git.v4"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/git"
+	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
@@ -40,10 +42,10 @@ type Deployment struct {
 	branch    string
 	buildType string
 
-	builders map[string]Builder
-	containerStopper
+	builders         map[string]Builder
+	containerStopper containers.ContainerStopper
 
-	repo *git.Repository
+	repo *gogit.Repository
 	auth ssh.AuthMethod
 	mux  sync.Mutex
 
@@ -73,7 +75,7 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
-	repo, err := initializeRepository(directory, cfg.RemoteURL, cfg.Branch, authMethod, out)
+	repo, err := git.InitializeRepository(directory, cfg.RemoteURL, cfg.Branch, authMethod, out)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +100,7 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 			"dockerfile":     dockerBuild,
 			"docker-compose": dockerCompose,
 		},
-		containerStopper: stopActiveContainers,
+		containerStopper: containers.StopActiveContainers,
 
 		// Repository
 		auth: authMethod,
@@ -136,7 +138,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOption
 
 	// Update repository
 	if !opts.SkipUpdate {
-		err := updateRepository(d.directory, d.repo, d.branch, d.auth, out)
+		err := git.UpdateRepository(d.directory, d.repo, d.branch, d.auth, out)
 		if err != nil {
 			return err
 		}
@@ -174,7 +176,7 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	// Error if no project containers are active, but try to kill
 	// everything anyway in case the docker-compose image is still
 	// active
-	_, err := getActiveContainers(cli)
+	_, err := containers.GetActiveContainers(cli)
 	if err != nil {
 		killErr := d.containerStopper(cli, out)
 		if killErr != nil {
@@ -212,8 +214,8 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*common.DeploymentStatus, er
 
 	// Get containers, filtering out non-project containers
 	buildContainerActive := false
-	containers, err := getActiveContainers(cli)
-	if err != nil && err != ErrNoContainers {
+	c, err := containers.GetActiveContainers(cli)
+	if err != nil && err != containers.ErrNoContainers {
 		return nil, err
 	}
 	ignore := map[string]bool{
@@ -221,7 +223,7 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*common.DeploymentStatus, er
 		"/" + BuildStageName: true,
 	}
 	activeContainers := make([]string, 0)
-	for _, container := range containers {
+	for _, container := range c {
 		if !ignore[container.Names[0]] {
 			activeContainers = append(activeContainers, container.Names[0])
 		} else {

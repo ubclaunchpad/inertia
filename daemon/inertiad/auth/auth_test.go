@@ -42,16 +42,3 @@ func TestGenerateToken(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEqual(t, token, otherToken)
 }
-
-func TestGitAuthFailedErr(t *testing.T) {
-	err := GitAuthFailedErr(testInertiaKeyPath)
-	assert.NotNil(t, err)
-	// Check for a substring of public key
-	assert.Contains(t, err.Error(), "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDD")
-}
-
-func TestGitAuthFailedErrFailed(t *testing.T) {
-	err := GitAuthFailedErr("wow")
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Error reading key")
-}

@@ -5,8 +5,8 @@ import (
 	"os"
 
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // downHandler tries to take the deployment offline
@@ -30,7 +30,7 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 	defer cli.Close()
 
 	err = deployment.Down(cli, logger)
-	if err == project.ErrNoContainers {
+	if err == containers.ErrNoContainers {
 		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 		return
 	} else if err != nil {
