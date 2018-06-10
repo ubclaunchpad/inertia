@@ -91,20 +91,10 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 	if err != nil {
 		return nil, err
 	}
-
-	// Attach logs and report build progress until container exits
-	reader, err := ContainerLogs(cli, LogOptions{
-		Container: resp.ID, Stream: true,
-		NoTimestamps: true,
-	})
-	if err != nil {
-		return nil, err
-	}
 	stop := make(chan struct{})
-	go log.FlushRoutine(out, reader, stop)
+	go StreamContainerLogs(cli, resp.ID, out, stop)
 	status, err := cli.ContainerWait(ctx, resp.ID)
 	close(stop)
-	reader.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -250,18 +240,10 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() er
 	}
 
 	// Attach logs and report build progress until container exits
-	reader, err := ContainerLogs(cli, LogOptions{
-		Container: resp.ID, Stream: true,
-		NoTimestamps: true,
-	})
-	if err != nil {
-		return nil, err
-	}
 	stop := make(chan struct{})
-	go log.FlushRoutine(out, reader, stop)
+	go StreamContainerLogs(cli, resp.ID, out, stop)
 	status, err := cli.ContainerWait(ctx, resp.ID)
 	close(stop)
-	reader.Close()
 	if err != nil {
 		return nil, err
 	}
