@@ -26,15 +26,15 @@ jobs:
         - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
         - make testdaemon-scp SSH_PORT=69
       script: go test ./... -v -run 'TestBootstrapIntegration' -ldflags "-X main.Version=test"
-      env: VPS_OS=debian VERSION=9.3
+      env: TEST=bootstrap VPS_OS=debian VERSION=9.3
     - <<: *test
-      env: VPS_OS=centos VERSION=7
+      env: TEST=bootstrap VPS_OS=centos VERSION=7
     - <<: *test
-      env: VPS_OS=amazon VERSION=latest
+      env: TEST=bootstrap VPS_OS=amazon VERSION=latest
 
     # Run whole test suite once
     - <<: *test
-      env: VPS_OS=ubuntu VERSION=16.04
+      env: TEST=all VPS_OS=ubuntu VERSION=16.04
       before_script:
         - bash test/deps.sh
       script:
