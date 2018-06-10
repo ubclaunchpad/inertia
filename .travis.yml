@@ -30,6 +30,13 @@ jobs:
         - make web-deps           # cache node_modules
 
     ############################
+    #     Static analysis      #
+    ############################
+    - stage: lint
+      install: bash test/lint_deps.sh
+      script: make lint
+
+    ############################
     #   Execute test pipeline  #
     ############################
     - &test
