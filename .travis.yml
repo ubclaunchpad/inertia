@@ -24,7 +24,7 @@ jobs:
     - stage: precache
       script: true
       install:
-        - go get -u github.com/golang/dep/cmd/dep
+        - go get github.com/golang/dep/cmd/dep
         - dep ensure              # cache vendor
         - make testdaemon-image   # cache images
         - make web-deps           # cache node_modules
@@ -42,7 +42,7 @@ jobs:
       script:
         - go test -race -coverprofile=coverage.out ./...
       after_success:
-        - go get -u github.com/mattn/goveralls
+        - go get github.com/mattn/goveralls
         - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
 
     # Make sure bootstrap works on various other VPS platforms
