@@ -21,7 +21,7 @@ jobs:
     ############################
     #       Set up cache       #
     ############################
-    - stage: precache
+    - stage: precache and test build
       script: true
       install:
         - go get github.com/golang/dep/cmd/dep
@@ -30,17 +30,10 @@ jobs:
         - make web-deps           # cache node_modules
 
     ############################
-    #     Static analysis      #
-    ############################
-    - stage: lint
-      install: bash test/lint_deps.sh
-      script: make lint
-
-    ############################
-    #   Execute test pipeline  #
+    #     Tests and Linting    #
     ############################
     - &test
-      stage: test
+      stage: tests and static analysis
       install:
         - make testenv VPS_OS=ubuntu VPS_VERSION=16.04 SSH_PORT=69
         - bash test/docker_deps.sh
@@ -63,11 +56,8 @@ jobs:
     - <<: *bootstraptest
       install: make testenv VPS_OS=amazon VPS_VERSION=latest SSH_PORT=69
 
-    ############################
-    #     Static analysis      #
-    ############################
-    - stage: lint
-      install: bash test/lint_deps.sh
+    # Run linter and static analysis
+    - install: bash test/lint_deps.sh
       script: make lint
 
     ############################
