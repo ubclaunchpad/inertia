@@ -25,7 +25,8 @@ prod-deps:
 .PHONY: dev-deps
 dev-deps:
 	go get -u github.com/jteeuwen/go-bindata/...
-	bash test/deps.sh	
+	bash test/docker_deps.sh
+	bash test/lint_deps.sh
 
 # Install Inertia with release version
 .PHONY: inertia

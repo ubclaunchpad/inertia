@@ -12,8 +12,9 @@ env:
 
 cache:
   directories:
-    - images
     - vendor
+    - images
+    - daemon/web/node_modules
 
 jobs:
   include:
@@ -24,8 +25,9 @@ jobs:
       script: true
       install:
         - go get -u github.com/golang/dep/cmd/dep
-        - dep ensure
-        - make testdaemon-image
+        - dep ensure              # cache vendor
+        - make testdaemon-image   # cache images
+        - make web-deps           # cache node_modules
 
     ############################
     #   Execute test pipeline  #
@@ -34,13 +36,11 @@ jobs:
       stage: test
       install:
         - make testenv VPS_OS=ubuntu VPS_VERSION=16.04 SSH_PORT=69
-        - bash test/deps.sh
-        - make web-deps
+        - bash test/docker_deps.sh
       before_script:
         - make testdaemon-scp SSH_PORT=69
       script:
         - go test -race -coverprofile=coverage.out ./...
-        - make lint
       after_success:
         - go get -u github.com/mattn/goveralls
         - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
@@ -57,9 +57,16 @@ jobs:
       install: make testenv VPS_OS=amazon VPS_VERSION=latest SSH_PORT=69
 
     ############################
+    #     Static analysis      #
+    ############################
+    - stage: lint
+      install: bash test/lint_deps.sh
+      script: make lint
+
+    ############################
     #    Build tag "latest"    #
     ############################
-    - stage: Build "latest"
+    - stage: build "latest"
       if: (branch = master) AND (type = push) AND (type != pull_request)
       install: true
       script:
@@ -69,7 +76,7 @@ jobs:
     ############################
     #  Build git tag (stable)  #
     ############################
-    - stage: Build Release
+    - stage: build release
       if: (branch = master) AND (tag IS present) AND (type != pull_request)
       install: true
       script: true
