@@ -27,7 +27,7 @@ vendor
 .vscode
 
 # Docker images
-inertia-daemon-image
+/images
 
 # mac
 .DS_Store

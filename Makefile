@@ -25,7 +25,8 @@ prod-deps:
 .PHONY: dev-deps
 dev-deps:
 	go get -u github.com/jteeuwen/go-bindata/...
-	bash test/deps.sh	
+	bash test/docker_deps.sh
+	bash test/lint_deps.sh
 
 # Install Inertia with release version
 .PHONY: inertia
@@ -40,20 +41,22 @@ inertia-tagged:
 # Remove Inertia binaries
 .PHONY: clean
 clean:
+	go clean -testcache
 	rm -f ./inertia
 	find . -type f -name inertia.\* -exec rm {} \;
 
+# Run static analysis
 .PHONY: lint
 lint:
 	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=60s ./...'
 	(cd ./daemon/web; npm run lint)
 
-# Run unit test suite
+# Run test suite without Docker ops
 .PHONY: test
 test:
 	go test ./... -short -ldflags "-X main.Version=test" --cover
 
-# Run unit test suite verbosely
+# Run test suite without Docker ops
 .PHONY: test-v
 test-v:
 	go test ./... -short -ldflags "-X main.Version=test" -v --cover
@@ -65,13 +68,11 @@ test-all:
 	make lint
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
-	go clean -testcache
 	go test ./... -ldflags "-X main.Version=test" --cover
 
 # Run integration tests verbosely - creates fresh test VPS and test daemon beforehand
 .PHONY: test-integration
 test-integration:
-	go clean -testcache
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
@@ -79,7 +80,6 @@ test-integration:
 # Run integration tests verbosely without recreating test VPS
 .PHONY: test-integration-fast
 test-integration-fast:
-	go clean -testcache
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
 
@@ -93,23 +93,31 @@ testenv:
 		./test
 	bash ./test/start_vps.sh $(SSH_PORT) $(VPS_OS)vps
 
-# Create test daemon and scp the image to the test VPS for use.
-# Requires Inertia version to be "test"
-.PHONY: testdaemon
-testdaemon:
-	rm -f ./inertia-daemon-image
+# Builds test daemon image and saves as inertia-daemon-image
+.PHONY: testdaemon-image
+testdaemon-image:
+	mkdir -p ./images
+	rm -f ./images/inertia-daemon-image
 	docker build --build-arg INERTIA_VERSION=$(TAG) \
 		-t ubclaunchpad/inertia:test .
-	docker save -o ./inertia-daemon-image ubclaunchpad/inertia:test
+	docker save -o ./images/inertia-daemon-image ubclaunchpad/inertia:test
 	docker rmi ubclaunchpad/inertia:test
+
+# Copies test daemon image to test VPS.
+.PHONY: testdaemon-scp
+testdaemon-scp:
 	chmod 400 ./test/keys/id_rsa
 	scp -i ./test/keys/id_rsa \
 		-o StrictHostKeyChecking=no \
 		-o UserKnownHostsFile=/dev/null \
 		-P $(SSH_PORT) \
-		./inertia-daemon-image \
+		./images/inertia-daemon-image \
 		root@0.0.0.0:/daemon-image
-	rm -f ./inertia-daemon-image
+
+# Create test daemon and scp the image to the test VPS for use.
+# Requires Inertia version to be "test"
+.PHONY: testdaemon
+testdaemon: testdaemon-image testdaemon-scp
 
 # Run a test daemon locally
 .PHONY: localdaemon

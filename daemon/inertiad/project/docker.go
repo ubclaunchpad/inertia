@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
 var (
@@ -84,4 +85,21 @@ func stopActiveContainers(cli *docker.Client, out io.Writer) error {
 	// Prune images
 	_, err = cli.ContainersPrune(ctx, filters.Args{})
 	return err
+}
+
+// StreamContainerLogs streams logs from given container ID. Best used as a
+// goroutine.
+func StreamContainerLogs(client *docker.Client, id string, out io.Writer,
+	stop chan struct{}) error {
+	// Attach logs and report build progress until container exits
+	reader, err := ContainerLogs(client, LogOptions{
+		Container: id, Stream: true,
+		NoTimestamps: true,
+	})
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	log.FlushRoutine(out, reader, stop)
+	return nil
 }
