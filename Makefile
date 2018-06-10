@@ -40,20 +40,22 @@ inertia-tagged:
 # Remove Inertia binaries
 .PHONY: clean
 clean:
+	go clean -testcache
 	rm -f ./inertia
 	find . -type f -name inertia.\* -exec rm {} \;
 
+# Run static analysis
 .PHONY: lint
 lint:
 	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=60s ./...'
 	(cd ./daemon/web; npm run lint)
 
-# Run unit test suite
+# Run test suite without Docker ops
 .PHONY: test
 test:
 	go test ./... -short -ldflags "-X main.Version=test" --cover
 
-# Run unit test suite verbosely
+# Run test suite without Docker ops
 .PHONY: test-v
 test-v:
 	go test ./... -short -ldflags "-X main.Version=test" -v --cover
@@ -65,13 +67,11 @@ test-all:
 	make lint
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
-	go clean -testcache
 	go test ./... -ldflags "-X main.Version=test" --cover
 
 # Run integration tests verbosely - creates fresh test VPS and test daemon beforehand
 .PHONY: test-integration
 test-integration:
-	go clean -testcache
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
@@ -79,7 +79,6 @@ test-integration:
 # Run integration tests verbosely without recreating test VPS
 .PHONY: test-integration-fast
 test-integration-fast:
-	go clean -testcache
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
 
