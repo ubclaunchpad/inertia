@@ -41,7 +41,7 @@ jobs:
       script:
         - go test -race -coverprofile=coverage.out ./...
         - make lint
-      after_script:
+      after_success:
         - go get -u github.com/mattn/goveralls
         - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
 
@@ -50,7 +50,7 @@ jobs:
       <<: *test
       install: make testenv VPS_OS=debian VPS_VERSION=9.3 SSH_PORT=69
       script: go test ./... -v -run 'TestBootstrapIntegration' -ldflags "-X main.Version=test"
-      after_script: true
+      after_success: true
     - <<: *bootstraptest
       install: make testenv VPS_OS=centos VPS_VERSION=7 SSH_PORT=69
     - <<: *bootstraptest
