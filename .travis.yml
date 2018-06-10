@@ -1,80 +1,56 @@
 language: go
-install: true
-notifications:
-  email: false
-
+go:
+  - "1.10"
 services:
   - docker
 
-go:
-  - "1.10"
-
 env:
-  # DOCKER_USER, DOCKER_KEY, COVERALLS_TOKEN
-  global:
+  global: # DOCKER_USER, DOCKER_KEY, COVERALLS_TOKEN
     - secure: "Wmv2HWUKWM0S5Kh1IgX/VKhQ21Oi85LZgHZVYXqGppa3wHO5hKYOSoWnBBR3uNgHsYPi3RL7kRNDDuKWyDAWU+2hV2xjXfqfSwsH9Sj8pFn/60KcIoMJU8EkxydJks6+H4sf04Fei1zSXc2ySTIsvCUSUKDOi8ZJCqkDxV0hIK0TmXn7isDcRWnHTvpNqLarQ4LyN9Qi8qU/NR28cNHIdkZaWxT0gciNwT9ep/vrG32aaIsNB/Ikn43A38mx5B9iSmG7YtZzDYldMEyOhCDqZIxwOjA1J1nHYqeYq/RrF6JJYpprBfEjEDa73cUBy8JVZqb3ur5uL0FeBFfToNBdK/Qbj93pkOS8pQSgyxCCpACJBeSrzuolVKLxMLbfc6YoFXaEeu7oCE5T3P4hws6yP2MD1opAMnTCLUyWRWecH6PwVwgrlur6EvrEpimGOWk4TmmomvQMRVbDF1JYuY+4QD2M2tTkmts+pwpvEkBF+aOatSE1xUWYAtwsjnAjBSL7mhWSUeBT6MlTeaO1UqNb5qW2Fbz5KSYDh71T3DslWiCxad6x48/eXBAtApQ1mHbHtCrAALHz3h1Ioe7GA/7CWigakPayfMOYuavPDE7Ghrt8m9RlvTVoV5HgWHM9Ophrv+OnAb0RYDpPKU8+ejgqqI+kV9dy10SK6LAnXoM+kd0="
     - secure: "jloKHZ9QfPnER+X34GnQQ+GIf5d+ZHiC8Nu4mNVR0QiqK4EH2BnJExOpSUtkDCLZqPdzIAD3efTs/vgm0Od+GKbOGW/s83oy605OR13Bop6fDNoMWTf6fBlZ4JxfVmJSVbv6jKhx627HTC4U1aFDxRfgmN+113YLYCodQlB3F98m5ldD1xA+uuOeLp1FXCS9p9L+1/GWninyYEjrDVZz37c6kYsQJPhPvWAr3VcnnEE0vX0RmyKIOgM3/7gYf57HMlUo6Ri0cF4+WDUV+6R8RGbInZPErTSGR3qwyGwq1RbHkqFYCU4gVSEih2uo4pflKqoiXsDkrKg5FKxE3X0YG/rKnlZ3ElX4VYg3Pn4sGvXp45QW6tb4syVGXNgmIhtmYHoTvh48DDtvsbpVc7VwLv6E/dI53BvIv5/AKGDNWafsBRo0OZfr5V/XH6JLr2eWO+PXBiqhvUsP+r29iKVywKL5hjEJ+sKkm1O0ZXJPhGJNgajG5UHr1N+s61QmZGMKas2hO0p2ZjGxje/Fmdt+DiJ6UsPhEk5uLYWjcGFnbKYZlo2WUzO6bo1P5VQDXlr6mGRwIwOf8j/QidT+pz4cYdX63BMJw40OfKB87UcegZsncJpLK7hzJpcxZ//WCqmU/EPNfeIB4JRFlzRCxzMwKe7HOTmKwz2+tbO1GyWDuw8="
     - secure: "GrHm6fAfnmJpMlNYH5pdac3R9rZ/ml6nVmzMVH8FrKKH50DCNBR06s47pw0oj3HsNkEz1SqQIgNG2wxDFGWoM8uTY9ndWGgREMbCxyhsezhFmfI1tGLHA0P93g+GkyVtq2Ne1/mhQQ3EUb+mPbWCSKHGyx9ypIAi1mwZYpKLRyMiTN+2rkNLV3+ccsrwhRq4T27ClKXP0qF0WaLUONC8I9qEAmko2ZP3ltTiqCDCFLEptaV3iH4vfVlvZWQyItkBaEyQH/KFgagkwQA+Xi/M9hiQA/Cb9zZ5edfFN4JMPGHzsWEv0u21iqH9OlyrBotlFvx0lxzKpYcTnhLKwV0U1K6dZRnVeq+A7f15kMFI4tjbE68I6+TjyAzZe560qwQqzqSPYM4AJ+DRkdDHilx8Jj/CckcaT9QtcVvi7/vbBAAjdd82Nxdd5/vjmVdaKiepw5ABJAxY/zg/TGl+ulz+YlvM3+Nkj+V6r12YrRjP5hB1AK9bl+ARCKGl30jj5jfFXaTETrWew/Xte3fepu8aTwZR7yHHsFtE7mecQJ80sRN0/tas5VTn2lFx62R01Evds9N5yGIeOlE7O19AE02u9eBeciCgHFpT+YVk/6dJvIGC2j2Lcnwxx80gt++bKUUTrOthGTO0bINQXrQK5tNIFa1WnqW4hjEXOCTggOlRMQE="
 
-before_install: |
-  [[ ! -x ~/go/bin/dep ]] && {
-    go get -u github.com/mattn/goveralls
-    go get -u github.com/golang/dep/cmd/dep
-  } || true
-
-install:
-  - go get -u github.com/mattn/goveralls
+before_install:
   - go get -u github.com/golang/dep/cmd/dep
-  - make deps
-  - make testdaemon-image
-
-cache:
-  directories:
-    - ~/go/bin
-    - vendor
-    - bin
-    - images
-    - daemon/web/node_modules
 
 jobs:
   include:
-    ############################
-    #   Warm up dependencies   #
-    ############################
-    - stage: Precache
-      script: true # run everything except script
-
-    ############################
-    #   Run static analysis    #
-    ############################
-    - stage: Lint
-      script: make lint
-
     ############################
     #   Execute test pipeline  #
     ############################
     - &test
       stage: Test
-      script:
+      install:
+        - dep ensure
+        - make testdaemon-image
         - make testenv VPS_OS="$VPS_OS" VPS_VERSION="$VERSION" SSH_PORT=69
-        - make testdaemon-scp SSH_PORT=69                 # send daemon to testvps
-        - go test -race -coverprofile=coverage.out ./...  # Execute tests
-        - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
-    - <<: *test
-      env: VPS_OS=ubuntu VERSION=16.04
-    - <<: *test
+        - make testdaemon-scp SSH_PORT=69
+      script: go test ./... -v -run 'TestBootstrapIntegration' -ldflags "-X main.Version=test"
       env: VPS_OS=debian VERSION=9.3
     - <<: *test
       env: VPS_OS=centos VERSION=7
     - <<: *test
       env: VPS_OS=amazon VERSION=latest
 
+    # Run whole test suite once
+    - <<: *test
+      env: VPS_OS=ubuntu VERSION=16.04
+      before_script:
+        - bash test/deps.sh
+      script:
+        - go test -race -coverprofile=coverage.out ./...
+        - make lint
+      after_script:
+        - go get -u github.com/mattn/goveralls
+        - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
+
     ############################
     #    Build tag "latest"    #
     ############################
     - stage: Build "latest"
       if: (branch = master) AND (type = push) AND (type != pull_request)
-      script: 
+      install: skip
+      script:
         - docker login -u $DOCKER_USER -p $DOCKER_KEY 
         - make daemon RELEASE=latest
 
@@ -83,6 +59,7 @@ jobs:
     ############################
     - stage: Build Release
       if: (branch = master) AND (tag IS present) AND (type != pull_request)
+      install: make prod-deps
       script: skip
       before_deploy:
         - docker login -u $DOCKER_USER -p $DOCKER_KEY 
