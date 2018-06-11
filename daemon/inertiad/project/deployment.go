@@ -32,6 +32,9 @@ type Deployer interface {
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
+	UpdateContainerEnvironmentValues(cli *docker.Client) error
+
+	GetDataManager() *DataManager
 }
 
 // Deployment represents the deployed project
@@ -49,7 +52,7 @@ type Deployment struct {
 	auth ssh.AuthMethod
 	mux  sync.Mutex
 
-	DataManager *DataManager
+	dataManager *DataManager
 }
 
 // DeploymentConfig is used to configure Deployment
@@ -107,7 +110,7 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 		repo: repo,
 
 		// Persistent data manager
-		DataManager: manager,
+		dataManager: manager,
 	}, nil
 }
 
@@ -193,7 +196,7 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
-	err := d.DataManager.destroy()
+	err := d.dataManager.destroy()
 	if err != nil {
 		fmt.Fprint(out, "unable to clear database records: "+err.Error())
 	}
@@ -260,4 +263,15 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
 	return nil
+}
+
+// UpdateContainerEnvironmentValues reads env variables from storage and applies
+// them to all active containers
+func (d *Deployment) UpdateContainerEnvironmentValues(cli *docker.Client) error {
+	return nil
+}
+
+// GetDataManager returns the class managing deployment data
+func (d *Deployment) GetDataManager() *DataManager {
+	return d.dataManager
 }

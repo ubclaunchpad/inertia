@@ -101,7 +101,7 @@ func (c *DataManager) AddEnvVariable(name, value string,
 }
 
 // RemoveEnvVariable removes a previously set env variable
-func (c *DataManager) RemoveEnvVariable(name, value string) error {
+func (c *DataManager) RemoveEnvVariable(name string) error {
 	return nil
 }
 
