@@ -268,7 +268,20 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 // UpdateContainerEnvironmentValues reads env variables from storage and applies
 // them to all active containers
 func (d *Deployment) UpdateContainerEnvironmentValues(cli *docker.Client) error {
-	return nil
+	values, err := d.dataManager.GetEnvVariables(true)
+	if err != nil {
+		return err
+	}
+
+	var setErr error
+	for n, v := range values {
+		err = containers.SetEnvInAllContainers(cli, n, v)
+		if err != nil {
+			setErr = err
+		}
+	}
+
+	return setErr
 }
 
 // GetDataManager returns the class managing deployment data

@@ -44,7 +44,14 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 	if envReq.Remove {
 		err = deployment.GetDataManager().RemoveEnvVariable(envReq.Name)
 	} else if envReq.List {
-		_, err = deployment.GetDataManager().GetEnvVariables(false)
+		values, err := deployment.GetDataManager().GetEnvVariables(false)
+		if err != nil {
+			logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(values)
+		return
 	} else {
 		err = deployment.GetDataManager().AddEnvVariable(
 			envReq.Name, envReq.Value, envReq.Encrypt,

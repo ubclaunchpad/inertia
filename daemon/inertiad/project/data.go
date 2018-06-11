@@ -120,6 +120,8 @@ func (c *DataManager) GetEnvVariables(decrypt bool) (map[string]string, error) {
 
 			if !variable.Encrypted {
 				env[string(name)] = string(variable.Value)
+			} else if !decrypt {
+				env[string(name)] = "[ENCRYPTED]"
 			} else {
 				// Decrypt the message using decrypt private key and the
 				// encrypt public key. When you decrypt, you must use the same

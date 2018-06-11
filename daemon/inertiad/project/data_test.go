@@ -17,11 +17,13 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
+		decrypt bool
 		wantErr bool
 	}{
-		{"no encrypt", args{"myvar1", "mysekret", false}, false},
-		{"encrypt", args{"myvar2", "myothersekret", true}, false},
-		{"invalid env", args{"", "", true}, true},
+		{"no encrypt", args{"myvar1", "mysekret", false}, true, false},
+		{"encrypt", args{"myvar2", "myothersekret", true}, true, false},
+		{"invalid env", args{"", "", true}, true, true},
+		{"no decrypt", args{"myvar", "asdfasdf", true}, true, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -36,9 +38,14 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 			err = c.AddEnvVariable(tt.args.name, tt.args.value, tt.args.encrypt)
 			assert.Equal(t, tt.wantErr, (err != nil))
 
-			vars, err := c.GetEnvVariables(true)
+			vars, err := c.GetEnvVariables(tt.decrypt)
 			assert.Nil(t, err)
-			assert.Equal(t, tt.args.value, vars[tt.args.name])
+
+			if tt.decrypt {
+				assert.Equal(t, tt.args.value, vars[tt.args.name])
+			} else {
+				assert.Equal(t, "[ENCRYPTED]", vars[tt.args.name])
+			}
 		})
 	}
 }
