@@ -38,10 +38,13 @@ type UserRequest struct {
 	Admin    bool   `json:"admin"`
 }
 
-// EnvRequest represents a request to set an environment variable
+// EnvRequest represents a request to manage environment variables
 type EnvRequest struct {
-	Name    string `json:"name"`
-	Value   string `json:"value"`
-	Encrypt bool   `json:"encrypt"`
-	Remove  bool   `json:"true"`
+	Name    string `json:"name,omitempty"`
+	Value   string `json:"value,omitempty"`
+	Encrypt bool   `json:"encrypt,omitempty"`
+
+	Remove bool `json:"remove,omitempty"`
+
+	List bool `json:"list,omitempty"`
 }

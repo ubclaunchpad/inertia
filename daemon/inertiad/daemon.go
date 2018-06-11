@@ -111,7 +111,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 	handler.AttachAdminRestrictedHandlerFunc("/up", upHandler)
 	handler.AttachAdminRestrictedHandlerFunc("/down", downHandler)
 	handler.AttachAdminRestrictedHandlerFunc("/reset", resetHandler)
-	handler.AttachAdminRestrictedHandlerFunc("/setenv", setenvHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/env", envHandler)
 
 	// Root "ok" endpoint
 	handler.AttachPublicHandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {

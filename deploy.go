@@ -79,6 +79,14 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		send.Flags().StringP("permissions", "p", "0655", "Permissions settings for file")
 		cmd.AddCommand(send)
 
+		env := deepCopy(cmdDeploymentEnv)
+		setenv := deepCopy(cmdDeploymentEnvSet)
+		setenv.Flags().BoolP("encrypt", "e", false, "Encrypt variable when stored")
+		env.AddCommand(setenv)
+		env.AddCommand(deepCopy(cmdDeploymentEnvRemove))
+		env.AddCommand(deepCopy(cmdDeploymentEnvList))
+		cmd.AddCommand(env)
+
 		init := deepCopy(cmdDeploymentInit)
 		cmd.AddCommand(init)
 

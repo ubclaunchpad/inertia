@@ -36,7 +36,7 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 			err = c.AddEnvVariable(tt.args.name, tt.args.value, tt.args.encrypt)
 			assert.Equal(t, tt.wantErr, (err != nil))
 
-			vars, err := c.getEnvVariables()
+			vars, err := c.GetEnvVariables(true)
 			assert.Nil(t, err)
 			assert.Equal(t, tt.args.value, vars[tt.args.name])
 		})

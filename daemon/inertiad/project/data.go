@@ -105,7 +105,8 @@ func (c *DataManager) RemoveEnvVariable(name string) error {
 	return nil
 }
 
-func (c *DataManager) getEnvVariables() (map[string]string, error) {
+// GetEnvVariables retrieves all stored environment variables
+func (c *DataManager) GetEnvVariables(decrypt bool) (map[string]string, error) {
 	env := map[string]string{}
 
 	err := c.db.View(func(tx *bolt.Tx) error {

@@ -11,8 +11,8 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
-// setenvHandler manages requests to set environment variables
-func setenvHandler(w http.ResponseWriter, r *http.Request) {
+// envHandler manages requests to manage environment variables
+func envHandler(w http.ResponseWriter, r *http.Request) {
 	// Set up logger
 	logger := log.NewLogger(log.LoggerOptions{
 		Stdout:     os.Stdout,
@@ -23,7 +23,7 @@ func setenvHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get container name and stream from request query params
+	// Parse request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusLengthRequired)
@@ -43,6 +43,8 @@ func setenvHandler(w http.ResponseWriter, r *http.Request) {
 	// Add, update, or remove values from storage
 	if envReq.Remove {
 		err = deployment.GetDataManager().RemoveEnvVariable(envReq.Name)
+	} else if envReq.List {
+		_, err = deployment.GetDataManager().GetEnvVariables(false)
 	} else {
 		err = deployment.GetDataManager().AddEnvVariable(
 			envReq.Name, envReq.Value, envReq.Encrypt,
