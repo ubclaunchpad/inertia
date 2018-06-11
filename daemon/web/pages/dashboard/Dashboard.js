@@ -1,8 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 
-import InertiaClient from '../client';
-import LogView from './metrics/LogView';
+import InertiaAPI from '../../common/API';
+import LogView from '../../components/LogView';
+import * as dashboardActions from '../../actions/dashboard';
 
 const styles = {
   container: {
@@ -26,7 +29,7 @@ function promiseState(p) {
     .then(v => (v === t ? 'pending' : ('fulfilled', () => 'rejected')));
 }
 
-export default class Dashboard extends React.Component {
+class DashboardWrapper extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -58,9 +61,9 @@ export default class Dashboard extends React.Component {
     try {
       let resp;
       if (!this.props.container) {
-        resp = await InertiaClient.getContainerLogs();
+        resp = await InertiaAPI.getContainerLogs();
       } else {
-        resp = await InertiaClient.getContainerLogs(this.props.container);
+        resp = await InertiaAPI.getContainerLogs(this.props.container);
       }
       if (resp.status !== 200) {
         this.setState({
@@ -122,6 +125,19 @@ export default class Dashboard extends React.Component {
     );
   }
 }
-Dashboard.propTypes = {
+DashboardWrapper.propTypes = {
   container: PropTypes.string,
 };
+
+const mapStateToProps = ({ Dashboard }) => {
+  return {
+    testState: Dashboard.testState,
+  };
+};
+
+const mapDispatchToProps = dispatch => bindActionCreators({ ...dashboardActions }, dispatch);
+
+const Dashboard = connect(mapStateToProps, mapDispatchToProps)(DashboardWrapper);
+
+
+export default Dashboard;

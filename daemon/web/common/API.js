@@ -1,10 +1,6 @@
-import encodeURL from './common/encodeURL';
+import encodeURL from './encodeURL';
 
-export default class InertiaClient {
-  constructor(url) {
-    this.url = 'https://' + url;
-  }
-
+export default class InertiaAPI {
   static async logout() {
     const endpoint = '/user/logout';
     const params = {
@@ -12,7 +8,7 @@ export default class InertiaClient {
         Accept: 'application/json',
       },
     };
-    return InertiaClient.post(endpoint, params);
+    return InertiaAPI.post(endpoint, params);
   }
 
   static async login(username, password) {
@@ -27,11 +23,11 @@ export default class InertiaClient {
         password,
       }),
     };
-    return InertiaClient.post(endpoint, params);
+    return InertiaAPI.post(endpoint, params);
   }
 
   static async validate() {
-    return InertiaClient.get('/user/validate', {});
+    return InertiaAPI.get('/user/validate', {});
   }
 
   static async getContainerLogs(container = '/inertia-daemon') {
@@ -46,7 +42,7 @@ export default class InertiaClient {
       },
     };
 
-    return InertiaClient.post(endpoint, params, queryParams);
+    return InertiaAPI.post(endpoint, params, queryParams);
   }
 
   static async getRemoteStatus() {
@@ -57,7 +53,7 @@ export default class InertiaClient {
         Accept: 'application/json',
       },
     };
-    return InertiaClient.get(endpoint, params);
+    return InertiaAPI.get(endpoint, params);
   }
 
   /**
