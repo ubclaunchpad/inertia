@@ -1,13 +1,11 @@
 package project
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"errors"
-	"io"
 
 	"github.com/boltdb/bolt"
-	"golang.org/x/crypto/nacl/box"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
 var (
@@ -43,15 +41,7 @@ func newDataManager(dbPath string) (*DataManager, error) {
 		return nil, err
 	}
 
-	encryptPublicKey, encryptPrivateKey, err := box.GenerateKey(rand.Reader)
-	if err != nil {
-		return nil, err
-	}
-
-	decryptPublicKey, decryptPrivateKey, err := box.GenerateKey(rand.Reader)
-	if err != nil {
-		return nil, err
-	}
+	encryptPublicKey, encryptPrivateKey, decryptPublicKey, decryptPrivateKey, err := crypto.GenerateKeys()
 
 	return &DataManager{
 		db,
@@ -69,22 +59,13 @@ func (c *DataManager) AddEnvVariable(name, value string,
 	}
 
 	valueBytes := []byte(value)
-
-	// You must use a different nonce for each message you encrypt with the
-	// same key. Since the nonce here is 192 bits long, a random value
-	// provides a sufficiently small probability of repeats.
-	var nonce [24]byte
-	if _, err := io.ReadFull(rand.Reader, nonce[:]); err != nil {
-		return err
-	}
-
-	// This encrypts the variable, storing the nonce in the first 24 bytes.
 	if encrypt {
-		variable := []byte(valueBytes)
-		valueBytes = box.Seal(
-			nonce[:], variable, &nonce,
-			c.decryptPublicKey, c.encryptPrivateKey,
-		)
+		encrypted, err := crypto.Seal(valueBytes,
+			c.encryptPrivateKey, c.decryptPublicKey)
+		if err != nil {
+			return err
+		}
+		valueBytes = encrypted
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
@@ -123,20 +104,11 @@ func (c *DataManager) GetEnvVariables(decrypt bool) (map[string]string, error) {
 			} else if !decrypt {
 				env[string(name)] = "[ENCRYPTED]"
 			} else {
-				// Decrypt the message using decrypt private key and the
-				// encrypt public key. When you decrypt, you must use the same
-				// nonce you used to encrypt the message - this nonce is stored
-				// in the first 24 bytes.
-				var decryptNonce [24]byte
-				copy(decryptNonce[:], variable.Value[:24])
-				decrypted, ok := box.Open(
-					nil, variable.Value[24:], &decryptNonce,
-					c.encryptPublicKey, c.decryptPrivateKey,
-				)
-				if !ok {
-					return errors.New("decryption error")
+				decrypted, err := crypto.UndoSeal(variable.Value,
+					c.encryptPublicKey, c.decryptPrivateKey)
+				if err != nil {
+					return err
 				}
-
 				env[string(name)] = string(decrypted)
 			}
 
@@ -153,6 +125,6 @@ func (c *DataManager) GetEnvVariables(decrypt bool) (map[string]string, error) {
 
 func (c *DataManager) destroy() error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		return nil
+		return tx.DeleteBucket(envVariableBucket)
 	})
 }
