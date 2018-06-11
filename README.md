@@ -28,7 +28,7 @@
     <img src="https://img.shields.io/microbadger/image-size/ubclaunchpad/inertia.svg" />
   </a>
 
-  <a href="https://github.com/ubclaunchpad/inertia/releases">
+  <a href="https://github.com/ubclaunchpad/inertia/releases/latest">
     <img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg" />
   </a>
 </p>
