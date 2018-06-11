@@ -83,12 +83,15 @@ func (c *DataManager) AddEnvVariable(name, value string,
 
 // RemoveEnvVariable removes a previously set env variable
 func (c *DataManager) RemoveEnvVariable(name string) error {
-	return nil
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vars := tx.Bucket(envVariableBucket)
+		return vars.Delete([]byte(name))
+	})
 }
 
 // GetEnvVariables retrieves all stored environment variables
-func (c *DataManager) GetEnvVariables(decrypt bool) (map[string]string, error) {
-	env := map[string]string{}
+func (c *DataManager) GetEnvVariables(decrypt bool) ([]string, error) {
+	envs := []string{}
 
 	err := c.db.View(func(tx *bolt.Tx) error {
 		variables := tx.Bucket(envVariableBucket)
@@ -99,28 +102,25 @@ func (c *DataManager) GetEnvVariables(decrypt bool) (map[string]string, error) {
 				return err
 			}
 
+			nameString := string(name)
 			if !variable.Encrypted {
-				env[string(name)] = string(variable.Value)
+				envs = append(envs, nameString+"="+string(variable.Value))
 			} else if !decrypt {
-				env[string(name)] = "[ENCRYPTED]"
+				envs = append(envs, nameString+"=[ENCRYPTED]")
 			} else {
 				decrypted, err := crypto.UndoSeal(variable.Value,
 					c.encryptPublicKey, c.decryptPrivateKey)
 				if err != nil {
-					return err
+					// If decrypt fails, key is no longer valid - remove var
+					c.RemoveEnvVariable(nameString)
 				}
-				env[string(name)] = string(decrypted)
+				envs = append(envs, nameString+"="+string(decrypted))
 			}
 
 			return nil
 		})
 	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return env, nil
+	return envs, err
 }
 
 func (c *DataManager) destroy() error {

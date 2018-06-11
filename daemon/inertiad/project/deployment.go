@@ -273,15 +273,7 @@ func (d *Deployment) UpdateContainerEnvironmentValues(cli *docker.Client) error 
 		return err
 	}
 
-	var setErr error
-	for n, v := range values {
-		err = containers.SetEnvInAllContainers(cli, n, v)
-		if err != nil {
-			setErr = err
-		}
-	}
-
-	return setErr
+	return containers.SetEnvInAllContainers(cli, values)
 }
 
 // GetDataManager returns the class managing deployment data
