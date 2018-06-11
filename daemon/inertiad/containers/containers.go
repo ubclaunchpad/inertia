@@ -104,3 +104,26 @@ func StreamContainerLogs(client *docker.Client, id string, out io.Writer,
 	log.FlushRoutine(out, reader, stop)
 	return nil
 }
+
+// SetEnvInAllContainers attaches an exec command to all containers
+func SetEnvInAllContainers(client *docker.Client, name, value string) error {
+	ctx := context.Background()
+	c, err := GetActiveContainers(client)
+	if err != nil {
+		return err
+	}
+
+	var setEnvErr error
+	for _, container := range c {
+		if container.Names[0] != "/inertia-daemon" {
+			resp, err := client.ContainerExecAttach(ctx, container.ID, types.ExecConfig{
+				Cmd: []string{"export", name + "=" + value},
+			})
+			if err != nil {
+				setEnvErr = err
+			}
+			resp.Close()
+		}
+	}
+	return setEnvErr
+}
