@@ -23,7 +23,7 @@ var cmdDeploymentEnvSet = &cobra.Command{
 variables are applied to all deployed contianers.`,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, err := local.GetClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
@@ -63,7 +63,7 @@ var cmdDeploymentEnvRemove = &cobra.Command{
 and persistent environment storage.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, err := local.GetClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
@@ -95,7 +95,7 @@ var cmdDeploymentEnvList = &cobra.Command{
 	Use:   "ls",
 	Short: "List currently set and saved environment variables",
 	Run: func(cmd *cobra.Command, args []string) {
-		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, err := local.GetClient(remoteName)
 		if err != nil {
 			log.Fatal(err)
