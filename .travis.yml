@@ -74,7 +74,7 @@ jobs:
     #  Build git tag (stable)  #
     ############################
     - stage: build release
-      if: (branch = master) AND (tag IS present) AND (type != pull_request)
+      if: (tag IS present) AND (type != pull_request)
       install: true
       script: true
       before_deploy:
