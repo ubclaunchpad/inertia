@@ -20,7 +20,7 @@ var cmdDeploymentEnvSet = &cobra.Command{
 	Use:   "set [NAME] [VALUE]",
 	Short: "Set an environment variable on your remote",
 	Long: `Set a persistent environment variable on your remote. Set environment
-variables are applied to all deployed contianers.`,
+variables are applied to all deployed containers.`,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
