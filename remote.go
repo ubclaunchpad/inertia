@@ -8,9 +8,24 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/local"
 )
 
-var remoteCmd = &cobra.Command{
+// Initialize 'inertia remote [COMMAND]' commands
+func init() {
+	cmdRoot.AddCommand(cmdRemote)
+	cmdRemote.AddCommand(cmdAddRemote)
+	cmdRemote.AddCommand(cmdListRemotes)
+	cmdRemote.AddCommand(cmdRemoveRemote)
+	cmdRemote.AddCommand(cmdShowRemote)
+	cmdRemote.AddCommand(cmdSetRemoteProperty)
+
+	cmdListRemotes.Flags().BoolP("verbose", "v", false, "Verbose output")
+	cmdAddRemote.Flags().StringP("port", "p", "4303", "Daemon port")
+	cmdAddRemote.Flags().StringP("sshPort", "s", "22", "SSH port")
+}
+
+var cmdRemote = &cobra.Command{
 	Use:   "remote",
 	Short: "Configure the local settings for a remote VPS instance",
 	Long: `Remote is a low level command for interacting with this VPS
@@ -26,7 +41,7 @@ inerta remote status gcloud`,
 	Args: cobra.MinimumNArgs(1),
 }
 
-var addCmd = &cobra.Command{
+var cmdAddRemote = &cobra.Command{
 	Use:   "add [REMOTE]",
 	Short: "Add a reference to a remote VPS instance",
 	Long: `Add a reference to a remote VPS instance. Requires 
@@ -35,7 +50,7 @@ file. Specify a VPS name.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := getProjectConfigFromDisk()
+		config, path, err := local.GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -73,13 +88,13 @@ file. Specify a VPS name.`,
 	},
 }
 
-var listCmd = &cobra.Command{
+var cmdListRemotes = &cobra.Command{
 	Use:   "ls",
 	Short: "List currently configured remotes",
 	Long:  `Lists all currently configured remotes.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		config, _, err := getProjectConfigFromDisk()
+		config, _, err := local.GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -94,13 +109,13 @@ var listCmd = &cobra.Command{
 	},
 }
 
-var removeCmd = &cobra.Command{
+var cmdRemoveRemote = &cobra.Command{
 	Use:   "rm [REMOTE]",
 	Short: "Remove a remote.",
 	Long:  `Remove a remote from Inertia's configuration file.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, path, err := getProjectConfigFromDisk()
+		config, path, err := local.GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -119,14 +134,14 @@ var removeCmd = &cobra.Command{
 	},
 }
 
-var showCmd = &cobra.Command{
+var cmdShowRemote = &cobra.Command{
 	Use:   "show [REMOTE]",
 	Short: "Show details about remote.",
 	Long:  `Show details about the given remote.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, _, err := getProjectConfigFromDisk()
+		config, _, err := local.GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -140,14 +155,14 @@ var showCmd = &cobra.Command{
 	},
 }
 
-var setCmd = &cobra.Command{
+var cmdSetRemoteProperty = &cobra.Command{
 	Use:   "set [REMOTE] [PROPERTY] [VALUE]",
 	Short: "Set details about remote.",
 	Long:  `Set details about the given remote.`,
 	Args:  cobra.MinimumNArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := getProjectConfigFromDisk()
+		config, path, err := local.GetProjectConfigFromDisk()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -167,17 +182,4 @@ var setCmd = &cobra.Command{
 			println("No remote '" + args[0] + "' currently set up.")
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(remoteCmd)
-	remoteCmd.AddCommand(addCmd)
-	remoteCmd.AddCommand(listCmd)
-	remoteCmd.AddCommand(removeCmd)
-	remoteCmd.AddCommand(showCmd)
-	remoteCmd.AddCommand(setCmd)
-
-	listCmd.Flags().BoolP("verbose", "v", false, "Verbose output")
-	addCmd.Flags().StringP("port", "p", "4303", "Daemon port")
-	addCmd.Flags().StringP("sshPort", "s", "22", "SSH port")
 }

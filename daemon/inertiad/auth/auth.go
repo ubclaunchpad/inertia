@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -53,17 +52,4 @@ func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 func GenerateToken(key []byte) (string, error) {
 	// No claims for now.
 	return jwt.New(jwt.SigningMethodHS256).SignedString(key)
-}
-
-// GitAuthFailedErr attaches the daemon key in the error message
-func GitAuthFailedErr(path ...string) error {
-	keyLoc := DaemonGithubKeyLocation
-	if len(path) > 0 {
-		keyLoc = path[0]
-	}
-	bytes, err := ioutil.ReadFile(keyLoc + ".pub")
-	if err != nil {
-		bytes = []byte(err.Error() + "\nError reading key - try running 'inertia [REMOTE] init' again: ")
-	}
-	return errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes))
 }

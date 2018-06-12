@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/boltdb/bolt"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
 var (
@@ -71,11 +72,11 @@ func (m *userManager) Reset() error {
 
 // AddUser inserts a new user
 func (m *userManager) AddUser(username, password string, admin bool) error {
-	err := validateCredentialValues(username, password)
+	err := crypto.ValidateCredentialValues(username, password)
 	if err != nil {
 		return err
 	}
-	hashedPassword, err := hashPassword(password)
+	hashedPassword, err := crypto.HashPassword(password)
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,7 @@ func (m *userManager) RemoveUser(username string) error {
 // UserList returns a list of all registered users
 func (m *userManager) UserList() []string {
 	userList := make([]string, 0)
-	m.db.Update(func(tx *bolt.Tx) error {
+	m.db.View(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
 		return users.ForEach(func(username, v []byte) error {
 			userList = append(userList, string(username))
@@ -155,7 +156,7 @@ func (m *userManager) IsCorrectCredentials(username, password string) (bool, err
 			return err
 		}
 
-		correct = correctPassword(props.HashedPassword, password)
+		correct = crypto.CorrectPassword(props.HashedPassword, password)
 		if !correct {
 			// Track number of login attempts and don't add
 			// user back to the database if past limit

@@ -10,7 +10,14 @@ import (
 // Version is the current build of Inertia
 var Version string
 
-var rootCmd = &cobra.Command{
+func getVersion() string {
+	if Version == "" {
+		Version = "latest"
+	}
+	return Version
+}
+
+var cmdRoot = &cobra.Command{
 	Use:     "inertia",
 	Short:   "Inertia is a continuous-deployment scaffold",
 	Version: getVersion(),
@@ -27,16 +34,9 @@ Repository:    https://github.com/ubclaunchpad/inertia/
 Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 }
 
-func getVersion() string {
-	if Version == "" {
-		Version = "latest"
-	}
-	return Version
-}
-
 func main() {
 	cobra.EnableCommandSorting = false
-	if err := rootCmd.Execute(); err != nil {
+	if err := cmdRoot.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}

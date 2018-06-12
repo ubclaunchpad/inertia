@@ -1,4 +1,4 @@
-package auth
+package crypto
 
 import (
 	"testing"
@@ -8,43 +8,43 @@ import (
 
 func TestHashPassword(t *testing.T) {
 	unhashed := "amazing"
-	hashed, err := hashPassword(unhashed)
+	hashed, err := HashPassword(unhashed)
 	assert.Nil(t, err)
 	assert.NotEqual(t, unhashed, hashed)
 }
 
 func TestCorrectPassword(t *testing.T) {
 	unhashed := "amazing"
-	hashed, err := hashPassword(unhashed)
+	hashed, err := HashPassword(unhashed)
 	assert.Nil(t, err)
 	assert.NotEqual(t, unhashed, hashed)
 
-	correct := correctPassword(hashed, unhashed)
+	correct := CorrectPassword(hashed, unhashed)
 	assert.True(t, correct)
 
-	correct = correctPassword(hashed, "ummmmm")
+	correct = CorrectPassword(hashed, "ummmmm")
 	assert.False(t, correct)
 }
 
 func TestValidateCredentialValues(t *testing.T) {
-	err := validateCredentialValues("finasdfsdfe", "okaasdfasdy")
+	err := ValidateCredentialValues("finasdfsdfe", "okaasdfasdy")
 	assert.Nil(t, err)
 
-	err = validateCredentialValues("0123456789a", "0123456789")
+	err = ValidateCredentialValues("0123456789a", "0123456789")
 	assert.Nil(t, err)
 
-	err = validateCredentialValues("ohnoitsme", "ohnoitsme")
+	err = ValidateCredentialValues("ohnoitsme", "ohnoitsme")
 	assert.Equal(t, errSameUsernamePassword, err)
 
-	err = validateCredentialValues("wowwow", "oh")
+	err = ValidateCredentialValues("wowwow", "oh")
 	assert.Equal(t, errInvalidPassword, err)
 
-	err = validateCredentialValues("um", "ohasdf")
+	err = ValidateCredentialValues("um", "ohasdf")
 	assert.Equal(t, errInvalidUsername, err)
 
-	err = validateCredentialValues("wow!!!!!!", "oasdfasdfh")
+	err = ValidateCredentialValues("wow!!!!!!", "oasdfasdfh")
 	assert.Equal(t, errInvalidUsername, err)
 
-	err = validateCredentialValues("wowwow", "oasdfasdfh!!!!")
+	err = ValidateCredentialValues("wowwow", "oasdfasdfh!!!!")
 	assert.Equal(t, errInvalidPassword, err)
 }

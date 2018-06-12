@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -53,18 +52,13 @@ func getMockClient(ts *httptest.Server) *Client {
 
 func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
 	remote := &RemoteVPS{
-		IP:   "127.0.0.1",
-		PEM:  "../test/keys/id_rsa",
-		User: "root",
+		IP:      "127.0.0.1",
+		PEM:     "../test/keys/id_rsa",
+		User:    "root",
+		SSHPort: "69",
 		Daemon: &DaemonConfig{
 			Port: "4303",
 		},
-	}
-	travis := os.Getenv("TRAVIS")
-	if travis != "" {
-		remote.SSHPort = "69"
-	} else {
-		remote.SSHPort = "22"
 	}
 	if mockRunner != nil {
 		mockRunner.r = remote

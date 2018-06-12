@@ -12,6 +12,7 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
@@ -29,6 +30,9 @@ var (
 var (
 	// specify location of SSL certificate
 	sslDirectory = "/app/host/inertia/config/ssl/"
+
+	userDatabasePath       = "/app/host/inertia/data/users.db"
+	deploymentDatabasePath = "/app/host/inertia/data/project.db"
 )
 
 const (
@@ -45,7 +49,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 		sslDirectory = certDir
 	}
 	if userDir != "" {
-		auth.UserDatabasePath = userDir
+		userDatabasePath = userDir
 	}
 
 	var (
@@ -73,7 +77,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 	// If they are not available, generate new ones.
 	if keyNotPresent && certNotPresent {
 		println("No certificates found - generating new ones...")
-		err = auth.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
+		err = crypto.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
 		if err != nil {
 			println(err.Error())
 			return
@@ -82,7 +86,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 
 	webPrefix := "/web/"
 	handler, err := auth.NewPermissionsHandler(
-		auth.UserDatabasePath, host, 120,
+		userDatabasePath, host, 120,
 	)
 	if err != nil {
 		println(err.Error())
@@ -107,6 +111,7 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 	handler.AttachAdminRestrictedHandlerFunc("/up", upHandler)
 	handler.AttachAdminRestrictedHandlerFunc("/down", downHandler)
 	handler.AttachAdminRestrictedHandlerFunc("/reset", resetHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/env", envHandler)
 
 	// Root "ok" endpoint
 	handler.AttachPublicHandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {

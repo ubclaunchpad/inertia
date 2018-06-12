@@ -11,12 +11,16 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
-	git "gopkg.in/src-d/go-git.v4"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/git"
+	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
-// directory is the directory the user's deployed project is cloned in
-var directory = "/app/host/inertia/project"
+var (
+	// directory is the directory the user's deployed project is cloned in
+	directory = "/app/host/inertia/project"
+)
 
 // Deployer does great deploys
 type Deployer interface {
@@ -28,6 +32,8 @@ type Deployer interface {
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
+
+	GetDataManager() (*DeploymentDataManager, bool)
 }
 
 // Deployment represents the deployed project
@@ -38,27 +44,31 @@ type Deployment struct {
 	branch    string
 	buildType string
 
-	builders map[string]Builder
-	containerStopper
+	builders         map[string]Builder
+	containerStopper containers.ContainerStopper
 
-	repo *git.Repository
+	repo *gogit.Repository
 	auth ssh.AuthMethod
 	mux  sync.Mutex
+
+	dataManager *DeploymentDataManager
 }
 
 // DeploymentConfig is used to configure Deployment
 type DeploymentConfig struct {
-	ProjectName string
-	BuildType   string
-	RemoteURL   string
-	Branch      string
-	PemFilePath string
+	ProjectName  string
+	BuildType    string
+	RemoteURL    string
+	Branch       string
+	PemFilePath  string
+	DatabasePath string
 }
 
 // NewDeployment creates a new deployment
 func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	common.RemoveContents(directory)
 
+	// Set up git repository
 	pemFile, err := os.Open(cfg.PemFilePath)
 	if err != nil {
 		return nil, err
@@ -67,11 +77,18 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
-	repo, err := initializeRepository(directory, cfg.RemoteURL, cfg.Branch, authMethod, out)
+	repo, err := git.InitializeRepository(directory, cfg.RemoteURL, cfg.Branch, authMethod, out)
 	if err != nil {
 		return nil, err
 	}
 
+	// Set up deployment database
+	manager, err := newDataManager(cfg.DatabasePath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create deployment
 	return &Deployment{
 		// Properties
 		directory: directory,
@@ -85,11 +102,14 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 			"dockerfile":     dockerBuild,
 			"docker-compose": dockerCompose,
 		},
-		containerStopper: stopActiveContainers,
+		containerStopper: containers.StopActiveContainers,
 
 		// Repository
 		auth: authMethod,
 		repo: repo,
+
+		// Persistent data manager
+		dataManager: manager,
 	}, nil
 }
 
@@ -120,7 +140,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOption
 
 	// Update repository
 	if !opts.SkipUpdate {
-		err := updateRepository(d.directory, d.repo, d.branch, d.auth, out)
+		err := git.UpdateRepository(d.directory, d.repo, d.branch, d.auth, out)
 		if err != nil {
 			return err
 		}
@@ -158,7 +178,7 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	// Error if no project containers are active, but try to kill
 	// everything anyway in case the docker-compose image is still
 	// active
-	_, err := getActiveContainers(cli)
+	_, err := containers.GetActiveContainers(cli)
 	if err != nil {
 		killErr := d.containerStopper(cli, out)
 		if killErr != nil {
@@ -175,6 +195,10 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
+	err := d.dataManager.destroy()
+	if err != nil {
+		fmt.Fprint(out, "unable to clear database records: "+err.Error())
+	}
 	return common.RemoveContents(d.directory)
 }
 
@@ -192,8 +216,8 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*common.DeploymentStatus, er
 
 	// Get containers, filtering out non-project containers
 	buildContainerActive := false
-	containers, err := getActiveContainers(cli)
-	if err != nil && err != ErrNoContainers {
+	c, err := containers.GetActiveContainers(cli)
+	if err != nil && err != containers.ErrNoContainers {
 		return nil, err
 	}
 	ignore := map[string]bool{
@@ -201,7 +225,7 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*common.DeploymentStatus, er
 		"/" + BuildStageName: true,
 	}
 	activeContainers := make([]string, 0)
-	for _, container := range containers {
+	for _, container := range c {
 		if !ignore[container.Names[0]] {
 			activeContainers = append(activeContainers, container.Names[0])
 		} else {
@@ -238,4 +262,12 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
 	}
 	return nil
+}
+
+// GetDataManager returns the class managing deployment data
+func (d *Deployment) GetDataManager() (manager *DeploymentDataManager, found bool) {
+	if d.dataManager == nil {
+		return nil, false
+	}
+	return d.dataManager, true
 }

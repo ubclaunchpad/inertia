@@ -9,6 +9,9 @@ const (
 
 	// Stream is a constant used in HTTP GET query strings
 	Stream = "stream"
+
+	// DaemonProjectPath is the path the daemon uses for the deployed project
+	DaemonProjectPath = "/app/host/project"
 )
 
 // DaemonRequest is the configurable body of a request to the daemon.
@@ -33,4 +36,13 @@ type UserRequest struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Admin    bool   `json:"admin"`
+}
+
+// EnvRequest represents a request to manage environment variables
+type EnvRequest struct {
+	Name    string `json:"name,omitempty"`
+	Value   string `json:"value,omitempty"`
+	Encrypt bool   `json:"encrypt,omitempty"`
+
+	Remove bool `json:"remove,omitempty"`
 }

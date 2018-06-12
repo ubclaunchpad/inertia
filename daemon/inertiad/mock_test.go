@@ -21,6 +21,8 @@ type FakeDeployment struct {
 	DownFunc           func(in1 *docker.Client, in2 io.Writer) error
 	GetBranchFunc      func() string
 	GetStatusFunc      func(in1 *docker.Client) (*common.DeploymentStatus, error)
+	UpdateEnvFunc      func(cli *docker.Client) error
+	GetDataManagerFunc func() *project.DeploymentDataManager
 }
 
 func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) error {
@@ -47,4 +49,12 @@ func (f *FakeDeployment) GetBranch() string {
 
 func (f *FakeDeployment) CompareRemotes(s string) error {
 	return f.CompareRemotesFunc(s)
+}
+
+func (f *FakeDeployment) GetDataManager() (*project.DeploymentDataManager, bool) {
+	return nil, false
+}
+
+func (f *FakeDeployment) UpdateContainerEnvironmentValues(cli *docker.Client) error {
+	return nil
 }
