@@ -83,7 +83,7 @@ var cmdDeploymentEnvList = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp, err := deployment.Reset()
+		resp, err := deployment.ListEnv()
 		if err != nil {
 			log.Fatal(err)
 		}

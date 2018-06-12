@@ -221,7 +221,7 @@ func (c *Client) UpdateEnv(name, value string, encrypt, remove bool) (*http.Resp
 
 // ListEnv lists environment variables currently set on remote
 func (c *Client) ListEnv() (*http.Response, error) {
-	return c.post("/env", common.EnvRequest{List: true})
+	return c.get("/env", nil)
 }
 
 // AddUser adds an authorized user for access to Inertia Web

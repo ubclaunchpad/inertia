@@ -45,6 +45,4 @@ type EnvRequest struct {
 	Encrypt bool   `json:"encrypt,omitempty"`
 
 	Remove bool `json:"remove,omitempty"`
-
-	List bool `json:"list,omitempty"`
 }

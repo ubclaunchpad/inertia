@@ -12,16 +12,24 @@ import (
 
 // envHandler manages requests to manage environment variables
 func envHandler(w http.ResponseWriter, r *http.Request) {
+	if deployment == nil {
+		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
+		return
+	}
+
+	if r.Method == "POST" {
+		envPostHandler(w, r)
+	} else if r.Method == "GET" {
+		envGetHandler(w, r)
+	}
+}
+
+func envPostHandler(w http.ResponseWriter, r *http.Request) {
 	// Set up logger
 	logger := log.NewLogger(log.LoggerOptions{
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 	})
-	if deployment == nil {
-		logger.WriteErr(msgNoDeployment, http.StatusPreconditionFailed)
-		return
-	}
-
 	// Parse request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -48,15 +56,6 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 	// Add, update, or remove values from storage
 	if envReq.Remove {
 		err = manager.RemoveEnvVariable(envReq.Name)
-	} else if envReq.List {
-		values, err := manager.GetEnvVariables(false)
-		if err != nil {
-			logger.WriteErr(err.Error(), http.StatusInternalServerError)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(values)
-		return
 	} else {
 		err = manager.AddEnvVariable(
 			envReq.Name, envReq.Value, envReq.Encrypt,
@@ -68,4 +67,26 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.WriteSuccess("environment variable saved - this will be applied the next time your container is started", http.StatusAccepted)
+}
+
+func envGetHandler(w http.ResponseWriter, r *http.Request) {
+	// Set up logger
+	logger := log.NewLogger(log.LoggerOptions{
+		Stdout:     os.Stdout,
+		HTTPWriter: w,
+	})
+
+	manager, found := deployment.GetDataManager()
+	if !found {
+		logger.WriteErr("no environment manager found", http.StatusPreconditionFailed)
+		return
+	}
+
+	values, err := manager.GetEnvVariables(false)
+	if err != nil {
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(values)
 }
