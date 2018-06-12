@@ -113,7 +113,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 
 	// try again if project no up (another workaround for Travis)
 	if !foundP {
-		time.Sleep(60 * time.Second)
+		time.Sleep(180 * time.Second)
 		containers, err = cli.ContainerList(
 			context.Background(),
 			types.ContainerListOptions{},
