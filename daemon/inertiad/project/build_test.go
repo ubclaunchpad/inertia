@@ -77,7 +77,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	// Check for containers
 	containers, err := cli.ContainerList(
@@ -98,7 +98,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 
 	// try again if project no up (workaround for Travis)
 	if !foundP {
-		time.Sleep(20 * time.Second)
+		time.Sleep(30 * time.Second)
 		containers, err = cli.ContainerList(
 			context.Background(),
 			types.ContainerListOptions{},
@@ -119,7 +119,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start again
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	// Check for containers
 	containers, err = cli.ContainerList(
@@ -140,7 +140,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 
 	// try again if project no up (workaround for Travis)
 	if !foundP {
-		time.Sleep(20 * time.Second)
+		time.Sleep(30 * time.Second)
 		containers, err = cli.ContainerList(
 			context.Background(),
 			types.ContainerListOptions{},
@@ -195,7 +195,7 @@ func TestDockerBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	containers, err := cli.ContainerList(
 		context.Background(),
@@ -215,7 +215,7 @@ func TestDockerBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	containers, err = cli.ContainerList(
 		context.Background(),
@@ -272,7 +272,7 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	containers, err := cli.ContainerList(
 		context.Background(),
@@ -292,7 +292,7 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	containers, err = cli.ContainerList(
 		context.Background(),
