@@ -16,7 +16,7 @@
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
   </a>
   
-  <a href="https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md">
+  <a href="https://github.com/ubclaunchpad/inertia/blob/master/CONTRIBUTING.md">
     <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
   </a>
 
@@ -28,7 +28,7 @@
     <img src="https://img.shields.io/microbadger/image-size/ubclaunchpad/inertia.svg" />
   </a>
 
-  <a href="https://github.com/ubclaunchpad/inertia/releases">
+  <a href="https://github.com/ubclaunchpad/inertia/releases/latest">
     <img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg" />
   </a>
 </p>
@@ -193,6 +193,6 @@ Inertia is set up serverside by executing a script over SSH that installs Docker
 
 Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome! 
 
-Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/.github/CONTRIBUTING.md) for contribution guidelines as well as a detailed guide to help you get started with Inertia's codebase.
+Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/CONTRIBUTING.md) for contribution guidelines as well as a detailed guide to help you get started with Inertia's codebase.
 
 <br>

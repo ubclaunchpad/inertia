@@ -31,12 +31,13 @@ RUN go build -o /bin/inertiad \
 
 ### Part 3 - Copy builds into combined image
 FROM alpine
-LABEL maintainer "UBC Launchpad team@ubclaunchpad.com"
-WORKDIR /app
+LABEL maintainer "UBC Launch Pad team@ubclaunchpad.com"
+RUN mkdir -p /daemon
+WORKDIR /daemon
 COPY --from=daemon-build-env /bin/inertiad /usr/local/bin
 COPY --from=web-build-env \
     /go/src/github.com/ubclaunchpad/inertia/daemon/web/public/ \
-    /app/inertia-web
+    /daemon/inertia-web
 
 # Serve the daemon by default.
 ENTRYPOINT ["inertiad", "run"]
