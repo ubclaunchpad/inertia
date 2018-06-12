@@ -60,6 +60,17 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
 
+	// get env
+	var envValues []string
+	manager, found := d.GetDataManager()
+	if found {
+		e, err := manager.GetEnvVariables(true)
+		if err != nil {
+			return nil, err
+		}
+		envValues = e
+	}
+
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      DockerComposeVersion,
@@ -68,6 +79,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 				"-p", d.project,
 				"build",
 			},
+			Env: envValues,
 		},
 		&container.HostConfig{
 			AutoRemove: true,
@@ -120,6 +132,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 				"-p", d.project,
 				"up",
 			},
+			Env: envValues,
 		},
 		&container.HostConfig{
 			AutoRemove: true,
@@ -178,10 +191,22 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error
 
 	fmt.Fprintf(out, "%s (%s) build has exited\n", imageName, buildResp.OSType)
 
+	// get env
+	var envValues []string
+	manager, found := d.GetDataManager()
+	if found {
+		e, err := manager.GetEnvVariables(true)
+		if err != nil {
+			return nil, err
+		}
+		envValues = e
+	}
+
 	// Create container from image
 	containerResp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image: imageName,
+			Env:   envValues,
 		},
 		&container.HostConfig{
 			AutoRemove: true,
@@ -210,11 +235,23 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() er
 	fmt.Fprintln(out, "Setting up herokuish...")
 	ctx := context.Background()
 
+	// get env
+	var envValues []string
+	manager, found := d.GetDataManager()
+	if found {
+		e, err := manager.GetEnvVariables(true)
+		if err != nil {
+			return nil, err
+		}
+		envValues = e
+	}
+
 	// Configure herokuish container to build project when run
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image: HerokuishVersion,
 			Cmd:   []string{"/build"},
+			Env:   envValues,
 		},
 		&container.HostConfig{
 			Binds: []string{
@@ -267,6 +304,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() er
 		// Currently, only start the standard "web" process
 		// @todo more processes
 		Cmd: []string{"/start", "web"},
+		Env: envValues,
 	}, nil, nil, d.project)
 	if err != nil {
 		return nil, err

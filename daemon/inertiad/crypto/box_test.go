@@ -20,7 +20,7 @@ func TestSealAndUndoSeal(t *testing.T) {
 	_, err = UndoSeal(encrypted, encryptPrivateKey, decryptPublicKey)
 	assert.NotNil(t, err)
 
-	// Succesfully undo seal
+	// Successfully undo seal
 	decrypted, err := UndoSeal(encrypted, encryptPublicKey, decryptPrivateKey)
 	assert.Nil(t, err)
 	assert.Equal(t, input, decrypted)

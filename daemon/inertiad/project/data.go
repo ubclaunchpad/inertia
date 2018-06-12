@@ -13,8 +13,8 @@ var (
 	envVariableBucket = []byte("envVariables")
 )
 
-// DataManager stores persistent deployment configuration
-type DataManager struct {
+// DeploymentDataManager stores persistent deployment configuration
+type DeploymentDataManager struct {
 	// db is a boltdb database, which is an embedded
 	// key/value database where each "bucket" is a collection
 	db *bolt.DB
@@ -28,7 +28,7 @@ type DataManager struct {
 	decryptPrivateKey *[32]byte
 }
 
-func newDataManager(dbPath string) (*DataManager, error) {
+func newDataManager(dbPath string) (*DeploymentDataManager, error) {
 	db, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func newDataManager(dbPath string) (*DataManager, error) {
 
 	encryptPublicKey, encryptPrivateKey, decryptPublicKey, decryptPrivateKey, err := crypto.GenerateKeys()
 
-	return &DataManager{
+	return &DeploymentDataManager{
 		db,
 		encryptPublicKey, encryptPrivateKey,
 		decryptPublicKey, decryptPrivateKey,
@@ -52,7 +52,7 @@ func newDataManager(dbPath string) (*DataManager, error) {
 
 // AddEnvVariable adds a new environment variable that will be applied
 // to all project containers
-func (c *DataManager) AddEnvVariable(name, value string,
+func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 	encrypt bool) error {
 	if len(name) == 0 || len(value) == 0 {
 		return errors.New("invalid env configuration")
@@ -82,7 +82,7 @@ func (c *DataManager) AddEnvVariable(name, value string,
 }
 
 // RemoveEnvVariable removes a previously set env variable
-func (c *DataManager) RemoveEnvVariable(name string) error {
+func (c *DeploymentDataManager) RemoveEnvVariable(name string) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		vars := tx.Bucket(envVariableBucket)
 		return vars.Delete([]byte(name))
@@ -90,7 +90,7 @@ func (c *DataManager) RemoveEnvVariable(name string) error {
 }
 
 // GetEnvVariables retrieves all stored environment variables
-func (c *DataManager) GetEnvVariables(decrypt bool) ([]string, error) {
+func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) {
 	envs := []string{}
 
 	err := c.db.View(func(tx *bolt.Tx) error {
@@ -123,7 +123,7 @@ func (c *DataManager) GetEnvVariables(decrypt bool) ([]string, error) {
 	return envs, err
 }
 
-func (c *DataManager) destroy() error {
+func (c *DeploymentDataManager) destroy() error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return tx.DeleteBucket(envVariableBucket)
 	})

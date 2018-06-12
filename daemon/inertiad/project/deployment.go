@@ -32,9 +32,8 @@ type Deployer interface {
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
-	UpdateContainerEnvironmentValues(cli *docker.Client) error
 
-	GetDataManager() *DataManager
+	GetDataManager() (*DeploymentDataManager, bool)
 }
 
 // Deployment represents the deployed project
@@ -52,7 +51,7 @@ type Deployment struct {
 	auth ssh.AuthMethod
 	mux  sync.Mutex
 
-	dataManager *DataManager
+	dataManager *DeploymentDataManager
 }
 
 // DeploymentConfig is used to configure Deployment
@@ -265,18 +264,10 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 	return nil
 }
 
-// UpdateContainerEnvironmentValues reads env variables from storage and applies
-// them to all active containers
-func (d *Deployment) UpdateContainerEnvironmentValues(cli *docker.Client) error {
-	values, err := d.dataManager.GetEnvVariables(true)
-	if err != nil {
-		return err
-	}
-
-	return containers.SetEnvInAllContainers(cli, values)
-}
-
 // GetDataManager returns the class managing deployment data
-func (d *Deployment) GetDataManager() *DataManager {
-	return d.dataManager
+func (d *Deployment) GetDataManager() (manager *DeploymentDataManager, found bool) {
+	if d.dataManager == nil {
+		return nil, false
+	}
+	return d.dataManager, true
 }

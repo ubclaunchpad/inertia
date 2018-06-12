@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
@@ -40,11 +39,17 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 		logger.WriteErr("no variable name provided", http.StatusBadRequest)
 	}
 
+	manager, found := deployment.GetDataManager()
+	if !found {
+		logger.WriteErr("no environment manager found", http.StatusPreconditionFailed)
+		return
+	}
+
 	// Add, update, or remove values from storage
 	if envReq.Remove {
-		err = deployment.GetDataManager().RemoveEnvVariable(envReq.Name)
+		err = manager.RemoveEnvVariable(envReq.Name)
 	} else if envReq.List {
-		values, err := deployment.GetDataManager().GetEnvVariables(false)
+		values, err := manager.GetEnvVariables(false)
 		if err != nil {
 			logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		}
@@ -53,7 +58,7 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(values)
 		return
 	} else {
-		err = deployment.GetDataManager().AddEnvVariable(
+		err = manager.AddEnvVariable(
 			envReq.Name, envReq.Value, envReq.Encrypt,
 		)
 	}
@@ -62,18 +67,5 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update values in containers
-	cli, err := docker.NewEnvClient()
-	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-	err = deployment.UpdateContainerEnvironmentValues(cli)
-	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	logger.WriteSuccess("environment variable updated", http.StatusAccepted)
+	logger.WriteSuccess("environment variable saved - this will be applied the next time your container is started", http.StatusAccepted)
 }
