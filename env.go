@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -44,15 +43,7 @@ variables are applied to all deployed containers.`,
 			log.Fatal(err)
 		}
 
-		switch resp.StatusCode {
-		case http.StatusOK:
-			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-		case http.StatusForbidden:
-			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-		default:
-			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-				resp.StatusCode, body)
-		}
+		fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 	},
 }
 
@@ -79,15 +70,7 @@ and persistent environment storage.`,
 			log.Fatal(err)
 		}
 
-		switch resp.StatusCode {
-		case http.StatusOK:
-			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-		case http.StatusForbidden:
-			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-		default:
-			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-				resp.StatusCode, body)
-		}
+		fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 	},
 }
 
@@ -110,14 +93,6 @@ var cmdDeploymentEnvList = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		switch resp.StatusCode {
-		case http.StatusOK:
-			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-		case http.StatusForbidden:
-			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-		default:
-			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-				resp.StatusCode, body)
-		}
+		fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 	},
 }
