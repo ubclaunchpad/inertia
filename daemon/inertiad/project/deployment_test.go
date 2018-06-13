@@ -121,22 +121,8 @@ func TestCompareRemotes(t *testing.T) {
 
 	// deployment := &Deployment{repo: repo}
 
-<<<<<<< HEAD
 	// for _, url := range urlVariations {
 	// 	err = deployment.CompareRemotes(url)
 	// 	assert.Nil(t, err)
 	// }
-=======
-	urlVariations := []string{
-		"git@github.com:ubclaunchpad/inertia.git",
-		"https://github.com/ubclaunchpad/inertia.git",
-		"git://github.com/ubclaunchpad/inertia.git",
-		"git://github.com/ubclaunchpad/inertia",
-	}
-
-	for _, url := range urlVariations {
-		err = deployment.CompareRemotes(url)
-		assert.Nil(t, err)
-	}
->>>>>>> master
 }
