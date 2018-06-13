@@ -7,7 +7,7 @@
 // client/scripts/token.sh
 // DO NOT EDIT!
 
-package client
+package internal
 
 import (
 	"bytes"
@@ -87,7 +87,7 @@ func clientScriptsDaemonDownSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/daemon-down.sh", size: 251, mode: os.FileMode(420), modTime: time.Unix(1528333857, 0)}
+	info := bindataFileInfo{name: "client/scripts/daemon-down.sh", size: 251, mode: os.FileMode(420), modTime: time.Unix(1528351521, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -107,7 +107,7 @@ func clientScriptsDaemonUpSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/daemon-up.sh", size: 1803, mode: os.FileMode(493), modTime: time.Unix(1528333857, 0)}
+	info := bindataFileInfo{name: "client/scripts/daemon-up.sh", size: 1803, mode: os.FileMode(493), modTime: time.Unix(1528351521, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -127,7 +127,7 @@ func clientScriptsDockerSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/docker.sh", size: 921, mode: os.FileMode(493), modTime: time.Unix(1528333857, 0)}
+	info := bindataFileInfo{name: "client/scripts/docker.sh", size: 921, mode: os.FileMode(493), modTime: time.Unix(1528351521, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -147,7 +147,7 @@ func clientScriptsKeygenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1528333857, 0)}
+	info := bindataFileInfo{name: "client/scripts/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1528351521, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -167,7 +167,7 @@ func clientScriptsTokenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/token.sh", size: 292, mode: os.FileMode(493), modTime: time.Unix(1528333857, 0)}
+	info := bindataFileInfo{name: "client/scripts/token.sh", size: 292, mode: os.FileMode(493), modTime: time.Unix(1528351521, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
