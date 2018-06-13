@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"io"
 )
 
 // mockSSHRunner is a mocked out implementation of SSHSession
@@ -21,5 +22,9 @@ func (runner *mockSSHRunner) RunStream(cmd string, interactive bool) error {
 }
 
 func (runner *mockSSHRunner) RunSession() error {
+	return nil
+}
+
+func (runner *mockSSHRunner) CopyFile(f io.Reader, remotePath string, permissions string) error {
 	return nil
 }

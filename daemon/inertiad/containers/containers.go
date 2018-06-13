@@ -1,4 +1,4 @@
-package project
+package containers
 
 import (
 	"context"
@@ -39,9 +39,9 @@ func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
 	})
 }
 
-// getActiveContainers returns all active containers and returns and error
+// GetActiveContainers returns all active containers and returns and error
 // if the Daemon is the only active container
-func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
+func GetActiveContainers(cli *docker.Client) ([]types.Container, error) {
 	containers, err := cli.ContainerList(
 		context.Background(),
 		types.ContainerListOptions{},
@@ -59,10 +59,11 @@ func getActiveContainers(cli *docker.Client) ([]types.Container, error) {
 	return containers, nil
 }
 
-type containerStopper func(*docker.Client, io.Writer) error
+// ContainerStopper is a function interface
+type ContainerStopper func(*docker.Client, io.Writer) error
 
-// stopActiveContainers kills all active project containers (ie not including daemon)
-func stopActiveContainers(cli *docker.Client, out io.Writer) error {
+// StopActiveContainers kills all active project containers (ie not including daemon)
+func StopActiveContainers(cli *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Shutting down active containers...")
 	ctx := context.Background()
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	git "gopkg.in/src-d/go-git.v4"
 
 	docker "github.com/docker/docker/client"
@@ -78,7 +79,7 @@ func TestDownIntegration(t *testing.T) {
 	defer cli.Close()
 
 	err = d.Down(cli, os.Stdout)
-	if err != ErrNoContainers {
+	if err != containers.ErrNoContainers {
 		assert.Nil(t, err)
 	}
 
@@ -120,8 +121,22 @@ func TestCompareRemotes(t *testing.T) {
 
 	// deployment := &Deployment{repo: repo}
 
+<<<<<<< HEAD
 	// for _, url := range urlVariations {
 	// 	err = deployment.CompareRemotes(url)
 	// 	assert.Nil(t, err)
 	// }
+=======
+	urlVariations := []string{
+		"git@github.com:ubclaunchpad/inertia.git",
+		"https://github.com/ubclaunchpad/inertia.git",
+		"git://github.com/ubclaunchpad/inertia.git",
+		"git://github.com/ubclaunchpad/inertia",
+	}
+
+	for _, url := range urlVariations {
+		err = deployment.CompareRemotes(url)
+		assert.Nil(t, err)
+	}
+>>>>>>> master
 }

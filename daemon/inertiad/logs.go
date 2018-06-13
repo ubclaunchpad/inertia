@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // logHandler handles requests for container logs
@@ -71,7 +71,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	logs, err := project.ContainerLogs(cli, project.LogOptions{
+	logs, err := containers.ContainerLogs(cli, containers.LogOptions{
 		Container: container,
 		Stream:    stream,
 	})

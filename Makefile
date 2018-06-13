@@ -1,5 +1,5 @@
 TAG = `git describe --tags`
-SSH_PORT = 22
+SSH_PORT = 69
 VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = test

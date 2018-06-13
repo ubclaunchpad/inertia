@@ -5,9 +5,9 @@
 // Generate a self-signed X.509 certificate for a TLS server. Outputs to
 // 'cert.pem' and 'key.pem' and will overwrite existing files.
 
-// Small modifications by kabukky
+// Small modifications by kabukky and bobheadxi
 
-package auth
+package crypto
 
 import (
 	"crypto/ecdsa"

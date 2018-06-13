@@ -212,6 +212,18 @@ func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
 	return socket, nil
 }
 
+// UpdateEnv updates environment variable
+func (c *Client) UpdateEnv(name, value string, encrypt, remove bool) (*http.Response, error) {
+	return c.post("/env", common.EnvRequest{
+		Name: name, Value: value, Encrypt: encrypt, Remove: remove,
+	})
+}
+
+// ListEnv lists environment variables currently set on remote
+func (c *Client) ListEnv() (*http.Response, error) {
+	return c.get("/env", nil)
+}
+
 // AddUser adds an authorized user for access to Inertia Web
 func (c *Client) AddUser(username, password string, admin bool) (*http.Response, error) {
 	reqContent := &common.UserRequest{
