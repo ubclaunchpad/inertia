@@ -16,7 +16,6 @@ var remoteURLVariations = []string{
 
 	// Github URL Variations
 	"https://github.com/ubclaunchpad/inertia.git",
-	"http://github.com/ubclaunchpad/inertia.git",
 	"git://github.com/ubclaunchpad/inertia.git",
 
 	// Gitlab URL Variations
