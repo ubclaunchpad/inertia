@@ -48,7 +48,7 @@ func CheckForGit(cwd string) error {
 // GetSSHRemoteURL gets the URL of the given remote in the form
 // "git@github.com:[USER]/[REPOSITORY].git"
 func GetSSHRemoteURL(url string) string {
-	re, _ := regexp.Compile("(https://)|(git://)")
+	re, _ := regexp.Compile("(https|git)://")
 
 	sshURL := re.ReplaceAllString(url, "git@")
 	if sshURL != url {
