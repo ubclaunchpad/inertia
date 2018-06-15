@@ -9,14 +9,22 @@ import (
 )
 
 var remoteURLVariations = []string{
+	// SSH URL
 	"git@github.com:ubclaunchpad/inertia.git",
 	"git@gitlab.com:ubclaunchpad/inertia.git",
 	"git@bitbucket.org:ubclaunchpad/inertia.git",
+
+	// Github URL Variations
 	"https://github.com/ubclaunchpad/inertia.git",
-	"https://gitlab.com/ubclaunchpad/inertia.git",
-	"https://ubclaunchpad@bitbucket.org/ubclaunchpad/inertia.git",
+	"http://github.com/ubclaunchpad/inertia.git",
 	"git://github.com/ubclaunchpad/inertia.git",
+
+	// Gitlab URL Variations
+	"https://gitlab.com/ubclaunchpad/inertia.git",
 	"git://gitlab.com/ubclaunchpad/inertia.git",
+
+	// Bitbucket URL Variations
+	"https://ubclaunchpad@bitbucket.org/ubclaunchpad/inertia.git",
 }
 
 func TestCheckForGit(t *testing.T) {
