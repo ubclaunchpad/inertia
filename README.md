@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/.static/inertia-with-name.png" width="30%"/>
+  <img src="/.static/inertia-with-name.png" width="30%" alt="Inertia"/>
 </p>
 
 <p align="center">
@@ -13,23 +13,28 @@
   </a>
 
   <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
-    <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia" alt="Clean code" />
+    <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia"
+      alt="Clean code" />
   </a>
   
   <a href="https://github.com/ubclaunchpad/inertia/blob/master/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" />
+    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" 
+      alt="Contributions welcome"/>
   </a>
 
   <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
-    <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg">
+    <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg"
+       alt="GoDocs available" />
   </a>
   
   <a href="https://microbadger.com/images/ubclaunchpad/inertia">
-    <img src="https://img.shields.io/microbadger/image-size/ubclaunchpad/inertia.svg" />
+    <img src="https://img.shields.io/microbadger/image-size/ubclaunchpad/inertia.svg" 
+       alt="Docker image" />
   </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases/latest">
-    <img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg" />
+    <img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg"
+       alt="Latest release" />
   </a>
 </p>
 
@@ -151,10 +156,10 @@ The daemon component of an Inertia release can be patched separately from the CL
 
 Add some bling to your Inertia-deployed project :sunglasses: 
 
-[![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
+[![Deployed with Inertia](https://img.shields.io/badge/deploying%20with-inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 
 ```
-[![Deployed with Inertia](https://img.shields.io/badge/Deploying%20with-Inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
+[![Deployed with Inertia](https://img.shields.io/badge/deploying%20with-inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 ```
 
 <br><br>
