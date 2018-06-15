@@ -1,5 +1,2 @@
-/*
-	Package containers provides utilities for interacting with Docker containers
-*/
-
+// Package containers provides utilities for interacting with Docker containers
 package containers

@@ -7,7 +7,7 @@ configuration options and various commands.
 It can be installed in several ways:
 
 	# Mac users
-	brew install ubclaunchpad/inertia
+	brew install ubclaunchpad/tap/inertia
 
 	# Windows users
 	scoop bucket add ubclaunchpad https://github.com/ubclaunchpad/scoop-bucket
