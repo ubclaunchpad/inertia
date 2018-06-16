@@ -52,7 +52,8 @@ fi
 # See the README for more details on how this works:
 # https://github.com/ubclaunchpad/inertia#how-it-works
 echo "Running daemon on port $DAEMON_PORT"
-sudo docker run -d --rm \
+sudo docker run -d \
+    --restart unless-stopped \
     -p "$DAEMON_PORT":"$CONTAINER_PORT" \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "$HOME":/app/host \
