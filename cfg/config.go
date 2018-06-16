@@ -1,4 +1,4 @@
-package client
+package cfg
 
 import (
 	"errors"
@@ -16,20 +16,25 @@ var (
 
 // Config represents the current projects configuration.
 type Config struct {
-	Version   string       `toml:"version"`
-	Project   string       `toml:"project-name"`
-	BuildType string       `toml:"build-type"`
-	Remotes   []*RemoteVPS `toml:"remote"`
+	Version       string       `toml:"version"`
+	Project       string       `toml:"project-name"`
+	BuildType     string       `toml:"build-type"`
+	BuildFilePath string       `toml:"build-file-path"`
+	Remotes       []*RemoteVPS `toml:"remote"`
 }
 
 // NewConfig sets up Inertia configuration with given properties
-func NewConfig(version, project, buildType string) *Config {
-	return &Config{
+func NewConfig(version, project, buildType, buildFilePath string) *Config {
+	cfg := &Config{
 		Version:   version,
 		Project:   project,
 		BuildType: buildType,
 		Remotes:   make([]*RemoteVPS, 0),
 	}
+	if buildFilePath != "" {
+		cfg.BuildFilePath = buildFilePath
+	}
+	return cfg
 }
 
 // Write writes configuration to Inertia config file at path. Optionally

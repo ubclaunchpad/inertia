@@ -71,12 +71,18 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 		envValues = e
 	}
 
+	dockercomposeFilePath := "docker-compose.yml"
+	if d.buildFilePath != "" {
+		dockercomposeFilePath = d.buildFilePath
+	}
+
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      DockerComposeVersion,
 			WorkingDir: "/build",
 			Cmd: []string{
 				"-p", d.project,
+				"-f", dockercomposeFilePath,
 				"build",
 			},
 			Env: envValues,
@@ -130,6 +136,7 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 			WorkingDir: "/build",
 			Cmd: []string{
 				"-p", d.project,
+				"-f", dockercomposeFilePath,
 				"up",
 			},
 			Env: envValues,
@@ -168,6 +175,9 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error
 
 	// @TODO: support configuration
 	dockerFilePath := "Dockerfile"
+	if d.buildFilePath != "" {
+		dockerFilePath = d.buildFilePath
+	}
 
 	// Build image
 	imageName := "inertia-build/" + d.project

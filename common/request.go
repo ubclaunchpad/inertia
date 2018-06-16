@@ -14,14 +14,14 @@ const (
 	DaemonProjectPath = "/app/host/project"
 )
 
-// DaemonRequest is the configurable body of a request to the daemon.
-type DaemonRequest struct {
-	Stream     bool        `json:"stream"`
-	Container  string      `json:"container,omitempty"`
-	Project    string      `json:"project"`
-	BuildType  string      `json:"build_type"`
-	GitOptions *GitOptions `json:"git_options"`
-	Secret     string      `json:"secret"`
+// UpRequest is the configurable body of a UP request to the daemon.
+type UpRequest struct {
+	Stream        bool        `json:"stream"`
+	Project       string      `json:"project"`
+	BuildType     string      `json:"build_type"`
+	BuildFilePath string      `json:"build_file_path"`
+	GitOptions    *GitOptions `json:"git_options"`
+	WebHookSecret string      `json:"webhook_secret"`
 }
 
 // GitOptions represents GitHub-related deployment options

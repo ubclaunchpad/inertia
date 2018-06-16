@@ -7,20 +7,21 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
-
-	"github.com/ubclaunchpad/inertia/client"
 )
 
 var (
-	errInvalidUser    = errors.New("invalid user")
-	errInvalidAddress = errors.New("invalid IP address")
+	errInvalidUser          = errors.New("invalid user")
+	errInvalidAddress       = errors.New("invalid IP address")
+	errInvalidBuildType     = errors.New("invalid build type")
+	errInvalidBuildFilePath = errors.New("invalid buildfile path")
 )
 
 // addRemoteWalkthough is the command line walkthrough that asks
 // users for RemoteVPS details. It is up to the caller to save config.
 func addRemoteWalkthrough(
-	in io.Reader, config *client.Config,
+	in io.Reader, config *cfg.Config,
 	name, port, sshPort, currBranch string,
 ) error {
 	homeEnvVar := os.Getenv("HOME")
@@ -71,17 +72,45 @@ func addRemoteWalkthrough(
 	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
-	config.AddRemote(&client.RemoteVPS{
+	config.AddRemote(&cfg.RemoteVPS{
 		Name:    name,
 		IP:      address,
 		User:    user,
 		PEM:     pemLoc,
 		Branch:  branch,
 		SSHPort: sshPort,
-		Daemon: &client.DaemonConfig{
-			Port:   port,
-			Secret: secret,
+		Daemon: &cfg.DaemonConfig{
+			Port:          port,
+			WebHookSecret: secret,
 		},
 	})
 	return nil
+}
+
+// addProjectWalkthrough is the command line walkthrough that asks for details
+// about the project the user intends to deploy
+func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string, inputErr error) {
+	println("Please enter the build type of your project - this could be one of:")
+	println("  - docker-compose")
+	println("  - dockerfile")
+	println("  - herokuish")
+
+	var response string
+	_, err := fmt.Fscanln(in, &response)
+	if err != nil {
+		return "", "", errInvalidBuildType
+	}
+	buildType = response
+
+	switch buildType {
+	case "herokuish":
+		return
+	default:
+		_, err := fmt.Fscanln(in, &response)
+		if err != nil {
+			return "", "", errInvalidBuildFilePath
+		}
+		buildFilePath = response
+	}
+	return
 }

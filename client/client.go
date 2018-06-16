@@ -6,39 +6,43 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
 
 	"github.com/gorilla/websocket"
+	"github.com/ubclaunchpad/inertia/cfg"
 	internal "github.com/ubclaunchpad/inertia/client/internal"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
 // Client manages a deployment
 type Client struct {
-	*RemoteVPS
-	version   string
-	project   string
-	buildType string
-	sshRunner SSHSession
+	*cfg.RemoteVPS
+	version       string
+	project       string
+	buildType     string
+	buildFilePath string
+	sshRunner     SSHSession
 }
 
 // NewClient sets up a client to communicate to the daemon at
 // the given named remote.
-func NewClient(remoteName string, config *Config) (*Client, bool) {
+func NewClient(remoteName string, config *cfg.Config) (*Client, bool) {
 	remote, found := config.GetRemote(remoteName)
 	if !found {
 		return nil, false
 	}
 
 	return &Client{
-		RemoteVPS: remote,
-		version:   config.Version,
-		project:   config.Project,
-		buildType: config.BuildType,
-		sshRunner: NewSSHRunner(remote),
+		RemoteVPS:     remote,
+		version:       config.Version,
+		project:       config.Project,
+		buildType:     config.BuildType,
+		buildFilePath: config.BuildFilePath,
+		sshRunner:     NewSSHRunner(remote),
 	}, true
 }
 
@@ -95,7 +99,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	// Output Webhook url to user.
 	println(">> GitHub WebHook URL (add to https://www.github.com/" + repoName + "/settings/hooks/new): ")
 	println("WebHook Address:  https://" + c.IP + ":" + c.Daemon.Port + "/webhook")
-	println("WebHook Secret:   " + c.Daemon.Secret)
+	println("WebHook Secret:   " + c.Daemon.WebHookSecret)
 	println(`Note that you will have to disable SSH verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
 be able to verify.` + "\n")
@@ -135,6 +139,62 @@ func (c *Client) DaemonDown() error {
 	return nil
 }
 
+// installDocker installs docker on a remote vps.
+func (c *Client) installDocker(session SSHSession) error {
+	installDockerSh, err := internal.Asset("client/scripts/docker.sh")
+	if err != nil {
+		return err
+	}
+
+	// Install docker.
+	cmdStr := string(installDockerSh)
+	_, stderr, err := session.Run(cmdStr)
+	if err != nil {
+		println(stderr.String())
+		return err
+	}
+
+	return nil
+}
+
+// keyGen creates a public-private key-pair on the remote vps
+// and returns the public key.
+func (c *Client) keyGen(session SSHSession) (*bytes.Buffer, error) {
+	scriptBytes, err := internal.Asset("client/scripts/keygen.sh")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create deploy key.
+	result, stderr, err := session.Run(string(scriptBytes))
+
+	if err != nil {
+		log.Println(stderr.String())
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// getDaemonAPIToken returns the daemon API token for RESTful access
+// to the daemon.
+func (c *Client) getDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
+	scriptBytes, err := internal.Asset("client/scripts/token.sh")
+	if err != nil {
+		return "", err
+	}
+	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion)
+
+	stdout, stderr, err := session.Run(daemonCmdStr)
+	if err != nil {
+		log.Println(stderr.String())
+		return "", err
+	}
+
+	// There may be a newline, remove it.
+	return strings.TrimSuffix(stdout.String(), "\n"), nil
+}
+
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
 func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response, error) {
@@ -142,17 +202,17 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 		buildType = c.buildType
 	}
 
-	reqContent := &common.DaemonRequest{
-		Stream:    stream,
-		Project:   c.project,
-		BuildType: buildType,
-		Secret:    c.RemoteVPS.Daemon.Secret,
+	return c.post("/up", &common.UpRequest{
+		Stream:        stream,
+		Project:       c.project,
+		BuildType:     buildType,
+		WebHookSecret: c.RemoteVPS.Daemon.WebHookSecret,
+		BuildFilePath: c.buildFilePath,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
 			Branch:    c.Branch,
 		},
-	}
-	return c.post("/up", reqContent)
+	})
 }
 
 // Down brings the project down on the remote VPS instance specified

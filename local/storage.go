@@ -7,15 +7,31 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-const configFileName = ".inertia.toml"
+const configFileName = "inertia.toml"
 
-// CreateConfigFile returns an error if the config directory
+// InitializeInertiaProject creates the inertia config folder and
+// returns an error if we're not in a git project.
+func InitializeInertiaProject(version, buildType, buildFilePath string) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	err = common.CheckForGit(cwd)
+	if err != nil {
+		return err
+	}
+
+	return createConfigFile(version, buildType, buildFilePath)
+}
+
+// createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func CreateConfigFile(version, buildType string) error {
+func createConfigFile(version, buildType, buildFilePath string) error {
 	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return err
@@ -33,7 +49,7 @@ func CreateConfigFile(version, buildType string) error {
 		if err != nil {
 			return err
 		}
-		config := client.NewConfig(version, filepath.Base(cwd), buildType)
+		config := cfg.NewConfig(version, filepath.Base(cwd), buildType, buildFilePath)
 
 		f, err := os.Create(configFilePath)
 		if err != nil {
@@ -46,24 +62,9 @@ func CreateConfigFile(version, buildType string) error {
 	return nil
 }
 
-// InitializeInertiaProject creates the inertia config folder and
-// returns an error if we're not in a git project.
-func InitializeInertiaProject(version, buildType string) error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	err = common.CheckForGit(cwd)
-	if err != nil {
-		return err
-	}
-
-	return CreateConfigFile(version, buildType)
-}
-
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
-func GetProjectConfigFromDisk() (*client.Config, string, error) {
+func GetProjectConfigFromDisk() (*cfg.Config, string, error) {
 	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return nil, "", err
@@ -77,7 +78,7 @@ func GetProjectConfigFromDisk() (*client.Config, string, error) {
 		return nil, configFilePath, err
 	}
 
-	var cfg client.Config
+	var cfg cfg.Config
 	err = toml.Unmarshal(raw, &cfg)
 	if err != nil {
 		return nil, configFilePath, err

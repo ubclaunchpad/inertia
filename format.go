@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -46,7 +46,7 @@ func formatStatus(s *common.DeploymentStatus) string {
 	return statusString
 }
 
-func formatRemoteDetails(remote *client.RemoteVPS) string {
+func formatRemoteDetails(remote *cfg.RemoteVPS) string {
 	remoteString := fmt.Sprintf("Remote %s: \n", remote.Name)
 	remoteString += fmt.Sprintf(" - Deployed Branch:   %s\n", remote.Branch)
 	remoteString += fmt.Sprintf(" - IP Address:        %s\n", remote.IP)
