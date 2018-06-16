@@ -15,14 +15,16 @@ import (
 func TestSetConfig(t *testing.T) {
 	deployment := &Deployment{}
 	deployment.SetConfig(DeploymentConfig{
-		ProjectName: "wow",
-		Branch:      "amazing",
-		BuildType:   "best",
+		ProjectName:   "wow",
+		Branch:        "amazing",
+		BuildType:     "best",
+		BuildFilePath: "/robertcompose.yml",
 	})
 
 	assert.Equal(t, "wow", deployment.project)
 	assert.Equal(t, "amazing", deployment.branch)
 	assert.Equal(t, "best", deployment.buildType)
+	assert.Equal(t, "/robertcompose.yml", deployment.buildFilePath)
 }
 
 func TestDeployMockSkipUpdateIntegration(t *testing.T) {

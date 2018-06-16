@@ -206,7 +206,7 @@ func TestUp(t *testing.T) {
 		body, err := ioutil.ReadAll(req.Body)
 		assert.Nil(t, err)
 		defer req.Body.Close()
-		var upReq common.DaemonRequest
+		var upReq common.UpRequest
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)

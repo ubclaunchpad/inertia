@@ -15,7 +15,7 @@ const configFileName = ".inertia.toml"
 
 // CreateConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func CreateConfigFile(version, buildType string) error {
+func CreateConfigFile(version, buildType, buildFilePath string) error {
 	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func CreateConfigFile(version, buildType string) error {
 		if err != nil {
 			return err
 		}
-		config := client.NewConfig(version, filepath.Base(cwd), buildType)
+		config := client.NewConfig(version, filepath.Base(cwd), buildType, buildFilePath)
 
 		f, err := os.Create(configFilePath)
 		if err != nil {
@@ -48,7 +48,7 @@ func CreateConfigFile(version, buildType string) error {
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func InitializeInertiaProject(version, buildType string) error {
+func InitializeInertiaProject(version, buildType, buildFilePath string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func InitializeInertiaProject(version, buildType string) error {
 		return err
 	}
 
-	return CreateConfigFile(version, buildType)
+	return CreateConfigFile(version, buildType, buildFilePath)
 }
 
 // GetProjectConfigFromDisk returns the current project's configuration.

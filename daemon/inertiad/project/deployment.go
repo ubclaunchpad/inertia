@@ -40,9 +40,10 @@ type Deployer interface {
 type Deployment struct {
 	directory string
 
-	project   string
-	branch    string
-	buildType string
+	project       string
+	branch        string
+	buildType     string
+	buildFilePath string
 
 	builders         map[string]Builder
 	containerStopper containers.ContainerStopper
@@ -56,12 +57,13 @@ type Deployment struct {
 
 // DeploymentConfig is used to configure Deployment
 type DeploymentConfig struct {
-	ProjectName  string
-	BuildType    string
-	RemoteURL    string
-	Branch       string
-	PemFilePath  string
-	DatabasePath string
+	ProjectName   string
+	BuildType     string
+	BuildFilePath string
+	RemoteURL     string
+	Branch        string
+	PemFilePath   string
+	DatabasePath  string
 }
 
 // NewDeployment creates a new deployment
@@ -124,6 +126,9 @@ func (d *Deployment) SetConfig(cfg DeploymentConfig) {
 	}
 	if cfg.BuildType != "" {
 		d.buildType = cfg.BuildType
+	}
+	if cfg.BuildFilePath != "" {
+		d.buildFilePath = cfg.BuildFilePath
 	}
 }
 

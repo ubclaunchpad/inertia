@@ -18,25 +18,28 @@ func GenerateRandomString() (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
-// CheckForDockerCompose returns error if current directory is a
+// CheckForDockerCompose returns false if current directory is a
 // not a docker-compose project
 func CheckForDockerCompose(cwd string) bool {
 	dockerComposeYML := filepath.Join(cwd, "docker-compose.yml")
-	dockerComposeYAML := filepath.Join(cwd, "docker-compose.yaml")
 	_, err := os.Stat(dockerComposeYML)
-	YMLnotPresent := os.IsNotExist(err)
-	_, err = os.Stat(dockerComposeYAML)
-	YAMLnotPresent := os.IsNotExist(err)
-	return !(YMLnotPresent && YAMLnotPresent)
+	return !os.IsNotExist(err)
 }
 
-// CheckForDockerfile returns error if current directory is a
+// CheckForDockerfile returns false if current directory is a
 // not a Dockerfile project
 func CheckForDockerfile(cwd string) bool {
 	dockerfilePath := filepath.Join(cwd, "Dockerfile")
 	_, err := os.Stat(dockerfilePath)
-	dockerfileNotPresent := os.IsNotExist(err)
-	return !dockerfileNotPresent
+	return !os.IsNotExist(err)
+}
+
+// CheckForProcfile returns false if current directory is not a
+// Heroku project
+func CheckForProcfile(cwd string) bool {
+	procfilePath := filepath.Join(cwd, "Procfile")
+	_, err := os.Stat(procfilePath)
+	return !os.IsNotExist(err)
 }
 
 // RemoveContents removes all files within given directory, returns nil if successful

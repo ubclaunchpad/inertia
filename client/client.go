@@ -19,10 +19,11 @@ import (
 // Client manages a deployment
 type Client struct {
 	*RemoteVPS
-	version   string
-	project   string
-	buildType string
-	sshRunner SSHSession
+	version       string
+	project       string
+	buildType     string
+	buildFilePath string
+	sshRunner     SSHSession
 }
 
 // NewClient sets up a client to communicate to the daemon at
@@ -34,11 +35,12 @@ func NewClient(remoteName string, config *Config) (*Client, bool) {
 	}
 
 	return &Client{
-		RemoteVPS: remote,
-		version:   config.Version,
-		project:   config.Project,
-		buildType: config.BuildType,
-		sshRunner: NewSSHRunner(remote),
+		RemoteVPS:     remote,
+		version:       config.Version,
+		project:       config.Project,
+		buildType:     config.BuildType,
+		buildFilePath: config.BuildFilePath,
+		sshRunner:     NewSSHRunner(remote),
 	}, true
 }
 
@@ -142,17 +144,17 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 		buildType = c.buildType
 	}
 
-	reqContent := &common.DaemonRequest{
-		Stream:    stream,
-		Project:   c.project,
-		BuildType: buildType,
-		Secret:    c.RemoteVPS.Daemon.Secret,
+	return c.post("/up", &common.UpRequest{
+		Stream:        stream,
+		Project:       c.project,
+		BuildType:     buildType,
+		Secret:        c.RemoteVPS.Daemon.Secret,
+		BuildFilePath: c.buildFilePath,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
 			Branch:    c.Branch,
 		},
-	}
-	return c.post("/up", reqContent)
+	})
 }
 
 // Down brings the project down on the remote VPS instance specified

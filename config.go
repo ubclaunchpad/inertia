@@ -37,7 +37,8 @@ to succeed.`,
 		}
 
 		// Determine best build type for project
-		buildType := "herokuish"
+		var buildType string
+		var buildFilePath string
 		cwd, err := os.Getwd()
 		if err != nil {
 			log.Fatal(err)
@@ -47,13 +48,21 @@ to succeed.`,
 		if common.CheckForDockerCompose(cwd) {
 			println("docker-compose project detected")
 			buildType = "docker-compose"
+			buildFilePath = "docker-compose.yml"
 		} else if common.CheckForDockerfile(cwd) {
 			println("Dockerfile project detected")
 			buildType = "dockerfile"
+			buildFilePath = "Dockefile"
+		} else if common.CheckForProcfile(cwd) {
+			println("Heroku project detected")
+			buildType = "herokuish"
+			buildFilePath = "Procfile"
+		} else {
+			println("No build file detected - please enter the relative path to your build file")
 		}
 
 		// Hello world config file!
-		err = local.InitializeInertiaProject(version, buildType)
+		err = local.InitializeInertiaProject(version, buildType, buildFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}

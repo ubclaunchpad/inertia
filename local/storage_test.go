@@ -9,7 +9,7 @@ import (
 )
 
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := CreateConfigFile("test", "dockerfile")
+	err := CreateConfigFile("test", "dockerfile", "")
 	assert.Nil(t, err)
 	config, configPath, err := GetProjectConfigFromDisk()
 	assert.Nil(t, err)

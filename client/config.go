@@ -16,19 +16,21 @@ var (
 
 // Config represents the current projects configuration.
 type Config struct {
-	Version   string       `toml:"version"`
-	Project   string       `toml:"project-name"`
-	BuildType string       `toml:"build-type"`
-	Remotes   []*RemoteVPS `toml:"remote"`
+	Version       string       `toml:"version"`
+	Project       string       `toml:"project-name"`
+	BuildType     string       `toml:"build-type"`
+	BuildFilePath string       `toml:"build-file-path"`
+	Remotes       []*RemoteVPS `toml:"remote"`
 }
 
 // NewConfig sets up Inertia configuration with given properties
-func NewConfig(version, project, buildType string) *Config {
+func NewConfig(version, project, buildType, buildFilePath string) *Config {
 	return &Config{
-		Version:   version,
-		Project:   project,
-		BuildType: buildType,
-		Remotes:   make([]*RemoteVPS, 0),
+		Version:       version,
+		Project:       project,
+		BuildType:     buildType,
+		BuildFilePath: buildFilePath,
+		Remotes:       make([]*RemoteVPS, 0),
 	}
 }
 
