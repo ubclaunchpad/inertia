@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/cobra"
+
 	"github.com/BurntSushi/toml"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
@@ -97,7 +99,7 @@ func GetConfigFilePath() (string, error) {
 }
 
 // GetClient returns a local deployment setup
-func GetClient(name string) (*client.Client, error) {
+func GetClient(name string, cmd ...*cobra.Command) (*client.Client, error) {
 	config, _, err := GetProjectConfigFromDisk()
 	if err != nil {
 		return nil, err
@@ -106,6 +108,14 @@ func GetClient(name string) (*client.Client, error) {
 	client, found := client.NewClient(name, config)
 	if !found {
 		return nil, errors.New("Remote not found")
+	}
+
+	if len(cmd) == 1 && cmd[0] != nil {
+		verify, err := cmd[0].Flags().GetBool("verify-ssl")
+		if err != nil {
+			return nil, err
+		}
+		client.SetSSLVerification(verify)
 	}
 
 	return client, nil

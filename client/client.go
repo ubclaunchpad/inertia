@@ -25,7 +25,9 @@ type Client struct {
 	project       string
 	buildType     string
 	buildFilePath string
-	sshRunner     SSHSession
+
+	sshRunner SSHSession
+	verifySSL bool
 }
 
 // NewClient sets up a client to communicate to the daemon at
@@ -44,6 +46,12 @@ func NewClient(remoteName string, config *cfg.Config) (*Client, bool) {
 		buildFilePath: config.BuildFilePath,
 		sshRunner:     NewSSHRunner(remote),
 	}, true
+}
+
+// SetSSLVerification toggles whether client should verify all SSL communications.
+// This requires a signed certificate to be in use on your daemon.
+func (c *Client) SetSSLVerification(verify bool) {
+	c.verifySSL = verify
 }
 
 // BootstrapRemote configures a remote vps for continuous deployment
@@ -265,7 +273,7 @@ func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
 	header.Set("Authorization", "Bearer "+c.Daemon.Token)
 
 	// Attempt websocket connection
-	socket, resp, err := buildWebSocketDialer().Dial(url.String(), header)
+	socket, resp, err := buildWebSocketDialer(c.verifySSL).Dial(url.String(), header)
 	if err == websocket.ErrBadHandshake {
 		return nil, fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
 	}
@@ -323,7 +331,7 @@ func (c *Client) get(endpoint string, queries map[string]string) (*http.Response
 		encodeQuery(req.URL, queries)
 	}
 
-	client := buildHTTPSClient()
+	client := buildHTTPSClient(c.verifySSL)
 	return client.Do(req)
 }
 
@@ -346,7 +354,7 @@ func (c *Client) post(endpoint string, requestBody interface{}) (*http.Response,
 		return nil, err
 	}
 
-	client := buildHTTPSClient()
+	client := buildHTTPSClient(c.verifySSL)
 	return client.Do(req)
 }
 
@@ -371,21 +379,21 @@ func (c *Client) buildRequest(method string, endpoint string, payload io.Reader)
 	return req, nil
 }
 
-func buildHTTPSClient() *http.Client {
+func buildHTTPSClient(verify bool) *http.Client {
 	return &http.Client{Transport: &http.Transport{
 		// Our certificates are self-signed, so will raise
 		// a warning - currently, we ask our client to ignore
 		// this warning.
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: !verify,
 		},
 	}}
 }
 
-func buildWebSocketDialer() *websocket.Dialer {
+func buildWebSocketDialer(verify bool) *websocket.Dialer {
 	return &websocket.Dialer{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: !verify,
 		},
 	}
 }

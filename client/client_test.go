@@ -102,6 +102,7 @@ func TestGetNewClient(t *testing.T) {
 	assert.Equal(t, "/some/pem/file", cli.RemoteVPS.PEM)
 	assert.Equal(t, "test", cli.version)
 	assert.Equal(t, "robert-writes-bad-code", cli.project)
+	assert.False(t, cli.verifySSL)
 }
 
 func TestInstallDocker(t *testing.T) {
@@ -146,6 +147,7 @@ func TestKeyGen(t *testing.T) {
 func TestBootstrap(t *testing.T) {
 	session := &mockSSHRunner{}
 	client := getIntegrationClient(session)
+	assert.False(t, client.verifySSL)
 
 	dockerScript, err := ioutil.ReadFile("scripts/docker.sh")
 	assert.Nil(t, err)
@@ -196,6 +198,7 @@ func TestBootstrapIntegration(t *testing.T) {
 	_, err = ioutil.ReadAll(resp.Body)
 	assert.Nil(t, err)
 }
+
 func TestUp(t *testing.T) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
@@ -225,6 +228,7 @@ func TestUp(t *testing.T) {
 	defer testServer.Close()
 
 	d := getMockClient(testServer)
+	assert.False(t, d.verifySSL)
 	resp, err := d.Up("myremote.git", "docker-compose", false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
