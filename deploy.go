@@ -101,11 +101,10 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		reset := deepCopy(cmdDeploymentReset)
 		cmd.AddCommand(reset)
 
-		// Attach a "stream" option on all commands, even if it doesn't
-		// do anything for some commands yet.
+		// Attach a "short" option on all commands
 		cmd.PersistentFlags().BoolP(
-			"stream", "s", false,
-			"Stream output from daemon - doesn't do anything on some commands.",
+			"short", "s", false,
+			"Don't stream output from command",
 		)
 		cmdRoot.AddCommand(cmd)
 	}
@@ -125,7 +124,7 @@ var cmdDeploymentUp = &cobra.Command{
 		}
 
 		// Get flags
-		stream, err := cmd.Flags().GetBool("stream")
+		short, err := cmd.Flags().GetBool("short")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -143,13 +142,13 @@ var cmdDeploymentUp = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp, err := deployment.Up(origin.Config().URLs[0], buildType, stream)
+		resp, err := deployment.Up(origin.Config().URLs[0], buildType, !short)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer resp.Body.Close()
 
-		if !stream {
+		if short {
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
@@ -274,7 +273,7 @@ var cmdDeploymentLogs = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		stream, err := cmd.Flags().GetBool("stream")
+		short, err := cmd.Flags().GetBool("short")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -284,7 +283,7 @@ var cmdDeploymentLogs = &cobra.Command{
 			container = args[0]
 		}
 
-		if !stream {
+		if short {
 			resp, err := deployment.Logs(container)
 			if err != nil {
 				log.Fatal(err)
