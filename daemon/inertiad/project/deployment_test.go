@@ -115,19 +115,16 @@ func TestGetBranch(t *testing.T) {
 }
 
 func TestCompareRemotes(t *testing.T) {
+	urlVariations := []string{
+		"https://github.com/ubclaunchpad/inertia.git",
+		"git://github.com/ubclaunchpad/inertia.git",
+	}
+
 	// Traverse back down to root directory of repository
 	repo, err := git.PlainOpen("../../../")
 	assert.Nil(t, err)
 
 	deployment := &Deployment{repo: repo}
-
-	urlVariations := []string{
-		"git@github.com:ubclaunchpad/inertia.git",
-		"https://github.com/ubclaunchpad/inertia.git",
-		"git://github.com/ubclaunchpad/inertia.git",
-		"git://github.com/ubclaunchpad/inertia",
-	}
-
 	for _, url := range urlVariations {
 		err = deployment.CompareRemotes(url)
 		assert.Nil(t, err)

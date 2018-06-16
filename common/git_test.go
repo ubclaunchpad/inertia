@@ -9,10 +9,21 @@ import (
 )
 
 var remoteURLVariations = []string{
+	// SSH URL
 	"git@github.com:ubclaunchpad/inertia.git",
+	"git@gitlab.com:ubclaunchpad/inertia.git",
+	"git@bitbucket.org:ubclaunchpad/inertia.git",
+
+	// Github URL Variations
 	"https://github.com/ubclaunchpad/inertia.git",
 	"git://github.com/ubclaunchpad/inertia.git",
-	"git://github.com/ubclaunchpad/inertia",
+
+	// Gitlab URL Variations
+	"https://gitlab.com/ubclaunchpad/inertia.git",
+	"git://gitlab.com/ubclaunchpad/inertia.git",
+
+	// Bitbucket URL Variations
+	"https://ubclaunchpad@bitbucket.org/ubclaunchpad/inertia.git",
 }
 
 func TestCheckForGit(t *testing.T) {
@@ -24,8 +35,9 @@ func TestCheckForGit(t *testing.T) {
 }
 
 func TestGetSSHRemoteURL(t *testing.T) {
+	validSSH := remoteURLVariations[0:3]
 	for _, url := range remoteURLVariations {
-		assert.Equal(t, remoteURLVariations[0], GetSSHRemoteURL(url))
+		assert.Contains(t, validSSH, GetSSHRemoteURL(url))
 	}
 }
 
