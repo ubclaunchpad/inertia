@@ -55,3 +55,44 @@ func TestRemoteAddWalkthroughFailure(t *testing.T) {
 	err = addRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	assert.Equal(t, errInvalidAddress, err)
 }
+
+func Test_addProjectWalkthrough(t *testing.T) {
+	tests := []struct {
+		name              string
+		wantBuildType     string
+		wantBuildFilePath string
+		wantErr           bool
+	}{
+		{"invalid build type", "", "", true},
+		{"invalid build file path", "dockerfile", "", true},
+		{"herokuish", "herokuish", "", false},
+		{"docker-compose", "docker-compose", "docker-compose.yml", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in, err := ioutil.TempFile("", "")
+			assert.Nil(t, err)
+			defer in.Close()
+
+			fmt.Fprintln(in, tt.wantBuildType)
+			fmt.Fprintln(in, tt.wantBuildFilePath)
+
+			_, err = in.Seek(0, io.SeekStart)
+			assert.Nil(t, err)
+
+			gotBuildType, gotBuildFilePath, err := addProjectWalkthrough(in)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("addProjectWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				if gotBuildType != tt.wantBuildType {
+					t.Errorf("addProjectWalkthrough() gotBuildType = %v, want %v", gotBuildType, tt.wantBuildType)
+				}
+				if gotBuildFilePath != tt.wantBuildFilePath {
+					t.Errorf("addProjectWalkthrough() gotBuildFilePath = %v, want %v", gotBuildFilePath, tt.wantBuildFilePath)
+				}
+			}
+		})
+	}
+}

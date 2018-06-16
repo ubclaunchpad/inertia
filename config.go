@@ -52,13 +52,16 @@ to succeed.`,
 		} else if common.CheckForDockerfile(cwd) {
 			println("Dockerfile project detected")
 			buildType = "dockerfile"
-			buildFilePath = "Dockefile"
+			buildFilePath = "Dockerfile"
 		} else if common.CheckForProcfile(cwd) {
 			println("Heroku project detected")
 			buildType = "herokuish"
-			buildFilePath = "Procfile"
 		} else {
-			println("No build file detected - please enter the relative path to your build file")
+			println("No build file detected")
+			buildType, buildFilePath, err = addProjectWalkthrough(os.Stdin)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		// Hello world config file!

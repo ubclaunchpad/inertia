@@ -13,8 +13,10 @@ import (
 )
 
 var (
-	errInvalidUser    = errors.New("invalid user")
-	errInvalidAddress = errors.New("invalid IP address")
+	errInvalidUser          = errors.New("invalid user")
+	errInvalidAddress       = errors.New("invalid IP address")
+	errInvalidBuildType     = errors.New("invalid build type")
+	errInvalidBuildFilePath = errors.New("invalid buildfile path")
 )
 
 // addRemoteWalkthough is the command line walkthrough that asks
@@ -84,4 +86,32 @@ func addRemoteWalkthrough(
 		},
 	})
 	return nil
+}
+
+// addProjectWalkthrough is the command line walkthrough that asks for details
+// about the project the user intends to deploy
+func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string, inputErr error) {
+	println("Please enter the build type of your project - this could be one of:")
+	println("  - docker-compose")
+	println("  - dockerfile")
+	println("  - herokuish")
+
+	var response string
+	_, err := fmt.Fscanln(in, &response)
+	if err != nil {
+		return "", "", errInvalidBuildType
+	}
+	buildType = response
+
+	switch buildType {
+	case "herokuish":
+		return
+	default:
+		_, err := fmt.Fscanln(in, &response)
+		if err != nil {
+			return "", "", errInvalidBuildFilePath
+		}
+		buildFilePath = response
+	}
+	return
 }

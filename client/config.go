@@ -25,13 +25,16 @@ type Config struct {
 
 // NewConfig sets up Inertia configuration with given properties
 func NewConfig(version, project, buildType, buildFilePath string) *Config {
-	return &Config{
-		Version:       version,
-		Project:       project,
-		BuildType:     buildType,
-		BuildFilePath: buildFilePath,
-		Remotes:       make([]*RemoteVPS, 0),
+	cfg := &Config{
+		Version:   version,
+		Project:   project,
+		BuildType: buildType,
+		Remotes:   make([]*RemoteVPS, 0),
 	}
+	if buildFilePath != "" {
+		cfg.BuildFilePath = buildFilePath
+	}
+	return cfg
 }
 
 // Write writes configuration to Inertia config file at path. Optionally
