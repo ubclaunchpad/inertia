@@ -4,7 +4,7 @@ VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = test
 
-all: prod-deps inertia
+all: prod-deps cli
 
 # List all commands
 .PHONY: ls
@@ -29,12 +29,12 @@ dev-deps:
 	bash test/lint_deps.sh
 
 # Install Inertia with release version
-.PHONY: inertia
+.PHONY: cli
 inertia:
 	go install -ldflags "-X main.Version=$(RELEASE)"
 
 # Install Inertia with git tag as release version
-.PHONY: inertia-tagged
+.PHONY: cli-tagged
 inertia-tagged:
 	go install -ldflags "-X main.Version=$(TAG)"
 
