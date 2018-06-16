@@ -7,9 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
-
-	"github.com/ubclaunchpad/inertia/client"
 )
 
 var (
@@ -22,7 +21,7 @@ var (
 // addRemoteWalkthough is the command line walkthrough that asks
 // users for RemoteVPS details. It is up to the caller to save config.
 func addRemoteWalkthrough(
-	in io.Reader, config *client.Config,
+	in io.Reader, config *cfg.Config,
 	name, port, sshPort, currBranch string,
 ) error {
 	homeEnvVar := os.Getenv("HOME")
@@ -73,14 +72,14 @@ func addRemoteWalkthrough(
 	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
-	config.AddRemote(&client.RemoteVPS{
+	config.AddRemote(&cfg.RemoteVPS{
 		Name:    name,
 		IP:      address,
 		User:    user,
 		PEM:     pemLoc,
 		Branch:  branch,
 		SSHPort: sshPort,
-		Daemon: &client.DaemonConfig{
+		Daemon: &cfg.DaemonConfig{
 			Port:   port,
 			Secret: secret,
 		},

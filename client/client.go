@@ -6,19 +6,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
 
 	"github.com/gorilla/websocket"
+	"github.com/ubclaunchpad/inertia/cfg"
 	internal "github.com/ubclaunchpad/inertia/client/internal"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
 // Client manages a deployment
 type Client struct {
-	*RemoteVPS
+	*cfg.RemoteVPS
 	version       string
 	project       string
 	buildType     string
@@ -28,7 +30,7 @@ type Client struct {
 
 // NewClient sets up a client to communicate to the daemon at
 // the given named remote.
-func NewClient(remoteName string, config *Config) (*Client, bool) {
+func NewClient(remoteName string, config *cfg.Config) (*Client, bool) {
 	remote, found := config.GetRemote(remoteName)
 	if !found {
 		return nil, false
@@ -135,6 +137,62 @@ func (c *Client) DaemonDown() error {
 	}
 
 	return nil
+}
+
+// installDocker installs docker on a remote vps.
+func (c *Client) installDocker(session SSHSession) error {
+	installDockerSh, err := internal.Asset("client/scripts/docker.sh")
+	if err != nil {
+		return err
+	}
+
+	// Install docker.
+	cmdStr := string(installDockerSh)
+	_, stderr, err := session.Run(cmdStr)
+	if err != nil {
+		println(stderr.String())
+		return err
+	}
+
+	return nil
+}
+
+// keyGen creates a public-private key-pair on the remote vps
+// and returns the public key.
+func (c *Client) keyGen(session SSHSession) (*bytes.Buffer, error) {
+	scriptBytes, err := internal.Asset("client/scripts/keygen.sh")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create deploy key.
+	result, stderr, err := session.Run(string(scriptBytes))
+
+	if err != nil {
+		log.Println(stderr.String())
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// getDaemonAPIToken returns the daemon API token for RESTful access
+// to the daemon.
+func (c *Client) getDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
+	scriptBytes, err := internal.Asset("client/scripts/token.sh")
+	if err != nil {
+		return "", err
+	}
+	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion)
+
+	stdout, stderr, err := session.Run(daemonCmdStr)
+	if err != nil {
+		log.Println(stderr.String())
+		return "", err
+	}
+
+	// There may be a newline, remove it.
+	return strings.TrimSuffix(stdout.String(), "\n"), nil
 }
 
 // Up brings the project up on the remote VPS instance specified

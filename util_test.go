@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/cfg"
 )
 
 func TestSetProperty(t *testing.T) {
-	testDaemonConfig := &client.DaemonConfig{
+	testDaemonConfig := &cfg.DaemonConfig{
 		Port:  "8080",
 		Token: "abcdefg",
 	}
 
-	testRemote := &client.RemoteVPS{
+	testRemote := &cfg.RemoteVPS{
 		Name:   "testName",
 		IP:     "1234",
 		User:   "testUser",

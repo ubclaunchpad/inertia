@@ -3,11 +3,13 @@ package client
 import (
 	"bytes"
 	"io"
+
+	"github.com/ubclaunchpad/inertia/cfg"
 )
 
 // mockSSHRunner is a mocked out implementation of SSHSession
 type mockSSHRunner struct {
-	r     *RemoteVPS
+	r     *cfg.RemoteVPS
 	Calls []string
 }
 

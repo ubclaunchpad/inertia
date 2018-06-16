@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/ubclaunchpad/inertia/cfg"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -29,7 +30,7 @@ type SSHRunner struct {
 }
 
 // NewSSHRunner returns a new SSHRunner
-func NewSSHRunner(r *RemoteVPS) *SSHRunner {
+func NewSSHRunner(r *cfg.RemoteVPS) *SSHRunner {
 	if r != nil {
 		return &SSHRunner{
 			pem:     r.PEM,

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
@@ -33,7 +34,7 @@ func CreateConfigFile(version, buildType, buildFilePath string) error {
 		if err != nil {
 			return err
 		}
-		config := client.NewConfig(version, filepath.Base(cwd), buildType, buildFilePath)
+		config := cfg.NewConfig(version, filepath.Base(cwd), buildType, buildFilePath)
 
 		f, err := os.Create(configFilePath)
 		if err != nil {
@@ -63,7 +64,7 @@ func InitializeInertiaProject(version, buildType, buildFilePath string) error {
 
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
-func GetProjectConfigFromDisk() (*client.Config, string, error) {
+func GetProjectConfigFromDisk() (*cfg.Config, string, error) {
 	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return nil, "", err
@@ -77,7 +78,7 @@ func GetProjectConfigFromDisk() (*client.Config, string, error) {
 		return nil, configFilePath, err
 	}
 
-	var cfg client.Config
+	var cfg cfg.Config
 	err = toml.Unmarshal(raw, &cfg)
 	if err != nil {
 		return nil, configFilePath, err
