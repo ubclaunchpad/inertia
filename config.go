@@ -69,7 +69,7 @@ to succeed.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-		println("A .inertia.toml configuration file has been created to store")
+		println("An inertia.toml configuration file has been created to store")
 		println("Inertia configuration. It is recommended that you DO NOT commit")
 		println("this file in source control since it will be used to store")
 		println("sensitive information.")
