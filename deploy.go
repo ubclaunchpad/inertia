@@ -21,9 +21,17 @@ import (
 
 // Initialize "inertia [REMOTE] [COMMAND]" commands
 func init() {
+	// This is the only place configuration is read every time an `inertia`
+	// command is run - check version here.
 	config, _, err := local.GetProjectConfigFromDisk()
 	if err != nil {
 		return
+	}
+	if config.Version != Version {
+		fmt.Printf(
+			"[WARNING] Configuration version '%s' does not match your Inertia CLI version '%s'\n",
+			config.Version, Version,
+		)
 	}
 
 	// Make a new command for each remote with all associated
