@@ -3,7 +3,6 @@ package local
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -112,9 +111,9 @@ func GetClient(name string, cmd ...*cobra.Command) (*client.Client, error) {
 	}
 
 	if len(cmd) == 1 && cmd[0] != nil {
-		verify, err := cmd[0].Flags().GetBool("verfiy-ssl")
+		verify, err := cmd[0].Flags().GetBool("verify-ssl")
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		client.SetSSLVerification(verify)
 	}
