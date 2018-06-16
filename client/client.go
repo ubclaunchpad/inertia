@@ -385,7 +385,7 @@ func buildHTTPSClient(verify bool) *http.Client {
 		// a warning - currently, we ask our client to ignore
 		// this warning.
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: verify,
+			InsecureSkipVerify: !verify,
 		},
 	}}
 }
@@ -393,7 +393,7 @@ func buildHTTPSClient(verify bool) *http.Client {
 func buildWebSocketDialer(verify bool) *websocket.Dialer {
 	return &websocket.Dialer{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: verify,
+			InsecureSkipVerify: !verify,
 		},
 	}
 }
