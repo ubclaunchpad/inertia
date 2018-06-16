@@ -21,7 +21,7 @@ type UpRequest struct {
 	BuildType     string      `json:"build_type"`
 	BuildFilePath string      `json:"build_file_path"`
 	GitOptions    *GitOptions `json:"git_options"`
-	Secret        string      `json:"webhook_secret"`
+	WebHookSecret string      `json:"webhook_secret"`
 }
 
 // GitOptions represents GitHub-related deployment options

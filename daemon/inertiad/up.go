@@ -38,7 +38,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	defer logger.Close()
 
-	webhookSecret = upReq.Secret
+	webhookSecret = upReq.WebHookSecret
 
 	// Check for existing git repository, clone if no git repository exists.
 	skipUpdate := false

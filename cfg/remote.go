@@ -13,9 +13,9 @@ type RemoteVPS struct {
 
 // DaemonConfig contains parameters for the Daemon
 type DaemonConfig struct {
-	Port   string `toml:"port"`
-	Token  string `toml:"token"`
-	Secret string `toml:"secret"`
+	Port          string `toml:"port"`
+	Token         string `toml:"token"`
+	WebHookSecret string `toml:"webhook_secret"`
 }
 
 // GetHost creates the user@IP string.

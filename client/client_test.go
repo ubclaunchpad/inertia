@@ -39,9 +39,9 @@ func getMockClient(ts *httptest.Server) *Client {
 		IP:   url,
 		PEM:  "",
 		Daemon: &cfg.DaemonConfig{
-			Port:   port,
-			Secret: "arjan",
-			Token:  fakeAuth,
+			Port:          port,
+			WebHookSecret: "arjan",
+			Token:         fakeAuth,
 		},
 	}
 
@@ -211,7 +211,7 @@ func TestUp(t *testing.T) {
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
-		assert.Equal(t, "arjan", upReq.Secret)
+		assert.Equal(t, "arjan", upReq.WebHookSecret)
 		assert.Equal(t, "test_project", upReq.Project)
 		assert.Equal(t, "docker-compose", upReq.BuildType)
 

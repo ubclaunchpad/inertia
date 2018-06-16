@@ -80,8 +80,8 @@ func addRemoteWalkthrough(
 		Branch:  branch,
 		SSHPort: sshPort,
 		Daemon: &cfg.DaemonConfig{
-			Port:   port,
-			Secret: secret,
+			Port:          port,
+			WebHookSecret: secret,
 		},
 	})
 	return nil

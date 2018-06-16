@@ -99,7 +99,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	// Output Webhook url to user.
 	println(">> GitHub WebHook URL (add to https://www.github.com/" + repoName + "/settings/hooks/new): ")
 	println("WebHook Address:  https://" + c.IP + ":" + c.Daemon.Port + "/webhook")
-	println("WebHook Secret:   " + c.Daemon.Secret)
+	println("WebHook Secret:   " + c.Daemon.WebHookSecret)
 	println(`Note that you will have to disable SSH verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
 be able to verify.` + "\n")
@@ -206,7 +206,7 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 		Stream:        stream,
 		Project:       c.project,
 		BuildType:     buildType,
-		Secret:        c.RemoteVPS.Daemon.Secret,
+		WebHookSecret: c.RemoteVPS.Daemon.WebHookSecret,
 		BuildFilePath: c.buildFilePath,
 		GitOptions: &common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
