@@ -12,11 +12,26 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-const configFileName = ".inertia.toml"
+const configFileName = "inertia.toml"
 
-// CreateConfigFile returns an error if the config directory
+// InitializeInertiaProject creates the inertia config folder and
+// returns an error if we're not in a git project.
+func InitializeInertiaProject(version, buildType, buildFilePath string) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	err = common.CheckForGit(cwd)
+	if err != nil {
+		return err
+	}
+
+	return createConfigFile(version, buildType, buildFilePath)
+}
+
+// createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func CreateConfigFile(version, buildType, buildFilePath string) error {
+func createConfigFile(version, buildType, buildFilePath string) error {
 	configFilePath, err := GetConfigFilePath()
 	if err != nil {
 		return err
@@ -45,21 +60,6 @@ func CreateConfigFile(version, buildType, buildFilePath string) error {
 	}
 
 	return nil
-}
-
-// InitializeInertiaProject creates the inertia config folder and
-// returns an error if we're not in a git project.
-func InitializeInertiaProject(version, buildType, buildFilePath string) error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	err = common.CheckForGit(cwd)
-	if err != nil {
-		return err
-	}
-
-	return CreateConfigFile(version, buildType, buildFilePath)
 }
 
 // GetProjectConfigFromDisk returns the current project's configuration.
