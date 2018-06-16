@@ -99,6 +99,11 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 			"stream", "s", false,
 			"Stream output from daemon - doesn't do anything on some commands.",
 		)
+		// Attach "secure" option on all commands to enable SSL verification
+		cmd.PersistentFlags().Bool(
+			"verify-ssl", false,
+			"Verify SSL communications - requires a signed SSL certificate.",
+		)
 		cmdRoot.AddCommand(cmd)
 	}
 }
@@ -111,7 +116,7 @@ var cmdDeploymentUp = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -178,7 +183,7 @@ var cmdDeploymentDown = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -215,7 +220,7 @@ var cmdDeploymentStatus = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -262,7 +267,7 @@ var cmdDeploymentLogs = &cobra.Command{
 	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -342,7 +347,7 @@ deployment. Provide a relative path to your file.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -426,7 +431,7 @@ remote. Requires Inertia daemon to be active on your remote - do this by
 running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
