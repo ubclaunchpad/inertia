@@ -17,7 +17,7 @@ func main() {
     config := cfg.NewConfig("0.3.0", "inertia-deploy-test", /* ... */)
 
     // Add your remote
-    config.AddRemote(&client.RemoteVPS{Name: "gcloud", /* ... */ })
+    config.AddRemote(&cfg.RemoteVPS{Name: "gcloud", /* ... */ })
 
     // Set up client, remote, and deploy your project
     cli, _ := client.NewClient("gcloud", config)
