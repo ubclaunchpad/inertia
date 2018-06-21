@@ -7,13 +7,13 @@ const styles = {
 };
 
 const mocklogs = [
-  "log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa",
-  "log2asdasdasdasdsdassdasdasdssdasdasdssdasdasdssdasdasdsdsdasds",
-  "log3dasdsdazxcxzsdasdasdssdasdasdssdasdasdssdasdasdsxxxxxxxxxx",
-  "log4dasdsdasdsdasdasdssdasdasdssdasdasdssdasdasdsxzczxczxs",
-  "log5dasdsdaasdsdasdasdssdasdasdssdasdasdssdasdasdsasdasdsds",
-  "log6dasdsdaszsdasdasdssdasdasdssdasdasdssdasdasdsxczxczxczxcwqdqds",
-  "log7dasdsdaxcsdasdasdssdasdasdssdasdasdssdasdasdszxczzxcsds"
+  'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',
+  'log2asdasdasdasdsdassdasdasdssdasdasdssdasdasdssdasdasdsdsdasds',
+  'log3dasdsdazxcxzsdasdasdssdasdasdssdasdasdssdasdasdsxxxxxxxxxx',
+  'log4dasdsdasdsdasdasdssdasdasdssdasdasdssdasdasdsxzczxczxs',
+  'log5dasdsdaasdsdasdasdssdasdasdssdasdasdssdasdasdsasdasdsds',
+  'log6dasdsdaszsdasdasdssdasdasdssdasdasdssdasdasdsxczxczxczxcwqdqds',
+  'log7dasdsdaxcsdasdasdssdasdasdssdasdasdssdasdasdszxczzxcsds',
 ];
 
 class ContainersWrapper extends React.Component {
@@ -23,10 +23,10 @@ class ContainersWrapper extends React.Component {
   }
 
   render() {
-      return (
+    return (
       <div style={styles.container}>
         <h1>Hello!</h1>
-        <TerminalView logs = {mocklogs}></TerminalView>
+        <TerminalView logs={mocklogs} />
       </div>
     );
   }

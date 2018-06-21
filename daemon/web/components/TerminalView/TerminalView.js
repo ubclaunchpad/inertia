@@ -1,35 +1,36 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './index.sass';
 
 const styles = {
   textarea: {
     position: 'relative',
     top: '1px',
-    width:'100%',
+    width: '100%',
     height: '70px',
     color: '#ffffff',
-    backgroundColor:'#212b36',
+    backgroundColor: '#212b36',
     fontSize: '10px',
     resize: 'none',
   },
 };
 
-export default class TerminalViewView extends React.Component {
-    constructor(props) {
-        // Expects logs to be list of string
-        super(props);
-    }
+const TerminalViewView = props =>
+  (
+    <div>
+      <textarea
+        style={styles.textarea}
+        readOnly
+        value={props.logs.reduce((accumulator, currentVal) => accumulator + '\r\n' + currentVal)} />
+    </div>
+  );
 
-    render() {
-      const results = this.props.logs.reduce((accumulator, currentVal) => {return accumulator + "\r\n" + currentVal;})
-      return (
-        <div>
-          <textarea
-          style={styles.textarea}
-          readOnly
-          value = {results}>
-          </textarea>
-        </div>
-      );
-    }
-}
+
+TerminalViewView.propTypes = {
+  logs: PropTypes.string,
+};
+
+export default TerminalViewView;
+
+// AppRegistry.registerComponent('TerminalViewView', () => App);
+
