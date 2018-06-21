@@ -1,9 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './index.sass';
 
 const styles = {
-  textarea: {
+  textArea: {
     position: 'relative',
     top: '1px',
     width: '100%',
@@ -15,22 +14,19 @@ const styles = {
   },
 };
 
-const TerminalViewView = props =>
+const TerminalView = props =>
   (
     <div>
       <textarea
-        style={styles.textarea}
+        style={styles.textArea}
         readOnly
         value={props.logs.reduce((accumulator, currentVal) => accumulator + '\r\n' + currentVal)} />
     </div>
   );
 
 
-TerminalViewView.propTypes = {
-  logs: PropTypes.string,
+TerminalView.propTypes = {
+  logs: PropTypes.array,
 };
 
-export default TerminalViewView;
-
-// AppRegistry.registerComponent('TerminalViewView', () => App);
-
+export default TerminalView;
