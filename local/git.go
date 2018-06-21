@@ -11,18 +11,18 @@ import (
 // GetRepoRemote reads a remote URL
 func GetRepoRemote(remote string) (string, error) {
 	arg := "remote." + remote + ".url"
-	out, err := exec.Command("git", "config", "--get", arg).Output()
+	out, err := exec.Command("git", "config", "--get", arg).CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", errors.New(err.Error() + ": " + string(out))
 	}
 	return strings.TrimSpace(string(out)), nil
 }
 
 // GetRepoCurrentBranch returns the current repository branch
 func GetRepoCurrentBranch() (string, error) {
-	out, err := exec.Command("git", "symbolic-ref", "--short", "HEAD").Output()
+	out, err := exec.Command("git", "symbolic-ref", "--short", "HEAD").CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", errors.New(err.Error() + ": " + string(out))
 	}
 	return strings.TrimSpace(string(out)), nil
 }
