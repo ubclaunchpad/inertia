@@ -28,11 +28,11 @@ var (
 )
 
 var (
-	// specify location of SSL certificate
-	sslDirectory = "/app/host/inertia/config/ssl/"
+	sslDirectory  = os.Getenv("INERTIA_SSL_DIR")  // "/app/host/inertia/config/ssl/"
+	dataDirectory = os.Getenv("INERTIA_DATA_DIR") // "/app/host/inertia/data/"
 
-	userDatabasePath       = "/app/host/inertia/data/users.db"
-	deploymentDatabasePath = "/app/host/inertia/data/project.db"
+	userDatabasePath       = path.Join(dataDirectory, "users.db")
+	deploymentDatabasePath = path.Join(dataDirectory, "project.db")
 )
 
 const (
@@ -40,17 +40,8 @@ const (
 )
 
 // run starts the daemon
-func run(host, port, version, keyPath, certDir, userDir string) {
+func run(host, port, version string) {
 	daemonVersion = version
-	if keyPath != "" {
-		auth.DaemonGithubKeyLocation = keyPath
-	}
-	if certDir != "" {
-		sslDirectory = certDir
-	}
-	if userDir != "" {
-		userDatabasePath = userDir
-	}
 
 	var (
 		daemonSSLCert = path.Join(sslDirectory, "daemon.cert")

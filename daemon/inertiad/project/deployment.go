@@ -19,7 +19,7 @@ import (
 
 var (
 	// directory is the directory the user's deployed project is cloned in
-	directory = "/app/host/inertia/project"
+	directory = os.Getenv("INERTIA_PROJECT_DIR") // "/app/host/inertia/project"
 )
 
 // Deployer does great deploys

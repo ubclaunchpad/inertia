@@ -39,5 +39,15 @@ COPY --from=web-build-env \
     /go/src/github.com/ubclaunchpad/inertia/daemon/web/public/ \
     /daemon/inertia-web
 
+# Directories
+ENV INERTIA_PROJECT_DIR=/app/host/inertia/project/ \
+    INERTIA_SSL_DIR=/app/host/inertia/config/ssl/ \
+    INERTIA_DATA_DIR=/app/host/inertia/data/ \
+    INERTIA_GH_KEY_PATH=/app/host/.ssh/id_rsa_inertia_deploy
+
+# Build tool versions
+ENV INERTIA_DOCKERCOMPOSE=docker/compose:1.21.0 \
+    INERTIA_HEROKUISH=gliderlabs/herokuish:v0.4.0
+
 # Serve the daemon by default.
 ENTRYPOINT ["inertiad", "run"]

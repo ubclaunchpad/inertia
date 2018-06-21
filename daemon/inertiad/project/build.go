@@ -18,13 +18,15 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
-const (
+var (
 	// DockerComposeVersion is the version of docker-compose used
-	DockerComposeVersion = "docker/compose:1.21.0"
+	DockerComposeVersion = os.Getenv("INERTIA_DOCKERCOMPOSE") // "docker/compose:1.21.0"
 
 	// HerokuishVersion is the version of Herokuish used
-	HerokuishVersion = "gliderlabs/herokuish:v0.4.0"
+	HerokuishVersion = os.Getenv("INERTIA_HEROKUISH") // "gliderlabs/herokuish:v0.4.0"
+)
 
+const (
 	// BuildStageName specifies the name of build stage containers
 	BuildStageName = "build"
 )
