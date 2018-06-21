@@ -16,6 +16,11 @@ func TestGetRepoRemote(t *testing.T) {
 }
 
 func TestGetRepoCurrentBranch(t *testing.T) {
+	// This test does not work on Travis, since Travis cloning doesn't always
+	// set up branches correctly (typically detached)
+	if os.Getenv("TRAVIS") == "true" {
+		t.Skip("skipping test because of Travis")
+	}
 	_, err := GetRepoCurrentBranch()
 	if err != nil {
 		fmt.Print(err)
