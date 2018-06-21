@@ -138,16 +138,13 @@ var cmdDeploymentUp = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		repo, err := common.GetLocalRepo()
-		if err != nil {
-			log.Fatal(err)
-		}
 		// TODO: support other remotes
-		origin, err := repo.Remote("origin")
+		url, err := local.GetRepoRemote("origin")
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp, err := deployment.Up(origin.Config().URLs[0], buildType, !short)
+
+		resp, err := deployment.Up(url, buildType, !short)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -408,15 +405,11 @@ for updates to this repository's remote master branch.`,
 		}
 		cli, found := client.NewClient(remoteName, config)
 		if found {
-			repo, err := common.GetLocalRepo()
+			url, err := local.GetRepoRemote("origin")
 			if err != nil {
 				log.Fatal(err)
 			}
-			origin, err := repo.Remote("origin")
-			if err != nil {
-				log.Fatal(err)
-			}
-			repoName := common.ExtractRepository(common.GetSSHRemoteURL(origin.Config().URLs[0]))
+			repoName := common.ExtractRepository(common.GetSSHRemoteURL(url))
 			err = cli.BootstrapRemote(repoName)
 			if err != nil {
 				log.Fatal(err)

@@ -1,8 +1,6 @@
 package common
 
 import (
-	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,14 +22,6 @@ var remoteURLVariations = []string{
 
 	// Bitbucket URL Variations
 	"https://ubclaunchpad@bitbucket.org/ubclaunchpad/inertia.git",
-}
-
-func TestCheckForGit(t *testing.T) {
-	cwd, err := os.Getwd()
-	assert.Nil(t, err)
-	assert.NotEqual(t, nil, CheckForGit(cwd))
-	inertia, _ := path.Split(cwd)
-	assert.Equal(t, nil, CheckForGit(inertia))
 }
 
 func TestGetSSHRemoteURL(t *testing.T) {
