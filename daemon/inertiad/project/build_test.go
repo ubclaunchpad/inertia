@@ -42,6 +42,9 @@ func TestDockerComposeIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
+	DockerComposeVersion = "docker/compose:1.21.0"
+	HerokuishVersion = "gliderlabs/herokuish:v0.4.0"
+
 	cli, err := docker.NewEnvClient()
 	assert.Nil(t, err)
 	defer cli.Close()
@@ -176,6 +179,9 @@ func TestDockerBuildIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
+	DockerComposeVersion = "docker/compose:1.21.0"
+	HerokuishVersion = "gliderlabs/herokuish:v0.4.0"
+
 	cli, err := docker.NewEnvClient()
 	assert.Nil(t, err)
 	defer cli.Close()
@@ -253,6 +259,9 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
+	DockerComposeVersion = "docker/compose:1.21.0"
+	HerokuishVersion = "gliderlabs/herokuish:v0.4.0"
+
 	cli, err := docker.NewEnvClient()
 	assert.Nil(t, err)
 	defer cli.Close()
