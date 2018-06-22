@@ -119,3 +119,10 @@ func GetClient(name string, cmd ...*cobra.Command) (*client.Client, error) {
 
 	return client, nil
 }
+
+// SaveKey writes a key to given path
+func SaveKey(keyMaterial *string, path string) error {
+	// todo
+	println(*keyMaterial)
+	return nil
+}

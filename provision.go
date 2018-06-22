@@ -2,9 +2,10 @@ package main
 
 // initCmd represents the init command
 import (
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
@@ -13,10 +14,14 @@ import (
 
 // Initialize "inertia" commands regarding basic configuration
 func init() {
+	cmdProvisionECS.Flags().StringP(
+		"type", "t", "m3.medium", "The ec2 instance type to instantiate",
+	)
+	cmdProvisionECS.Flags().Bool(
+		"from-env", false, "Load ec2 credentials from ENV",
+	)
 	cmdProvision.AddCommand(cmdProvisionECS)
 	cmdRoot.AddCommand(cmdProvision)
-
-	cmdProvision.Flags().String("version", Version, "Specify Inertia daemon version to use")
 }
 
 var cmdProvision = &cobra.Command{
@@ -38,27 +43,54 @@ var cmdProvisionECS = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		// Load flags
+		fromEnv, _ := cmd.Flags().GetBool("from-env")
+		instanceType, _ := cmd.Flags().GetString("type")
+
 		// Create VPS instance
-		prov := provision.NewEC2Provisioner()
-		// todo: allow config
-		address, err := prov.CreateInstance("m3.medium", "us-east-1b")
+		var prov *provision.EC2Provisioner
+		if fromEnv {
+			id, secret, token, err := enterEC2CredentialsWalkthrough(os.Stdin)
+			if err != nil {
+				log.Fatal(err)
+			}
+			prov = provision.NewEC2Provisioner(id, secret, token)
+		} else {
+			prov = provision.NewEC2ProvisionerFromEnv()
+		}
+
+		// List regions and prompt for input
+		regions, err := prov.ListRegions()
+		if err != nil {
+			log.Fatal(err)
+		}
+		region, err := chooseFromListWalkthrough(os.Stdin, "region", regions)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		// Save new remote
-		branch, err := local.GetRepoCurrentBranch()
+		// List image options and prompt for input
+		images, err := prov.ListImageOptions(region)
 		if err != nil {
 			log.Fatal(err)
 		}
-		config.AddRemote(&cfg.RemoteVPS{
-			Name:    args[0],
-			IP:      address,
-			User:    "", // todo
-			PEM:     "", // todo
-			Branch:  branch,
-			SSHPort: "22",
-		})
+		image, err := chooseFromListWalkthrough(os.Stdin, "image", images)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Create instance from input
+		remote, err := prov.CreateInstance(args[0], image, instanceType, region)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Save new remote to configuration
+		remote.Branch, err = local.GetRepoCurrentBranch()
+		if err != nil {
+			log.Fatal(err)
+		}
+		config.AddRemote(remote)
 		config.Write(path)
 
 		// Init the new instance

@@ -12,6 +12,8 @@ import (
 )
 
 var (
+	errInvalidInput = errors.New("invalid input")
+
 	errInvalidUser          = errors.New("invalid user")
 	errInvalidAddress       = errors.New("invalid IP address")
 	errInvalidBuildType     = errors.New("invalid build type")
@@ -113,4 +115,59 @@ func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string
 		buildFilePath = response
 	}
 	return
+}
+
+func enterEC2CredentialsWalkthrough(in io.Reader) (id, secret, token string, err error) {
+	print("Please enter the following:")
+
+	var response string
+
+	print("\nAWS ID:       ")
+	_, err = fmt.Fscanln(in, &response)
+	if err != nil {
+		return
+	}
+	id = response
+
+	print("\nAWS Secret:   ")
+	_, err = fmt.Fscanln(in, &response)
+	if err != nil {
+		return
+	}
+	secret = response
+
+	print("\nAWS Token:    ")
+	_, err = fmt.Fscanln(in, &response)
+	if err != nil {
+		return
+	}
+	token = response
+	return
+}
+
+func chooseFromListWalkthrough(in io.Reader, optionName string, options []string) (string, error) {
+	fmt.Printf("Available %ss:\n", optionName)
+	for _, o := range options {
+		println("> " + o)
+	}
+	print("Please enter your desired %s:", optionName)
+
+	var response string
+	_, err := fmt.Fscanln(in, &response)
+	if err != nil {
+		return "", errInvalidInput
+	}
+
+	var contains bool
+	for _, r := range options {
+		if r == response {
+			contains = true
+			break
+		}
+	}
+	if !contains {
+		return "", fmt.Errorf("invalid %s - please choose from options", optionName)
+	}
+
+	return response, nil
 }
