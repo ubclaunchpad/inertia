@@ -26,9 +26,9 @@ var cmdProvision = &cobra.Command{
 }
 
 var cmdProvisionECS = &cobra.Command{
-	Use:   "ecs [name]",
-	Short: "Provision a new Amazon ECS instance",
-	Long: `Provision a new Amazon ECS instance and set it up for continuous deployment
+	Use:   "ec2 [name]",
+	Short: "Provision a new Amazon EC2 instance",
+	Long: `Provision a new Amazon EC2 instance and set it up for continuous deployment
 	with Inertia.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
