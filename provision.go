@@ -18,7 +18,7 @@ func init() {
 		"type", "t", "m3.medium", "The ec2 instance type to instantiate",
 	)
 	cmdProvisionECS.Flags().Bool(
-		"from-env", false, "Load ec2 credentials from ENV",
+		"from-env", false, "Load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY to be set.",
 	)
 	cmdProvision.AddCommand(cmdProvisionECS)
 	cmdRoot.AddCommand(cmdProvision)
@@ -49,12 +49,12 @@ var cmdProvisionECS = &cobra.Command{
 
 		// Create VPS instance
 		var prov *provision.EC2Provisioner
-		if fromEnv {
-			id, secret, token, err := enterEC2CredentialsWalkthrough(os.Stdin)
+		if !fromEnv {
+			id, key, err := enterEC2CredentialsWalkthrough(os.Stdin)
 			if err != nil {
 				log.Fatal(err)
 			}
-			prov = provision.NewEC2Provisioner(id, secret, token)
+			prov = provision.NewEC2Provisioner(id, key)
 		} else {
 			prov = provision.NewEC2ProvisionerFromEnv()
 		}

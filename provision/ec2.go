@@ -19,10 +19,10 @@ type EC2Provisioner struct {
 
 // NewEC2Provisioner creates a client to interact with Amazon EC2 using the
 // given credentials
-func NewEC2Provisioner(id, secret, token string) *EC2Provisioner {
+func NewEC2Provisioner(id, key string) *EC2Provisioner {
 	sess := session.Must(session.NewSession())
 	client := ec2.New(sess, &aws.Config{
-		Credentials: credentials.NewStaticCredentials(id, secret, token),
+		Credentials: credentials.NewStaticCredentials(id, key, ""),
 	})
 	return &EC2Provisioner{client: client}
 }

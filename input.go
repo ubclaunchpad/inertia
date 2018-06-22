@@ -117,31 +117,33 @@ func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string
 	return
 }
 
-func enterEC2CredentialsWalkthrough(in io.Reader) (id, secret, token string, err error) {
-	print("Please enter the following:")
+func enterEC2CredentialsWalkthrough(in io.Reader) (id, key string, err error) {
+	print(`To get your credentials:
+	1. Open the IAM console (https://console.aws.amazon.com/iam/home?#home).
+	2. In the navigation pane of the console, choose Users.
+	3. Choose your IAM user name (not the check box).
+	4. Choose the Security credentials tab and then choose Create access key.
+	5. To see the new access key, choose Show. Your credentials will look something like this:
+
+		Access key ID: AKIAIOSFODNN7EXAMPLE
+		Secret access key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+	`)
 
 	var response string
 
-	print("\nAWS ID:       ")
+	print("\nKey ID:       ")
 	_, err = fmt.Fscanln(in, &response)
 	if err != nil {
 		return
 	}
 	id = response
 
-	print("\nAWS Secret:   ")
+	print("\nAccess Key:   ")
 	_, err = fmt.Fscanln(in, &response)
 	if err != nil {
 		return
 	}
-	secret = response
-
-	print("\nAWS Token:    ")
-	_, err = fmt.Fscanln(in, &response)
-	if err != nil {
-		return
-	}
-	token = response
+	key = response
 	return
 }
 
