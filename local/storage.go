@@ -121,8 +121,6 @@ func GetClient(name string, cmd ...*cobra.Command) (*client.Client, error) {
 }
 
 // SaveKey writes a key to given path
-func SaveKey(keyMaterial *string, path string) error {
-	// todo
-	println(*keyMaterial)
-	return nil
+func SaveKey(keyMaterial string, path string) error {
+	return ioutil.WriteFile(path, []byte(keyMaterial), 0644)
 }

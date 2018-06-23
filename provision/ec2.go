@@ -88,7 +88,7 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 
 	// Save key
 	keyPath := filepath.Join(os.Getenv("HOME"), ".ssh", *keyResp.KeyName)
-	err = local.SaveKey(keyResp.KeyMaterial, keyPath)
+	err = local.SaveKey(*keyResp.KeyMaterial, keyPath)
 	if err != nil {
 		return nil, err
 	}
