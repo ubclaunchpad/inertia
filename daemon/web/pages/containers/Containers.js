@@ -1,9 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-const styles = {
-};
-
 class ContainersWrapper extends React.Component {
   constructor(props) {
     super(props);
