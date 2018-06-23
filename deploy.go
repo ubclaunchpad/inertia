@@ -390,7 +390,7 @@ deployment. Provide a relative path to your file.`,
 		}
 
 		// Destination path - todo: allow config
-		projectPath := "/app/host/inertia/project"
+		projectPath := "$HOME/inertia/project"
 		remotePath := path.Join(projectPath, dest)
 
 		// Initiate copy
