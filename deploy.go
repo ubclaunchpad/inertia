@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
@@ -378,10 +379,19 @@ deployment. Provide a relative path to your file.`,
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+		if dest != "" {
+			// If path is defined, dest = [path]/[filename], with the user-provided
+			// path to the source file stripped out
+			dest = path.Join(dest, filepath.Base(args[0]))
+		} else {
+			// Otherwise, dest = [filepath], where [filepath] is what the user
+			// provided to the command
+			dest = args[0]
+		}
 
 		// Destination path - todo: allow config
 		projectPath := "/app/host/inertia/project"
-		remotePath := path.Join(projectPath, dest, args[0])
+		remotePath := path.Join(projectPath, dest)
 
 		// Initiate copy
 		session := client.NewSSHRunner(deployment.RemoteVPS)
