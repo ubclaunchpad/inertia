@@ -5,7 +5,7 @@ go build ./daemon/inertiad
 
 echo "Daemon Token:" $(./inertiad token $(pwd)/test/keys/id_rsa)
 
-./inertiad run 127.0.0.1 \
+eval $(egrep -v '^#' ./test/daemon.env | xargs) ./inertiad run 127.0.0.1 \
     $(pwd)/test/keys/id_rsa \
     $(pwd)/test/certs/ \
     $(pwd)/test/users.db
