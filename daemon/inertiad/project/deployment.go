@@ -163,7 +163,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	// Get config
 	conf, err := d.GetBuildConfiguration()
 	if err != nil {
-		return err
+		fmt.Println(err.Error())
 	}
 
 	// Build project
@@ -278,7 +278,8 @@ func (d *Deployment) GetDataManager() (manager *DeploymentDataManager, found boo
 	return d.dataManager, true
 }
 
-// GetBuildConfiguration returns the build used to build this project
+// GetBuildConfiguration returns the build used to build this project. Returns
+// config without env values if error.
 func (d *Deployment) GetBuildConfiguration() (*build.Config, error) {
 	conf := &build.Config{
 		Name:           d.project,
@@ -286,10 +287,14 @@ func (d *Deployment) GetBuildConfiguration() (*build.Config, error) {
 		BuildFilePath:  d.buildFilePath,
 		BuildDirectory: d.directory,
 	}
-	env, err := d.dataManager.GetEnvVariables(true)
-	if err != nil {
-		return conf, err
+	if d.dataManager != nil {
+		env, err := d.dataManager.GetEnvVariables(true)
+		if err != nil {
+			return conf, err
+		}
+		conf.EnvValues = env
+	} else {
+		return conf, errors.New("no data manager")
 	}
-	conf.EnvValues = env
 	return conf, nil
 }
