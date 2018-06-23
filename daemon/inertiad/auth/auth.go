@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	// DaemonGithubKeyLocation is the default path of the deploy key
+	// DaemonGithubKeyLocation is the default path of the generated deploy key
 	DaemonGithubKeyLocation = os.Getenv("INERTIA_GH_KEY_PATH") //"/app/host/.ssh/id_rsa_inertia_deploy"
 )
 
