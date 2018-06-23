@@ -4,16 +4,6 @@ import { connect } from 'react-redux';
 const styles = {
 };
 
-// const mocklogs = [
-//   'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',
-//   'log2asdasdasdasdsdassdasdasdssdasdasdssdasdasdssdasdasdsdsdasds',
-//   'log3dasdsdazxcxzsdasdasdssdasdasdssdasdasdssdasdasdsxxxxxxxxxx',
-//   'log4dasdsdasdsdasdasdssdasdasdssdasdasdssdasdasdsxzczxczxs',
-//   'log5dasdsdaasdsdasdasdssdasdasdssdasdasdssdasdasdsasdasdsds',
-//   'log6dasdsdaszsdasdasdssdasdasdssdasdasdssdasdasdsxczxczxczxcwqdqds',
-//   'log7dasdsdaxcsdasdasdssdasdasdssdasdasdssdasdasdszxczzxcsds',
-// ];
-
 class ContainersWrapper extends React.Component {
   constructor(props) {
     super(props);
