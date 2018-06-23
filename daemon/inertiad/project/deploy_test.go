@@ -77,6 +77,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 
 	// Execute build
 	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
 	time.Sleep(10 * time.Second)
@@ -204,6 +205,7 @@ func TestDockerBuildIntegration(t *testing.T) {
 
 	// Execute build
 	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
 	time.Sleep(10 * time.Second)
@@ -275,6 +277,7 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 
 	// Execute build
 	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
 	time.Sleep(10 * time.Second)
