@@ -11,7 +11,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 const configFileName = "inertia.toml"
@@ -23,7 +22,7 @@ func InitializeInertiaProject(version, buildType, buildFilePath string) error {
 	if err != nil {
 		return err
 	}
-	err = common.CheckForGit(cwd)
+	err = checkForGit(cwd)
 	if err != nil {
 		return err
 	}

@@ -9,9 +9,6 @@ const (
 
 	// Stream is a constant used in HTTP GET query strings
 	Stream = "stream"
-
-	// DaemonProjectPath is the path the daemon uses for the deployed project
-	DaemonProjectPath = "/app/host/project"
 )
 
 // UpRequest is the configurable body of a UP request to the daemon.
