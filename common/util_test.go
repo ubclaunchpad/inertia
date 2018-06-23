@@ -19,7 +19,6 @@ func TestCheckForDockerCompose(t *testing.T) {
 	assert.Nil(t, err)
 
 	ymlPath := path.Join(cwd, "/docker-compose.yml")
-	yamlPath := path.Join(cwd, "/docker-compose.yaml")
 
 	// No!
 	b := CheckForDockerCompose(cwd)
@@ -32,14 +31,6 @@ func TestCheckForDockerCompose(t *testing.T) {
 	b = CheckForDockerCompose(cwd)
 	assert.True(t, b)
 	os.Remove(ymlPath)
-
-	// Yes!
-	file, err = os.Create(yamlPath)
-	assert.Nil(t, err)
-	file.Close()
-	b = CheckForDockerCompose(cwd)
-	assert.True(t, b)
-	os.Remove(yamlPath)
 }
 
 func TestCheckForDockerfile(t *testing.T) {
@@ -57,6 +48,25 @@ func TestCheckForDockerfile(t *testing.T) {
 	assert.Nil(t, err)
 	file.Close()
 	b = CheckForDockerfile(cwd)
+	assert.True(t, b)
+	os.Remove(path)
+}
+
+func TestCheckForProcfile(t *testing.T) {
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+
+	path := path.Join(cwd, "/Procfile")
+
+	// No!
+	b := CheckForProcfile(cwd)
+	assert.False(t, b)
+
+	// Yes!
+	file, err := os.Create(path)
+	assert.Nil(t, err)
+	file.Close()
+	b = CheckForProcfile(cwd)
 	assert.True(t, b)
 	os.Remove(path)
 }

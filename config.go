@@ -37,7 +37,8 @@ to succeed.`,
 		}
 
 		// Determine best build type for project
-		buildType := "herokuish"
+		var buildType string
+		var buildFilePath string
 		cwd, err := os.Getwd()
 		if err != nil {
 			log.Fatal(err)
@@ -47,17 +48,28 @@ to succeed.`,
 		if common.CheckForDockerCompose(cwd) {
 			println("docker-compose project detected")
 			buildType = "docker-compose"
+			buildFilePath = "docker-compose.yml"
 		} else if common.CheckForDockerfile(cwd) {
 			println("Dockerfile project detected")
 			buildType = "dockerfile"
+			buildFilePath = "Dockerfile"
+		} else if common.CheckForProcfile(cwd) {
+			println("Heroku project detected")
+			buildType = "herokuish"
+		} else {
+			println("No build file detected")
+			buildType, buildFilePath, err = addProjectWalkthrough(os.Stdin)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		// Hello world config file!
-		err = local.InitializeInertiaProject(version, buildType)
+		err = local.InitializeInertiaProject(version, buildType, buildFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
-		println("A .inertia.toml configuration file has been created to store")
+		println("An inertia.toml configuration file has been created to store")
 		println("Inertia configuration. It is recommended that you DO NOT commit")
 		println("this file in source control since it will be used to store")
 		println("sensitive information.")

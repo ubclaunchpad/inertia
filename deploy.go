@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
@@ -21,9 +22,17 @@ import (
 
 // Initialize "inertia [REMOTE] [COMMAND]" commands
 func init() {
+	// This is the only place configuration is read every time an `inertia`
+	// command is run - check version here.
 	config, _, err := local.GetProjectConfigFromDisk()
 	if err != nil {
 		return
+	}
+	if config.Version != Version {
+		fmt.Printf(
+			"[WARNING] Configuration version '%s' does not match your Inertia CLI version '%s'\n",
+			config.Version, Version,
+		)
 	}
 
 	// Make a new command for each remote with all associated
@@ -76,6 +85,7 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		cmd.AddCommand(ssh)
 
 		send := deepCopy(cmdDeploymentSendFile)
+		send.Flags().StringP("dest", "d", "", "Path relative from project root to send file to")
 		send.Flags().StringP("permissions", "p", "0655", "Permissions settings for file")
 		cmd.AddCommand(send)
 
@@ -93,11 +103,15 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		reset := deepCopy(cmdDeploymentReset)
 		cmd.AddCommand(reset)
 
-		// Attach a "stream" option on all commands, even if it doesn't
-		// do anything for some commands yet.
+		// Attach a "short" option on all commands
 		cmd.PersistentFlags().BoolP(
-			"stream", "s", false,
-			"Stream output from daemon - doesn't do anything on some commands.",
+			"short", "s", false,
+			"Don't stream output from command",
+		)
+		// Attach "secure" option on all commands to enable SSL verification
+		cmd.PersistentFlags().Bool(
+			"verify-ssl", false,
+			"Verify SSL communications - requires a signed SSL certificate.",
 		)
 		cmdRoot.AddCommand(cmd)
 	}
@@ -111,13 +125,13 @@ var cmdDeploymentUp = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// Get flags
-		stream, err := cmd.Flags().GetBool("stream")
+		short, err := cmd.Flags().GetBool("short")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -126,22 +140,19 @@ var cmdDeploymentUp = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		repo, err := common.GetLocalRepo()
-		if err != nil {
-			log.Fatal(err)
-		}
 		// TODO: support other remotes
-		origin, err := repo.Remote("origin")
+		url, err := local.GetRepoRemote("origin")
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp, err := deployment.Up(origin.Config().URLs[0], buildType, stream)
+
+		resp, err := deployment.Up(url, buildType, !short)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer resp.Body.Close()
 
-		if !stream {
+		if short {
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
@@ -178,7 +189,7 @@ var cmdDeploymentDown = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -215,7 +226,7 @@ var cmdDeploymentStatus = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -262,11 +273,11 @@ var cmdDeploymentLogs = &cobra.Command{
 	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
-		stream, err := cmd.Flags().GetBool("stream")
+		short, err := cmd.Flags().GetBool("short")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -276,7 +287,7 @@ var cmdDeploymentLogs = &cobra.Command{
 			container = args[0]
 		}
 
-		if !stream {
+		if short {
 			resp, err := deployment.Logs(container)
 			if err != nil {
 				log.Fatal(err)
@@ -342,7 +353,7 @@ deployment. Provide a relative path to your file.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -363,8 +374,24 @@ deployment. Provide a relative path to your file.`,
 			log.Fatal(err.Error())
 		}
 
-		// Destination path
-		remotePath := path.Join(common.DaemonProjectPath, args[0])
+		// Get flag for destination
+		dest, err := cmd.Flags().GetString("dest")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		if dest != "" {
+			// If path is defined, dest = [path]/[filename], with the user-provided
+			// path to the source file stripped out
+			dest = path.Join(dest, filepath.Base(args[0]))
+		} else {
+			// Otherwise, dest = [filepath], where [filepath] is what the user
+			// provided to the command
+			dest = args[0]
+		}
+
+		// Destination path - todo: allow config
+		projectPath := "/app/host/inertia/project"
+		remotePath := path.Join(projectPath, dest)
 
 		// Initiate copy
 		session := client.NewSSHRunner(deployment.RemoteVPS)
@@ -373,7 +400,7 @@ deployment. Provide a relative path to your file.`,
 			log.Fatal(err.Error())
 		}
 
-		fmt.Println("File", args[0], "has been copied to", common.DaemonProjectPath, "on remote", remoteName)
+		fmt.Println("File", args[0], "has been copied to", remotePath, "on remote", remoteName)
 	},
 }
 
@@ -396,15 +423,11 @@ for updates to this repository's remote master branch.`,
 		}
 		cli, found := client.NewClient(remoteName, config)
 		if found {
-			repo, err := common.GetLocalRepo()
+			url, err := local.GetRepoRemote("origin")
 			if err != nil {
 				log.Fatal(err)
 			}
-			origin, err := repo.Remote("origin")
-			if err != nil {
-				log.Fatal(err)
-			}
-			repoName := common.ExtractRepository(common.GetSSHRemoteURL(origin.Config().URLs[0]))
+			repoName := common.ExtractRepository(common.GetSSHRemoteURL(url))
 			err = cli.BootstrapRemote(repoName)
 			if err != nil {
 				log.Fatal(err)
@@ -426,7 +449,7 @@ remote. Requires Inertia daemon to be active on your remote - do this by
 running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName)
+		deployment, err := local.GetClient(remoteName, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}

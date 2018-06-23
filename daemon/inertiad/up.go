@@ -22,7 +22,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	var upReq common.DaemonRequest
+	var upReq common.UpRequest
 	err = json.Unmarshal(body, &upReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -38,19 +38,20 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	defer logger.Close()
 
-	webhookSecret = upReq.Secret
+	webhookSecret = upReq.WebHookSecret
 
 	// Check for existing git repository, clone if no git repository exists.
 	skipUpdate := false
 	if deployment == nil {
 		logger.Println("No deployment detected")
 		d, err := project.NewDeployment(project.DeploymentConfig{
-			ProjectName:  upReq.Project,
-			BuildType:    upReq.BuildType,
-			RemoteURL:    gitOpts.RemoteURL,
-			Branch:       gitOpts.Branch,
-			PemFilePath:  auth.DaemonGithubKeyLocation,
-			DatabasePath: deploymentDatabasePath,
+			ProjectName:   upReq.Project,
+			BuildType:     upReq.BuildType,
+			BuildFilePath: upReq.BuildFilePath,
+			RemoteURL:     gitOpts.RemoteURL,
+			Branch:        gitOpts.Branch,
+			PemFilePath:   auth.DaemonGithubKeyLocation,
+			DatabasePath:  deploymentDatabasePath,
 		}, logger)
 		if err != nil {
 			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)

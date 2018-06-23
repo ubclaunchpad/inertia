@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -33,14 +34,14 @@ func getMockClient(ts *httptest.Server) *Client {
 		port = "8080"
 	}
 
-	mockRemote := &RemoteVPS{
+	mockRemote := &cfg.RemoteVPS{
 		User: "",
 		IP:   url,
 		PEM:  "",
-		Daemon: &DaemonConfig{
-			Port:   port,
-			Secret: "arjan",
-			Token:  fakeAuth,
+		Daemon: &cfg.DaemonConfig{
+			Port:          port,
+			WebHookSecret: "arjan",
+			Token:         fakeAuth,
 		},
 	}
 
@@ -51,12 +52,12 @@ func getMockClient(ts *httptest.Server) *Client {
 }
 
 func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
-	remote := &RemoteVPS{
+	remote := &cfg.RemoteVPS{
 		IP:      "127.0.0.1",
 		PEM:     "../test/keys/id_rsa",
 		User:    "root",
 		SSHPort: "69",
-		Daemon: &DaemonConfig{
+		Daemon: &cfg.DaemonConfig{
 			Port: "4303",
 		},
 	}
@@ -76,18 +77,18 @@ func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
 }
 
 func TestGetNewClient(t *testing.T) {
-	config := &Config{
+	config := &cfg.Config{
 		Version: "test",
 		Project: "robert-writes-bad-code",
-		Remotes: make([]*RemoteVPS, 0),
+		Remotes: make([]*cfg.RemoteVPS, 0),
 	}
-	testRemote := &RemoteVPS{
+	testRemote := &cfg.RemoteVPS{
 		Name:    "test",
 		IP:      "12343",
 		User:    "bobheadxi",
 		PEM:     "/some/pem/file",
 		SSHPort: "22",
-		Daemon: &DaemonConfig{
+		Daemon: &cfg.DaemonConfig{
 			Port: "8080",
 		},
 	}
@@ -101,6 +102,7 @@ func TestGetNewClient(t *testing.T) {
 	assert.Equal(t, "/some/pem/file", cli.RemoteVPS.PEM)
 	assert.Equal(t, "test", cli.version)
 	assert.Equal(t, "robert-writes-bad-code", cli.project)
+	assert.False(t, cli.verifySSL)
 }
 
 func TestInstallDocker(t *testing.T) {
@@ -145,6 +147,7 @@ func TestKeyGen(t *testing.T) {
 func TestBootstrap(t *testing.T) {
 	session := &mockSSHRunner{}
 	client := getIntegrationClient(session)
+	assert.False(t, client.verifySSL)
 
 	dockerScript, err := ioutil.ReadFile("scripts/docker.sh")
 	assert.Nil(t, err)
@@ -195,6 +198,7 @@ func TestBootstrapIntegration(t *testing.T) {
 	_, err = ioutil.ReadAll(resp.Body)
 	assert.Nil(t, err)
 }
+
 func TestUp(t *testing.T) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
@@ -206,11 +210,11 @@ func TestUp(t *testing.T) {
 		body, err := ioutil.ReadAll(req.Body)
 		assert.Nil(t, err)
 		defer req.Body.Close()
-		var upReq common.DaemonRequest
+		var upReq common.UpRequest
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
-		assert.Equal(t, "arjan", upReq.Secret)
+		assert.Equal(t, "arjan", upReq.WebHookSecret)
 		assert.Equal(t, "test_project", upReq.Project)
 		assert.Equal(t, "docker-compose", upReq.BuildType)
 
@@ -224,6 +228,7 @@ func TestUp(t *testing.T) {
 	defer testServer.Close()
 
 	d := getMockClient(testServer)
+	assert.False(t, d.verifySSL)
 	resp, err := d.Up("myremote.git", "docker-compose", false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

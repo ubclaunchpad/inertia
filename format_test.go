@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -48,7 +48,7 @@ func TestFormatStatusNoDeployment(t *testing.T) {
 }
 
 func TestFormatRemoteDetails(t *testing.T) {
-	client := &client.RemoteVPS{
+	client := &cfg.RemoteVPS{
 		Name:   "bob",
 		Branch: "great",
 		User:   "tree",
