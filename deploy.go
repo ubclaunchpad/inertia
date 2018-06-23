@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/ubclaunchpad/inertia/common"
@@ -84,6 +85,7 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		cmd.AddCommand(ssh)
 
 		send := deepCopy(cmdDeploymentSendFile)
+		send.Flags().StringP("dest", "d", "", "Path relative from project root to send file to")
 		send.Flags().StringP("permissions", "p", "0655", "Permissions settings for file")
 		cmd.AddCommand(send)
 
@@ -372,8 +374,24 @@ deployment. Provide a relative path to your file.`,
 			log.Fatal(err.Error())
 		}
 
-		// Destination path
-		remotePath := path.Join(common.DaemonProjectPath, args[0])
+		// Get flag for destination
+		dest, err := cmd.Flags().GetString("dest")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		if dest != "" {
+			// If path is defined, dest = [path]/[filename], with the user-provided
+			// path to the source file stripped out
+			dest = path.Join(dest, filepath.Base(args[0]))
+		} else {
+			// Otherwise, dest = [filepath], where [filepath] is what the user
+			// provided to the command
+			dest = args[0]
+		}
+
+		// Destination path - todo: allow config
+		projectPath := "/app/host/inertia/project"
+		remotePath := path.Join(projectPath, dest)
 
 		// Initiate copy
 		session := client.NewSSHRunner(deployment.RemoteVPS)
@@ -382,7 +400,7 @@ deployment. Provide a relative path to your file.`,
 			log.Fatal(err.Error())
 		}
 
-		fmt.Println("File", args[0], "has been copied to", common.DaemonProjectPath, "on remote", remoteName)
+		fmt.Println("File", args[0], "has been copied to", remotePath, "on remote", remoteName)
 	},
 }
 
