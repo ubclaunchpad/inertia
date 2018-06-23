@@ -21,7 +21,7 @@ func (m *MockBuilder) Build(string, *build.Config, *docker.Client, io.Writer) (f
 	return m.builder, nil
 }
 
-func (m *MockBuilder) GetBuildStageName() string { return "build " }
+func (m *MockBuilder) GetBuildStageName() string { return "build" }
 
 func TestSetConfig(t *testing.T) {
 	deployment := &Deployment{}
@@ -113,6 +113,7 @@ func TestGetStatusIntegration(t *testing.T) {
 	deployment := &Deployment{
 		repo:      repo,
 		buildType: "test",
+		builder:   &MockBuilder{},
 	}
 	status, err := deployment.GetStatus(cli)
 	assert.Nil(t, err)
