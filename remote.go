@@ -7,7 +7,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
@@ -62,17 +61,12 @@ file. Specify a VPS name.`,
 
 		port, _ := cmd.Flags().GetString("port")
 		sshPort, _ := cmd.Flags().GetString("sshPort")
-
-		repo, err := common.GetLocalRepo()
+		branch, err := local.GetRepoCurrentBranch()
 		if err != nil {
 			log.Fatal(err)
 		}
-		head, err := repo.Head()
-		if err != nil {
-			log.Fatal(err)
-		}
-		branch := head.Name().Short()
 
+		// Start prompts and save configuration
 		err = addRemoteWalkthrough(os.Stdin, config, args[0], port, sshPort, branch)
 		if err != nil {
 			log.Fatal(err)
