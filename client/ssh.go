@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/ubclaunchpad/inertia/cfg"
 	"golang.org/x/crypto/ssh"
@@ -124,14 +124,15 @@ func (runner *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions
 	}
 	reader := bytes.NewReader(contents)
 
-	// Send file contents
-	filename := path.Base(remotePath)
-	directory := path.Dir(remotePath)
+	// Set up
+	filename := filepath.Base(remotePath)
+	directory := filepath.Dir(remotePath)
 	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
 	if err != nil {
 		return err
 	}
 
+	// Send file contents
 	go func() {
 		w, _ := session.StdinPipe()
 		defer w.Close()
@@ -139,7 +140,7 @@ func (runner *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions
 		io.Copy(w, reader)
 		fmt.Fprintln(w, "\x00")
 	}()
-	session.Run("/usr/bin/scp -t " + directory)
+	session.Run("mkdir -p " + directory + "; /usr/bin/scp -t " + directory)
 	return nil
 }
 
