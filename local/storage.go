@@ -11,20 +11,12 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/common"
 )
-
-// GetConfigFilePath returns the absolute path of the config file.
-func GetConfigFilePath(relPath string) (string, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(path, relPath), nil
-}
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func InitializeInertiaProject(version, buildType, buildFilePath string) error {
+func InitializeInertiaProject(configPath, version, buildType, buildFilePath string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -34,13 +26,13 @@ func InitializeInertiaProject(version, buildType, buildFilePath string) error {
 		return err
 	}
 
-	return createConfigFile(version, buildType, buildFilePath)
+	return createConfigFile(configPath, version, buildType, buildFilePath)
 }
 
 // createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func createConfigFile(version, buildType, buildFilePath string) error {
-	configFilePath, err := GetConfigFilePath("inertia.toml")
+func createConfigFile(configPath, version, buildType, buildFilePath string) error {
+	configFilePath, err := common.GetFullPath(configPath)
 	if err != nil {
 		return err
 	}
@@ -73,7 +65,7 @@ func createConfigFile(version, buildType, buildFilePath string) error {
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
 func GetProjectConfigFromDisk(relPath string) (*cfg.Config, string, error) {
-	configFilePath, err := GetConfigFilePath(relPath)
+	configFilePath, err := common.GetFullPath(relPath)
 	if err != nil {
 		return nil, "", err
 	}

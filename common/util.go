@@ -8,6 +8,15 @@ import (
 	"path/filepath"
 )
 
+// GetFullPath returns the absolute path of the config file.
+func GetFullPath(relPath string) (string, error) {
+	path, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(path, relPath), nil
+}
+
 // GenerateRandomString creates a rand.Reader-generated
 // string for use with simple secrets and identifiers
 func GenerateRandomString() (string, error) {

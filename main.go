@@ -12,7 +12,7 @@ var (
 	Version string
 
 	// ConfigFilePath is the relative path to Inertia's configuration file
-	ConfigFilePath string
+	ConfigFilePath = "inertia.toml"
 )
 
 func getVersion() string {

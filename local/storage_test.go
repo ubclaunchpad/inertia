@@ -9,7 +9,7 @@ import (
 )
 
 func TestInitializeInertiaProjetFail(t *testing.T) {
-	err := InitializeInertiaProject("", "", "")
+	err := InitializeInertiaProject("inertia.toml", "", "", "")
 	assert.NotNil(t, err)
 }
 
@@ -19,11 +19,11 @@ func TestGetConfigFail(t *testing.T) {
 }
 
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := createConfigFile("test", "dockerfile", "")
+	err := createConfigFile("inertia.toml", "test", "dockerfile", "")
 	assert.Nil(t, err)
 
 	// Already exists
-	err = createConfigFile("test", "dockerfile", "")
+	err = createConfigFile("inertia.toml", "test", "dockerfile", "")
 	assert.NotNil(t, err)
 
 	// Get config and add remotes
