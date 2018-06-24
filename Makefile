@@ -30,12 +30,12 @@ dev-deps:
 
 # Install Inertia with release version
 .PHONY: cli
-inertia:
+cli:
 	go install -ldflags "-X main.Version=$(RELEASE)"
 
 # Install Inertia with git tag as release version
 .PHONY: cli-tagged
-inertia-tagged:
+cli-tagged:
 	go install -ldflags "-X main.Version=$(TAG)"
 
 # Remove Inertia binaries
