@@ -15,7 +15,7 @@ import (
 // Initialize "inertia" commands regarding basic configuration
 func init() {
 	cmdProvisionECS.Flags().StringP(
-		"type", "t", "m3.medium", "The ec2 instance type to instantiate",
+		"type", "t", "t2.small", "The ec2 instance type to instantiate",
 	)
 	cmdProvisionECS.Flags().Bool(
 		"from-env", false, "Load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY to be set.",
