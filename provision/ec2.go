@@ -1,11 +1,15 @@
 package provision
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/ubclaunchpad/inertia/cfg"
@@ -94,8 +98,8 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 	}
 
 	// Start up instance
-	resp, err := p.client.RunInstances(&ec2.RunInstancesInput{
-		ImageId:      aws.String(imageID), // todo: allow config
+	runResp, err := p.client.RunInstances(&ec2.RunInstancesInput{
+		ImageId:      aws.String(imageID),
 		InstanceType: aws.String(instanceType),
 		MinCount:     aws.Int64(1),
 		MaxCount:     aws.Int64(1),
@@ -105,9 +109,41 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 		return nil, err
 	}
 
-	// Set instance metadata
+	// Get instance, checking every 3 seconds and occasionally asking the user
+	// if they would like to continue waiting
+	c := ec2metadata.New(session.New(), &p.client.Config)
+	attempts := 0
+	for !c.Available() {
+		attempts++
+		if attempts < 10 {
+			println("Metadata not yet available... trying again")
+			time.Sleep(3 * time.Second)
+		} else {
+			print("Would you like to continue waiting? (y/n)")
+			var response string
+			_, err := fmt.Scanln(&response)
+			print("\n")
+			if err != nil {
+				log.Fatal("Invalid response - aborting.")
+			}
+			if response == "y" {
+				attempts = 0
+			} else {
+				log.Fatal("Aborting.")
+				break
+			}
+		}
+	}
+
+	// Get metadata
+	publicHostname, err := c.GetMetadata("public-hostname")
+	if err != nil {
+		return nil, err
+	}
+
+	// Set some instance tags for convenience
 	_, err = p.client.CreateTags(&ec2.CreateTagsInput{
-		Resources: []*string{resp.Instances[0].InstanceId},
+		Resources: []*string{runResp.Instances[0].InstanceId},
 		Tags: []*ec2.Tag{
 			{
 				Key:   aws.String("Name"),
@@ -126,8 +162,8 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 	// Return remote configuration
 	return &cfg.RemoteVPS{
 		Name:    name,
-		IP:      "", // todo
-		User:    "",
+		IP:      publicHostname,
+		User:    "ec2-user",
 		PEM:     keyPath,
 		SSHPort: "22",
 	}, nil
