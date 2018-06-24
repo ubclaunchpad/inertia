@@ -3,6 +3,7 @@ package provision
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -129,6 +130,34 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Loop until intance is running
+	attempts := 0
+	for true {
+		attempts++
+		println("Checking status of requested instance...")
+		// Request instance status
+		result, err := p.client.DescribeInstances(&ec2.DescribeInstancesInput{
+			InstanceIds: []*string{runResp.Instances[0].InstanceId},
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(result.Reservations) == 0 || len(result.Reservations[0].Instances) == 0 {
+			// A reservation corresponds to a command to start instances
+			time.Sleep(3 * time.Second)
+			continue
+		} else if *result.Reservations[0].Instances[0].State.Code != 16 {
+			// Code 16 indicates instance is running
+			println("Instance status: " + result.Reservations[0].Instances[0].State.GoString())
+			time.Sleep(3 * time.Second)
+			continue
+		} else {
+			// Code 16 means we can continue!
+			println("Instance is running!")
+			break
+		}
 	}
 
 	// Return remote configuration
