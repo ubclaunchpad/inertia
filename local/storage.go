@@ -13,7 +13,14 @@ import (
 	"github.com/ubclaunchpad/inertia/client"
 )
 
-const configFileName = "inertia.toml"
+// GetConfigFilePath returns the absolute path of the config file.
+func GetConfigFilePath(relPath string) (string, error) {
+	path, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(path, relPath), nil
+}
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
@@ -33,7 +40,7 @@ func InitializeInertiaProject(version, buildType, buildFilePath string) error {
 // createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
 func createConfigFile(version, buildType, buildFilePath string) error {
-	configFilePath, err := GetConfigFilePath()
+	configFilePath, err := GetConfigFilePath("inertia.toml")
 	if err != nil {
 		return err
 	}
@@ -65,8 +72,8 @@ func createConfigFile(version, buildType, buildFilePath string) error {
 
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
-func GetProjectConfigFromDisk() (*cfg.Config, string, error) {
-	configFilePath, err := GetConfigFilePath()
+func GetProjectConfigFromDisk(relPath string) (*cfg.Config, string, error) {
+	configFilePath, err := GetConfigFilePath(relPath)
 	if err != nil {
 		return nil, "", err
 	}
@@ -88,18 +95,9 @@ func GetProjectConfigFromDisk() (*cfg.Config, string, error) {
 	return &cfg, configFilePath, err
 }
 
-// GetConfigFilePath returns the absolute path of the config file.
-func GetConfigFilePath() (string, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(path, configFileName), nil
-}
-
 // GetClient returns a local deployment setup
-func GetClient(name string, cmd ...*cobra.Command) (*client.Client, error) {
-	config, _, err := GetProjectConfigFromDisk()
+func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, error) {
+	config, _, err := GetProjectConfigFromDisk(relPath)
 	if err != nil {
 		return nil, err
 	}
