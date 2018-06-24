@@ -49,7 +49,7 @@ file. Specify a VPS name.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk()
+		config, path, err := local.GetProjectConfigFromDisk(ConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -88,7 +88,7 @@ var cmdListRemotes = &cobra.Command{
 	Long:  `Lists all currently configured remotes.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		config, _, err := local.GetProjectConfigFromDisk()
+		config, _, err := local.GetProjectConfigFromDisk(ConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -109,7 +109,7 @@ var cmdRemoveRemote = &cobra.Command{
 	Long:  `Remove a remote from Inertia's configuration file.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, path, err := local.GetProjectConfigFromDisk()
+		config, path, err := local.GetProjectConfigFromDisk(ConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -135,7 +135,7 @@ var cmdShowRemote = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, _, err := local.GetProjectConfigFromDisk()
+		config, _, err := local.GetProjectConfigFromDisk(ConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -156,7 +156,7 @@ var cmdSetRemoteProperty = &cobra.Command{
 	Args:  cobra.MinimumNArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk()
+		config, path, err := local.GetProjectConfigFromDisk(ConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
