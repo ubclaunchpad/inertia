@@ -160,12 +160,20 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 		}
 	}
 
+	// Get branch for remote setup
+	branch, err := local.GetRepoCurrentBranch()
+	if err != nil {
+		println("failed to set branch - defaulting to 'master'")
+		branch = "master"
+	}
+
 	// Return remote configuration
 	return &cfg.RemoteVPS{
 		Name:    name,
 		IP:      *runResp.Instances[0].PublicIpAddress,
-		User:    "ec2-user",
+		User:    "ec2-user", // default user
 		PEM:     keyPath,
+		Branch:  branch,
 		SSHPort: "22",
 	}, nil
 }
