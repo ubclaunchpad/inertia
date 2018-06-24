@@ -1,15 +1,11 @@
 package provision
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/ubclaunchpad/inertia/cfg"
@@ -24,7 +20,9 @@ type EC2Provisioner struct {
 // NewEC2Provisioner creates a client to interact with Amazon EC2 using the
 // given credentials
 func NewEC2Provisioner(id, key string) *EC2Provisioner {
-	sess := session.Must(session.NewSession())
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 	client := ec2.New(sess, &aws.Config{
 		Credentials: credentials.NewStaticCredentials(id, key, ""),
 	})
@@ -36,7 +34,9 @@ func NewEC2Provisioner(id, key string) *EC2Provisioner {
 // NewEC2ProvisionerFromEnv creates a client to interact with Amazon EC2 using
 // credentials from environment
 func NewEC2ProvisionerFromEnv() *EC2Provisioner {
-	sess := session.Must(session.NewSession())
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 	client := ec2.New(sess, &aws.Config{
 		Credentials: credentials.NewEnvCredentials(),
 	})
@@ -113,38 +113,6 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 		return nil, err
 	}
 
-	// Get instance, checking every 3 seconds and occasionally asking the user
-	// if they would like to continue waiting
-	c := ec2metadata.New(session.New(), &p.client.Config)
-	attempts := 0
-	for !c.Available() {
-		attempts++
-		if attempts < 10 {
-			println("Metadata not yet available... trying again")
-			time.Sleep(3 * time.Second)
-		} else {
-			print("Would you like to continue waiting? (y/n)")
-			var response string
-			_, err := fmt.Scanln(&response)
-			print("\n")
-			if err != nil {
-				log.Fatal("Invalid response - aborting.")
-			}
-			if response == "y" {
-				attempts = 0
-			} else {
-				log.Fatal("Aborting.")
-				break
-			}
-		}
-	}
-
-	// Get metadata
-	publicHostname, err := c.GetMetadata("public-hostname")
-	if err != nil {
-		return nil, err
-	}
-
 	// Set some instance tags for convenience
 	_, err = p.client.CreateTags(&ec2.CreateTagsInput{
 		Resources: []*string{runResp.Instances[0].InstanceId},
@@ -166,7 +134,7 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 	// Return remote configuration
 	return &cfg.RemoteVPS{
 		Name:    name,
-		IP:      publicHostname,
+		IP:      *runResp.Instances[0].PublicIpAddress,
 		User:    "ec2-user",
 		PEM:     keyPath,
 		SSHPort: "22",
