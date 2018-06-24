@@ -26,14 +26,14 @@ func init() {
 
 var cmdProvision = &cobra.Command{
 	Use:   "provision",
-	Short: "Provision a new VPS set up for Inertia",
-	Long:  `Provision a new VPS instance set up for continuous deployment with Inertia.`,
+	Short: "[BETA] Provision a new VPS setup for Inertia",
+	Long:  `[BETA] Provision a new VPS instance set up for continuous deployment with Inertia.`,
 }
 
 var cmdProvisionECS = &cobra.Command{
 	Use:   "ec2 [name]",
-	Short: "Provision a new Amazon EC2 instance",
-	Long: `Provision a new Amazon EC2 instance and set it up for continuous deployment
+	Short: "[BETA] Provision a new Amazon EC2 instance",
+	Long: `[BETA] Provision a new Amazon EC2 instance and set it up for continuous deployment
 	with Inertia.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
