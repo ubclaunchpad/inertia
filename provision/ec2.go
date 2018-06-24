@@ -28,6 +28,8 @@ func NewEC2Provisioner(id, key string) *EC2Provisioner {
 	client := ec2.New(sess, &aws.Config{
 		Credentials: credentials.NewStaticCredentials(id, key, ""),
 	})
+	// Workaround for a strange bug where client instantiates with "https://ec2..amazonaws.com"
+	client.Endpoint = "https://ec2.amazonaws.com"
 	return &EC2Provisioner{client: client}
 }
 
@@ -38,6 +40,8 @@ func NewEC2ProvisionerFromEnv() *EC2Provisioner {
 	client := ec2.New(sess, &aws.Config{
 		Credentials: credentials.NewEnvCredentials(),
 	})
+	// Workaround for a strange bug where client instantiates with "https://ec2..amazonaws.com"
+	client.Endpoint = "https://ec2.amazonaws.com"
 	return &EC2Provisioner{client: client}
 }
 
