@@ -13,6 +13,13 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
+)
+
+const (
+	DockerComposeVersion = "docker/compose:1.21.0"
+	HerokuishVersion     = "gliderlabs/herokuish:v0.4.0"
 )
 
 // killTestContainers is a helper for tests - it implements project.ContainerStopper
@@ -42,6 +49,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
+
 	cli, err := docker.NewEnvClient()
 	assert.Nil(t, err)
 	defer cli.Close()
@@ -60,20 +68,15 @@ func TestDockerComposeIntegration(t *testing.T) {
 		project:   testProjectName,
 		buildType: "docker-compose",
 
-		builders: map[string]Builder{
-			"herokuish":      herokuishBuild,
-			"dockerfile":     dockerBuild,
-			"docker-compose": dockerCompose,
-		},
+		builder: build.NewBuilder(cfg.Config{
+			DockerComposeVersion: DockerComposeVersion,
+			HerokuishVersion:     HerokuishVersion,
+		}),
 		containerStopper: killTestContainers,
 	}
 
 	// Execute build
-	deploy, err := dockerCompose(d, cli, os.Stdout)
-	assert.Nil(t, err)
-
-	// Execute deploy
-	err = deploy()
+	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
@@ -176,6 +179,7 @@ func TestDockerBuildIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
+
 	cli, err := docker.NewEnvClient()
 	assert.Nil(t, err)
 	defer cli.Close()
@@ -192,21 +196,15 @@ func TestDockerBuildIntegration(t *testing.T) {
 		directory: testProjectDir,
 		project:   testProjectName,
 		buildType: "dockerfile",
-
-		builders: map[string]Builder{
-			"herokuish":      herokuishBuild,
-			"dockerfile":     dockerBuild,
-			"docker-compose": dockerCompose,
-		},
+		builder: build.NewBuilder(cfg.Config{
+			DockerComposeVersion: DockerComposeVersion,
+			HerokuishVersion:     HerokuishVersion,
+		}),
 		containerStopper: killTestContainers,
 	}
 
 	// Execute build
-	deploy, err := dockerBuild(d, cli, os.Stdout)
-	assert.Nil(t, err)
-
-	// Execute deploy
-	err = deploy()
+	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start
@@ -253,6 +251,7 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
+
 	cli, err := docker.NewEnvClient()
 	assert.Nil(t, err)
 	defer cli.Close()
@@ -269,21 +268,15 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 		directory: testProjectDir,
 		project:   testProjectName,
 		buildType: "herokuish",
-
-		builders: map[string]Builder{
-			"herokuish":      herokuishBuild,
-			"dockerfile":     dockerBuild,
-			"docker-compose": dockerCompose,
-		},
+		builder: build.NewBuilder(cfg.Config{
+			DockerComposeVersion: DockerComposeVersion,
+			HerokuishVersion:     HerokuishVersion,
+		}),
 		containerStopper: killTestContainers,
 	}
 
 	// Execute build
-	deploy, err := herokuishBuild(d, cli, os.Stdout)
-	assert.Nil(t, err)
-
-	// Execute deploy
-	err = deploy()
+	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
 	assert.Nil(t, err)
 
 	// Arbitrary wait for containers to start

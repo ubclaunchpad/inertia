@@ -1,4 +1,4 @@
-package project
+package build
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -14,32 +13,72 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
-const (
-	// DockerComposeVersion is the version of docker-compose used
-	DockerComposeVersion = "docker/compose:1.21.0"
-
-	// HerokuishVersion is the version of Herokuish used
-	HerokuishVersion = "gliderlabs/herokuish:v0.4.0"
-
-	// BuildStageName specifies the name of build stage containers
-	BuildStageName = "build"
-)
-
-// Builder builds projects and returns a callback that can be used to deploy the project.
+// ProjectBuilder builds projects and returns a callback that can be used to deploy the project.
 // No relation to Bob the Builder, though a Bob did write this.
-type Builder func(*Deployment, *docker.Client, io.Writer) (func() error, error)
+type ProjectBuilder func(*Config, *docker.Client, io.Writer) (func() error, error)
 
-// getTrueDirectory converts given filepath to host-based filepath
-// if applicable - Docker commands are sent to the mounted Docker
-// socket and hence are executed on the host, using the host's filepaths,
-// which means Docker client commands must use this function when
-// dealing with paths
-func getTrueDirectory(path string) string {
-	return strings.Replace(path, "/app/host", os.Getenv("HOME"), 1)
+// Builder manages build tools and executes builds
+type Builder struct {
+	buildStageName       string
+	dockerComposeVersion string
+	herokuishVersion     string
+
+	builders map[string]ProjectBuilder
+}
+
+// NewBuilder creates a builder with given configuration
+func NewBuilder(conf cfg.Config) *Builder {
+	b := &Builder{
+		buildStageName:       "build",
+		dockerComposeVersion: conf.DockerComposeVersion,
+		herokuishVersion:     conf.HerokuishVersion,
+	}
+	b.builders = map[string]ProjectBuilder{
+		"herokuish":      b.herokuishBuild,
+		"dockerfile":     b.dockerBuild,
+		"docker-compose": b.dockerCompose,
+	}
+	return b
+}
+
+// GetBuildStageName returns the name of the intermediary container used to
+// build projects
+func (b *Builder) GetBuildStageName() string { return b.buildStageName }
+
+// Config contains parameters required for builds to execute
+type Config struct {
+	Name string
+	Type string
+
+	BuildFilePath  string
+	BuildDirectory string
+
+	EnvValues []string
+}
+
+// Build executes build and deploy
+func (b *Builder) Build(buildType string, d *Config,
+	cli *docker.Client, out io.Writer) (func() error, error) {
+	// Use the appropriate build method
+	builder, found := b.builders[strings.ToLower(d.Type)]
+	if !found {
+		// @todo: attempt a guess at project type instead
+		fmt.Println(out, "Unknown project type "+d.Type)
+		fmt.Println(out, "Defaulting to docker-compose build")
+		builder = b.dockerCompose
+	}
+
+	// Deploy project
+	deploy, err := builder(d, cli, out)
+	if err != nil {
+		return func() error { return nil }, err
+	}
+	return deploy, nil
 }
 
 // dockerCompose builds and runs project using docker-compose -
@@ -56,44 +95,34 @@ func getTrueDirectory(path string) string {
 // separate from the daemon and the user's project, and is the
 // second container to require access to the docker socket.
 // See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
-func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() error, error) {
+func (b *Builder) dockerCompose(d *Config, cli *docker.Client,
+	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
 
-	// get env
-	var envValues []string
-	manager, found := d.GetDataManager()
-	if found {
-		e, err := manager.GetEnvVariables(true)
-		if err != nil {
-			return nil, err
-		}
-		envValues = e
-	}
-
 	dockercomposeFilePath := "docker-compose.yml"
-	if d.buildFilePath != "" {
-		dockercomposeFilePath = d.buildFilePath
+	if d.BuildFilePath != "" {
+		dockercomposeFilePath = d.BuildFilePath
 	}
 
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
-			Image:      DockerComposeVersion,
+			Image:      b.dockerComposeVersion,
 			WorkingDir: "/build",
 			Cmd: []string{
-				"-p", d.project,
+				"-p", d.Name,
 				"-f", dockercomposeFilePath,
 				"build",
 			},
-			Env: envValues,
+			Env: d.EnvValues,
 		},
 		&container.HostConfig{
 			AutoRemove: true,
 			Binds: []string{
-				getTrueDirectory(d.directory) + ":/build",
+				getTrueDirectory(d.BuildDirectory) + ":/build",
 				"/var/run/docker.sock:/var/run/docker.sock",
 			},
-		}, nil, BuildStageName,
+		}, nil, b.buildStageName,
 	)
 	if err != nil {
 		return nil, err
@@ -125,21 +154,21 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 	// @TODO allow configuration
 	dockerComposeRelFilePath := "docker-compose.yml"
 	dockerComposeFilePath := path.Join(
-		getTrueDirectory(d.directory), dockerComposeRelFilePath,
+		getTrueDirectory(d.BuildDirectory), dockerComposeRelFilePath,
 	)
 
 	// Set up docker-compose up
 	fmt.Fprintln(out, "Preparing to start project...")
 	resp, err = cli.ContainerCreate(
 		ctx, &container.Config{
-			Image:      DockerComposeVersion,
+			Image:      b.dockerComposeVersion,
 			WorkingDir: "/build",
 			Cmd: []string{
-				"-p", d.project,
+				"-p", d.Name,
 				"-f", dockercomposeFilePath,
 				"up",
 			},
-			Env: envValues,
+			Env: d.EnvValues,
 		},
 		&container.HostConfig{
 			AutoRemove: true,
@@ -164,23 +193,24 @@ func dockerCompose(d *Deployment, cli *docker.Client, out io.Writer) (func() err
 }
 
 // dockerBuild builds project from Dockerfile, and returns a callback function to deploy it
-func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error, error) {
+func (b *Builder) dockerBuild(d *Config, cli *docker.Client,
+	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Building Dockerfile project...")
 	ctx := context.Background()
 	buildCtx := bytes.NewBuffer(nil)
-	err := buildTar(d.directory, buildCtx)
+	err := buildTar(d.BuildDirectory, buildCtx)
 	if err != nil {
 		return nil, err
 	}
 
 	// @TODO: support configuration
 	dockerFilePath := "Dockerfile"
-	if d.buildFilePath != "" {
-		dockerFilePath = d.buildFilePath
+	if d.BuildFilePath != "" {
+		dockerFilePath = d.BuildFilePath
 	}
 
 	// Build image
-	imageName := "inertia-build/" + d.project
+	imageName := "inertia-build/" + d.Name
 	buildResp, err := cli.ImageBuild(
 		ctx, buildCtx, types.ImageBuildOptions{
 			Tags:           []string{imageName},
@@ -198,29 +228,17 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error
 	log.FlushRoutine(out, buildResp.Body, stop)
 	close(stop)
 	buildResp.Body.Close()
-
 	fmt.Fprintf(out, "%s (%s) build has exited\n", imageName, buildResp.OSType)
-
-	// get env
-	var envValues []string
-	manager, found := d.GetDataManager()
-	if found {
-		e, err := manager.GetEnvVariables(true)
-		if err != nil {
-			return nil, err
-		}
-		envValues = e
-	}
 
 	// Create container from image
 	containerResp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image: imageName,
-			Env:   envValues,
+			Env:   d.EnvValues,
 		},
 		&container.HostConfig{
 			AutoRemove: true,
-		}, nil, d.project,
+		}, nil, d.Name,
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "No such image") {
@@ -234,42 +252,32 @@ func dockerBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error
 	}
 
 	return func() error {
-		fmt.Fprintln(out, "Starting up project in container "+d.project+"...")
+		fmt.Fprintln(out, "Starting up project in container "+d.Name+"...")
 		return cli.ContainerStart(ctx, containerResp.ID, types.ContainerStartOptions{})
 	}, nil
 }
 
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
 // to build the user project.
-func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() error, error) {
+func (b *Builder) herokuishBuild(d *Config, cli *docker.Client,
+	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Setting up herokuish...")
 	ctx := context.Background()
-
-	// get env
-	var envValues []string
-	manager, found := d.GetDataManager()
-	if found {
-		e, err := manager.GetEnvVariables(true)
-		if err != nil {
-			return nil, err
-		}
-		envValues = e
-	}
 
 	// Configure herokuish container to build project when run
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
-			Image: HerokuishVersion,
+			Image: b.herokuishVersion,
 			Cmd:   []string{"/build"},
-			Env:   envValues,
+			Env:   d.EnvValues,
 		},
 		&container.HostConfig{
 			Binds: []string{
 				// "/tmp/app" is the directory herokuish looks
 				// for during a build, so mount project there
-				getTrueDirectory(d.directory) + ":/tmp/app",
+				getTrueDirectory(d.BuildDirectory) + ":/tmp/app",
 			},
-		}, nil, BuildStageName,
+		}, nil, b.buildStageName,
 	)
 	if err != nil {
 		return nil, err
@@ -301,7 +309,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() er
 	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
 
 	// Save build as new image and create a container
-	imgName := "inertia-build/" + d.project
+	imgName := "inertia-build/" + d.Name
 	fmt.Fprintln(out, "Saving build...")
 	_, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
 		Reference: imgName,
@@ -314,8 +322,8 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() er
 		// Currently, only start the standard "web" process
 		// @todo more processes
 		Cmd: []string{"/start", "web"},
-		Env: envValues,
-	}, nil, nil, d.project)
+		Env: d.EnvValues,
+	}, nil, nil, d.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +333,7 @@ func herokuishBuild(d *Deployment, cli *docker.Client, out io.Writer) (func() er
 		return nil, errors.New(warnings)
 	}
 
-	fmt.Fprintln(out, "Starting up project in container "+d.project+"...")
+	fmt.Fprintln(out, "Starting up project in container "+d.Name+"...")
 	return func() error {
 		return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	}, nil
