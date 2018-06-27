@@ -140,7 +140,7 @@ var cmdProvisionECS = &cobra.Command{
 
 		// Bootstrap remote
 		fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.RemoteVPS.IP)
-		err = inertia.BootstrapRemote(common.ExtractRepository(gitURL))
+		err = inertia.BootstrapRemote(common.ExtractRepository(common.GetSSHRemoteURL(gitURL)))
 		if err != nil {
 			log.Fatal(err)
 		}
