@@ -150,25 +150,14 @@ func enterEC2CredentialsWalkthrough(in io.Reader) (id, key string, err error) {
 func chooseFromListWalkthrough(in io.Reader, optionName string, options []string) (string, error) {
 	fmt.Printf("Available %ss:\n", optionName)
 	for _, o := range options {
-		println("> " + o)
+		println("  > " + o)
 	}
-	print("Please enter your desired %s:", optionName)
+	fmt.Printf("Please enter your desired %s: ", optionName)
 
 	var response string
 	_, err := fmt.Fscanln(in, &response)
 	if err != nil {
 		return "", errInvalidInput
-	}
-
-	var contains bool
-	for _, r := range options {
-		if r == response {
-			contains = true
-			break
-		}
-	}
-	if !contains {
-		return "", fmt.Errorf("invalid %s - please choose from options", optionName)
 	}
 
 	return response, nil
