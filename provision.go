@@ -22,6 +22,8 @@ func init() {
 		"from-env", false, "Load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set.",
 	)
 	cmdProvision.AddCommand(cmdProvisionECS)
+	cmdProvision.PersistentFlags().StringP("daemon-port", "d", "4303", "Daemon port")
+	cmdProvision.PersistentFlags().StringArrayP("ports", "p", []string{}, "Ports your project uses")
 	cmdRoot.AddCommand(cmdProvision)
 }
 
@@ -88,9 +90,32 @@ var cmdProvisionECS = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		// Create instance from input
+		// Gather input
 		fmt.Printf("Creating %s instance in %s from image %s...\n", instanceType, region, image)
-		remote, err := prov.CreateInstance(args[0], image, instanceType, region)
+		stringProjectPorts, _ := cmd.Flags().GetStringArray("ports")
+		ports := []int64{}
+		for _, portString := range stringProjectPorts {
+			p, err := common.ParseInt64(portString)
+			if err == nil {
+				ports = append(ports, p)
+			} else {
+				fmt.Printf("invalid port %s", portString)
+			}
+		}
+		port, _ := cmd.Flags().GetString("daemon-port")
+		portDaemon, _ := common.ParseInt64(port)
+
+		// Create remote instance
+		remote, err := prov.CreateInstance(provision.EC2CreateInstanceOptions{
+			Name:        args[0],
+			ProjectName: config.Project,
+			Ports:       ports,
+			DaemonPort:  portDaemon,
+
+			ImageID:      image,
+			InstanceType: instanceType,
+			Region:       region,
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
