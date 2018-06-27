@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // GetFullPath returns the absolute path of the config file.
@@ -69,4 +70,11 @@ func RemoveContents(directory string) error {
 		}
 	}
 	return nil
+}
+
+// ParseDate parses a date in format "2006-01-02T15:04:05.000Z"
+func ParseDate(dateString string) *time.Time {
+	layout := "2006-01-02T15:04:05.000Z"
+	t, _ := time.Parse(layout, dateString)
+	return &t
 }

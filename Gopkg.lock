@@ -49,6 +49,12 @@
   version = "v1.14.10"
 
 [[projects]]
+  name = "github.com/awslabs/aws-sdk-go"
+  packages = ["service/iam"]
+  revision = "aff39e8473db578a1cec9ac2f829a56813c1d631"
+  version = "v1.14.14"
+
+[[projects]]
   name = "github.com/boltdb/bolt"
   packages = ["."]
   revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
@@ -372,6 +378,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "15ca8cb1b5abf739f82069c4a5d3a30866976168a69411cd76d8d0c834e0862b"
+  inputs-digest = "53de8c655e9993ee367c812b02ef45bf086b8675785ab42995a7906eacdeff09"
   solver-name = "gps-cdcl"
   solver-version = 1

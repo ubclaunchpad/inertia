@@ -1,8 +1,10 @@
 package provision
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/awslabs/aws-sdk-go/service/iam"
 	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
@@ -40,14 +43,17 @@ func (p *EC2Provisioner) GetUser() string { return p.user }
 
 // ListRegions lists available regions to create an instance in
 func (p *EC2Provisioner) ListRegions() ([]string, error) {
+	// Set an arbitrary region, since the API requires this
+	p.client.Config.WithRegion("us-east-1")
+
+	// Get list of available regions
 	regions, err := p.client.DescribeRegions(nil)
 	if err != nil {
 		return nil, err
 	}
-
 	regionList := []string{}
 	for _, r := range regions.Regions {
-		regionList = append(regionList, r.GoString())
+		regionList = append(regionList, *r.RegionName)
 	}
 	return regionList, nil
 }
@@ -60,16 +66,39 @@ func (p *EC2Provisioner) ListImageOptions(region string) ([]string, error) {
 	// Query for images from the Amazon
 	output, err := p.client.DescribeImages(&ec2.DescribeImagesInput{
 		Owners: []*string{aws.String("amazon")},
+		Filters: []*ec2.Filter{
+			&ec2.Filter{
+				Name:   aws.String("name"),
+				Values: []*string{aws.String("amzn*")},
+			},
+		},
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Return relevant list
+	// Sort by date
+	sort.Slice(output.Images, func(i, j int) bool {
+		iCreated := common.ParseDate(*output.Images[i].CreationDate)
+		if iCreated == nil {
+			return false
+		}
+		jCreated := common.ParseDate(*output.Images[j].CreationDate)
+		if jCreated == nil {
+			return true
+		}
+		return iCreated.After(*jCreated)
+	})
+
 	images := []string{}
 	for _, image := range output.Images {
-		// todo: improve return structure
-		images = append(images, image.GoString())
+		if len(images) == 10 {
+			break
+		}
+		// Ignore nameless images
+		if image.Name != nil {
+			images = append(images, fmt.Sprintf("%s (%s)", *image.ImageId, *image.Description))
+		}
 	}
 	return images, nil
 }
@@ -80,8 +109,10 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 	p.client.Config.WithRegion(region)
 
 	// Generate authentication
+	keyName := fmt.Sprintf("%s_%s_inertia_key_%d", name, p.user, time.Now().UnixNano())
+	fmt.Printf("Generating key pair %s...", keyName)
 	keyResp, err := p.client.CreateKeyPair(&ec2.CreateKeyPairInput{
-		KeyName: aws.String(name + "_inertia_key"),
+		KeyName: aws.String(keyName),
 	})
 	if err != nil {
 		return nil, err
@@ -89,6 +120,7 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 
 	// Save key
 	keyPath := filepath.Join(os.Getenv("HOME"), ".ssh", *keyResp.KeyName)
+	fmt.Printf("Saving key to %s...", keyPath)
 	err = local.SaveKey(*keyResp.KeyMaterial, keyPath)
 	if err != nil {
 		return nil, err
@@ -105,6 +137,7 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 	if err != nil {
 		return nil, err
 	}
+	println(runResp.GoString())
 
 	// Set some instance tags for convenience
 	_, err = p.client.CreateTags(&ec2.CreateTagsInput{
@@ -125,10 +158,11 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 	}
 
 	// Loop until intance is running
+	println("Checking status of requested instance...")
 	attempts := 0
+	var instanceStatus *ec2.DescribeInstancesOutput
 	for true {
 		attempts++
-		println("Checking status of requested instance...")
 		// Request instance status
 		result, err := p.client.DescribeInstances(&ec2.DescribeInstancesInput{
 			InstanceIds: []*string{runResp.Instances[0].InstanceId},
@@ -142,12 +176,13 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 			continue
 		} else if *result.Reservations[0].Instances[0].State.Code != 16 {
 			// Code 16 indicates instance is running
-			println("Instance status: " + result.Reservations[0].Instances[0].State.GoString())
+			println("Instance status: " + *result.Reservations[0].Instances[0].State.Name)
 			time.Sleep(3 * time.Second)
 			continue
 		} else {
 			// Code 16 means we can continue!
 			println("Instance is running!")
+			instanceStatus = result
 			break
 		}
 	}
@@ -155,8 +190,8 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 	// Return remote configuration
 	return &cfg.RemoteVPS{
 		Name:    name,
-		IP:      *runResp.Instances[0].PublicIpAddress,
-		User:    "ec2-user", // default user
+		IP:      *instanceStatus.Reservations[0].Instances[0].PublicDnsName,
+		User:    p.user,
 		PEM:     keyPath,
 		SSHPort: "22",
 	}, nil
