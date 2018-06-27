@@ -37,7 +37,8 @@ var cmdProvisionECS = &cobra.Command{
 	Use:   "ec2 [name]",
 	Short: "[BETA] Provision a new Amazon EC2 instance",
 	Long: `[BETA] Provision a new Amazon EC2 instance and set it up for continuous deployment
-	with Inertia.`,
+	with Inertia. Make sure you run this command with the '-p' flag to indicate what ports
+	your project uses, since they must be exposed on your new instance.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
