@@ -18,7 +18,7 @@ func init() {
 		"type", "t", "t2.micro", "The ec2 instance type to instantiate",
 	)
 	cmdProvisionECS.Flags().Bool(
-		"from-env", false, "Load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY to be set.",
+		"from-env", false, "Load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set.",
 	)
 	cmdProvision.AddCommand(cmdProvisionECS)
 	cmdRoot.AddCommand(cmdProvision)
