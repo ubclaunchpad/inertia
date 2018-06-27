@@ -2,6 +2,14 @@ import React from 'react';
 import { connect } from 'react-redux';
 import TerminalView from '../../components/TerminalView/TerminalView';
 import IconHeader from '../../components/IconHeader/IconHeader';
+import {
+  Table,
+  TableCell,
+  TableRow,
+  TableHeader,
+  TableBody,
+  TableRowExpandable,
+} from '../../components/Table/Table';
 
 const mocklogs = [
   'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',
@@ -22,9 +30,14 @@ class ContainersWrapper extends React.Component {
   render() {
     return (
       <div>
-        <IconHeader  type='containers' title='CONTAINER'/>
+        <IconHeader  type='containers' title='/inertia-deploy-test_dev_1'/>
+        <div className='containerInfo'>
+
+        </div>
         <TerminalView logs={mocklogs} />
       </div>
+
+
     );
   }
 }
