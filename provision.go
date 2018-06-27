@@ -2,6 +2,7 @@ package main
 
 // initCmd represents the init command
 import (
+	"fmt"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -66,6 +67,7 @@ var cmdProvisionECS = &cobra.Command{
 		println("Successfully authenticated with user " + prov.GetUser())
 
 		// List regions and prompt for input
+		println("Loading regions...")
 		regions, err := prov.ListRegions()
 		if err != nil {
 			log.Fatal(err)
@@ -76,6 +78,7 @@ var cmdProvisionECS = &cobra.Command{
 		}
 
 		// List image options and prompt for input
+		println("Loading images...")
 		images, err := prov.ListImageOptions(region)
 		if err != nil {
 			log.Fatal(err)
@@ -86,6 +89,7 @@ var cmdProvisionECS = &cobra.Command{
 		}
 
 		// Create instance from input
+		fmt.Printf("Creating %s instance in %s from image %s...\n", instanceType, region, image)
 		remote, err := prov.CreateInstance(args[0], image, instanceType, region)
 		if err != nil {
 			log.Fatal(err)
@@ -99,7 +103,7 @@ var cmdProvisionECS = &cobra.Command{
 		config.AddRemote(remote)
 		config.Write(path)
 
-		// Init the new instance
+		// Create inertia client
 		inertia, found := client.NewClient(args[0], config)
 		if !found {
 			log.Fatal("vps setup did not complete properly")
@@ -108,6 +112,9 @@ var cmdProvisionECS = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		// Bootstrap remote
+		fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.RemoteVPS.IP)
 		err = inertia.BootstrapRemote(common.ExtractRepository(gitURL))
 		if err != nil {
 			log.Fatal(err)
