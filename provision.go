@@ -54,10 +54,16 @@ var cmdProvisionECS = &cobra.Command{
 			if err != nil {
 				log.Fatal(err)
 			}
-			prov = provision.NewEC2Provisioner(id, key)
+			prov, err = provision.NewEC2Provisioner(id, key)
 		} else {
-			prov = provision.NewEC2ProvisionerFromEnv()
+			prov, err = provision.NewEC2ProvisionerFromEnv()
 		}
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Report connected user
+		println("Successfully authenticated with user " + prov.GetUser())
 
 		// List regions and prompt for input
 		regions, err := prov.ListRegions()

@@ -9,46 +9,38 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/awslabs/aws-sdk-go/service/iam"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
 // EC2Provisioner creates Amazon EC2 instances
 type EC2Provisioner struct {
-	client *ec2.EC2
+	user    string
+	session *session.Session
+	client  *ec2.EC2
 }
 
 // NewEC2Provisioner creates a client to interact with Amazon EC2 using the
 // given credentials
-func NewEC2Provisioner(id, key string) *EC2Provisioner {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-	client := ec2.New(sess, &aws.Config{
-		Credentials: credentials.NewStaticCredentials(id, key, ""),
-	})
-	// Workaround for a strange bug where client instantiates with "https://ec2..amazonaws.com"
-	client.Endpoint = "https://ec2.amazonaws.com"
-	return &EC2Provisioner{client: client}
+func NewEC2Provisioner(id, key string) (*EC2Provisioner, error) {
+	prov := &EC2Provisioner{}
+	return prov, prov.init(credentials.NewStaticCredentials(id, key, ""))
 }
 
 // NewEC2ProvisionerFromEnv creates a client to interact with Amazon EC2 using
 // credentials from environment
-func NewEC2ProvisionerFromEnv() *EC2Provisioner {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-	client := ec2.New(sess, &aws.Config{
-		Credentials: credentials.NewEnvCredentials(),
-	})
-	// Workaround for a strange bug where client instantiates with "https://ec2..amazonaws.com"
-	client.Endpoint = "https://ec2.amazonaws.com"
-	return &EC2Provisioner{client: client}
+func NewEC2ProvisionerFromEnv() (*EC2Provisioner, error) {
+	prov := &EC2Provisioner{}
+	return prov, prov.init(credentials.NewEnvCredentials())
 }
+
+// GetUser returns the user attached to given credentials
+func (p *EC2Provisioner) GetUser() string { return p.user }
 
 // ListRegions lists available regions to create an instance in
 func (p *EC2Provisioner) ListRegions() ([]string, error) {
-	regions, err := p.client.DescribeRegions(&ec2.DescribeRegionsInput{})
+	regions, err := p.client.DescribeRegions(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -168,4 +160,26 @@ func (p *EC2Provisioner) CreateInstance(name, imageID, instanceType, region stri
 		PEM:     keyPath,
 		SSHPort: "22",
 	}, nil
+}
+
+func (p *EC2Provisioner) init(creds *credentials.Credentials) error {
+	// Set up configuration
+	p.session = session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+	config := &aws.Config{Credentials: creds}
+
+	// Attempt to access credentials
+	identityClient := iam.New(p.session, config)
+	user, err := identityClient.GetUser(nil)
+	if err != nil {
+		return err
+	}
+	p.user = *user.User.UserName
+
+	// Set up EC2 client
+	p.client = ec2.New(p.session, config)
+	// Workaround for a strange bug where client instantiates with "https://ec2..amazonaws.com"
+	p.client.Endpoint = "https://ec2.amazonaws.com"
+	return nil
 }
