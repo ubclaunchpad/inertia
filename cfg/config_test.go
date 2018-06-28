@@ -97,6 +97,10 @@ func TestConfigRemoveRemote(t *testing.T) {
 		},
 	}
 	config.AddRemote(testRemote)
+
+	added := config.AddRemote(testRemote)
+	assert.False(t, added)
+
 	config.AddRemote(&RemoteVPS{
 		Name:    "test2",
 		IP:      "12343",

@@ -89,8 +89,14 @@ func (config *Config) GetRemote(name string) (*RemoteVPS, bool) {
 }
 
 // AddRemote adds a remote to configuration
-func (config *Config) AddRemote(remote *RemoteVPS) {
+func (config *Config) AddRemote(remote *RemoteVPS) bool {
+	for _, r := range config.Remotes {
+		if r.Name == remote.Name {
+			return false
+		}
+	}
 	config.Remotes = append(config.Remotes, remote)
+	return true
 }
 
 // RemoveRemote removes remote with given name

@@ -72,7 +72,7 @@ func addRemoteWalkthrough(
 	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
-	config.AddRemote(&cfg.RemoteVPS{
+	added := config.AddRemote(&cfg.RemoteVPS{
 		Name:    name,
 		IP:      address,
 		User:    user,
@@ -84,6 +84,9 @@ func addRemoteWalkthrough(
 			WebHookSecret: secret,
 		},
 	})
+	if !added {
+		return errors.New("failed to add remote - you already have a remote with given name")
+	}
 	return nil
 }
 
