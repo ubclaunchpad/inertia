@@ -14,6 +14,47 @@
   version = "v0.4.5"
 
 [[projects]]
+  name = "github.com/aws/aws-sdk-go"
+  packages = [
+    "aws",
+    "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/corehandlers",
+    "aws/credentials",
+    "aws/credentials/ec2rolecreds",
+    "aws/credentials/endpointcreds",
+    "aws/credentials/stscreds",
+    "aws/csm",
+    "aws/defaults",
+    "aws/ec2metadata",
+    "aws/endpoints",
+    "aws/request",
+    "aws/session",
+    "aws/signer/v4",
+    "internal/sdkio",
+    "internal/sdkrand",
+    "internal/shareddefaults",
+    "private/protocol",
+    "private/protocol/ec2query",
+    "private/protocol/query",
+    "private/protocol/query/queryutil",
+    "private/protocol/rest",
+    "private/protocol/xml/xmlutil",
+    "service/ec2",
+    "service/sts"
+  ]
+  revision = "e4805606f5138247510183050abe642344275ebd"
+  version = "v1.14.10"
+
+[[projects]]
+  name = "github.com/awslabs/aws-sdk-go"
+  packages = ["service/iam"]
+  revision = "aff39e8473db578a1cec9ac2f829a56813c1d631"
+  version = "v1.14.14"
+
+[[projects]]
   name = "github.com/boltdb/bolt"
   packages = ["."]
   revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
@@ -93,6 +134,12 @@
   version = "v1.9.0"
 
 [[projects]]
+  name = "github.com/go-ini/ini"
+  packages = ["."]
+  revision = "06f5f3d67269ccec1fe5fe4134ba6e982984f7f5"
+  version = "v1.37.0"
+
+[[projects]]
   name = "github.com/google/go-github"
   packages = ["github"]
   revision = "e48060a28fac52d0f1cb758bc8b87c07bac4a87d"
@@ -121,6 +168,11 @@
   name = "github.com/jbenet/go-context"
   packages = ["io"]
   revision = "d14ea06fba99483203c19d92cfcd13ebe73135f4"
+
+[[projects]]
+  name = "github.com/jmespath/go-jmespath"
+  packages = ["."]
+  revision = "0b12d6b5"
 
 [[projects]]
   name = "github.com/kevinburke/ssh_config"
@@ -326,6 +378,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dd4e53edb336cd3acce35836e5f1a5a1803bd010b62646bc8097b22657fc2fdc"
+  inputs-digest = "53de8c655e9993ee367c812b02ef45bf086b8675785ab42995a7906eacdeff09"
   solver-name = "gps-cdcl"
   solver-version = 1
