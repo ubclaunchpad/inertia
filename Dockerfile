@@ -26,7 +26,7 @@ RUN if [ ! -d "vendor" ]; then \
     fi
 # Build daemon binary.
 RUN go build -o /bin/inertiad \
-    -ldflags "-X main.Version=$INERTIA_VERSION" \
+    -ldflags "-w -s -X main.Version=$INERTIA_VERSION" \
     ./daemon/inertiad
 
 ### Part 3 - Copy builds into combined image
