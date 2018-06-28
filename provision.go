@@ -1,6 +1,5 @@
 package main
 
-// initCmd represents the init command
 import (
 	"fmt"
 	"os"
