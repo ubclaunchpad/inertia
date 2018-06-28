@@ -2,6 +2,7 @@ package provision
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"sort"
@@ -206,6 +207,19 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 			},
 		},
 	})
+
+	// Poll for SSH port to open
+	println("Waiting for port 22 to open...")
+	for true {
+		time.Sleep(3 * time.Second)
+		println("Checking port...")
+		conn, err := net.Dial("tcp", *instanceStatus.Reservations[0].Instances[0].PublicDnsName+":22")
+		if err == nil {
+			println("Connection established!")
+			conn.Close()
+			break
+		}
+	}
 
 	// Generate webhook secret
 	webhookSecret, err := common.GenerateRandomString()
