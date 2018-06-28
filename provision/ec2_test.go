@@ -7,11 +7,11 @@ import (
 )
 
 func TestNewEC2Provisioner(t *testing.T) {
-	_, err := NewEC2Provisioner("id", "key")
-	assert.NotNil(t, err)
+	prov, _ := NewEC2Provisioner("id", "key")
+	assert.NotNil(t, prov.client.Config.Credentials)
 }
 
 func TestNewEC2ProvisionerFromEnv(t *testing.T) {
-	_, err := NewEC2Provisioner("id", "key")
-	assert.NotNil(t, err)
+	prov, _ := NewEC2Provisioner("id", "key")
+	assert.NotNil(t, prov.client.Config.Credentials)
 }
