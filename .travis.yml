@@ -54,7 +54,9 @@ jobs:
     - <<: *bootstraptest
       install: make testenv VPS_OS=centos VPS_VERSION=7 SSH_PORT=69
     - <<: *bootstraptest
-      install: make testenv VPS_OS=amazon VPS_VERSION=latest SSH_PORT=69
+      install: make testenv VPS_OS=amazon VPS_VERSION=1 SSH_PORT=69
+    # - <<: *bootstraptest
+    #   install: make testenv VPS_OS=amazon VPS_VERSION=2 SSH_PORT=69
 
     # Run linter and static analysis
     - install: bash test/lint_deps.sh

@@ -86,3 +86,16 @@ func TestExtract(t *testing.T) {
 	repoNameWithMixed := ExtractRepository("git@github.com:ubclaunchpad/inertia-deploy.test.git")
 	assert.Equal(t, "ubclaunchpad/inertia-deploy.test", repoNameWithMixed)
 }
+
+func TestParseDate(t *testing.T) {
+	assert.NotNil(t, ParseDate("2006-01-02T15:04:05.000Z"))
+}
+
+func TestParseInt64(t *testing.T) {
+	parsed, err := ParseInt64("10")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(10), parsed)
+
+	_, err = ParseInt64("")
+	assert.NotNil(t, err)
+}

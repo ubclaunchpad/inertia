@@ -109,3 +109,8 @@ func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, err
 
 	return client, nil
 }
+
+// SaveKey writes a key to given path
+func SaveKey(keyMaterial string, path string) error {
+	return ioutil.WriteFile(path, []byte(keyMaterial), 0644)
+}
