@@ -68,15 +68,16 @@ var cmdProvisionECS = &cobra.Command{
 		// Report connected user
 		println("Successfully authenticated with user " + prov.GetUser())
 
-		// List regions and prompt for input
-		println("Loading regions...")
-		regions, err := prov.ListRegions()
+		// Prompt for region
+		println("See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions for a list of available regions.")
+		print("Please enter a region: ")
+		var region string
+		len, err := fmt.Fscanln(os.Stdin, &region)
 		if err != nil {
 			log.Fatal(err)
 		}
-		region, err := chooseFromListWalkthrough(os.Stdin, "region", regions)
-		if err != nil {
-			log.Fatal(err)
+		if len < 9 {
+			log.Fatal("invalid region")
 		}
 
 		// List image options and prompt for input

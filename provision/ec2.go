@@ -42,23 +42,6 @@ func NewEC2ProvisionerFromEnv() (*EC2Provisioner, error) {
 // GetUser returns the user attached to given credentials
 func (p *EC2Provisioner) GetUser() string { return p.user }
 
-// ListRegions lists available regions to create an instance in
-func (p *EC2Provisioner) ListRegions() ([]string, error) {
-	// Set an arbitrary region, since the API requires this
-	p.client.Config.WithRegion("us-east-1")
-
-	// Get list of available regions
-	regions, err := p.client.DescribeRegions(nil)
-	if err != nil {
-		return nil, err
-	}
-	regionList := []string{}
-	for _, r := range regions.Regions {
-		regionList = append(regionList, *r.RegionName)
-	}
-	return regionList, nil
-}
-
 // ListImageOptions lists available Amazon images for your given region
 func (p *EC2Provisioner) ListImageOptions(region string) ([]string, error) {
 	// Set requested region
