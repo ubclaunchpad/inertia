@@ -51,7 +51,7 @@ func (p *EC2Provisioner) ListImageOptions(region string) ([]string, error) {
 	output, err := p.client.DescribeImages(&ec2.DescribeImagesInput{
 		Owners: []*string{aws.String("amazon")},
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("name"),
 				Values: []*string{aws.String("amzn*")},
 			},
@@ -226,18 +226,18 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 // given ports
 func (p *EC2Provisioner) exposePorts(securityGroupID string, daemonPort int64, ports []int64) error {
 	// Create Inertia rules
-	portRules := []*ec2.IpPermission{&ec2.IpPermission{
+	portRules := []*ec2.IpPermission{{
 		FromPort:   aws.Int64(int64(22)),
 		ToPort:     aws.Int64(int64(22)),
 		IpProtocol: aws.String("tcp"),
-		IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("Inertia SSH port")}},
-		Ipv6Ranges: []*ec2.Ipv6Range{&ec2.Ipv6Range{CidrIpv6: aws.String("::/0"), Description: aws.String("Inertia SSH port")}},
-	}, &ec2.IpPermission{
+		IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("Inertia SSH port")}},
+		Ipv6Ranges: []*ec2.Ipv6Range{{CidrIpv6: aws.String("::/0"), Description: aws.String("Inertia SSH port")}},
+	}, {
 		FromPort:   aws.Int64(daemonPort),
 		ToPort:     aws.Int64(daemonPort),
 		IpProtocol: aws.String("tcp"),
-		IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("Inertia daemon port")}},
-		Ipv6Ranges: []*ec2.Ipv6Range{&ec2.Ipv6Range{CidrIpv6: aws.String("::/0"), Description: aws.String("Inertia daemon port")}},
+		IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("Inertia daemon port")}},
+		Ipv6Ranges: []*ec2.Ipv6Range{{CidrIpv6: aws.String("::/0"), Description: aws.String("Inertia daemon port")}},
 	}}
 
 	// Generate rules for user project
@@ -246,8 +246,8 @@ func (p *EC2Provisioner) exposePorts(securityGroupID string, daemonPort int64, p
 			FromPort:   aws.Int64(port),
 			ToPort:     aws.Int64(port),
 			IpProtocol: aws.String("tcp"), // todo: allow config
-			IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("0.0.0.0/0")}},
-			Ipv6Ranges: []*ec2.Ipv6Range{&ec2.Ipv6Range{CidrIpv6: aws.String("::/0")}},
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
+			Ipv6Ranges: []*ec2.Ipv6Range{{CidrIpv6: aws.String("::/0")}},
 		})
 	}
 
