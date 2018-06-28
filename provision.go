@@ -17,6 +17,9 @@ func init() {
 	cmdProvisionECS.Flags().StringP(
 		"type", "t", "t2.micro", "The ec2 instance type to instantiate",
 	)
+	cmdProvisionECS.Flags().StringP(
+		"user", "u", "ec2-user", "The ec2 instance type to instantiate",
+	)
 	cmdProvisionECS.Flags().Bool(
 		"from-env", false, "Load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set.",
 	)
@@ -49,6 +52,8 @@ var cmdProvisionECS = &cobra.Command{
 		// Load flags
 		fromEnv, _ := cmd.Flags().GetBool("from-env")
 		instanceType, _ := cmd.Flags().GetString("type")
+		user, _ := cmd.Flags().GetString("user")
+		stringProjectPorts, _ := cmd.Flags().GetStringArray("ports")
 
 		// Create VPS instance
 		var prov *provision.EC2Provisioner
@@ -90,7 +95,6 @@ var cmdProvisionECS = &cobra.Command{
 
 		// Gather input
 		fmt.Printf("Creating %s instance in %s from image %s...\n", instanceType, region, image)
-		stringProjectPorts, _ := cmd.Flags().GetStringArray("ports")
 		ports := []int64{}
 		for _, portString := range stringProjectPorts {
 			p, err := common.ParseInt64(portString)
@@ -113,6 +117,8 @@ var cmdProvisionECS = &cobra.Command{
 			ImageID:      image,
 			InstanceType: instanceType,
 			Region:       region,
+
+			User: user,
 		})
 		if err != nil {
 			log.Fatal(err)

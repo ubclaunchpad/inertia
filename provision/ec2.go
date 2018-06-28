@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/awslabs/aws-sdk-go/service/iam"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
@@ -97,12 +96,19 @@ type EC2CreateInstanceOptions struct {
 	ImageID      string
 	InstanceType string
 	Region       string
+
+	User string
 }
 
 // CreateInstance creates an EC2 instance with given properties
 func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.RemoteVPS, error) {
 	// Set requested region
 	p.client.Config.WithRegion(opts.Region)
+
+	// Set user if given
+	if opts.User != "" {
+		p.user = opts.User
+	}
 
 	// Generate authentication
 	keyName := fmt.Sprintf("%s_%s_inertia_key_%d", opts.Name, p.user, time.Now().UnixNano())
@@ -260,22 +266,16 @@ func (p *EC2Provisioner) exposePorts(securityGroupID string, daemonPort int64, p
 }
 
 func (p *EC2Provisioner) init(creds *credentials.Credentials) error {
+	// Set default user
+	p.user = "ec2-user"
+
 	// Set up configuration
 	p.session = session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
-	config := &aws.Config{Credentials: creds}
-
-	// Attempt to access credentials
-	identityClient := iam.New(p.session, config)
-	user, err := identityClient.GetUser(nil)
-	if err != nil {
-		return err
-	}
-	p.user = *user.User.UserName
 
 	// Set up EC2 client
-	p.client = ec2.New(p.session, config)
+	p.client = ec2.New(p.session, &aws.Config{Credentials: creds})
 	// Workaround for a strange bug where client instantiates with "https://ec2..amazonaws.com"
 	p.client.Endpoint = "https://ec2.amazonaws.com"
 	return nil
