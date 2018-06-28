@@ -7,8 +7,21 @@ set -e
 DOCKER_SOURCE=get.docker.com
 DOCKER_DEST='/tmp/get-docker.sh'
 
+startDockerd() {
+    # Start dockerd if it is not online
+    if ! sudo docker stats --no-stream ; then
+        sudo service docker start
+        # Poll until dockerd is running
+        while ! sudo docker stats --no-stream ; do
+            echo "Waiting for dockerd to launch..."
+            sleep 1
+        done
+    fi
+}
+
 # Skip installation if Docker is already installed.
 if hash docker 2>/dev/null; then
+    startDockerd
     exit 0
 fi;
 
@@ -40,4 +53,4 @@ else
     fi
 fi
 
-sudo service docker start
+startDockerd
