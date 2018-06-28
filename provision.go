@@ -72,12 +72,9 @@ var cmdProvisionECS = &cobra.Command{
 		println("See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions for a list of available regions.")
 		print("Please enter a region: ")
 		var region string
-		len, err := fmt.Fscanln(os.Stdin, &region)
+		_, err = fmt.Fscanln(os.Stdin, &region)
 		if err != nil {
 			log.Fatal(err)
-		}
-		if len < 9 {
-			log.Fatal("invalid region")
 		}
 
 		// List image options and prompt for input
