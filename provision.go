@@ -48,6 +48,10 @@ var cmdProvisionECS = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+		_, found := config.GetRemote(args[0])
+		if found {
+			log.Fatal("remote with name already exists")
+		}
 
 		// Load flags
 		fromEnv, _ := cmd.Flags().GetBool("from-env")
