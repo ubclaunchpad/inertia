@@ -1,6 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import ShutdownButton from '../../components/ShutdownButton/ShutdownButton';
+import IconHeader from '../../components/IconHeader/IconHeader';
+
 
 import {
   Table,
@@ -20,7 +22,7 @@ class SettingsWrapper extends React.Component {
     return (
 
       <div>
-        <h1 style={{ margin: '1rem' }}>PROJECT INFORMATION</h1>
+        <IconHeader type="settings" title="PROJECT INFORMATION" style={{ margin: '1rem' }} />
         <Table style={{ width: '90%', margin: '1rem' }}>
           <TableHeader>
             <TableRow>
