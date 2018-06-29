@@ -16,11 +16,12 @@ var (
 
 // Config represents the current projects configuration.
 type Config struct {
-	Version       string       `toml:"version"`
-	Project       string       `toml:"project-name"`
-	BuildType     string       `toml:"build-type"`
-	BuildFilePath string       `toml:"build-file-path"`
-	Remotes       []*RemoteVPS `toml:"remote"`
+	Version       string `toml:"version"`
+	Project       string `toml:"project-name"`
+	BuildType     string `toml:"build-type"`
+	BuildFilePath string `toml:"build-file-path"`
+
+	Remotes map[string]*RemoteVPS `toml:"remotes"`
 }
 
 // NewConfig sets up Inertia configuration with given properties
@@ -29,7 +30,7 @@ func NewConfig(version, project, buildType, buildFilePath string) *Config {
 		Version:   version,
 		Project:   project,
 		BuildType: buildType,
-		Remotes:   make([]*RemoteVPS, 0),
+		Remotes:   make(map[string]*RemoteVPS),
 	}
 	if buildFilePath != "" {
 		cfg.BuildFilePath = buildFilePath
@@ -89,18 +90,21 @@ func (config *Config) GetRemote(name string) (*RemoteVPS, bool) {
 }
 
 // AddRemote adds a remote to configuration
-func (config *Config) AddRemote(remote *RemoteVPS) {
-	config.Remotes = append(config.Remotes, remote)
+func (config *Config) AddRemote(remote *RemoteVPS) bool {
+	_, ok := config.Remotes[remote.Name]
+	if ok {
+		return false
+	}
+	config.Remotes[remote.Name] = remote
+	return true
 }
 
 // RemoveRemote removes remote with given name
 func (config *Config) RemoveRemote(name string) bool {
-	for index, remote := range config.Remotes {
-		if remote.Name == name {
-			remote = nil
-			config.Remotes = append(config.Remotes[:index], config.Remotes[index+1:]...)
-			return true
-		}
+	_, ok := config.Remotes[name]
+	if !ok {
+		return false
 	}
-	return false
+	delete(config.Remotes, name)
+	return true
 }
