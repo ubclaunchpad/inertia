@@ -80,7 +80,7 @@ func TestGetNewClient(t *testing.T) {
 	config := &cfg.Config{
 		Version: "test",
 		Project: "robert-writes-bad-code",
-		Remotes: make([]*cfg.RemoteVPS, 0),
+		Remotes: make(map[string]*cfg.RemoteVPS),
 	}
 	testRemote := &cfg.RemoteVPS{
 		Name:    "test",

@@ -30,7 +30,7 @@ func NewConfig(version, project, buildType, buildFilePath string) *Config {
 		Version:   version,
 		Project:   project,
 		BuildType: buildType,
-		Remotes:   make(map[string]*RemoteVPS, 0),
+		Remotes:   make(map[string]*RemoteVPS),
 	}
 	if buildFilePath != "" {
 		cfg.BuildFilePath = buildFilePath
