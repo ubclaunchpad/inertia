@@ -1,4 +1,4 @@
-package project
+package build
 
 import (
 	"archive/tar"
@@ -9,6 +9,14 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+// getTrueDirectory converts given filepath to host-based filepath if applicable
+// - Docker commands are sent to the mounted Docker socket and hence are
+// executed on the host, using the host's filepaths, which means Docker client
+// commands must use this function when dealing with paths
+func getTrueDirectory(path string) string {
+	return strings.Replace(path, "/app/host", os.Getenv("HOME"), 1)
+}
 
 // buildTar takes a source and variable writers and walks 'source' writing each file
 // found to the tar writer; the purpose for accepting multiple writers is to allow

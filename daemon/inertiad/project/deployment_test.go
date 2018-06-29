@@ -6,11 +6,22 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	git "gopkg.in/src-d/go-git.v4"
 
 	docker "github.com/docker/docker/client"
 )
+
+type MockBuilder struct {
+	builder func() error
+}
+
+func (m *MockBuilder) Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error) {
+	return m.builder, nil
+}
+
+func (m *MockBuilder) GetBuildStageName() string { return "build" }
 
 func TestSetConfig(t *testing.T) {
 	deployment := &Deployment{}
@@ -37,12 +48,10 @@ func TestDeployMockSkipUpdateIntegration(t *testing.T) {
 	d := Deployment{
 		directory: "./test/",
 		buildType: "test",
-		builders: map[string]Builder{
-			"test": func(*Deployment, *docker.Client, io.Writer) (func() error, error) {
-				return func() error {
-					buildCalled = true
-					return nil
-				}, nil
+		builder: &MockBuilder{
+			builder: func() error {
+				buildCalled = true
+				return nil
 			},
 		},
 		containerStopper: func(*docker.Client, io.Writer) error {
@@ -57,8 +66,8 @@ func TestDeployMockSkipUpdateIntegration(t *testing.T) {
 
 	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
 	assert.Nil(t, err)
-	assert.True(t, buildCalled)
-	assert.True(t, stopCalled)
+	assert.Equal(t, true, buildCalled)
+	assert.Equal(t, true, stopCalled)
 }
 
 func TestDownIntegration(t *testing.T) {
@@ -104,6 +113,7 @@ func TestGetStatusIntegration(t *testing.T) {
 	deployment := &Deployment{
 		repo:      repo,
 		buildType: "test",
+		builder:   &MockBuilder{},
 	}
 	status, err := deployment.GetStatus(cli)
 	assert.Nil(t, err)

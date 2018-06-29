@@ -1,26 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
-const styles = {
-  textArea: {
-    position: 'relative',
-    top: '1px',
-    width: '100%',
-    height: '70px',
-    color: '#ffffff',
-    backgroundColor: '#212b36',
-    fontSize: '10px',
-    resize: 'none',
-  },
-};
+import './index.sass';
 
 const TerminalView = props =>
   (
-    <div>
+    <div className="terminalView">
       <textarea
-        style={styles.textArea}
+        className="textArea"
         readOnly
-        value={props.logs.reduce((accumulator, currentVal) => accumulator + '\r\n' + currentVal)} />
+        value={!props.logs ? '' : props.logs.reduce((accumulator, currentVal) => accumulator + '\r\n' + currentVal)} />
     </div>
   );
 

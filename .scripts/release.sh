@@ -12,5 +12,5 @@ make daemon RELEASE=$RELEASE
 
 # Build Inertia Go binaries for specified platforms
 gox -output="inertia.$(git describe --tags).{{.OS}}.{{.Arch}}" \
-    -ldflags "-X main.Version=$RELEASE" \
+    -ldflags "-w -s -X main.Version=$RELEASE" \
     -osarch="$PLATFORMS" \

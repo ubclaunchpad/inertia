@@ -60,6 +60,7 @@ Inertia is a simple cross-platform command line application that enables quick a
 ----|-----------------
 🚀  | Simple setup from your computer without ever having to manually SSH into your remote
 🍰  | Use any Linux-based remote virtual private server platform you want
+📦  | Easily provision new VPS instances on supported platforms such as Amazon EC2
 ⚒  | Deploy a wide range of supported project types (including Dockerfile, docker-compose, and Heroku projects)
 🚄  | Have your project automatically updated, rebuilt, and deployed as soon as you `git push`
 🛂  | Start up, shut down, and monitor your deployment with ease
@@ -94,20 +95,29 @@ Initializing a project for use with Inertia only takes a few simple steps:
 
 ```bash
 $> inertia init
-$> inertia remote add $VPS_NAME
 ```
 
-After adding a remote, you can bring the Inertia daemon online on your VPS:
+#### Using an Existing Remote
+
+To use an existing host, you must first add it to your Inertia configuration and initialize it - this will install Inertia on your remote.
 
 ```bash
+$> inertia remote add $VPS_NAME
 $> inertia $VPS_NAME init
 $> inertia $VPS_NAME status
 # Confirms that the daemon is online and accepting requests
 ```
 
-This daemon will be used to manage your deployment.
-
 See our [wiki](https://github.com/ubclaunchpad/inertia/wiki/VPS-Compatibility) for more details on VPS platform compatibility.
+
+#### Provisioning a New Remote
+
+Inertia offers some tools to easily provision a new VPS instance and set it up for Inertia. For example, to create an EC2 instance and initialize it, just run:
+
+```bash
+$> inertia provision ec2 $VPS_NAME
+$> inertia $VPS_NAME status
+```
 
 ### Deployment Management
 

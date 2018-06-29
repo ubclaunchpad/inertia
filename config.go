@@ -65,7 +65,7 @@ to succeed.`,
 		}
 
 		// Hello world config file!
-		err = local.InitializeInertiaProject(version, buildType, buildFilePath)
+		err = local.InitializeInertiaProject(ConfigFilePath, version, buildType, buildFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -94,7 +94,7 @@ var cmdReset = &cobra.Command{
 		if response != "y" {
 			log.Fatal("aborting")
 		}
-		path, err := local.GetConfigFilePath()
+		path, err := common.GetFullPath(ConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -110,7 +110,7 @@ var cmdSetConfigProperty = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk()
+		config, path, err := local.GetProjectConfigFromDisk(ConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}

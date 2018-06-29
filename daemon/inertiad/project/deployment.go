@@ -11,18 +11,21 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/git"
 	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
-var (
-	// directory is the directory the user's deployed project is cloned in
-	directory = "/app/host/inertia/project"
-)
+// Builder builds projects and returns a callback that can be used to deploy the project.
+// No relation to Bob the Builder, though a Bob did write this.
+type Builder interface {
+	Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error)
+	GetBuildStageName() string
+}
 
-// Deployer does great deploys
+// Deployer manages the deployed user project
 type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) error
 	Down(*docker.Client, io.Writer) error
@@ -45,7 +48,7 @@ type Deployment struct {
 	buildType     string
 	buildFilePath string
 
-	builders         map[string]Builder
+	builder          Builder
 	containerStopper containers.ContainerStopper
 
 	repo *gogit.Repository
@@ -57,18 +60,19 @@ type Deployment struct {
 
 // DeploymentConfig is used to configure Deployment
 type DeploymentConfig struct {
-	ProjectName   string
-	BuildType     string
-	BuildFilePath string
-	RemoteURL     string
-	Branch        string
-	PemFilePath   string
-	DatabasePath  string
+	ProjectDirectory string
+	ProjectName      string
+	BuildType        string
+	BuildFilePath    string
+	RemoteURL        string
+	Branch           string
+	PemFilePath      string
+	DatabasePath     string
 }
 
 // NewDeployment creates a new deployment
-func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
-	common.RemoveContents(directory)
+func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
+	common.RemoveContents(cfg.ProjectDirectory)
 
 	// Set up git repository
 	pemFile, err := os.Open(cfg.PemFilePath)
@@ -79,7 +83,9 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
-	repo, err := git.InitializeRepository(directory, cfg.RemoteURL, cfg.Branch, authMethod, out)
+	repo, err := git.InitializeRepository(
+		cfg.ProjectDirectory, cfg.RemoteURL, cfg.Branch, authMethod, out,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -93,17 +99,13 @@ func NewDeployment(cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
 	// Create deployment
 	return &Deployment{
 		// Properties
-		directory: directory,
+		directory: cfg.ProjectDirectory,
 		project:   cfg.ProjectName,
 		branch:    cfg.Branch,
 		buildType: cfg.BuildType,
 
 		// Functions
-		builders: map[string]Builder{
-			"herokuish":      herokuishBuild,
-			"dockerfile":     dockerBuild,
-			"docker-compose": dockerCompose,
-		},
+		builder:          builder,
 		containerStopper: containers.StopActiveContainers,
 
 		// Repository
@@ -138,7 +140,8 @@ type DeployOptions struct {
 }
 
 // Deploy will update, build, and deploy the project
-func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOptions) error {
+func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
+	opts DeployOptions) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	fmt.Println(out, "Preparing to deploy project")
@@ -151,27 +154,25 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer, opts DeployOption
 		}
 	}
 
-	// Use the appropriate build method
-	builder, found := d.builders[strings.ToLower(d.buildType)]
-	if !found {
-		// @todo: attempt a guess at project type instead
-		fmt.Println(out, "Unknown project type "+d.buildType)
-		fmt.Println(out, "Defaulting to docker-compose build")
-		builder = dockerCompose
-	}
-
 	// Kill active project containers if there are any
 	err := d.containerStopper(cli, out)
 	if err != nil {
 		return err
 	}
 
-	// Deploy project
-	deploy, err := builder(d, cli, out)
+	// Get config
+	conf, err := d.GetBuildConfiguration()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	// Build project
+	deploy, err := d.builder.Build(strings.ToLower(d.buildType), conf, cli, out)
 	if err != nil {
 		return err
 	}
 
+	// Deploy
 	return deploy()
 }
 
@@ -226,8 +227,8 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*common.DeploymentStatus, er
 		return nil, err
 	}
 	ignore := map[string]bool{
-		"/inertia-daemon":    true,
-		"/" + BuildStageName: true,
+		"/inertia-daemon":                   true,
+		"/" + d.builder.GetBuildStageName(): true,
 	}
 	activeContainers := make([]string, 0)
 	for _, container := range c {
@@ -275,4 +276,25 @@ func (d *Deployment) GetDataManager() (manager *DeploymentDataManager, found boo
 		return nil, false
 	}
 	return d.dataManager, true
+}
+
+// GetBuildConfiguration returns the build used to build this project. Returns
+// config without env values if error.
+func (d *Deployment) GetBuildConfiguration() (*build.Config, error) {
+	conf := &build.Config{
+		Name:           d.project,
+		Type:           d.buildType,
+		BuildFilePath:  d.buildFilePath,
+		BuildDirectory: d.directory,
+	}
+	if d.dataManager != nil {
+		env, err := d.dataManager.GetEnvVariables(true)
+		if err != nil {
+			return conf, err
+		}
+		conf.EnvValues = env
+	} else {
+		return conf, errors.New("no data manager")
+	}
+	return conf, nil
 }

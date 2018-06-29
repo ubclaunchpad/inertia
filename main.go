@@ -7,8 +7,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Version is the current build of Inertia
-var Version string
+var (
+	// Version is the current build of Inertia
+	Version string
+
+	// ConfigFilePath is the relative path to Inertia's configuration file
+	ConfigFilePath = "inertia.toml"
+)
 
 func getVersion() string {
 	if Version == "" {
@@ -36,6 +41,7 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 
 func main() {
 	cobra.EnableCommandSorting = false
+	cmdRoot.PersistentFlags().StringVar(&ConfigFilePath, "config", "inertia.toml", "Specify relative path to Inertia configuration")
 	if err := cmdRoot.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)

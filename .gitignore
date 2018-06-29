@@ -20,8 +20,10 @@ users.db
 # Vendored dependencies
 vendor
 
-# Test output
+# Tests
 .inertia
+inertia*.toml
+bumper
 
 # Development
 .vscode

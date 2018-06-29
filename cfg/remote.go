@@ -7,7 +7,7 @@ type RemoteVPS struct {
 	User    string        `toml:"user"`
 	PEM     string        `toml:"pemfile"`
 	Branch  string        `toml:"branch"`
-	SSHPort string        `toml:"ssh_port"`
+	SSHPort string        `toml:"ssh-port"`
 	Daemon  *DaemonConfig `toml:"daemon"`
 }
 
@@ -15,7 +15,7 @@ type RemoteVPS struct {
 type DaemonConfig struct {
 	Port          string `toml:"port"`
 	Token         string `toml:"token"`
-	WebHookSecret string `toml:"webhook_secret"`
+	WebHookSecret string `toml:"webhook-secret"`
 }
 
 // GetHost creates the user@IP string.
