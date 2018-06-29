@@ -1,4 +1,4 @@
-package auth
+package crypto
 
 import (
 	"io"
@@ -12,10 +12,6 @@ import (
 var (
 	// DaemonGithubKeyLocation is the default path of the generated deploy key
 	DaemonGithubKeyLocation = os.Getenv("INERTIA_GH_KEY_PATH") //"/app/host/.ssh/id_rsa_inertia_deploy"
-)
-
-const (
-	tokenInvalidErrorMsg = "Token invalid"
 )
 
 // GetAPIPrivateKey returns the private RSA key to authenticate HTTP

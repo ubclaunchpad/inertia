@@ -10,10 +10,16 @@ import (
 	"path"
 	"testing"
 
-	"github.com/ubclaunchpad/inertia/common"
-
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
+
+// Helper function that implements jwt.keyFunc
+func getFakeAPIKey(tok *jwt.Token) (interface{}, error) {
+	return crypto.TestPrivateKey, nil
+}
 
 func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
 	err := os.Mkdir(dir, os.ModePerm)
@@ -287,7 +293,7 @@ func TestUserControlHandlers(t *testing.T) {
 
 	// Test handler uses the getFakeAPIToken keylookup, which
 	// will match with the testToken
-	bearerTokenString := fmt.Sprintf("Bearer %s", testToken)
+	bearerTokenString := fmt.Sprintf("Bearer %s", crypto.TestToken)
 
 	// Add a new user
 	body, err := json.Marshal(&common.UserRequest{

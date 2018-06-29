@@ -9,6 +9,11 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+)
+
+const (
+	tokenInvalidErrorMsg = "Token invalid"
 )
 
 // PermissionsHandler handles users, permissions, and sessions on top
@@ -47,7 +52,7 @@ func NewPermissionsHandler(
 		sessions: sessionManager,
 		mux:      mux,
 	}
-	handler.keyLookup = GetAPIPrivateKey
+	handler.keyLookup = crypto.GetAPIPrivateKey
 	if len(keyLookup) > 0 {
 		handler.keyLookup = keyLookup[0]
 	}
