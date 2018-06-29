@@ -22,7 +22,8 @@ class ContainersWrapper extends React.Component {
   render() {
     return (
       <div>
-        <IconHeader  type='containers' title='CONTAINER'/>
+        <IconHeader type="containers" title="/inertia-deploy-test_dev_1" />
+        <div className="containerInfo" />
         <TerminalView logs={mocklogs} />
       </div>
     );
