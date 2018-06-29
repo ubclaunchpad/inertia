@@ -64,7 +64,7 @@ func TestWriteToWritersAndFile(t *testing.T) {
 }
 
 func TestConfigGetRemote(t *testing.T) {
-	config := &Config{Remotes: make([]*RemoteVPS, 0)}
+	config := &Config{Remotes: make(map[string]*RemoteVPS, 0)}
 	testRemote := &RemoteVPS{
 		Name:    "test",
 		IP:      "12343",
@@ -85,7 +85,7 @@ func TestConfigGetRemote(t *testing.T) {
 }
 
 func TestConfigRemoveRemote(t *testing.T) {
-	config := &Config{Remotes: make([]*RemoteVPS, 0)}
+	config := &Config{Remotes: make(map[string]*RemoteVPS, 0)}
 	testRemote := &RemoteVPS{
 		Name:    "test",
 		IP:      "12343",
