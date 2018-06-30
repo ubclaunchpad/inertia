@@ -49,7 +49,7 @@ func TestAllUserManagementOperations(t *testing.T) {
 	assert.Nil(t, err)
 
 	users := manager.UserList()
-	assert.Equal(t, len(users), 2)
+	assert.Equal(t, len(users), 3) // There is a master user in here too
 
 	err = manager.HasUser("bobheadxi")
 	assert.Nil(t, err)
