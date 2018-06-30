@@ -1,4 +1,4 @@
-package auth
+package crypto
 
 import (
 	"io"
@@ -12,10 +12,6 @@ import (
 var (
 	// DaemonGithubKeyLocation is the default path of the generated deploy key
 	DaemonGithubKeyLocation = os.Getenv("INERTIA_GH_KEY_PATH") //"/app/host/.ssh/id_rsa_inertia_deploy"
-)
-
-const (
-	tokenInvalidErrorMsg = "Token invalid"
 )
 
 // GetAPIPrivateKey returns the private RSA key to authenticate HTTP
@@ -45,11 +41,4 @@ func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 		return nil, err
 	}
 	return ssh.NewPublicKeys("git", bytes, "")
-}
-
-// GenerateToken creates a JSON Web Token (JWT) for a client to use when
-// sending HTTP requests to the daemon server.
-func GenerateToken(key []byte) (string, error) {
-	// No claims for now.
-	return jwt.New(jwt.SigningMethodHS256).SignedString(key)
 }

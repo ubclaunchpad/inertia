@@ -2,43 +2,46 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
-	"net/url"
+	"strings"
 	"sync"
 	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
-// session are properties associated with session,
-// used for database entries
-type session struct {
-	Username string    `json:"username"`
-	Expires  time.Time `json:"created"`
-}
-
 type sessionManager struct {
-	cookieName    string
-	cookieDomain  string
-	cookieTimeout time.Duration
-	internal      map[string]*session
+	// sessionTimeout is the amount of time created Tokens are given to expire
+	sessionTimeout time.Duration
 
+	// internal is sessionManager's session store - it is protected by an RWMutex
+	internal map[string]*crypto.TokenClaims
 	sync.RWMutex
+
+	// keyLookup implements jwt.Keyfunc and retrieves the key used to sign and
+	// validate JWT tokens
+	keyLookup func(*jwt.Token) (interface{}, error)
+
+	// endSessionCleanup ends the goroutine that continually cleans up expired
+	// essions from memory
 	endSessionCleanup chan bool
 }
 
-func newSessionManager(domain string, timeout int) *sessionManager {
+func newSessionManager(domain string, timeout int,
+	keyLookup func(*jwt.Token) (interface{}, error)) *sessionManager {
 	manager := &sessionManager{
-		cookieName:    "ubclaunchpad-inertia",
-		cookieDomain:  domain,
-		cookieTimeout: time.Duration(timeout) * time.Minute,
-		internal:      make(map[string]*session),
+		sessionTimeout: time.Duration(timeout) * time.Minute,
+		internal:       make(map[string]*crypto.TokenClaims),
+		keyLookup:      keyLookup,
 
 		endSessionCleanup: make(chan bool),
 	}
 
 	// Set up session cleanup goroutine
-	ticker := time.NewTicker(manager.cookieTimeout)
+	ticker := time.NewTicker(manager.sessionTimeout)
 	go func() {
 		for {
 			select {
@@ -47,8 +50,8 @@ func newSessionManager(domain string, timeout int) *sessionManager {
 				return
 			case <-ticker.C:
 				manager.Lock()
-				for id, session := range manager.internal {
-					if !manager.isValidSession(session) {
+				for id, c := range manager.internal {
+					if c.Valid() != nil {
 						delete(manager.internal, id)
 					}
 				}
@@ -64,117 +67,101 @@ func (s *sessionManager) Close() {
 	s.endSessionCleanup <- true
 
 	s.Lock()
-	s.internal = make(map[string]*session)
+	s.internal = make(map[string]*crypto.TokenClaims)
 	s.Unlock()
 }
 
-// SessionBegin starts a new session with user by setting a cookie
-// and adding session to memory
-func (s *sessionManager) BeginSession(username string, w http.ResponseWriter, r *http.Request) error {
-	expiration := time.Now().Add(s.cookieTimeout)
+// SessionBegin starts a new session with user by generating a token and adding
+// session to memory
+func (s *sessionManager) BeginSession(username string, admin bool) (*crypto.TokenClaims, string, error) {
+	expiration := time.Now().Add(s.sessionTimeout)
 	id, err := common.GenerateRandomString()
 	if err != nil {
-		return errors.New("Failed to begin session for " + username + ": " + err.Error())
+		return nil, "", fmt.Errorf("Faield to begin sesison for %s: %s", username, err.Error())
+	}
+
+	claims := &crypto.TokenClaims{
+		SessionID: id, User: username, Admin: admin, Expiry: expiration,
+	}
+
+	// Sign a token for user
+	keyBytes, err := s.keyLookup(nil)
+	if err != nil {
+		return nil, "", err
+	}
+	token, err := claims.GenerateToken(keyBytes.([]byte))
+	if err != nil {
+		return nil, "", err
 	}
 
 	// Add session to map
 	s.Lock()
-	s.internal[id] = &session{
-		Username: username,
-		Expires:  expiration,
-	}
+	s.internal[id] = claims
 	s.Unlock()
-
-	// Add cookie with session ID
-	http.SetCookie(w, &http.Cookie{
-		Name:     s.cookieName,
-		Value:    url.QueryEscape(id),
-		Domain:   s.cookieDomain,
-		Path:     "/",
-		HttpOnly: true,
-		Expires:  expiration,
-	})
-	return nil
+	return claims, token, nil
 }
 
-// SessionEnd ends a session and sets cookie to expire
-func (s *sessionManager) EndSession(w http.ResponseWriter, r *http.Request) error {
-	cookie, err := r.Cookie(s.cookieName)
+// SessionEnd ends a session by invalidating the token
+func (s *sessionManager) EndSession(r *http.Request) error {
+	claims, err := s.GetSession(r)
 	if err != nil {
-		return errors.New("Invalid cookie: " + err.Error())
-	}
-	if cookie.Value == "" {
-		return errors.New("Invalid cookie")
-	}
-	id, err := url.QueryUnescape(cookie.Value)
-	if err != nil {
-		return errors.New("Invalid cookie: " + err.Error())
+		return err
 	}
 
 	// Delete session from map
-	s.Lock()
-	delete(s.internal, id)
-	s.Unlock()
-
-	// Set cookie to expire immediately
-	http.SetCookie(w, &http.Cookie{
-		Name:     s.cookieName,
-		Value:    "",
-		Domain:   s.cookieDomain,
-		Path:     "/",
-		HttpOnly: true,
-		Expires:  time.Unix(0, 0),
-	})
+	s.deleteSession(claims.SessionID)
 	return nil
 }
 
 // GetSession verifies if given request is from a valid session and returns it
-func (s *sessionManager) GetSession(w http.ResponseWriter, r *http.Request) (*session, error) {
-	cookie, err := r.Cookie(s.cookieName)
-	if err != nil || cookie.Value == "" {
-		return nil, errCookieNotFound
+func (s *sessionManager) GetSession(r *http.Request) (*crypto.TokenClaims, error) {
+	// Check token in header - if no tokens, check cookie
+	bearerString := r.Header.Get("Authorization")
+	splitToken := strings.Split(bearerString, "Bearer ")
+	if len(splitToken) != 2 {
+		return nil, errors.New(errMalformedHeaderMsg)
 	}
-	id, err := url.QueryUnescape(cookie.Value)
+
+	// Validate token and get claims
+	claims, err := crypto.ValidateToken(splitToken[1], s.keyLookup)
 	if err != nil {
 		return nil, err
 	}
 
-	s.RLock()
-	session, found := s.internal[id]
-	if !found {
-		s.RUnlock()
-		s.EndSession(w, r)
-		return nil, errSessionNotFound
+	// Master tokens aren't session-tracked. TODO: reassess security of this
+	if claims.IsMaster() {
+		return claims, nil
 	}
-	if !s.isValidSession(session) {
+
+	s.RLock()
+	_, found := s.internal[claims.SessionID]
+	if !found || claims.Valid() != nil {
 		s.RUnlock()
-		s.EndSession(w, r)
+		s.deleteSession(claims.SessionID)
 		return nil, errSessionNotFound
 	}
 	s.RUnlock()
-
-	return session, nil
+	return claims, nil
 }
 
 // endAllUserSessions removes all active sessions with given user
 func (s *sessionManager) EndAllUserSessions(username string) {
-	s.Lock()
-	for id, session := range s.internal {
-		if session.Username == username {
-			delete(s.internal, id)
+	for id, claim := range s.internal {
+		if claim.User == username {
+			s.deleteSession(id)
 		}
 	}
-	s.Unlock()
 }
 
 // EndAllSessions removes all active sessions
 func (s *sessionManager) EndAllSessions() {
 	s.Lock()
-	s.internal = make(map[string]*session)
+	s.internal = make(map[string]*crypto.TokenClaims)
 	s.Unlock()
 }
 
-// isValidSession checks if session is expired
-func (s *sessionManager) isValidSession(session *session) bool {
-	return session.Expires.After(time.Now())
+func (s *sessionManager) deleteSession(sessionID string) {
+	s.Lock()
+	delete(s.internal, sessionID)
+	s.Unlock()
 }

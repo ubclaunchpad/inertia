@@ -141,16 +141,15 @@ var cmdProvisionECS = &cobra.Command{
 		if !found {
 			log.Fatal("vps setup did not complete properly")
 		}
-		gitURL, err := local.GetRepoRemote("origin")
+
+		// Bootstrap remote
+		fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.RemoteVPS.IP)
+		err = inertia.BootstrapRemote(config.Project)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		// Bootstrap remote
-		fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.RemoteVPS.IP)
-		err = inertia.BootstrapRemote(common.ExtractRepository(common.GetSSHRemoteURL(gitURL)))
-		if err != nil {
-			log.Fatal(err)
-		}
+		// Save updated config
+		config.Write(path)
 	},
 }

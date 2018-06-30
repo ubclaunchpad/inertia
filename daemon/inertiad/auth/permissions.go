@@ -9,6 +9,11 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+)
+
+const (
+	errMalformedHeaderMsg = "malformed authorization error"
 )
 
 // PermissionsHandler handles users, permissions, and sessions on top
@@ -18,7 +23,6 @@ type PermissionsHandler struct {
 	users      *userManager
 	sessions   *sessionManager
 	mux        *http.ServeMux
-	keyLookup  func(*jwt.Token) (interface{}, error)
 	userPaths  []string
 	adminPaths []string
 }
@@ -37,7 +41,11 @@ func NewPermissionsHandler(
 	}
 
 	// Set up session manager
-	sessionManager := newSessionManager(hostDomain, timeout)
+	lookup := crypto.GetAPIPrivateKey
+	if len(keyLookup) > 0 {
+		lookup = keyLookup[0]
+	}
+	sessionManager := newSessionManager(hostDomain, timeout, lookup)
 
 	// Set up permissions handler
 	mux := http.NewServeMux()
@@ -47,13 +55,8 @@ func NewPermissionsHandler(
 		sessions: sessionManager,
 		mux:      mux,
 	}
-	handler.keyLookup = GetAPIPrivateKey
-	if len(keyLookup) > 0 {
-		handler.keyLookup = keyLookup[0]
-	}
 
-	// The following endpoints are for user administration and session
-	// administration
+	// The following endpoints are for user administration and session administration
 	userHandler := http.NewServeMux()
 	userHandler.HandleFunc("/login", handler.loginHandler)
 	userHandler.HandleFunc("/logout", handler.logoutHandler)
@@ -84,17 +87,17 @@ func (h *PermissionsHandler) Close() error {
 
 // nolint: gocyclo
 func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// http.StripPrefix removes the leading slash, but in the interest
-	// of maintaining similar behaviour to stdlib handler functions,
-	// we manually add a leading "/" here instead of having users not add
-	// a leading "/" on the path if it dosn't already exist.
+	// http.StripPrefix removes the leading slash, but in the interest of
+	// maintaining similar behaviour to stdlib handler functions, we manually
+	// add a leading "/" here instead of having users not add a leading "/" on
+	// the path if it dosn't already exist.
 	path := r.URL.Path
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
 		r.URL.Path = path
 	}
 
-	// Check if this is restricted
+	// Check if this path is restricted
 	adminRestricted := false
 	for _, prefix := range h.adminPaths {
 		if strings.HasPrefix(path, prefix) {
@@ -108,62 +111,37 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Serve if path is public
+	// Serve directly if path is public
 	if !userRestricted && !adminRestricted {
 		h.mux.ServeHTTP(w, r)
 		return
 	}
 
-	// Check token in header - if no tokens, check cookie
-	bearerString := r.Header.Get("Authorization")
-	splitToken := strings.Split(bearerString, "Bearer ")
-	if len(splitToken) == 2 {
-		tokenString := splitToken[1]
-
-		// Parse takes the token string and a function for looking up the key.
-		token, err := jwt.Parse(tokenString, h.keyLookup)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusForbidden)
-			return
-		}
-
-		// Verify the claims (none for now) and token.
-		if _, ok := token.Claims.(jwt.MapClaims); !ok || !token.Valid {
-			http.Error(w, tokenInvalidErrorMsg, http.StatusForbidden)
-			return
-		}
-
-		// @todo: manage admin-restricted endpoints
-
-		// Serve the requested endpoint to token holders
-		h.mux.ServeHTTP(w, r)
-		return
-	}
-
-	// Check if session is valid
-	s, err := h.sessions.GetSession(w, r)
+	// Check if token is valid
+	claims, err := h.sessions.GetSession(r)
 	if err != nil {
-		if err == errSessionNotFound || err == errCookieNotFound {
-			http.Error(w, err.Error(), http.StatusForbidden)
+		if err == errSessionNotFound {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusForbidden)
 		}
 		return
 	}
 
 	// Check if user has sufficient permissions for path
 	if adminRestricted {
-		admin, err := h.users.IsAdmin(s.Username)
+		admin, err := h.users.IsAdmin(claims.User)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		if !admin {
 			http.Error(w, "Admin privileges required", http.StatusForbidden)
+			return
 		}
-		return
 	}
 
-	// Serve the requested page if permissions were granted
+	// Serve the requested endpoint to token holders
 	h.mux.ServeHTTP(w, r)
 }
 
@@ -296,7 +274,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// Log in user if password is correct
-	correct, err := h.users.IsCorrectCredentials(userReq.Username, userReq.Password)
+	props, correct, err := h.users.IsCorrectCredentials(userReq.Username, userReq.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -305,18 +283,19 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Login failed", http.StatusForbidden)
 		return
 	}
-	err = h.sessions.BeginSession(userReq.Username, w, r)
+	_, token, err := h.sessions.BeginSession(userReq.Username, props.Admin)
 	if err != nil {
 		http.Error(w, "Login failed: "+err.Error(), http.StatusForbidden)
 		return
 	}
 
+	// Write back
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "[SUCCESS %d] User %s logged in\n", http.StatusOK, userReq.Username)
+	w.Write([]byte(token))
 }
 
 func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	err := h.sessions.EndSession(w, r)
+	err := h.sessions.EndSession(r)
 	if err != nil {
 		http.Error(w, "Logout failed: "+err.Error(), http.StatusInternalServerError)
 		return

@@ -48,7 +48,7 @@ clean:
 # Run static analysis
 .PHONY: lint
 lint:
-	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=60s ./...'
+	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=120s ./...'
 	(cd ./daemon/web; npm run lint)
 
 # Run test suite without Docker ops
