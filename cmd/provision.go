@@ -149,7 +149,7 @@ var cmdProvisionECS = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		// Save udpated config
+		// Save updated config
 		config.Write(path)
 	},
 }
