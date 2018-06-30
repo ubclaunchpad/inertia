@@ -88,7 +88,7 @@ jobs:
         api_key:
           secure: eHe5lL6mVp6XQM5sdUQHWcugROAjZC5Gf81flIjM/4K1ceUQfblIQ3/suXOHBXl+jGro0DTlI/a8S9zKb3NDdlTiXjABQD8KkWNMfEqajUInRwSFE7vSvydzJDuwO00KZOuFKdp2hZwpO2jbODZvHEnYONTClle5pV6bzhp4JaY1P0CjAl6/E67WVjpNQmHNIlzcZ7PRLe7KcjEl5N7DIg/B4R19EiBTjaPsCh8xP/T68cqVVa+4cwUAxN6Xd0ca81T9dkhppRL9tiJRn6iP/x64paIeWV0pF80V2PKTwbI9Ox0mcd7TWkHFD4taV+UwQUeOeN3OR7NHfzyPtWUcCVOp3wxFKvWySPYNeh8x8OrFh7HzIMl+20SQ/rdEsJJ6cfMx+qp+RBJmSj+Btm/ZxfEZgjRTg2jiCeUNnNpBL+46U49TVPTuw7+K97x/cGRF9k0JAfkq75tQTPCoQwmkCqTeJ6KGwFwlDx5+OUCJz3WS0XfQ6k88eYQygmBBdWqoHXUS75vOa96GVN1JSp8tBpSp0lUp+U2QQJkIy9VN9NpMlsbn3r5Ssk/AtEhal1fpT5tncPvzphwSKDH3WtCJ+FJjMajBIlZA2yop1VdsVJzKFBo2DH+yn8qd1tIsp5C+HDPvulCYMFCg7zJk0ksXZVERTGnrnRBSENW+Ut1avJ0=
         file_glob: true
-        file: inertia.*
+        file: inertia.v*
         go: "1.10"
         on:
           repo: ubclaunchpad/inertia
