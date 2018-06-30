@@ -298,7 +298,7 @@ func TestUserControlHandlers(t *testing.T) {
 
 	// Test handler uses the getFakeAPIToken keylookup, which will match with
 	// the testToken
-	bearerTokenString := fmt.Sprintf("Bearer %s", crypto.TestToken)
+	bearerTokenString := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
 
 	// Add a new user
 	body, err := json.Marshal(&common.UserRequest{

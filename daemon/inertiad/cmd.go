@@ -43,7 +43,7 @@ Created using an RSA private key.`,
 			panic(err)
 		}
 
-		token, err := crypto.GenerateToken(keyBytes.([]byte))
+		token, err := crypto.GenerateMasterToken(keyBytes.([]byte))
 		if err != nil {
 			panic(err)
 		}

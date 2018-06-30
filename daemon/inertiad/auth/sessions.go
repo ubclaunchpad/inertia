@@ -128,10 +128,8 @@ func (s *sessionManager) GetSession(r *http.Request) (*crypto.TokenClaims, error
 		return nil, err
 	}
 
-	// TODO: this is a workaround for client tokens having no claims and no
-	// sessions
-	if claims.User == "" && claims.SessionID == "" {
-		claims.User = "sudo"
+	// Master tokens aren't session-tracked. TODO: reassess security of this
+	if claims.IsMaster() {
 		return claims, nil
 	}
 

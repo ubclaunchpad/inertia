@@ -44,8 +44,17 @@ func newUserManager(dbPath string) (*userManager, error) {
 		return nil, err
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists(manager.usersBucket)
-		return err
+		users, err := tx.CreateBucketIfNotExists(manager.usersBucket)
+		if err != nil {
+			return err
+		}
+		// Add a master user - the password to this guy/gal will just be the
+		// GitHub key. It's not really meant for use.
+		bytes, err := json.Marshal(&userProps{Admin: true})
+		if err != nil {
+			return err
+		}
+		return users.Put([]byte("master"), bytes)
 	})
 	if err != nil {
 		return nil, err
@@ -197,12 +206,6 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 
 // IsAdmin checks if given user is has administrator priviledges
 func (m *userManager) IsAdmin(username string) (bool, error) {
-	// TODO: this is a workaround for client tokens having no claims and no
-	// sessions
-	if username == "sudo" {
-		return true, nil
-	}
-
 	// Check if user is admin in database
 	admin := false
 	err := m.db.View(func(tx *bolt.Tx) error {

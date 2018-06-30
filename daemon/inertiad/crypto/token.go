@@ -8,7 +8,10 @@ import (
 )
 
 const (
+	// TokenInvalidErrorMsg says that the token is invalid
 	TokenInvalidErrorMsg = "token invalid"
+
+	// TokenExpiredErrorMsg says that the token is expired
 	TokenExpiredErrorMsg = "token expired"
 )
 
@@ -22,9 +25,7 @@ type TokenClaims struct {
 
 // Valid checks if token is authentic
 func (t *TokenClaims) Valid() error {
-	// TODO: This is a workaround for client tokens, which currently do not
-	// have claims. Need to move those onto this system.
-	if t.SessionID == "" && t.User == "" {
+	if t.IsMaster() {
 		return nil
 	}
 
@@ -32,6 +33,11 @@ func (t *TokenClaims) Valid() error {
 		return errors.New(TokenExpiredErrorMsg)
 	}
 	return nil
+}
+
+// IsMaster returns true if this is a mster key
+func (t *TokenClaims) IsMaster() bool {
+	return (t.User == "master" && t.Expiry == time.Time{})
 }
 
 // GenerateToken creates a JWT token from this claim, signed with given key
@@ -61,9 +67,15 @@ func ValidateToken(tokenString string, lookup jwt.Keyfunc) (*TokenClaims, error)
 	return nil, errors.New(TokenInvalidErrorMsg)
 }
 
-// GenerateToken creates a JSON Web Token (JWT) for a client to use when
-// sending HTTP requests to the daemon server.
-func GenerateToken(key []byte) (string, error) {
-	// No claims for now.
-	return jwt.New(jwt.SigningMethodHS256).SignedString(key)
+// GenerateMasterToken creates a "master" JSON Web Token (JWT) for a client to use
+// when sending HTTP requests to the daemon server.
+func GenerateMasterToken(key []byte) (string, error) {
+	return jwt.
+		NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
+			User:  "master",
+			Admin: true,
+			// For the time being, never allow this token to expire, so don't
+			// set an expiry.
+		}).
+		SignedString(key)
 }

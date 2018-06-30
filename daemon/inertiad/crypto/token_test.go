@@ -7,14 +7,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGenerateToken(t *testing.T) {
-	token, err := GenerateToken(TestPrivateKey)
-	assert.Nil(t, err, "generateToken must not fail")
-	assert.Equal(t, token, TestToken)
+func TestGenerateMasterToken(t *testing.T) {
+	token, err := GenerateMasterToken(TestPrivateKey)
+	assert.Nil(t, err)
+	assert.Equal(t, TestMasterToken, token)
 
-	otherToken, err := GenerateToken([]byte("another_sekrit_key"))
+	otherToken, err := GenerateMasterToken([]byte("another_sekrit_key"))
 	assert.Nil(t, err)
 	assert.NotEqual(t, token, otherToken)
+
+	// Verify validity
+	readClaims, err := ValidateToken(token, GetFakeAPIKey)
+	assert.Nil(t, err)
+	assert.Nil(t, readClaims.Valid())
 }
 
 func TestTokenClaims_Valid(t *testing.T) {
@@ -29,6 +34,8 @@ func TestTokenClaims_Valid(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
+		// master key
+		{"success", fields{"1234", "master", true, time.Time{}}, false},
 		// expiry in future (+1)
 		{"success", fields{"1234", "bob", true, time.Now().AddDate(0, 1, 0)}, false},
 		// expiry in past (-1)
@@ -49,7 +56,7 @@ func TestTokenClaims_Valid(t *testing.T) {
 	}
 }
 
-func TestTokenCliams_GenerateToken(t *testing.T) {
+func TestTokenClaims_GenerateToken(t *testing.T) {
 	expires := time.Now().AddDate(0, 1, 0)
 	claims := &TokenClaims{"1234", "robert", true, expires}
 	token, err := claims.GenerateToken(TestPrivateKey)
