@@ -42,10 +42,3 @@ func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 	}
 	return ssh.NewPublicKeys("git", bytes, "")
 }
-
-// GenerateToken creates a JSON Web Token (JWT) for a client to use when
-// sending HTTP requests to the daemon server.
-func GenerateToken(key []byte) (string, error) {
-	// No claims for now.
-	return jwt.New(jwt.SigningMethodHS256).SignedString(key)
-}

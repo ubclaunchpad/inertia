@@ -4,22 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path"
 	"testing"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
-
-// Helper function that implements jwt.keyFunc
-func getFakeAPIKey(tok *jwt.Token) (interface{}, error) {
-	return crypto.TestPrivateKey, nil
-}
 
 func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
 	err := os.Mkdir(dir, os.ModePerm)
@@ -29,7 +24,7 @@ func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
 	return NewPermissionsHandler(
 		path.Join(dir, "users.db"),
 		"127.0.0.1", 3000,
-		getFakeAPIKey,
+		crypto.GetFakeAPIKey,
 	)
 }
 
@@ -72,12 +67,19 @@ func TestServeHTTPWithUserReject(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
+	// Without token
 	req, err := http.NewRequest("POST", ts.URL+"/test", nil)
 	assert.Nil(t, err)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 
+	// With malformed token
+	req.Header.Set("Authorization", "Bearer badtoken")
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 }
 
@@ -100,7 +102,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	err = ph.users.AddUser("bobheadxi", "wowgreat", false)
 	assert.Nil(t, err)
 
-	// Login in as user, use cookiejar to catch cookie
+	// Login in as user
 	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
@@ -111,15 +113,15 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	defer loginResp.Body.Close()
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
-	// Check for cookies
-	assert.True(t, len(loginResp.Cookies()) > 0)
-	cookie := loginResp.Cookies()[0]
-	assert.Equal(t, "ubclaunchpad-inertia", cookie.Name)
+	// Get token
+	tokenBytes, err := ioutil.ReadAll(loginResp.Body)
+	assert.Nil(t, err)
+	token := string(tokenBytes)
 
 	// Attempt to validate
 	req, err = http.NewRequest("POST", ts.URL+"/user/validate", nil)
 	assert.Nil(t, err)
-	req.AddCookie(cookie)
+	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
@@ -128,17 +130,20 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	// Log out
 	req, err = http.NewRequest("POST", ts.URL+"/user/logout", nil)
 	assert.Nil(t, err)
-	req.AddCookie(cookie)
+	req.Header.Set("Authorization", "Bearer "+token)
 	logoutResp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer logoutResp.Body.Close()
 	assert.Equal(t, http.StatusOK, logoutResp.StatusCode)
 
-	// Check for cookies
-	assert.True(t, len(logoutResp.Cookies()) > 0)
-	cookie = logoutResp.Cookies()[0]
-	assert.Equal(t, "ubclaunchpad-inertia", cookie.Name)
-	assert.Equal(t, 0, cookie.MaxAge)
+	// Attempt to validate again
+	req, err = http.NewRequest("POST", ts.URL+"/user/validate", nil)
+	assert.Nil(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
 
 func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
@@ -160,7 +165,7 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	err = ph.users.AddUser("bobheadxi", "wowgreat", false)
 	assert.Nil(t, err)
 
-	// Login in as user, use cookiejar to catch cookie
+	// Login in as user
 	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
@@ -171,15 +176,15 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	defer loginResp.Body.Close()
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
-	// Check for cookies
-	assert.True(t, len(loginResp.Cookies()) > 0)
-	cookie := loginResp.Cookies()[0]
-	assert.Equal(t, "ubclaunchpad-inertia", cookie.Name)
+	// Get token
+	tokenBytes, err := ioutil.ReadAll(loginResp.Body)
+	assert.Nil(t, err)
+	token := string(tokenBytes)
 
 	// Attempt to access restricted endpoint with cookie
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
 	assert.Nil(t, err)
-	req.AddCookie(cookie)
+	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
@@ -206,7 +211,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	err = ph.users.AddUser("bobheadxi", "wowgreat", false)
 	assert.Nil(t, err)
 
-	// Login in as user, use cookiejar to catch cookie
+	// Login in as user
 	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
@@ -217,15 +222,15 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	defer loginResp.Body.Close()
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
-	// Check for cookies
-	assert.True(t, len(loginResp.Cookies()) > 0)
-	cookie := loginResp.Cookies()[0]
-	assert.Equal(t, "ubclaunchpad-inertia", cookie.Name)
+	// Get token
+	tokenBytes, err := ioutil.ReadAll(loginResp.Body)
+	assert.Nil(t, err)
+	token := string(tokenBytes)
 
 	// Attempt to access restricted endpoint with cookie
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
 	assert.Nil(t, err)
-	req.AddCookie(cookie)
+	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
@@ -252,7 +257,7 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	err = ph.users.AddUser("bobheadxi", "wowgreat", true)
 	assert.Nil(t, err)
 
-	// Login in as user, use cookiejar to catch cookie
+	// Login in as user
 	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
@@ -263,15 +268,15 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	defer loginResp.Body.Close()
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
-	// Check for cookies
-	assert.True(t, len(loginResp.Cookies()) > 0)
-	cookie := loginResp.Cookies()[0]
-	assert.Equal(t, "ubclaunchpad-inertia", cookie.Name)
+	// Get token
+	tokenBytes, err := ioutil.ReadAll(loginResp.Body)
+	assert.Nil(t, err)
+	token := string(tokenBytes)
 
 	// Attempt to access restricted endpoint with cookie
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
 	assert.Nil(t, err)
-	req.AddCookie(cookie)
+	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
@@ -291,8 +296,8 @@ func TestUserControlHandlers(t *testing.T) {
 	defer ph.Close()
 	ts.Config.Handler = ph
 
-	// Test handler uses the getFakeAPIToken keylookup, which
-	// will match with the testToken
+	// Test handler uses the getFakeAPIToken keylookup, which will match with
+	// the testToken
 	bearerTokenString := fmt.Sprintf("Bearer %s", crypto.TestToken)
 
 	// Add a new user

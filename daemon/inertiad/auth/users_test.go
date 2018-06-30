@@ -26,11 +26,11 @@ func TestAddUserAndIsCorrectCredentials(t *testing.T) {
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
 
-	correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
+	_, correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
 	assert.Nil(t, err)
 	assert.False(t, correct)
 
-	correct, err = manager.IsCorrectCredentials("bobheadxi", "best_person_ever")
+	_, correct, err = manager.IsCorrectCredentials("bobheadxi", "best_person_ever")
 	assert.Nil(t, err)
 	assert.True(t, correct)
 }
@@ -112,12 +112,12 @@ func TestTooManyLogins(t *testing.T) {
 	assert.Nil(t, err)
 
 	for i := 0; i < loginAttemptsLimit; i++ {
-		correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
+		_, correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
 		assert.Nil(t, err)
 		assert.False(t, correct)
 	}
 
-	correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
+	_, correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
 	assert.False(t, correct)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "login attempts")

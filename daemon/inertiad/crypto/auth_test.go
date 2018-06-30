@@ -19,13 +19,3 @@ func TestGetGithubKey(t *testing.T) {
 	_, err = GetGithubKey(pemFile)
 	assert.Nil(t, err)
 }
-
-func TestGenerateToken(t *testing.T) {
-	token, err := GenerateToken(TestPrivateKey)
-	assert.Nil(t, err, "generateToken must not fail")
-	assert.Equal(t, token, TestToken)
-
-	otherToken, err := GenerateToken([]byte("another_sekrit_key"))
-	assert.Nil(t, err)
-	assert.NotEqual(t, token, otherToken)
-}
