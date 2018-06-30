@@ -37,3 +37,6 @@ bumper
 # Inertia web
 node_modules/
 public/
+
+# Exceptions
+!inertia.go

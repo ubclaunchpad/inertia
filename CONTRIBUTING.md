@@ -76,7 +76,7 @@ The Inertia codebase is split up into several components - this section gives a 
 
 ### CLI
 
-Inertia's command line application is in the root directory. It is built on top of [cobra](https://github.com/spf13/cobra), a library for building command line applications.
+Inertia's command line application is initiated in the root directory, but the majority of the code is in the `cmd` package. It is built on top of [cobra](https://github.com/spf13/cobra), a library for building command line applications.
 
 This code should only include the CLI user interface and code used to manage local assets, such as configuration files - core client logic, functionality, and daemon API interactions should go into the `client` package.
 

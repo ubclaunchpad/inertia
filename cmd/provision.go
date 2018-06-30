@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ func init() {
 	cmdProvision.AddCommand(cmdProvisionECS)
 	cmdProvision.PersistentFlags().StringP("daemon-port", "d", "4303", "Daemon port")
 	cmdProvision.PersistentFlags().StringArrayP("ports", "p", []string{}, "Ports your project uses")
-	cmdRoot.AddCommand(cmdProvision)
+	Root.AddCommand(cmdProvision)
 }
 
 var cmdProvision = &cobra.Command{
@@ -44,7 +44,7 @@ var cmdProvisionECS = &cobra.Command{
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk(ConfigFilePath)
+		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
