@@ -1,4 +1,4 @@
-package main
+package cmd
 
 // initCmd represents the init command
 import (
@@ -13,11 +13,12 @@ import (
 
 // Initialize "inertia" commands regarding basic configuration
 func init() {
-	cmdRoot.AddCommand(cmdInit)
-	cmdRoot.AddCommand(cmdReset)
-	cmdRoot.AddCommand(cmdSetConfigProperty)
+	Root.PersistentFlags().StringVar(&configFilePath, "config", "inertia.toml", "Specify relative path to Inertia configuration")
+	Root.AddCommand(cmdInit)
+	Root.AddCommand(cmdReset)
+	Root.AddCommand(cmdSetConfigProperty)
 
-	cmdInit.Flags().String("version", Version, "Specify Inertia daemon version to use")
+	cmdInit.Flags().String("version", Root.Version, "Specify Inertia daemon version to use")
 }
 
 var cmdInit = &cobra.Command{
@@ -65,7 +66,7 @@ to succeed.`,
 		}
 
 		// Hello world config file!
-		err = local.InitializeInertiaProject(ConfigFilePath, version, buildType, buildFilePath)
+		err = local.InitializeInertiaProject(configFilePath, version, buildType, buildFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -94,7 +95,7 @@ var cmdReset = &cobra.Command{
 		if response != "y" {
 			log.Fatal("aborting")
 		}
-		path, err := common.GetFullPath(ConfigFilePath)
+		path, err := common.GetFullPath(configFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -110,7 +111,7 @@ var cmdSetConfigProperty = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk(ConfigFilePath)
+		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
