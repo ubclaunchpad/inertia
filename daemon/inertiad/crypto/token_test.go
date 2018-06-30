@@ -65,5 +65,5 @@ func TestTokenClaims_GenerateToken(t *testing.T) {
 	// Try decoding token
 	readClaims, err := ValidateToken(token, GetFakeAPIKey)
 	assert.Nil(t, err)
-	assert.True(t, assert.ObjectsAreEqualValues(claims, readClaims))
+	assert.Equal(t, claims.User, readClaims.User)
 }
