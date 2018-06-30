@@ -83,8 +83,8 @@ Inertia uses:
 Make sure all of the above are installed before running:
 
 ```bash
-$> make               # installs dependencies and an Inertia 
-                      # build tagged as "test" to gopath
+$> make deps          # installs dependencies
+$> make cli           # installs Inertia build tagged as "test" to gopath
 $> inertia --version  # check what version you have installed
 ```
 
