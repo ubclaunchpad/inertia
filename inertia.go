@@ -16,6 +16,8 @@ var (
 func setVersion(c *cobra.Command) {
 	if Version != "" {
 		c.Version = Version
+	} else {
+		c.Version = "latest"
 	}
 }
 
