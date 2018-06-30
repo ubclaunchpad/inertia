@@ -10,9 +10,9 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/git"
 	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
@@ -79,7 +79,7 @@ func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deplo
 	if err != nil {
 		return nil, err
 	}
-	authMethod, err := auth.GetGithubKey(pemFile)
+	authMethod, err := crypto.GetGithubKey(pemFile)
 	if err != nil {
 		return nil, err
 	}

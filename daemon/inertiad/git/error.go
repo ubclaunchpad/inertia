@@ -4,12 +4,12 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
 // AuthFailedErr attaches the daemon key in the error message
 func AuthFailedErr(path ...string) error {
-	keyLoc := auth.DaemonGithubKeyLocation
+	keyLoc := crypto.DaemonGithubKeyLocation
 	if len(path) > 0 {
 		keyLoc = path[0]
 	}
