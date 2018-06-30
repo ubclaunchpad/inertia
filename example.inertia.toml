@@ -1,0 +1,28 @@
+version = "latest"
+project-name = "inertia"
+build-type = "dockerfile"
+build-file-path = "Dockerfile"
+
+[remotes]
+  [remotes.production]
+    name = "production"
+    IP = "1.2.3.4"
+    user = "root"
+    pemfile = "/Users/robertlin/.ssh/id_rsa"
+    branch = "master"
+    ssh_port = "22"
+    [remotes.production.daemon]
+      port = "4303"
+      token = "asdfasdf"
+      webhook_secret = "9oC_5rfFcx2es4NLonMP2leOlJARkmu404EAXHXR4CI="
+  [remotes.staging]
+    name = "staging"
+    IP = "4.3.2.1"
+    user = "bleh"
+    pemfile = "/Users/robertlin/.ssh/id_rsa"
+    branch = "dev"
+    ssh_port = "22"
+    [remotes.staging.daemon]
+      port = "4303"
+      token = "asdfasdf"
+      webhook_secret = "7dtg2lmTHF5EDBUgIpdu0zuERqs9Emn8rd3NCh5EiMU="

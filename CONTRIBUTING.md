@@ -22,7 +22,31 @@ All pull requests should be connected to one or more issues. Please try to fill 
 
 At the very least, all pull requests need to pass our Travis builds and receive an approval from a reviewer. Please include tests whenever possible.
 
-Read on for a comprehensive guide on how to get started with Inertia's codebase!
+See the [Development Tips](#development-tips) section to get started with the codebase!
+
+## Guidelines
+
+### Commits
+
+When writing a commit message, consider how useful it might be to someone reading it - can a reader tell *why* you made your changes based on your commit message? Try to avoid messages like `fix` or `wip` - for example, write `Fix x` or `Scaffold y`.
+
+Formatting-wise, just follow basic Git commit message conventions - capitalize subject line, use the imperative mood, and so on. See [this guide](https://chris.beams.io/posts/git-commit/#seven-rules) for an introduction on writing good Git commit messages.
+
+### Merging Pull Requests
+
+Small, nuclear changes should be squashed - on our ZenHub board, this usually means tickets with 3 or fewer Epic Points. Pull requests with lots of "mistake" commits (`add back accidentally deleted file` or `wip wip`) should be squashed as well. 
+
+Larger pull requests, given the commits are reasonable, should be merged with a standard `merge` to preserve history. On our ZenHub board, this usually means tickets with 8 or more Epic Points.
+
+### Branch Naming
+
+Branches should be named to refer to the component of Inertia the changes pertain to, as well as a related ticket. The component should correspond to [Labels](https://github.com/ubclaunchpad/inertia/labels) that begin with `area: ...`. The format ideally goes:
+
+```
+[area]/#[ticket]-[summary]
+```
+
+For example, [Issue #261](https://github.com/ubclaunchpad/inertia/issues/261) has the label `area: client` - in that case, the branch name should be `client/#261-ec2-provisioning`. If there are multiple `area` labels, just choose the most relevant one.
 
 # Development Tips
 
@@ -76,7 +100,7 @@ The Inertia codebase is split up into several components - this section gives a 
 
 ### CLI
 
-Inertia's command line application is in the root directory. It is built on top of [cobra](https://github.com/spf13/cobra), a library for building command line applications.
+Inertia's command line application is initiated in the root directory, but the majority of the code is in the `cmd` package. It is built on top of [cobra](https://github.com/spf13/cobra), a library for building command line applications.
 
 This code should only include the CLI user interface and code used to manage local assets, such as configuration files - core client logic, functionality, and daemon API interactions should go into the `client` package.
 

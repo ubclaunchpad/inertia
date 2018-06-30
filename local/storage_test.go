@@ -59,8 +59,8 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	// Test config read
 	readConfig, _, err := GetProjectConfigFromDisk("inertia.toml")
 	assert.Nil(t, err)
-	assert.Equal(t, config.Remotes[0], readConfig.Remotes[0])
-	assert.Equal(t, config.Remotes[1], readConfig.Remotes[1])
+	assert.Equal(t, config.Remotes["test"], readConfig.Remotes["test"])
+	assert.Equal(t, config.Remotes["test2"], readConfig.Remotes["test2"])
 
 	// Test client read
 	client, err := GetClient("test2", "inertia.toml")

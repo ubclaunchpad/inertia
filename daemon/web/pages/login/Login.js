@@ -45,7 +45,9 @@ class LoginWrapper extends React.Component {
 
   async handleLoginSubmit() {
     // TODO: disable authentication until we get it working
+    /* eslint-disable no-console */
     console.log(this.state.username, this.state.password);
+    /* eslint-enable no-console */
     this.props.testAction();
     // const response = await InertiaAPI.login(
     //   this.state.username,

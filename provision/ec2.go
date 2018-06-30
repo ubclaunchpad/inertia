@@ -167,7 +167,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	println("Checking status of requested instance...")
 	attempts := 0
 	var instanceStatus *ec2.DescribeInstancesOutput
-	for true {
+	for {
 		attempts++
 		// Request instance status
 		result, err := p.client.DescribeInstances(&ec2.DescribeInstancesInput{
@@ -210,7 +210,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 
 	// Poll for SSH port to open
 	println("Waiting for port 22 to open...")
-	for true {
+	for {
 		time.Sleep(3 * time.Second)
 		println("Checking port...")
 		conn, err := net.Dial("tcp", *instanceStatus.Reservations[0].Instances[0].PublicDnsName+":22")
