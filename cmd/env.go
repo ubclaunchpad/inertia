@@ -23,7 +23,7 @@ variables are applied to all deployed containers.`,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -55,7 +55,7 @@ and persistent environment storage.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,7 +79,7 @@ var cmdDeploymentEnvList = &cobra.Command{
 	Short: "List currently set and saved environment variables",
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
