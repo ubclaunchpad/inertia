@@ -38,6 +38,7 @@ func NewBuilder(conf cfg.Config, stopper containers.ContainerStopper) *Builder {
 		buildStageName:       "build",
 		dockerComposeVersion: conf.DockerComposeVersion,
 		herokuishVersion:     conf.HerokuishVersion,
+		stopper:              stopper,
 	}
 	b.builders = map[string]ProjectBuilder{
 		"herokuish":      b.herokuishBuild,
