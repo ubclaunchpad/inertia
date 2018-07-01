@@ -66,9 +66,9 @@ var cmdProvisionECS = &cobra.Command{
 			if err != nil {
 				log.Fatal(err)
 			}
-			prov, err = provision.NewEC2Provisioner(id, key)
+			prov, err = provision.NewEC2Provisioner(id, key, os.Stdout)
 		} else {
-			prov, err = provision.NewEC2ProvisionerFromEnv()
+			prov, err = provision.NewEC2ProvisionerFromEnv(os.Stdout)
 		}
 		if err != nil {
 			log.Fatal(err)
@@ -137,7 +137,7 @@ var cmdProvisionECS = &cobra.Command{
 		config.Write(path)
 
 		// Create inertia client
-		inertia, found := client.NewClient(args[0], config)
+		inertia, found := client.NewClient(args[0], config, os.Stdout)
 		if !found {
 			log.Fatal("vps setup did not complete properly")
 		}

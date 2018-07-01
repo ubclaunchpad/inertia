@@ -88,26 +88,28 @@ func GetProjectConfigFromDisk(relPath string) (*cfg.Config, string, error) {
 }
 
 // GetClient returns a local deployment setup
-func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, error) {
-	config, _, err := GetProjectConfigFromDisk(relPath)
+func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, func() error, error) {
+	config, path, err := GetProjectConfigFromDisk(relPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	client, found := client.NewClient(name, config)
+	client, found := client.NewClient(name, config, os.Stdout)
 	if !found {
-		return nil, errors.New("Remote not found")
+		return nil, nil, errors.New("Remote not found")
 	}
 
 	if len(cmd) == 1 && cmd[0] != nil {
 		verify, err := cmd[0].Flags().GetBool("verify-ssl")
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		client.SetSSLVerification(verify)
 	}
 
-	return client, nil
+	return client, func() error {
+		return config.Write(path)
+	}, nil
 }
 
 // SaveKey writes a key to given path
