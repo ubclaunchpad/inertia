@@ -28,9 +28,9 @@ type LogOptions struct {
 }
 
 // ContainerLogs get logs ;)
-func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
+func ContainerLogs(docker *docker.Client, opts LogOptions) (io.ReadCloser, error) {
 	ctx := context.Background()
-	return cli.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
+	return docker.ContainerLogs(ctx, opts.Container, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     opts.Stream,
@@ -39,10 +39,27 @@ func ContainerLogs(cli *docker.Client, opts LogOptions) (io.ReadCloser, error) {
 	})
 }
 
+// StreamContainerLogs streams logs from given container ID. Best used as a
+// goroutine.
+func StreamContainerLogs(client *docker.Client, id string, out io.Writer,
+	stop chan struct{}) error {
+	// Attach logs and report build progress until container exits
+	reader, err := ContainerLogs(client, LogOptions{
+		Container: id, Stream: true,
+		NoTimestamps: true,
+	})
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	log.FlushRoutine(out, reader, stop)
+	return nil
+}
+
 // GetActiveContainers returns all active containers and returns and error
 // if the Daemon is the only active container
-func GetActiveContainers(cli *docker.Client) ([]types.Container, error) {
-	containers, err := cli.ContainerList(
+func GetActiveContainers(docker *docker.Client) ([]types.Container, error) {
+	containers, err := docker.ContainerList(
 		context.Background(),
 		types.ContainerListOptions{},
 	)
@@ -63,10 +80,10 @@ func GetActiveContainers(cli *docker.Client) ([]types.Container, error) {
 type ContainerStopper func(*docker.Client, io.Writer) error
 
 // StopActiveContainers kills all active project containers (ie not including daemon)
-func StopActiveContainers(cli *docker.Client, out io.Writer) error {
+func StopActiveContainers(docker *docker.Client, out io.Writer) error {
 	fmt.Fprintln(out, "Shutting down active containers...")
 	ctx := context.Background()
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	containers, err := docker.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
 		return err
 	}
@@ -76,31 +93,26 @@ func StopActiveContainers(cli *docker.Client, out io.Writer) error {
 		if container.Names[0] != "/inertia-daemon" {
 			fmt.Fprintln(out, "Stopping "+container.Names[0]+"...")
 			timeout := 10 * time.Second
-			err := cli.ContainerStop(ctx, container.ID, &timeout)
+			err := docker.ContainerStop(ctx, container.ID, &timeout)
 			if err != nil {
 				return err
 			}
 		}
 	}
-
-	// Prune images
-	_, err = cli.ContainersPrune(ctx, filters.Args{})
-	return err
+	return nil
 }
 
-// StreamContainerLogs streams logs from given container ID. Best used as a
-// goroutine.
-func StreamContainerLogs(client *docker.Client, id string, out io.Writer,
-	stop chan struct{}) error {
-	// Attach logs and report build progress until container exits
-	reader, err := ContainerLogs(client, LogOptions{
-		Container: id, Stream: true,
-		NoTimestamps: true,
-	})
+// Cleanup clears up unused Docker assets
+func Cleanup(docker *docker.Client, exceptions ...string) error {
+	ctx := context.Background()
+	_, err := docker.ContainersPrune(ctx, filters.Args{})
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
-	log.FlushRoutine(out, reader, stop)
-	return nil
+	args := filters.NewArgs()
+	for _, e := range exceptions {
+		filters.ParseFlag("label!="+e, args)
+	}
+	_, err = docker.ImagesPrune(ctx, args)
+	return err
 }

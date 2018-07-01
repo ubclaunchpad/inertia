@@ -71,8 +71,7 @@ func TestDockerComposeIntegration(t *testing.T) {
 		builder: build.NewBuilder(cfg.Config{
 			DockerComposeVersion: DockerComposeVersion,
 			HerokuishVersion:     HerokuishVersion,
-		}),
-		containerStopper: killTestContainers,
+		}, killTestContainers),
 	}
 
 	// Execute build
@@ -199,8 +198,7 @@ func TestDockerBuildIntegration(t *testing.T) {
 		builder: build.NewBuilder(cfg.Config{
 			DockerComposeVersion: DockerComposeVersion,
 			HerokuishVersion:     HerokuishVersion,
-		}),
-		containerStopper: killTestContainers,
+		}, killTestContainers),
 	}
 
 	// Execute build
@@ -271,8 +269,7 @@ func TestHerokuishBuildIntegration(t *testing.T) {
 		builder: build.NewBuilder(cfg.Config{
 			DockerComposeVersion: DockerComposeVersion,
 			HerokuishVersion:     HerokuishVersion,
-		}),
-		containerStopper: killTestContainers,
+		}, killTestContainers),
 	}
 
 	// Execute build

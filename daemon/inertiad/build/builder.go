@@ -27,12 +27,13 @@ type Builder struct {
 	buildStageName       string
 	dockerComposeVersion string
 	herokuishVersion     string
+	stopper              containers.ContainerStopper
 
 	builders map[string]ProjectBuilder
 }
 
 // NewBuilder creates a builder with given configuration
-func NewBuilder(conf cfg.Config) *Builder {
+func NewBuilder(conf cfg.Config, stopper containers.ContainerStopper) *Builder {
 	b := &Builder{
 		buildStageName:       "build",
 		dockerComposeVersion: conf.DockerComposeVersion,
@@ -49,6 +50,16 @@ func NewBuilder(conf cfg.Config) *Builder {
 // GetBuildStageName returns the name of the intermediary container used to
 // build projects
 func (b *Builder) GetBuildStageName() string { return b.buildStageName }
+
+// StopContainers stops containers and cleans up assets
+func (b *Builder) StopContainers(docker *docker.Client, out io.Writer) error {
+	return b.stopper(docker, out)
+}
+
+// Prune cleans up Dokcer assets
+func (b *Builder) Prune(docker *docker.Client, out io.Writer) error {
+	return containers.Cleanup(docker, b.dockerComposeVersion, b.herokuishVersion)
+}
 
 // Config contains parameters required for builds to execute
 type Config struct {

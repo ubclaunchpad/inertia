@@ -23,6 +23,8 @@ import (
 type Builder interface {
 	Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error)
 	GetBuildStageName() string
+	StopContainers(*docker.Client, io.Writer) error
+	Prune(*docker.Client, io.Writer) error
 }
 
 // Deployer manages the deployed user project
@@ -48,8 +50,7 @@ type Deployment struct {
 	buildType     string
 	buildFilePath string
 
-	builder          Builder
-	containerStopper containers.ContainerStopper
+	builder Builder
 
 	repo *gogit.Repository
 	auth ssh.AuthMethod
@@ -105,8 +106,7 @@ func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deplo
 		buildType: cfg.BuildType,
 
 		// Functions
-		builder:          builder,
-		containerStopper: containers.StopActiveContainers,
+		builder: builder,
 
 		// Repository
 		auth: authMethod,
@@ -155,7 +155,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	}
 
 	// Kill active project containers if there are any
-	err := d.containerStopper(cli, out)
+	err := d.builder.StopContainers(cli, out)
 	if err != nil {
 		return err
 	}
@@ -186,13 +186,17 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	// active
 	_, err := containers.GetActiveContainers(cli)
 	if err != nil {
-		killErr := d.containerStopper(cli, out)
+		killErr := d.builder.StopContainers(cli, out)
 		if killErr != nil {
 			println(err)
 		}
 		return err
 	}
-	return d.containerStopper(cli, out)
+	err = d.builder.StopContainers(cli, out)
+	if err != nil {
+		return err
+	}
+	return d.builder.Prune(cli, out)
 }
 
 // Destroy shuts down the deployment and removes the repository
