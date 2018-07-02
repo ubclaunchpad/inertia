@@ -32,8 +32,9 @@ type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) error
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
-
+	Prune(*docker.Client, io.Writer) error
 	GetStatus(*docker.Client) (*common.DeploymentStatus, error)
+
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
@@ -196,6 +197,11 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	return d.builder.Prune(cli, out)
+}
+
+// Prune clears unused Docker assets
+func (d *Deployment) Prune(cli *docker.Client, out io.Writer) error {
 	return d.builder.Prune(cli, out)
 }
 

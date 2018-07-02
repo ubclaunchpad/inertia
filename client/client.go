@@ -229,6 +229,11 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 	})
 }
 
+// Prune clears Docker assets on this remote.
+func (c *Client) Prune() (*http.Response, error) {
+	return c.post("/prune", nil)
+}
+
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
 func (c *Client) Down() (*http.Response, error) {
