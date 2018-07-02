@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -26,16 +25,25 @@ type Client struct {
 	buildType     string
 	buildFilePath string
 
+	out io.Writer
+
 	sshRunner SSHSession
 	verifySSL bool
 }
 
 // NewClient sets up a client to communicate to the daemon at
 // the given named remote.
-func NewClient(remoteName string, config *cfg.Config) (*Client, bool) {
+func NewClient(remoteName string, config *cfg.Config, out ...io.Writer) (*Client, bool) {
 	remote, found := config.GetRemote(remoteName)
 	if !found {
 		return nil, false
+	}
+
+	var writer io.Writer
+	if len(out) > 0 {
+		writer = out[0]
+	} else {
+		writer = common.DevNull{}
 	}
 
 	return &Client{
@@ -45,6 +53,8 @@ func NewClient(remoteName string, config *cfg.Config) (*Client, bool) {
 		buildType:     config.BuildType,
 		buildFilePath: config.BuildFilePath,
 		sshRunner:     NewSSHRunner(remote),
+
+		out: writer,
 	}, true
 }
 
@@ -59,15 +69,15 @@ func (c *Client) SetSSLVerification(verify bool) {
 // public-private key-pair. It outputs configuration information
 // for the user.
 func (c *Client) BootstrapRemote(repoName string) error {
-	println("Setting up remote \"" + c.Name + "\" at " + c.IP)
+	fmt.Fprintf(c.out, "Setting up remote %s at %s", c.Name, c.IP)
 
-	println(">> Step 1/4: Installing docker...")
+	fmt.Fprint(c.out, ">> Step 1/4: Installing docker...")
 	err := c.installDocker(c.sshRunner)
 	if err != nil {
 		return err
 	}
 
-	println("\n>> Step 2/4: Building deploy key...")
+	fmt.Fprint(c.out, "\n>> Step 2/4: Building deploy key...")
 	if err != nil {
 		return err
 	}
@@ -78,7 +88,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 
 	// This step needs to run before any other commands that rely on
 	// the daemon image, since the daemon is loaded here.
-	println("\n>> Step 3/4: Starting daemon...")
+	fmt.Fprint(c.out, "\n>> Step 3/4: Starting daemon...")
 	if err != nil {
 		return err
 	}
@@ -87,34 +97,34 @@ func (c *Client) BootstrapRemote(repoName string) error {
 		return err
 	}
 
-	println("\n>> Step 4/4: Fetching daemon API token...")
+	fmt.Fprint(c.out, "\n>> Step 4/4: Fetching daemon API token...")
 	token, err := c.getDaemonAPIToken(c.sshRunner, c.version)
 	if err != nil {
 		return err
 	}
 	c.Daemon.Token = token
 
-	println("\nInertia has been set up and daemon is running on remote!")
-	println("You may have to wait briefly for Inertia to set up some dependencies.")
-	fmt.Printf("Use 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", c.Name)
+	fmt.Fprint(c.out, "\nInertia has been set up and daemon is running on remote!")
+	fmt.Fprint(c.out, "You may have to wait briefly for Inertia to set up some dependencies.")
+	fmt.Fprintf(c.out, "Use 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", c.Name)
 
-	println("=============================\n")
+	fmt.Fprint(c.out, "=============================\n")
 
 	// Output deploy key to user.
-	println(">> GitHub Deploy Key (add to https://www.github.com/" + repoName + "/settings/keys/new): ")
-	println(pub.String())
+	fmt.Fprintf(c.out, ">> GitHub Deploy Key (add to https://www.github.com/%s/settings/keys/new): ", repoName)
+	fmt.Fprint(c.out, pub.String())
 
 	// Output Webhook url to user.
-	println(">> GitHub WebHook URL (add to https://www.github.com/" + repoName + "/settings/hooks/new): ")
-	println("WebHook Address:  https://" + c.IP + ":" + c.Daemon.Port + "/webhook")
-	println("WebHook Secret:   " + c.Daemon.WebHookSecret)
-	println(`Note that you will have to disable SSH verification in your webhook
+	fmt.Fprintf(c.out, ">> GitHub WebHook URL (add to https://www.github.com/%s/settings/hooks/new): ", repoName)
+	fmt.Fprintf(c.out, "WebHook Address:  https://%s:%s/webhook", c.IP, c.Daemon.Port)
+	fmt.Fprint(c.out, "WebHook Secret:   "+c.Daemon.WebHookSecret)
+	fmt.Fprint(c.out, `Note that you will have to disable SSH verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
-be able to verify.` + "\n")
+be able to verify.`+"\n")
 
-	println(`Inertia daemon successfully deployed! Add your webhook url and deploy
+	fmt.Fprint(c.out, `Inertia daemon successfully deployed! Add your webhook url and deploy
 key to enable continuous deployment.`)
-	fmt.Printf("Then run 'inertia %s up' to deploy your application.\n", c.Name)
+	fmt.Fprintf(c.out, "Then run 'inertia %s up' to deploy your application.\n", c.Name)
 
 	return nil
 }
@@ -140,8 +150,7 @@ func (c *Client) DaemonDown() error {
 
 	_, stderr, err := c.sshRunner.Run(string(scriptBytes))
 	if err != nil {
-		println(stderr.String())
-		return err
+		return fmt.Errorf("daemon shutdown failed: %s: %s", err.Error(), stderr.String())
 	}
 
 	return nil
@@ -158,8 +167,7 @@ func (c *Client) installDocker(session SSHSession) error {
 	cmdStr := string(installDockerSh)
 	_, stderr, err := session.Run(cmdStr)
 	if err != nil {
-		println(stderr.String())
-		return err
+		return fmt.Errorf("docker installation: %s: %s", err.Error(), stderr.String())
 	}
 
 	return nil
@@ -177,8 +185,7 @@ func (c *Client) keyGen(session SSHSession) (*bytes.Buffer, error) {
 	result, stderr, err := session.Run(string(scriptBytes))
 
 	if err != nil {
-		log.Println(stderr.String())
-		return nil, err
+		return nil, fmt.Errorf("key generation failed: %s: %s", err.Error(), stderr.String())
 	}
 
 	return result, nil
@@ -195,8 +202,7 @@ func (c *Client) getDaemonAPIToken(session SSHSession, daemonVersion string) (st
 
 	stdout, stderr, err := session.Run(daemonCmdStr)
 	if err != nil {
-		log.Println(stderr.String())
-		return "", err
+		return "", fmt.Errorf("api token generation failed: %s: %s", err.Error(), stderr.String())
 	}
 
 	// There may be a newline, remove it.

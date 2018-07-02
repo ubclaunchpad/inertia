@@ -65,7 +65,6 @@ test-v:
 # Also attempts to run linter
 .PHONY: test-all
 test-all:
-	make lint
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
 	go test ./... -ldflags "-X main.Version=test" --cover

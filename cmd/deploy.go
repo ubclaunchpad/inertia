@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -138,7 +137,7 @@ var cmdDeploymentUp = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -202,7 +201,7 @@ var cmdDeploymentDown = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -239,7 +238,7 @@ var cmdDeploymentStatus = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -286,7 +285,7 @@ var cmdDeploymentLogs = &cobra.Command{
 	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -346,7 +345,7 @@ var cmdDeploymentSSH = &cobra.Command{
 	Long:  `Starts up an interact SSH session with your remote.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath)
+		deployment, _, err := local.GetClient(remoteName, configFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -366,7 +365,7 @@ deployment. Provide a relative path to your file.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -422,27 +421,21 @@ request access to the repository via a public key, and will listen
 for updates to this repository's remote master branch.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-
-		// Bootstrap needs to write to configuration.
-		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
+		cli, write, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
-		cli, found := client.NewClient(remoteName, config)
-		if found {
-			url, err := local.GetRepoRemote("origin")
-			if err != nil {
-				log.Fatal(err)
-			}
-			repoName := common.ExtractRepository(common.GetSSHRemoteURL(url))
-			err = cli.BootstrapRemote(repoName)
-			if err != nil {
-				log.Fatal(err)
-			}
-			config.Write(path)
-		} else {
-			log.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
+
+		url, err := local.GetRepoRemote("origin")
+		if err != nil {
+			log.Fatal(err)
 		}
+		repoName := common.ExtractRepository(common.GetSSHRemoteURL(url))
+		err = cli.BootstrapRemote(repoName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		write()
 	},
 }
 
@@ -456,7 +449,7 @@ remote. Requires Inertia daemon to be active on your remote - do this by
 running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
