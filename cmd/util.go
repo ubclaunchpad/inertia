@@ -15,8 +15,8 @@ func deepCopy(cmd *cobra.Command) *cobra.Command {
 
 // setProperty takes a struct pointer and searches for its "toml" tag with a search key
 // and set property value with the tag
-func setProperty(name string, value string, structObject interface{}) bool {
-	val := reflect.ValueOf(structObject)
+func setProperty(name string, value string, object interface{}) bool {
+	val := reflect.ValueOf(object)
 
 	if val.Kind() != reflect.Ptr {
 		return false
@@ -26,9 +26,14 @@ func setProperty(name string, value string, structObject interface{}) bool {
 		valueField := structVal.Field(i)
 		typeField := structVal.Type().Field(i)
 		if typeField.Tag.Get("toml") == name {
-			if valueField.IsValid() && valueField.CanSet() && valueField.Kind() == reflect.String {
-				valueField.SetString(value)
-				return true
+			if valueField.IsValid() && valueField.CanSet() {
+				if valueField.Kind() == reflect.String {
+					valueField.SetString(value)
+					return true
+				} else if valueField.Kind() == reflect.Ptr {
+					valueField.Elem().SetString(value)
+					return true
+				}
 			}
 		}
 	}

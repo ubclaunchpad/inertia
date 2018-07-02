@@ -8,15 +8,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BurntSushi/toml"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func InitializeInertiaProject(configPath, version, buildType, buildFilePath string) error {
+func InitializeInertiaProject(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -26,19 +24,14 @@ func InitializeInertiaProject(configPath, version, buildType, buildFilePath stri
 		return err
 	}
 
-	return createConfigFile(configPath, version, buildType, buildFilePath)
+	return createConfigFile(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath)
 }
 
 // createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func createConfigFile(configPath, version, buildType, buildFilePath string) error {
-	configFilePath, err := common.GetFullPath(configPath)
-	if err != nil {
-		return err
-	}
-
+func createConfigFile(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath string) error {
 	// Check if Inertia is already set up.
-	s, fileErr := os.Stat(configFilePath)
+	s, fileErr := os.Stat(projectConfigPath)
 	if s != nil {
 		return errors.New("inertia already properly configured in this folder")
 	}
@@ -51,45 +44,23 @@ func createConfigFile(configPath, version, buildType, buildFilePath string) erro
 		}
 		config := cfg.NewConfig(version, filepath.Base(cwd), buildType, buildFilePath)
 
-		f, err := os.Create(configFilePath)
+		f, err := os.Create(projectConfigPath)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		config.Write(configFilePath)
+		config.WriteProjectConfig(projectConfigPath)
+		config.WriteRemoteConfig(remoteConfigPath)
+		return nil
 	}
 
-	return nil
+	return fileErr
 }
 
-// GetProjectConfigFromDisk returns the current project's configuration.
-// If an .inertia folder is not found, it returns an error.
-func GetProjectConfigFromDisk(relPath string) (*cfg.Config, string, error) {
-	configFilePath, err := common.GetFullPath(relPath)
-	if err != nil {
-		return nil, "", err
-	}
-
-	raw, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, configFilePath, errors.New("config file doesnt exist, try inertia init")
-		}
-		return nil, configFilePath, err
-	}
-
-	var cfg cfg.Config
-	err = toml.Unmarshal(raw, &cfg)
-	if err != nil {
-		return nil, configFilePath, err
-	}
-
-	return &cfg, configFilePath, err
-}
-
-// GetClient returns a local deployment setup
-func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, func() error, error) {
-	config, path, err := GetProjectConfigFromDisk(relPath)
+// GetClient returns a local deployment setup. Returns a callback to write any
+// changes made to the configuration.
+func GetClient(name, projectConfigPath, remoteConfigPath string, cmd ...*cobra.Command) (*client.Client, func() error, error) {
+	config, err := cfg.NewConfigFromFiles(projectConfigPath, remoteConfigPath)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -108,7 +79,11 @@ func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, fun
 	}
 
 	return client, func() error {
-		return config.Write(path)
+		err = config.WriteProjectConfig(projectConfigPath)
+		if err != nil {
+			return err
+		}
+		return config.WriteRemoteConfig(remoteConfigPath)
 	}, nil
 }
 

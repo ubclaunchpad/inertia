@@ -17,12 +17,12 @@ func TestNewConfig(t *testing.T) {
 
 func TestWriteFailed(t *testing.T) {
 	cfg := NewConfig("test", "best-project", "docker-compose", "")
-	err := cfg.Write("")
+	err := cfg.WriteProjectConfig("")
 	assert.NotNil(t, err)
 	assert.Contains(t, "nothing to write to", err.Error())
 }
 
-func TestWriteToPath(t *testing.T) {
+func TestWriteProjectConfigToPath(t *testing.T) {
 	configPath := "/test-config.toml"
 	cfg := NewConfig("test", "best-project", "docker-compose", "")
 
@@ -31,13 +31,42 @@ func TestWriteToPath(t *testing.T) {
 	absPath := filepath.Join(cwd, configPath)
 	defer os.RemoveAll(absPath)
 
-	err = cfg.Write(absPath)
+	err = cfg.WriteProjectConfig(absPath)
 	assert.Nil(t, err)
 
 	writtenConfigContents, err := ioutil.ReadFile(absPath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(writtenConfigContents), "best-project")
 	assert.Contains(t, string(writtenConfigContents), "docker-compose")
+}
+
+func TestWritePremoteConfigToPath(t *testing.T) {
+	configPath := "/test-config.toml"
+	cfg := NewConfig("test", "best-project", "docker-compose", "")
+	testRemote := &RemoteVPS{
+		Name:    "test",
+		IP:      "12343",
+		User:    "bobheadxi",
+		PEM:     "/some/pem/file",
+		SSHPort: "22",
+		Daemon: &DaemonConfig{
+			Port: "8080",
+		},
+	}
+	cfg.AddRemote(testRemote)
+
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+	absPath := filepath.Join(cwd, configPath)
+	defer os.RemoveAll(absPath)
+
+	err = cfg.WriteRemoteConfig(absPath)
+	assert.Nil(t, err)
+
+	writtenConfigContents, err := ioutil.ReadFile(absPath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(writtenConfigContents), "/some/pem/file")
+	assert.Contains(t, string(writtenConfigContents), "bobheadxi")
 }
 
 func TestWriteToWritersAndFile(t *testing.T) {
@@ -52,7 +81,7 @@ func TestWriteToWritersAndFile(t *testing.T) {
 	buffer1 := bytes.NewBuffer(nil)
 	buffer2 := bytes.NewBuffer(nil)
 
-	err = cfg.Write(absPath, buffer1, buffer2)
+	err = cfg.WriteProjectConfig(absPath, buffer1, buffer2)
 	assert.Nil(t, err)
 
 	writtenConfigContents, err := ioutil.ReadFile(absPath)
@@ -64,7 +93,7 @@ func TestWriteToWritersAndFile(t *testing.T) {
 }
 
 func TestConfigGetRemote(t *testing.T) {
-	config := &Config{Remotes: make(map[string]*RemoteVPS)}
+	config := &Config{remotes: make(map[string]*RemoteVPS)}
 	testRemote := &RemoteVPS{
 		Name:    "test",
 		IP:      "12343",
@@ -85,7 +114,7 @@ func TestConfigGetRemote(t *testing.T) {
 }
 
 func TestConfigRemoveRemote(t *testing.T) {
-	config := &Config{Remotes: make(map[string]*RemoteVPS)}
+	config := &Config{remotes: make(map[string]*RemoteVPS)}
 	testRemote := &RemoteVPS{
 		Name:    "test",
 		IP:      "12343",

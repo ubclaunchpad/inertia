@@ -7,13 +7,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
 // Initialize "inertia" commands regarding basic configuration
 func init() {
-	Root.PersistentFlags().StringVar(&configFilePath, "config", "inertia.toml", "Specify relative path to Inertia configuration")
 	Root.AddCommand(cmdInit)
 	Root.AddCommand(cmdReset)
 	Root.AddCommand(cmdSetConfigProperty)
@@ -66,7 +66,7 @@ to succeed.`,
 		}
 
 		// Hello world config file!
-		err = local.InitializeInertiaProject(configFilePath, version, buildType, buildFilePath)
+		err = local.InitializeInertiaProject(projectConfigFilePath, remoteConfigFilePath, version, buildType, buildFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -95,11 +95,14 @@ var cmdReset = &cobra.Command{
 		if response != "y" {
 			log.Fatal("aborting")
 		}
-		path, err := common.GetFullPath(configFilePath)
+		err = os.Remove(projectConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
-		os.Remove(path)
+		err = os.Remove(remoteConfigFilePath)
+		if err != nil {
+			log.Fatal(err)
+		}
 		println("Inertia configuration removed.")
 	},
 }
@@ -111,14 +114,17 @@ var cmdSetConfigProperty = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
+		config, err := cfg.NewConfigFromFiles(projectConfigFilePath, remoteConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
-		success := setProperty(args[0], args[1], config)
+		success := setProperty(args[0], args[1], config.GetProjectConfig())
 		if success {
-			config.Write(path)
-			println("Configuration setting '" + args[0] + "' has been updated..")
+			err = config.WriteProjectConfig(projectConfigFilePath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			println("Configuration setting '" + args[0] + "' has been updated.")
 		} else {
 			println("Configuration setting '" + args[0] + "' not found.")
 		}

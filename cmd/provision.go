@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
@@ -44,7 +45,7 @@ var cmdProvisionECS = &cobra.Command{
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
+		config, err := cfg.NewConfigFromFiles(projectConfigFilePath, remoteConfigFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -134,7 +135,7 @@ var cmdProvisionECS = &cobra.Command{
 			log.Fatal(err)
 		}
 		config.AddRemote(remote)
-		config.Write(path)
+		config.WriteRemoteConfig(remoteConfigFilePath)
 
 		// Create inertia client
 		inertia, found := client.NewClient(args[0], config, os.Stdout)
@@ -150,6 +151,9 @@ var cmdProvisionECS = &cobra.Command{
 		}
 
 		// Save updated config
-		config.Write(path)
+		err = config.WriteRemoteConfig(remoteConfigFilePath)
+		if err != nil {
+			log.Fatal("Faield to save configuration: " + err.Error())
+		}
 	},
 }

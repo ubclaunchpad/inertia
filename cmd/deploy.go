@@ -10,6 +10,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 
@@ -18,27 +19,14 @@ import (
 	"github.com/ubclaunchpad/inertia/client"
 )
 
-// parseConfigArg is a dirty dirty hack to allow access to the --config argument
-// before Cobra parses it (it is required to set up remote commands in the
-// init() phase)
-func parseConfigArg() {
-	for i, arg := range os.Args {
-		if arg == "--config" {
-			configFilePath = os.Args[i+1]
-			break
-		}
-	}
-}
-
 // Initialize "inertia [REMOTE] [COMMAND]" commands
 func init() {
-	// This is the only place configuration is read every time an `inertia`
-	// command is run - check version here.
-	parseConfigArg() // see parseArgs documentation
-	config, _, err := local.GetProjectConfigFromDisk(configFilePath)
+	config, err := cfg.NewConfigFromFiles(projectConfigFilePath, remoteConfigFilePath)
 	if err != nil {
-		println("[WARNING] Inertia configuration not found in " + configFilePath)
-		return
+		if err == cfg.ErrNoProjectConfig {
+			return
+		}
+		log.Fatal(err)
 	}
 	if config.Version != Root.Version {
 		fmt.Printf(
@@ -137,7 +125,7 @@ var cmdDeploymentUp = &cobra.Command{
 	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -201,7 +189,7 @@ var cmdDeploymentDown = &cobra.Command{
 	Requires project to be online - do this by running 'inertia [REMOTE] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -238,7 +226,7 @@ var cmdDeploymentStatus = &cobra.Command{
 	running 'inertia [REMOTE] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -285,7 +273,7 @@ var cmdDeploymentLogs = &cobra.Command{
 	status' to see what containers are accessible.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -345,7 +333,7 @@ var cmdDeploymentSSH = &cobra.Command{
 	Long:  `Starts up an interact SSH session with your remote.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, _, err := local.GetClient(remoteName, configFilePath)
+		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -365,7 +353,7 @@ deployment. Provide a relative path to your file.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -421,7 +409,7 @@ request access to the repository via a public key, and will listen
 for updates to this repository's remote master branch.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		cli, write, err := local.GetClient(remoteName, configFilePath, cmd)
+		cli, write, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -449,7 +437,7 @@ remote. Requires Inertia daemon to be active on your remote - do this by
 running 'inertia [REMOTE] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}

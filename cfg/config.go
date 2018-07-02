@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -12,14 +13,17 @@ import (
 var (
 	// NoInertiaRemote is used to warn about missing inertia remote
 	NoInertiaRemote = "No inertia remote"
+
+	// ErrNoProjectConfig indicates Inertia has not been set up yet
+	ErrNoProjectConfig = errors.New("project config file doesn't exist, try inertia init")
 )
 
-// Config represents the current projects configuration.
+// Config represents the current project's configuration.
 type Config struct {
-	Version       string `toml:"version"`
-	Project       string `toml:"project-name"`
-	BuildType     string `toml:"build-type"`
-	BuildFilePath string `toml:"build-file-path"`
+	Version       string
+	Project       string
+	BuildType     string
+	BuildFilePath string
 
 	remotes map[string]*RemoteVPS
 }
@@ -38,7 +42,64 @@ func NewConfig(version, project, buildType, buildFilePath string) *Config {
 	return cfg
 }
 
-// Write writes configuration to Inertia config file at path. Optionally
+// NewConfigFromFiles loads configuration from given filepaths
+func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Config, error) {
+	// Get project
+	raw, err := ioutil.ReadFile(projectConfigPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrNoProjectConfig
+		}
+		return nil, err
+	}
+	var project InertiaProject
+	err = toml.Unmarshal(raw, &project)
+	if err != nil {
+		return nil, fmt.Errorf("project config error: %s", err.Error())
+	}
+
+	// Get remotes
+	raw, err = ioutil.ReadFile(remoteConfigPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return NewConfigFromTOML(project, InertiaRemotes{Version: project.Version})
+		}
+		return nil, err
+	}
+	var remotes InertiaRemotes
+	err = toml.Unmarshal(raw, &remotes)
+	if err != nil {
+		return nil, fmt.Errorf("remote config error: %s", err.Error())
+	}
+
+	// Generate config
+	return NewConfigFromTOML(project, remotes)
+}
+
+// NewConfigFromTOML loads configuration from TOML format structs
+func NewConfigFromTOML(project InertiaProject, remotes InertiaRemotes) (*Config, error) {
+	// Set remote defaults
+	if remotes.Remotes == nil {
+		r := make(map[string]*RemoteVPS)
+		remotes.Remotes = &r
+	}
+	if remotes.Version == nil {
+		remotes.Version = project.Version
+	}
+
+	// Generate config
+	if *project.Version != *remotes.Version {
+		return nil, fmt.Errorf("mismatching versions %s and %s", *project.Version, *remotes.Version)
+	}
+	return &Config{
+		Version:       *project.Version,
+		Project:       *project.Project,
+		BuildType:     *project.BuildType,
+		BuildFilePath: *project.BuildFilePath,
+		remotes:       *remotes.Remotes,
+	}, nil
+}
+
 // GetRemotes retrieves a list of all remotes
 func (config *Config) GetRemotes() []*RemoteVPS {
 	remotes := make([]*RemoteVPS, 0)
@@ -82,8 +143,28 @@ func (config *Config) RemoveRemote(name string) bool {
 	return true
 }
 
+// GetProjectConfig gets project configuration
+func (config *Config) GetProjectConfig() *InertiaProject {
+	return &InertiaProject{&config.Version, &config.Project, &config.BuildType, &config.BuildFilePath}
+}
+
+// WriteProjectConfig writes Inertia project configuration. This file should be
+// committed.
+func (config *Config) WriteProjectConfig(filePath string, writers ...io.Writer) error {
+	toml := config.GetProjectConfig()
+	return config.write(filePath, toml, writers...)
+}
+
+// WriteRemoteConfig writes Inertia remote configuration. This file should NOT
+// be committed.
+func (config *Config) WriteRemoteConfig(filePath string, writers ...io.Writer) error {
+	toml := InertiaRemotes{&config.Version, &config.remotes}
+	return config.write(filePath, toml, writers...)
+}
+
+// write writes configuration to Inertia config file at path. Optionally
 // takes io.Writers.
-func (config *Config) Write(filePath string, writers ...io.Writer) error {
+func (config *Config) write(filePath string, contents interface{}, writers ...io.Writer) error {
 	if len(writers) == 0 && filePath == "" {
 		return errors.New("nothing to write to")
 	}
@@ -119,35 +200,5 @@ func (config *Config) Write(filePath string, writers ...io.Writer) error {
 
 	// Write configuration to writers
 	encoder := toml.NewEncoder(writer)
-	return encoder.Encode(config)
-}
-
-// GetRemote retrieves a remote by name
-func (config *Config) GetRemote(name string) (*RemoteVPS, bool) {
-	for _, remote := range config.Remotes {
-		if remote.Name == name {
-			return remote, true
-		}
-	}
-	return nil, false
-}
-
-// AddRemote adds a remote to configuration
-func (config *Config) AddRemote(remote *RemoteVPS) bool {
-	_, ok := config.Remotes[remote.Name]
-	if ok {
-		return false
-	}
-	config.Remotes[remote.Name] = remote
-	return true
-}
-
-// RemoveRemote removes remote with given name
-func (config *Config) RemoveRemote(name string) bool {
-	_, ok := config.Remotes[name]
-	if !ok {
-		return false
-	}
-	delete(config.Remotes, name)
-	return true
+	return encoder.Encode(contents)
 }

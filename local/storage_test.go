@@ -6,30 +6,29 @@ import (
 	"path"
 	"testing"
 
+	"github.com/ubclaunchpad/inertia/common"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/cfg"
 )
 
 func TestInitializeInertiaProjetFail(t *testing.T) {
-	err := InitializeInertiaProject("inertia.toml", "", "", "")
-	assert.NotNil(t, err)
-}
-
-func TestGetConfigFail(t *testing.T) {
-	_, _, err := GetProjectConfigFromDisk("inertia.toml")
+	err := InitializeInertiaProject("inertia.toml", "inertia.remotes", "", "", "")
 	assert.NotNil(t, err)
 }
 
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := createConfigFile("inertia.toml", "test", "dockerfile", "")
+	project, _ := common.GetFullPath("inertia.toml")
+	remotes, _ := common.GetFullPath("inertia.remotes")
+	err := createConfigFile(project, remotes, "test", "dockerfile", "")
 	assert.Nil(t, err)
 
 	// Already exists
-	err = createConfigFile("inertia.toml", "test", "dockerfile", "")
+	err = createConfigFile(project, remotes, "test", "dockerfile", "")
 	assert.NotNil(t, err)
 
 	// Get config and add remotes
-	config, configPath, err := GetProjectConfigFromDisk("inertia.toml")
+	config, err := cfg.NewConfigFromFiles(project, remotes)
 	assert.Nil(t, err)
 	config.AddRemote(&cfg.RemoteVPS{
 		Name:    "test",
@@ -53,28 +52,31 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	})
 
 	// Test config creation
-	err = config.Write(configPath)
+	err = config.WriteProjectConfig(project)
+	assert.Nil(t, err)
+	err = config.WriteRemoteConfig(remotes)
 	assert.Nil(t, err)
 
 	// Test config read
-	readConfig, _, err := GetProjectConfigFromDisk("inertia.toml")
+	readConfig, err := cfg.NewConfigFromFiles(project, remotes)
 	assert.Nil(t, err)
-	assert.Equal(t, config.Remotes["test"], readConfig.Remotes["test"])
-	assert.Equal(t, config.Remotes["test2"], readConfig.Remotes["test2"])
+	assert.Equal(t, config.GetRemotes()[0], readConfig.GetRemotes()[0])
+	assert.Equal(t, config.GetRemotes()[1], readConfig.GetRemotes()[1])
 
 	// Test client read
-	client, _, err := GetClient("test2", "inertia.toml")
+	client, _, err := GetClient("test2", project, remotes)
 	assert.Nil(t, err)
 	assert.Equal(t, "test2", client.Name)
 	assert.Equal(t, "12343:80801", client.GetIPAndPort())
-	_, _, err = GetClient("asdf", "inertia.toml")
+	_, _, err = GetClient("asdf", project, remotes)
 	assert.NotNil(t, err)
 
 	// Test config remove
-	err = os.Remove(configPath)
+	err = os.Remove(project)
+	assert.Nil(t, err)
+	err = os.Remove(remotes)
 	assert.Nil(t, err)
 }
-
 func TestSaveKey(t *testing.T) {
 	keyMaterial := `-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEAw+14SQTAidfYPDizCYPv0gWq4+wFeInCrZGo4BFbMcP7xhH+

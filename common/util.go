@@ -17,7 +17,7 @@ func (dn DevNull) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-// GetFullPath returns the absolute path of the config file.
+// GetFullPath returns the absolute path of given relative path.
 func GetFullPath(relPath string) (string, error) {
 	path, err := os.Getwd()
 	if err != nil {
