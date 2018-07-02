@@ -49,7 +49,7 @@ func init() {
 
 	// Make a new command for each remote with all associated
 	// deployment commands.
-	for _, remote := range config.Remotes {
+	for _, remote := range config.GetRemotes() {
 		cmd := &cobra.Command{
 			Use:    remote.Name + " [COMMAND]",
 			Hidden: true,

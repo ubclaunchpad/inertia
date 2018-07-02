@@ -21,7 +21,7 @@ type Config struct {
 	BuildType     string `toml:"build-type"`
 	BuildFilePath string `toml:"build-file-path"`
 
-	Remotes map[string]*RemoteVPS `toml:"remotes"`
+	remotes map[string]*RemoteVPS
 }
 
 // NewConfig sets up Inertia configuration with given properties
@@ -30,7 +30,7 @@ func NewConfig(version, project, buildType, buildFilePath string) *Config {
 		Version:   version,
 		Project:   project,
 		BuildType: buildType,
-		Remotes:   make(map[string]*RemoteVPS),
+		remotes:   make(map[string]*RemoteVPS),
 	}
 	if buildFilePath != "" {
 		cfg.BuildFilePath = buildFilePath
@@ -39,6 +39,49 @@ func NewConfig(version, project, buildType, buildFilePath string) *Config {
 }
 
 // Write writes configuration to Inertia config file at path. Optionally
+// GetRemotes retrieves a list of all remotes
+func (config *Config) GetRemotes() []*RemoteVPS {
+	remotes := make([]*RemoteVPS, 0)
+	for name, remote := range config.remotes {
+		// Set name
+		remote.Name = name
+		remotes = append(remotes, remote)
+	}
+	return remotes
+}
+
+// GetRemote retrieves a remote by name
+func (config *Config) GetRemote(name string) (*RemoteVPS, bool) {
+	for n, remote := range config.remotes {
+		if n == name {
+			// Set name
+			remote.Name = n
+			return remote, true
+		}
+	}
+	return nil, false
+}
+
+// AddRemote adds a remote to configuration
+func (config *Config) AddRemote(remote *RemoteVPS) bool {
+	_, ok := config.remotes[remote.Name]
+	if ok {
+		return false
+	}
+	config.remotes[remote.Name] = remote
+	return true
+}
+
+// RemoveRemote removes remote with given name
+func (config *Config) RemoveRemote(name string) bool {
+	_, ok := config.remotes[name]
+	if !ok {
+		return false
+	}
+	delete(config.remotes, name)
+	return true
+}
+
 // takes io.Writers.
 func (config *Config) Write(filePath string, writers ...io.Writer) error {
 	if len(writers) == 0 && filePath == "" {
