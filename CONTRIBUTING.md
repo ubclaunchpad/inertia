@@ -86,6 +86,9 @@ Make sure all of the above are installed before running:
 $> make deps          # installs dependencies
 $> make cli           # installs Inertia build tagged as "test" to gopath
 $> inertia --version  # check what version you have installed
+
+# check config reading
+$> inertia --project example.inertia.toml --remotes example.inertia.remotes production
 ```
 
 A build tagged as `test` allows you to use `make testdaemon` for local development. See the next section for more details. Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
