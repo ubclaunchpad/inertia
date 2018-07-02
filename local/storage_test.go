@@ -13,13 +13,20 @@ import (
 )
 
 func TestInitializeInertiaProjetFail(t *testing.T) {
-	err := InitializeInertiaProject("inertia.toml", "inertia.remotes", "", "", "")
+	project, _ := common.GetFullPath("testinit.inertia.toml")
+	remotes, _ := common.GetFullPath("testinit.inertia.remotes")
+	defer os.Remove(project)
+	defer os.Remove(remotes)
+	err := InitializeInertiaProject(project, remotes, "", "", "")
 	assert.NotNil(t, err)
 }
 
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	project, _ := common.GetFullPath("inertia.toml")
-	remotes, _ := common.GetFullPath("inertia.remotes")
+	project, _ := common.GetFullPath("test.inertia.toml")
+	remotes, _ := common.GetFullPath("test.inertia.remotes")
+	println(project)
+	defer os.Remove(project)
+	defer os.Remove(remotes)
 	err := createConfigFile(project, remotes, "test", "dockerfile", "")
 	assert.Nil(t, err)
 
@@ -60,8 +67,11 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	// Test config read
 	readConfig, err := cfg.NewConfigFromFiles(project, remotes)
 	assert.Nil(t, err)
-	assert.Equal(t, config.GetRemotes()[0], readConfig.GetRemotes()[0])
-	assert.Equal(t, config.GetRemotes()[1], readConfig.GetRemotes()[1])
+	r1, found := config.GetRemote("test")
+	assert.True(t, found)
+	r2, found := readConfig.GetRemote("test")
+	assert.True(t, found)
+	assert.Equal(t, r1, r2)
 
 	// Test client read
 	client, _, err := GetClient("test2", project, remotes)
@@ -70,12 +80,6 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	assert.Equal(t, "12343:80801", client.GetIPAndPort())
 	_, _, err = GetClient("asdf", project, remotes)
 	assert.NotNil(t, err)
-
-	// Test config remove
-	err = os.Remove(project)
-	assert.Nil(t, err)
-	err = os.Remove(remotes)
-	assert.Nil(t, err)
 }
 func TestSaveKey(t *testing.T) {
 	keyMaterial := `-----BEGIN RSA PRIVATE KEY-----

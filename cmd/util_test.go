@@ -20,13 +20,13 @@ func TestSetProperty(t *testing.T) {
 		PEM:    "/some/pem/file",
 		Daemon: testDaemonConfig,
 	}
-	a := setProperty("name", "newTestName", testRemote)
+	a := setProperty("pemfile", "newTestName", testRemote)
 	assert.True(t, a)
-	assert.Equal(t, "newTestName", testRemote.Name)
+	assert.Equal(t, "newTestName", testRemote.PEM)
 
 	b := setProperty("wrongtag", "otherTestName", testRemote)
 	assert.False(t, b)
-	assert.Equal(t, "newTestName", testRemote.Name)
+	assert.Equal(t, "testName", testRemote.Name)
 
 	c := setProperty("port", "8000", testDaemonConfig)
 	assert.True(t, c)
