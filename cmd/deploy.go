@@ -21,6 +21,10 @@ import (
 
 // Initialize "inertia [REMOTE] [COMMAND]" commands
 func init() {
+	if remoteConfigFilePath == "" {
+		return
+	}
+
 	config, err := cfg.NewConfigFromFiles(projectConfigFilePath, remoteConfigFilePath)
 	if err != nil {
 		if strings.Contains(err.Error(), cfg.NoInertiaConfig) {

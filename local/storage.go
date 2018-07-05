@@ -12,6 +12,11 @@ import (
 	"github.com/ubclaunchpad/inertia/client"
 )
 
+// GetRemotesConfigFilePath retrieves path of file in global storage ($HOME/.inertia)
+func GetRemotesConfigFilePath(projectName string) string {
+	return filepath.Join(os.Getenv("HOME"), ".inertia", projectName+".remotes")
+}
+
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
 func InitializeInertiaProject(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath string) error {
