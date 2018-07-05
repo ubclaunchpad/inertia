@@ -23,7 +23,7 @@ import (
 func init() {
 	config, err := cfg.NewConfigFromFiles(projectConfigFilePath, remoteConfigFilePath)
 	if err != nil {
-		if err == cfg.ErrNoProjectConfig {
+		if strings.Contains(err.Error(), cfg.NoInertiaConfig) {
 			return
 		}
 		log.Fatal(err)

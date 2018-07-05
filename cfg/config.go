@@ -12,10 +12,10 @@ import (
 
 var (
 	// NoInertiaRemote is used to warn about missing inertia remote
-	NoInertiaRemote = "No inertia remote"
+	NoInertiaRemote = "no inertia remote"
 
-	// ErrNoProjectConfig indicates Inertia has not been set up yet
-	ErrNoProjectConfig = errors.New("project config file doesn't exist, try inertia init")
+	// NoInertiaConfig is used to warn about missing inertia configuration
+	NoInertiaConfig = "no inertia configuration found - try running 'inertia init'"
 )
 
 // Config represents the current project's configuration.
@@ -44,36 +44,56 @@ func NewConfig(version, project, buildType, buildFilePath string) *Config {
 
 // NewConfigFromFiles loads configuration from given filepaths
 func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Config, error) {
-	// Get project
-	raw, err := ioutil.ReadFile(projectConfigPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, ErrNoProjectConfig
-		}
+	// Attempt to read files
+	projectBytes, err := ioutil.ReadFile(projectConfigPath)
+	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
-	var project InertiaProject
-	err = toml.Unmarshal(raw, &project)
-	if err != nil {
-		return nil, fmt.Errorf("project config error: %s", err.Error())
-	}
-
-	// Get remotes
-	raw, err = ioutil.ReadFile(remoteConfigPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return NewConfigFromTOML(project, InertiaRemotes{Version: project.Version})
-		}
+	remotesBytes, err := ioutil.ReadFile(remoteConfigPath)
+	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
-	var remotes InertiaRemotes
-	err = toml.Unmarshal(raw, &remotes)
-	if err != nil {
-		return nil, fmt.Errorf("remote config error: %s", err.Error())
+
+	var (
+		project *InertiaProject
+		remotes *InertiaRemotes
+	)
+
+	// If both files are present, construct config using both
+	if projectBytes != nil && remotesBytes != nil {
+		err = toml.Unmarshal(projectBytes, project)
+		if err != nil {
+			return nil, fmt.Errorf("project config error: %s", err.Error())
+		}
+		err = toml.Unmarshal(remotesBytes, remotes)
+		if err != nil {
+			return nil, fmt.Errorf("remotes config error: %s", err.Error())
+		}
+		return NewConfigFromTOML(*project, *remotes)
 	}
 
-	// Generate config
-	return NewConfigFromTOML(project, remotes)
+	// If only project is present, construct config using project
+	if projectBytes != nil && remotesBytes == nil {
+		err = toml.Unmarshal(projectBytes, project)
+		if err != nil {
+			return nil, fmt.Errorf("project config error: %s", err.Error())
+		}
+		return NewConfigFromTOML(*project, InertiaRemotes{Version: project.Version})
+	}
+
+	// If only remotes is present, construct config using remotes
+	if projectBytes == nil && remotesBytes != nil {
+		err = toml.Unmarshal(remotesBytes, remotes)
+		if err != nil {
+			return nil, fmt.Errorf("remotes config error: %s", err.Error())
+		}
+		return NewConfigFromTOML(InertiaProject{
+			Project: remotes.Project,
+			Version: remotes.Version,
+		}, *remotes)
+	}
+
+	return nil, errors.New(NoInertiaConfig)
 }
 
 // NewConfigFromTOML loads configuration from TOML format structs
@@ -87,10 +107,15 @@ func NewConfigFromTOML(project InertiaProject, remotes InertiaRemotes) (*Config,
 		remotes.Version = project.Version
 	}
 
-	// Generate config
+	// Check all is g
 	if *project.Version != *remotes.Version {
 		return nil, fmt.Errorf("mismatching versions %s and %s", *project.Version, *remotes.Version)
 	}
+	if *project.Project != *project.Project {
+		return nil, fmt.Errorf("mismatching projects %s and %s", *project.Project, *remotes.Project)
+	}
+
+	// Generate configuration
 	return &Config{
 		Version:       *project.Version,
 		Project:       *project.Project,
@@ -158,7 +183,7 @@ func (config *Config) WriteProjectConfig(filePath string, writers ...io.Writer) 
 // WriteRemoteConfig writes Inertia remote configuration. This file should NOT
 // be committed.
 func (config *Config) WriteRemoteConfig(filePath string, writers ...io.Writer) error {
-	toml := InertiaRemotes{&config.Version, &config.remotes}
+	toml := InertiaRemotes{&config.Version, &config.Project, &config.remotes}
 	return config.write(filePath, toml, writers...)
 }
 
