@@ -15,6 +15,7 @@ type Payload interface {
 	GetRepoName() string
 	GetRef() string
 	GetGitURL() string
+	GetSSHURL() string
 }
 
 func parse(r *http.Request) (Payload, error) {
@@ -28,7 +29,7 @@ func parse(r *http.Request) (Payload, error) {
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
 		fmt.Println("Github webhook received")
-		return nil, nil
+		return parseGithubEvent(r, githubEventHeader)
 	}
 
 	// Try Gitlab
