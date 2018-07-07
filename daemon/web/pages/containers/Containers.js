@@ -2,14 +2,6 @@ import React from 'react';
 import { connect } from 'react-redux';
 import TerminalView from '../../components/TerminalView/TerminalView';
 import IconHeader from '../../components/IconHeader/IconHeader';
-import {
-  Table,
-  TableCell,
-  TableRow,
-  TableHeader,
-  TableBody,
-  TableRowExpandable,
-} from '../../components/Table/Table';
 
 const mocklogs = [
   'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',
