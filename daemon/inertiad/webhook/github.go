@@ -24,21 +24,21 @@ type GithubPushEventRepository struct {
 }
 
 func parseGithubEvent(r *http.Request, event string) (Payload, error) {
-	var payload Payload
+	dec := json.NewDecoder(r.Body)
+
 	switch event {
 	case "push":
-		fmt.Println("Push event")
-		payload = GithubPushEvent{eventType: event}
+		payload := GithubPushEvent{eventType: event}
+
+		if err := dec.Decode(&payload); err != nil {
+			fmt.Println(err)
+			return nil, errors.New("Error parsing PushEvent")
+		}
+
+		return payload, nil
 	default:
 		return nil, errors.New("Unsupported Github event")
 	}
-
-	err := json.NewDecoder(r.Body).Decode(&payload)
-	if err != nil {
-		return nil, errors.New("Error decoding body")
-	}
-
-	return payload, nil
 }
 
 // GetEventType returns the event type of the webhook

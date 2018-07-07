@@ -14,7 +14,7 @@ import (
 var webhookSecret = "inertia"
 
 // gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
-func gitHubWebHookHandler(w http.ResponseWriter, r *http.Request) {
+func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.MsgDaemonOK)
 
 	payload, err := github.ValidatePayload(r, []byte(webhookSecret))

@@ -27,21 +27,21 @@ func Parse(r *http.Request) (Payload, error) {
 	// Try Github
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
-		fmt.Println("Github webhook received")
+		fmt.Println("Github webhook detected")
 		return parseGithubEvent(r, githubEventHeader)
 	}
 
 	// Try Gitlab
 	gitlabEventHeader := r.Header.Get("x-gitlab-event")
 	if len(gitlabEventHeader) > 0 {
-		fmt.Println("Gitlab webhook received")
+		fmt.Println("Gitlab webhook detected")
 		return nil, errors.New("Unsupported webhook received")
 	}
 
 	// Try Bitbucket
 	userAgent := r.Header.Get("user-agent")
 	if strings.Contains(userAgent, "Bitbucket") {
-		fmt.Println("Bitbucket webhook received")
+		fmt.Println("Bitbucket webhook detected")
 		return nil, errors.New("Unsupported webhook received")
 	}
 
