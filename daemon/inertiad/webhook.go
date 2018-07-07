@@ -6,46 +6,39 @@ import (
 	"os"
 
 	docker "github.com/docker/docker/client"
-	"github.com/google/go-github/github"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/webhook"
 )
 
 var webhookSecret = "inertia"
 
-// gitHubWebHookHandler writes a response to a request into the given ResponseWriter.
+// webhookHandler writes a response to a request into the given ResponseWriter.
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.MsgDaemonOK)
 
-	payload, err := github.ValidatePayload(r, []byte(webhookSecret))
+	payload, err := webhook.Parse(r)
 	if err != nil {
-		println(err.Error())
+		println(err)
 		return
 	}
 
-	event, err := github.ParseWebHook(github.WebHookType(r), payload)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-
-	switch event := event.(type) {
-	case *github.PushEvent:
-		processPushEvent(event)
-	case *github.PullRequestEvent:
-		processPullRequestEvent(event)
+	switch event := payload.GetEventType(); event {
+	case webhook.PushEvent:
+		processPushEvent(payload)
+	// case webhook.PullEvent:
+	// 	processPullRequestEvent(payload)
 	default:
 		println("Unrecognized event type")
 	}
 }
 
 // processPushEvent prints information about the given PushEvent.
-func processPushEvent(event *github.PushEvent) {
-	repo := event.GetRepo()
-	branch := common.GetBranchFromRef(event.GetRef())
+func processPushEvent(payload webhook.Payload) {
+	branch := common.GetBranchFromRef(payload.GetRef())
 	println("Received PushEvent")
-	println(fmt.Sprintf("Repository Name: %s", *repo.Name))
-	println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
+	println(fmt.Sprintf("Repository Name: %s", payload.GetRepoName()))
+	println(fmt.Sprintf("Repository Git URL: %s", payload.GetGitURL()))
 	println(fmt.Sprintf("Branch: %s", branch))
 
 	// Ignore event if repository not set up yet, otherwise
@@ -56,7 +49,7 @@ func processPushEvent(event *github.PushEvent) {
 	}
 
 	// Check for matching remotes
-	err := deployment.CompareRemotes(common.GetSSHRemoteURL(repo.GetGitURL()))
+	err := deployment.CompareRemotes(payload.GetSSHURL())
 	if err != nil {
 		println(err.Error())
 		return
@@ -85,22 +78,4 @@ func processPushEvent(event *github.PushEvent) {
 				deployment.GetBranch() + " - ignoring event.",
 		)
 	}
-}
-
-// processPullRequestEvent prints information about the given PullRequestEvent.
-// Handling PRs is unnecessary because merging one will trigger a PushEvent.
-// For now, simply logs events - may in the future do something configured
-// by the user.
-func processPullRequestEvent(event *github.PullRequestEvent) {
-	repo := event.GetRepo()
-	pr := event.GetPullRequest()
-	merged := "false"
-	if *pr.Merged {
-		merged = "true"
-	}
-	println("Received PullRequestEvent")
-	println(fmt.Sprintf("Repository Name: %s", *repo.Name))
-	println(fmt.Sprintf("Repository Git URL: %s", *repo.GitURL))
-	println(fmt.Sprintf("Ref: %s", pr.GetBase().GetRef()))
-	println(fmt.Sprintf("Merge status: %v", merged))
 }

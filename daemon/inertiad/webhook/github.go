@@ -7,6 +7,12 @@ import (
 	"net/http"
 )
 
+// x-github-event header values
+var (
+	GithubPushHeader = "push"
+	// GithubPullHeader = "pull"
+)
+
 // GithubPushEvent represents a push to a Github repository
 // see https://developer.github.com/v3/activity/events/types/#pushevent
 type GithubPushEvent struct {
@@ -27,8 +33,8 @@ func parseGithubEvent(r *http.Request, event string) (Payload, error) {
 	dec := json.NewDecoder(r.Body)
 
 	switch event {
-	case "push":
-		payload := GithubPushEvent{eventType: event}
+	case GithubPushHeader:
+		payload := GithubPushEvent{eventType: PushEvent}
 
 		if err := dec.Decode(&payload); err != nil {
 			fmt.Println(err)

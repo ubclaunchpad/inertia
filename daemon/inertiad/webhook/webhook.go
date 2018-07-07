@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// Constants for the generic webhook interface
+var (
+	PushEvent = "push"
+	// PullEvent = "pull"
+)
+
 // Payload represents a generic webhook payload
 type Payload interface {
 	GetEventType() string
