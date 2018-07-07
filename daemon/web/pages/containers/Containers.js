@@ -29,8 +29,6 @@ class ContainersWrapper extends React.Component {
         </div>
         <TerminalView logs={mocklogs} />
       </div>
-
-
     );
   }
 }
