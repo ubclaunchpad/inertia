@@ -24,8 +24,6 @@ type Payload interface {
 
 // Parse takes in a webhook request and parses it into one of the supported types
 func Parse(r *http.Request) (Payload, error) {
-	fmt.Println("Parsing webhook...")
-
 	if r.Header.Get("content-type") != "application/json" {
 		return nil, errors.New("Content-Type must be JSON")
 	}

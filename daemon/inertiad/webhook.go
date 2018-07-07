@@ -36,6 +36,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(payload webhook.Payload) {
 	branch := common.GetBranchFromRef(payload.GetRef())
+
 	println("Received PushEvent")
 	println(fmt.Sprintf("Repository Name: %s", payload.GetRepoName()))
 	println(fmt.Sprintf("Repository Git URL: %s", payload.GetGitURL()))
@@ -51,7 +52,7 @@ func processPushEvent(payload webhook.Payload) {
 	// Check for matching remotes
 	err := deployment.CompareRemotes(payload.GetSSHURL())
 	if err != nil {
-		println(err.Error())
+		println(err)
 		return
 	}
 
@@ -60,7 +61,7 @@ func processPushEvent(payload webhook.Payload) {
 		println("Event branch matches deployed branch " + branch)
 		cli, err := docker.NewEnvClient()
 		if err != nil {
-			println(err.Error())
+			println(err)
 			return
 		}
 		defer cli.Close()
@@ -70,7 +71,7 @@ func processPushEvent(payload webhook.Payload) {
 			SkipUpdate: false,
 		})
 		if err != nil {
-			println(err.Error())
+			println(err)
 		}
 	} else {
 		println(

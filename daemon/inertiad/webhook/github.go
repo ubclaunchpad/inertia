@@ -3,7 +3,6 @@ package webhook
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 )
 
@@ -37,7 +36,6 @@ func parseGithubEvent(r *http.Request, event string) (Payload, error) {
 		payload := GithubPushEvent{eventType: PushEvent}
 
 		if err := dec.Decode(&payload); err != nil {
-			fmt.Println(err)
 			return nil, errors.New("Error parsing PushEvent")
 		}
 
