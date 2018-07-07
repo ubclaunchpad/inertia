@@ -39,7 +39,7 @@ func Parse(r *http.Request) (Payload, error) {
 	gitlabEventHeader := r.Header.Get("x-gitlab-event")
 	if len(gitlabEventHeader) > 0 {
 		fmt.Println("Gitlab webhook detected")
-		return nil, errors.New("Unsupported webhook received")
+		return parseGitlabEvent(r, gitlabEventHeader)
 	}
 
 	// Try Bitbucket
