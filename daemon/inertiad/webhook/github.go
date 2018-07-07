@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// GithubPushEvent represents a push to a Github respository
+// GithubPushEvent represents a push to a Github repository
 // see https://developer.github.com/v3/activity/events/types/#pushevent
 type GithubPushEvent struct {
 	eventType string
