@@ -21,7 +21,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := webhook.Parse(r, outStream)
 	if err != nil {
-		fmt.Fprintf(outStream, err.Error())
+		fmt.Fprintln(outStream, err.Error())
 		return
 	}
 
@@ -31,7 +31,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	// case webhook.PullEvent:
 	// 	processPullRequestEvent(payload)
 	default:
-		fmt.Fprintf(outStream, "Unrecognized event type")
+		fmt.Fprintln(outStream, "Unrecognized event type")
 	}
 }
 
@@ -39,31 +39,31 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 func processPushEvent(payload webhook.Payload, out io.Writer) {
 	branch := common.GetBranchFromRef(payload.GetRef())
 
-	fmt.Fprintf(out, "Received PushEvent")
-	fmt.Fprintf(out, fmt.Sprintf("Repository Name: %s", payload.GetRepoName()))
-	fmt.Fprintf(out, fmt.Sprintf("Repository Git URL: %s", payload.GetGitURL()))
-	fmt.Fprintf(out, fmt.Sprintf("Branch: %s", branch))
+	fmt.Fprintln(out, "Received PushEvent")
+	fmt.Fprintln(out, fmt.Sprintf("Repository Name: %s", payload.GetRepoName()))
+	fmt.Fprintln(out, fmt.Sprintf("Repository Git URL: %s", payload.GetGitURL()))
+	fmt.Fprintln(out, fmt.Sprintf("Branch: %s", branch))
 
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
 	if deployment == nil {
-		fmt.Fprintf(out, "No deployment detected - try running 'inertia $REMOTE up'")
+		fmt.Fprintln(out, "No deployment detected - try running 'inertia $REMOTE up'")
 		return
 	}
 
 	// Check for matching remotes
 	err := deployment.CompareRemotes(payload.GetSSHURL())
 	if err != nil {
-		fmt.Fprintf(out, err.Error())
+		fmt.Fprintln(out, err.Error())
 		return
 	}
 
 	// If branches match, deploy, otherwise ignore the event.
 	if deployment.GetBranch() == branch {
-		fmt.Fprintf(out, "Event branch matches deployed branch "+branch)
+		fmt.Fprintln(out, "Event branch matches deployed branch "+branch)
 		cli, err := docker.NewEnvClient()
 		if err != nil {
-			fmt.Fprintf(out, err.Error())
+			fmt.Fprintln(out, err.Error())
 			return
 		}
 		defer cli.Close()
@@ -73,10 +73,10 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 			SkipUpdate: false,
 		})
 		if err != nil {
-			fmt.Fprintf(out, err.Error())
+			fmt.Fprintln(out, err.Error())
 		}
 	} else {
-		fmt.Fprintf(out,
+		fmt.Fprintln(out,
 			"Event branch "+branch+" does not match deployed branch "+
 				deployment.GetBranch()+" - ignoring event.",
 		)

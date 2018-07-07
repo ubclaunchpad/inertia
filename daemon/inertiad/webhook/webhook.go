@@ -32,21 +32,21 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 	// Try Github
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
-		fmt.Fprintf(out, "Github webhook detected")
+		fmt.Fprintln(out, "Github webhook detected")
 		return parseGithubEvent(r, githubEventHeader)
 	}
 
 	// Try Gitlab
 	gitlabEventHeader := r.Header.Get("x-gitlab-event")
 	if len(gitlabEventHeader) > 0 {
-		fmt.Fprintf(out, "Gitlab webhook detected")
+		fmt.Fprintln(out, "Gitlab webhook detected")
 		return parseGitlabEvent(r, gitlabEventHeader)
 	}
 
 	// Try Bitbucket
 	userAgent := r.Header.Get("user-agent")
 	if strings.Contains(userAgent, "Bitbucket") {
-		fmt.Fprintf(out, "Bitbucket webhook detected")
+		fmt.Fprintln(out, "Bitbucket webhook detected")
 		return nil, errors.New("Unsupported webhook received")
 	}
 
