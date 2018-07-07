@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 
@@ -16,52 +17,53 @@ var webhookSecret = "inertia"
 // webhookHandler writes a response to a request into the given ResponseWriter.
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.MsgDaemonOK)
+	outStream := os.Stdout
 
-	payload, err := webhook.Parse(r)
+	payload, err := webhook.Parse(r, outStream)
 	if err != nil {
-		println(err)
+		fmt.Fprintf(outStream, err.Error())
 		return
 	}
 
 	switch event := payload.GetEventType(); event {
 	case webhook.PushEvent:
-		processPushEvent(payload)
+		processPushEvent(payload, outStream)
 	// case webhook.PullEvent:
 	// 	processPullRequestEvent(payload)
 	default:
-		println("Unrecognized event type")
+		fmt.Fprintf(outStream, "Unrecognized event type")
 	}
 }
 
 // processPushEvent prints information about the given PushEvent.
-func processPushEvent(payload webhook.Payload) {
+func processPushEvent(payload webhook.Payload, out io.Writer) {
 	branch := common.GetBranchFromRef(payload.GetRef())
 
-	println("Received PushEvent")
-	println(fmt.Sprintf("Repository Name: %s", payload.GetRepoName()))
-	println(fmt.Sprintf("Repository Git URL: %s", payload.GetGitURL()))
-	println(fmt.Sprintf("Branch: %s", branch))
+	fmt.Fprintf(out, "Received PushEvent")
+	fmt.Fprintf(out, fmt.Sprintf("Repository Name: %s", payload.GetRepoName()))
+	fmt.Fprintf(out, fmt.Sprintf("Repository Git URL: %s", payload.GetGitURL()))
+	fmt.Fprintf(out, fmt.Sprintf("Branch: %s", branch))
 
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
 	if deployment == nil {
-		println("No deployment detected - try running 'inertia $REMOTE up'")
+		fmt.Fprintf(out, "No deployment detected - try running 'inertia $REMOTE up'")
 		return
 	}
 
 	// Check for matching remotes
 	err := deployment.CompareRemotes(payload.GetSSHURL())
 	if err != nil {
-		println(err)
+		fmt.Fprintf(out, err.Error())
 		return
 	}
 
 	// If branches match, deploy, otherwise ignore the event.
 	if deployment.GetBranch() == branch {
-		println("Event branch matches deployed branch " + branch)
+		fmt.Fprintf(out, "Event branch matches deployed branch "+branch)
 		cli, err := docker.NewEnvClient()
 		if err != nil {
-			println(err)
+			fmt.Fprintf(out, err.Error())
 			return
 		}
 		defer cli.Close()
@@ -71,12 +73,12 @@ func processPushEvent(payload webhook.Payload) {
 			SkipUpdate: false,
 		})
 		if err != nil {
-			println(err)
+			fmt.Fprintf(out, err.Error())
 		}
 	} else {
-		println(
-			"Event branch " + branch + " does not match deployed branch " +
-				deployment.GetBranch() + " - ignoring event.",
+		fmt.Fprintf(out,
+			"Event branch "+branch+" does not match deployed branch "+
+				deployment.GetBranch()+" - ignoring event.",
 		)
 	}
 }

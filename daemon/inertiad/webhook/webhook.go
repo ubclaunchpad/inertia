@@ -3,6 +3,7 @@ package webhook
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -23,7 +24,7 @@ type Payload interface {
 }
 
 // Parse takes in a webhook request and parses it into one of the supported types
-func Parse(r *http.Request) (Payload, error) {
+func Parse(r *http.Request, out io.Writer) (Payload, error) {
 	if r.Header.Get("content-type") != "application/json" {
 		return nil, errors.New("Content-Type must be JSON")
 	}
@@ -31,21 +32,21 @@ func Parse(r *http.Request) (Payload, error) {
 	// Try Github
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
-		fmt.Println("Github webhook detected")
+		fmt.Fprintf(out, "Github webhook detected")
 		return parseGithubEvent(r, githubEventHeader)
 	}
 
 	// Try Gitlab
 	gitlabEventHeader := r.Header.Get("x-gitlab-event")
 	if len(gitlabEventHeader) > 0 {
-		fmt.Println("Gitlab webhook detected")
+		fmt.Fprintf(out, "Gitlab webhook detected")
 		return parseGitlabEvent(r, gitlabEventHeader)
 	}
 
 	// Try Bitbucket
 	userAgent := r.Header.Get("user-agent")
 	if strings.Contains(userAgent, "Bitbucket") {
-		fmt.Println("Bitbucket webhook detected")
+		fmt.Fprintf(out, "Bitbucket webhook detected")
 		return nil, errors.New("Unsupported webhook received")
 	}
 
