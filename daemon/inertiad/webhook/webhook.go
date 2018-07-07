@@ -9,32 +9,43 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-func parse(r *http.Request) (string, error) {
+// Payload represents a generic webhook payload
+type Payload interface {
+	GetEventType() string
+	GetRepoName() string
+	GetRef() string
+	GetGitURL() string
+}
+
+func parse(r *http.Request) (Payload, error) {
 	fmt.Println("Parsing webhook...")
 
 	if r.Header.Get("content-type") != "application/json" {
-		return "", errors.New("Content-Type must be JSON")
+		return nil, errors.New("Content-Type must be JSON")
 	}
 
 	// Try Github
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
-		return "Github webhook received", nil
+		fmt.Println("Github webhook received")
+		return nil, nil
 	}
 
 	// Try Gitlab
 	gitlabEventHeader := r.Header.Get("x-gitlab-event")
 	if len(gitlabEventHeader) > 0 {
-		return "Gitlab webhook received", nil
+		fmt.Println("Gitlab webhook received")
+		return nil, nil
 	}
 
 	// Try Bitbucket
 	userAgent := r.Header.Get("user-agent")
-	if strings.Contains(userAgent, "BitBucket") {
-		return "Bitbucket webhook received", nil
+	if strings.Contains(userAgent, "Bitbucket") {
+		fmt.Println("Bitbucket webhook received")
+		return nil, nil
 	}
 
-	return "", errors.New("Unsupported webhook received")
+	return nil, errors.New("Unsupported webhook received")
 }
 
 // Handler receives a webhook and parses it into one of the supported types
@@ -42,9 +53,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, common.MsgDaemonOK)
 	payload, err := parse(r)
 	if err != nil {
-		println(err)
+		fmt.Println(err)
 		return
 	}
 
-	println(payload)
+	fmt.Println(payload)
 }
