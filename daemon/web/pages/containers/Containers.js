@@ -26,7 +26,7 @@ class ContainersWrapper extends React.Component {
       <div>
         <IconHeader type="containers" title="/inertia-deploy-test_dev_1" />
         <div className="containerInfo" >
-          <Status title="Status:" status="Active" /> 
+          <Status title="Status:" status="Active" />
           <h3>Last Updated: {this.props.dateUpdated}</h3>
         </div>
         <TerminalView logs={mocklogs} />
@@ -35,7 +35,7 @@ class ContainersWrapper extends React.Component {
   }
 }
 ContainersWrapper.propTypes = {
-  dateUpdated : PropTypes.string,
+  dateUpdated: PropTypes.string,
 };
 
 const mapStateToProps = () => { return {}; };
