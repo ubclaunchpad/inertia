@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import TerminalView from '../../components/TerminalView/TerminalView';
 import IconHeader from '../../components/IconHeader/IconHeader';
 import Status from '../../components/Status/ActiveStatus';
+import '../../pages/containers/index.sass';
 
 const mocklogs = [
   'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',
@@ -27,7 +28,8 @@ class ContainersWrapper extends React.Component {
         <IconHeader type="containers" title="/inertia-deploy-test_dev_1" />
         <div className="containerInfo" >
           <Status title="Status:" status="Active" />
-          <h3>Last Updated: {this.props.dateUpdated}</h3>
+          <h3>Last Updated:</h3>
+          <h4>{this.props.dateUpdated}</h4>
         </div>
         <TerminalView logs={mocklogs} />
       </div>
