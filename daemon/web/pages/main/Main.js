@@ -258,7 +258,7 @@ class MainWrapper extends React.Component {
               <Route
                 exact
                 path={`${this.props.match.url}/containers`}
-                component={() => <Containers />}
+                component={() => <Containers dateUpdated="the date" />}
               />
             </Switch>
           </div>

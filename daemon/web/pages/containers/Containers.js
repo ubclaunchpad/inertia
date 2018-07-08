@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import TerminalView from '../../components/TerminalView/TerminalView';
 import IconHeader from '../../components/IconHeader/IconHeader';
@@ -25,14 +26,17 @@ class ContainersWrapper extends React.Component {
       <div>
         <IconHeader type="containers" title="/inertia-deploy-test_dev_1" />
         <div className="containerInfo" >
-          <Status title="Status:" status="Active" />
+          <Status title="Status:" status="Active" /> 
+          <h3>Last Updated: {this.props.dateUpdated}</h3>
         </div>
         <TerminalView logs={mocklogs} />
       </div>
     );
   }
 }
-ContainersWrapper.propTypes = {};
+ContainersWrapper.propTypes = {
+  dateUpdated : PropTypes.string,
+};
 
 const mapStateToProps = () => { return {}; };
 
