@@ -11,13 +11,12 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/common"
 )
-
-const configFileName = "inertia.toml"
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func InitializeInertiaProject(version, buildType, buildFilePath string) error {
+func InitializeInertiaProject(configPath, version, buildType, buildFilePath string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -27,13 +26,13 @@ func InitializeInertiaProject(version, buildType, buildFilePath string) error {
 		return err
 	}
 
-	return createConfigFile(version, buildType, buildFilePath)
+	return createConfigFile(configPath, version, buildType, buildFilePath)
 }
 
 // createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func createConfigFile(version, buildType, buildFilePath string) error {
-	configFilePath, err := GetConfigFilePath()
+func createConfigFile(configPath, version, buildType, buildFilePath string) error {
+	configFilePath, err := common.GetFullPath(configPath)
 	if err != nil {
 		return err
 	}
@@ -65,8 +64,8 @@ func createConfigFile(version, buildType, buildFilePath string) error {
 
 // GetProjectConfigFromDisk returns the current project's configuration.
 // If an .inertia folder is not found, it returns an error.
-func GetProjectConfigFromDisk() (*cfg.Config, string, error) {
-	configFilePath, err := GetConfigFilePath()
+func GetProjectConfigFromDisk(relPath string) (*cfg.Config, string, error) {
+	configFilePath, err := common.GetFullPath(relPath)
 	if err != nil {
 		return nil, "", err
 	}
@@ -88,34 +87,32 @@ func GetProjectConfigFromDisk() (*cfg.Config, string, error) {
 	return &cfg, configFilePath, err
 }
 
-// GetConfigFilePath returns the absolute path of the config file.
-func GetConfigFilePath() (string, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(path, configFileName), nil
-}
-
 // GetClient returns a local deployment setup
-func GetClient(name string, cmd ...*cobra.Command) (*client.Client, error) {
-	config, _, err := GetProjectConfigFromDisk()
+func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, func() error, error) {
+	config, path, err := GetProjectConfigFromDisk(relPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	client, found := client.NewClient(name, config)
+	client, found := client.NewClient(name, config, os.Stdout)
 	if !found {
-		return nil, errors.New("Remote not found")
+		return nil, nil, errors.New("Remote not found")
 	}
 
 	if len(cmd) == 1 && cmd[0] != nil {
 		verify, err := cmd[0].Flags().GetBool("verify-ssl")
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		client.SetSSLVerification(verify)
 	}
 
-	return client, nil
+	return client, func() error {
+		return config.Write(path)
+	}, nil
+}
+
+// SaveKey writes a key to given path
+func SaveKey(keyMaterial string, path string) error {
+	return ioutil.WriteFile(path, []byte(keyMaterial), 0644)
 }

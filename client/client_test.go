@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -47,6 +48,7 @@ func getMockClient(ts *httptest.Server) *Client {
 
 	return &Client{
 		RemoteVPS: mockRemote,
+		out:       os.Stdout,
 		project:   "test_project",
 	}
 }
@@ -66,12 +68,14 @@ func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
 		return &Client{
 			version:   "test",
 			RemoteVPS: remote,
+			out:       os.Stdout,
 			sshRunner: mockRunner,
 		}
 	}
 	return &Client{
 		version:   "test",
 		RemoteVPS: remote,
+		out:       os.Stdout,
 		sshRunner: NewSSHRunner(remote),
 	}
 }
@@ -80,7 +84,7 @@ func TestGetNewClient(t *testing.T) {
 	config := &cfg.Config{
 		Version: "test",
 		Project: "robert-writes-bad-code",
-		Remotes: make([]*cfg.RemoteVPS, 0),
+		Remotes: make(map[string]*cfg.RemoteVPS),
 	}
 	testRemote := &cfg.RemoteVPS{
 		Name:    "test",

@@ -12,6 +12,7 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
@@ -23,16 +24,11 @@ var (
 	// deployment is the currently deployed project on this remote
 	deployment project.Deployer
 
+	// configuration
+	conf *cfg.Config
+
 	// socketUpgrader specifies parameters for upgrading an HTTP connection to a WebSocket connection
 	socketUpgrader = websocket.Upgrader{}
-)
-
-var (
-	// specify location of SSL certificate
-	sslDirectory = "/app/host/inertia/config/ssl/"
-
-	userDatabasePath       = "/app/host/inertia/data/users.db"
-	deploymentDatabasePath = "/app/host/inertia/data/project.db"
 )
 
 const (
@@ -40,21 +36,14 @@ const (
 )
 
 // run starts the daemon
-func run(host, port, version, keyPath, certDir, userDir string) {
+func run(host, port, version string) {
+	conf = cfg.New()
 	daemonVersion = version
-	if keyPath != "" {
-		auth.DaemonGithubKeyLocation = keyPath
-	}
-	if certDir != "" {
-		sslDirectory = certDir
-	}
-	if userDir != "" {
-		userDatabasePath = userDir
-	}
 
 	var (
-		daemonSSLCert = path.Join(sslDirectory, "daemon.cert")
-		daemonSSLKey  = path.Join(sslDirectory, "daemon.key")
+		daemonSSLCert    = path.Join(conf.SSLDirectory, "daemon.cert")
+		daemonSSLKey     = path.Join(conf.SSLDirectory, "daemon.key")
+		userDatabasePath = path.Join(conf.DataDirectory, "users.db")
 	)
 
 	// Download build tools
@@ -65,10 +54,10 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 		return
 	}
 	println("Downloading build tools...")
-	go downloadDeps(cli)
+	go downloadDeps(cli, conf.DockerComposeVersion, conf.HerokuishVersion)
 
 	// Check if the cert files are available.
-	println("Checking for existing SSL certificates in " + sslDirectory + "...")
+	println("Checking for existing SSL certificates in " + conf.SSLDirectory + "...")
 	_, err = os.Stat(daemonSSLCert)
 	certNotPresent := os.IsNotExist(err)
 	_, err = os.Stat(daemonSSLKey)
@@ -128,11 +117,12 @@ func run(host, port, version, keyPath, certDir, userDir string) {
 	))
 }
 
-func downloadDeps(cli *docker.Client) {
+func downloadDeps(cli *docker.Client, images ...string) {
 	var wait sync.WaitGroup
-	wait.Add(2)
-	go dockerPull(project.DockerComposeVersion, cli, &wait)
-	go dockerPull(project.HerokuishVersion, cli, &wait)
+	wait.Add(len(images))
+	for _, i := range images {
+		go dockerPull(i, cli, &wait)
+	}
 	wait.Wait()
 	cli.Close()
 }

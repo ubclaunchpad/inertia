@@ -5,10 +5,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
@@ -44,14 +46,15 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	skipUpdate := false
 	if deployment == nil {
 		logger.Println("No deployment detected")
-		d, err := project.NewDeployment(project.DeploymentConfig{
-			ProjectName:   upReq.Project,
-			BuildType:     upReq.BuildType,
-			BuildFilePath: upReq.BuildFilePath,
-			RemoteURL:     gitOpts.RemoteURL,
-			Branch:        gitOpts.Branch,
-			PemFilePath:   auth.DaemonGithubKeyLocation,
-			DatabasePath:  deploymentDatabasePath,
+		d, err := project.NewDeployment(build.NewBuilder(*conf), project.DeploymentConfig{
+			ProjectDirectory: conf.ProjectDirectory,
+			ProjectName:      upReq.Project,
+			BuildType:        upReq.BuildType,
+			BuildFilePath:    upReq.BuildFilePath,
+			RemoteURL:        gitOpts.RemoteURL,
+			Branch:           gitOpts.Branch,
+			PemFilePath:      crypto.DaemonGithubKeyLocation,
+			DatabasePath:     path.Join(conf.DataDirectory, "project.db"),
 		}, logger)
 		if err != nil {
 			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)

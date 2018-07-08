@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
-
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
 // Version is the current build of Inertia
@@ -27,14 +25,9 @@ Example:
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetString("port")
 		if err != nil {
-			log.WithError(err)
+			println(err)
 		}
-
-		if len(args) == 4 {
-			run(args[0], port, Version, args[1], args[2], args[3])
-		} else {
-			run(args[0], port, Version, "", "", "")
-		}
+		run(args[0], port, Version)
 	},
 }
 
@@ -45,18 +38,14 @@ var tokenCmd = &cobra.Command{
 	Long: `Produce an API token to use with the daemon,
 Created using an RSA private key.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 1 {
-			auth.DaemonGithubKeyLocation = args[0]
+		keyBytes, err := crypto.GetAPIPrivateKey(nil)
+		if err != nil {
+			panic(err)
 		}
 
-		keyBytes, err := auth.GetAPIPrivateKey(nil)
+		token, err := crypto.GenerateMasterToken(keyBytes.([]byte))
 		if err != nil {
-			log.Fatal(err)
-		}
-
-		token, err := auth.GenerateToken(keyBytes.([]byte))
-		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 
 		fmt.Println(token)

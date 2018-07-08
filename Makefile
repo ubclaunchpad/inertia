@@ -30,12 +30,12 @@ dev-deps:
 
 # Install Inertia with release version
 .PHONY: cli
-inertia:
+cli:
 	go install -ldflags "-X main.Version=$(RELEASE)"
 
 # Install Inertia with git tag as release version
 .PHONY: cli-tagged
-inertia-tagged:
+cli-tagged:
 	go install -ldflags "-X main.Version=$(TAG)"
 
 # Remove Inertia binaries
@@ -48,7 +48,7 @@ clean:
 # Run static analysis
 .PHONY: lint
 lint:
-	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=60s ./...'
+	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=120s ./...'
 	(cd ./daemon/web; npm run lint)
 
 # Run test suite without Docker ops
@@ -65,7 +65,6 @@ test-v:
 # Also attempts to run linter
 .PHONY: test-all
 test-all:
-	make lint
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
 	go test ./... -ldflags "-X main.Version=test" --cover

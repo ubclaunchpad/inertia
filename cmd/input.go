@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"errors"
@@ -12,6 +12,8 @@ import (
 )
 
 var (
+	errInvalidInput = errors.New("invalid input")
+
 	errInvalidUser          = errors.New("invalid user")
 	errInvalidAddress       = errors.New("invalid IP address")
 	errInvalidBuildType     = errors.New("invalid build type")
@@ -72,7 +74,7 @@ func addRemoteWalkthrough(
 	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
-	config.AddRemote(&cfg.RemoteVPS{
+	added := config.AddRemote(&cfg.RemoteVPS{
 		Name:    name,
 		IP:      address,
 		User:    user,
@@ -84,6 +86,9 @@ func addRemoteWalkthrough(
 			WebHookSecret: secret,
 		},
 	})
+	if !added {
+		return errors.New("failed to add remote - you already have a remote with given name")
+	}
 	return nil
 }
 
@@ -113,4 +118,50 @@ func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string
 		buildFilePath = response
 	}
 	return
+}
+
+func enterEC2CredentialsWalkthrough(in io.Reader) (id, key string, err error) {
+	print(`To get your credentials:
+	1. Open the IAM console (https://console.aws.amazon.com/iam/home?#home).
+	2. In the navigation pane of the console, choose Users. You may have to create a user.
+	3. Choose your IAM user name (not the check box).
+	4. Choose the Security credentials tab and then choose Create access key.
+	5. To see the new access key, choose Show. Your credentials will look something like this:
+
+		Access key ID: AKIAIOSFODNN7EXAMPLE
+		Secret access key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+	`)
+
+	var response string
+
+	print("\nKey ID:       ")
+	_, err = fmt.Fscanln(in, &response)
+	if err != nil {
+		return
+	}
+	id = response
+
+	print("\nAccess Key:   ")
+	_, err = fmt.Fscanln(in, &response)
+	if err != nil {
+		return
+	}
+	key = response
+	return
+}
+
+func chooseFromListWalkthrough(in io.Reader, optionName string, options []string) (string, error) {
+	fmt.Printf("Available %ss:\n", optionName)
+	for _, o := range options {
+		println("  > " + o)
+	}
+	fmt.Printf("Please enter your desired %s: ", optionName)
+
+	var response string
+	_, err := fmt.Fscanln(in, &response)
+	if err != nil {
+		return "", errInvalidInput
+	}
+
+	return response, nil
 }
