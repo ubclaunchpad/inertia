@@ -17,21 +17,20 @@ var webhookSecret = "inertia"
 // webhookHandler writes a response to a request into the given ResponseWriter.
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.MsgDaemonOK)
-	outStream := os.Stdout
 
-	payload, err := webhook.Parse(r, outStream)
+	payload, err := webhook.Parse(r, os.Stdout)
 	if err != nil {
-		fmt.Fprintln(outStream, err.Error())
+		fmt.Fprintln(os.Stdout, err.Error())
 		return
 	}
 
 	switch event := payload.GetEventType(); event {
 	case webhook.PushEvent:
-		processPushEvent(payload, outStream)
+		processPushEvent(payload, os.Stdout)
 	// case webhook.PullEvent:
 	// 	processPullRequestEvent(payload)
 	default:
-		fmt.Fprintln(outStream, "Unrecognized event type")
+		fmt.Fprintln(os.Stdout, "Unrecognized event type")
 	}
 }
 
