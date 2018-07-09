@@ -165,7 +165,8 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	// Get config
 	conf, err := d.GetBuildConfiguration()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintln(out, err.Error())
+		fmt.Fprintln(out, "Continuing...")
 	}
 
 	// Build project
