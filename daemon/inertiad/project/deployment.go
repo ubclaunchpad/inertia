@@ -25,6 +25,7 @@ type Builder interface {
 	GetBuildStageName() string
 	StopContainers(*docker.Client, io.Writer) error
 	Prune(*docker.Client, io.Writer) error
+	PruneAll(*docker.Client, io.Writer) error
 }
 
 // Deployer manages the deployed user project
@@ -197,12 +198,14 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+
+	// Do a lite prune
 	return d.builder.Prune(cli, out)
 }
 
 // Prune clears unused Docker assets
 func (d *Deployment) Prune(cli *docker.Client, out io.Writer) error {
-	return d.builder.Prune(cli, out)
+	return d.builder.PruneAll(cli, out)
 }
 
 // Destroy shuts down the deployment and removes the repository

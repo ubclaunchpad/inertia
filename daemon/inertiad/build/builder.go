@@ -59,7 +59,12 @@ func (b *Builder) StopContainers(docker *docker.Client, out io.Writer) error {
 
 // Prune cleans up Dokcer assets
 func (b *Builder) Prune(docker *docker.Client, out io.Writer) error {
-	return containers.Cleanup(docker, b.dockerComposeVersion, b.herokuishVersion)
+	return containers.Prune(docker)
+}
+
+// PruneAll forcibly removes Docker assets
+func (b *Builder) PruneAll(docker *docker.Client, out io.Writer) error {
+	return containers.PruneAll(docker, b.dockerComposeVersion, b.herokuishVersion)
 }
 
 // Config contains parameters required for builds to execute

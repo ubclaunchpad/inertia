@@ -22,9 +22,10 @@ func (m *MockBuilder) Build(string, *build.Config, *docker.Client, io.Writer) (f
 	return m.builder, nil
 }
 
+func (m *MockBuilder) GetBuildStageName() string                      { return "build" }
 func (m *MockBuilder) StopContainers(*docker.Client, io.Writer) error { return nil }
 func (m *MockBuilder) Prune(*docker.Client, io.Writer) error          { return m.stopper() }
-func (m *MockBuilder) GetBuildStageName() string                      { return "build" }
+func (m *MockBuilder) PruneAll(*docker.Client, io.Writer) error       { return m.stopper() }
 
 func TestSetConfig(t *testing.T) {
 	deployment := &Deployment{}

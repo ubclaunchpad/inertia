@@ -102,17 +102,52 @@ func StopActiveContainers(docker *docker.Client, out io.Writer) error {
 	return nil
 }
 
-// Cleanup clears up unused Docker assets
-func Cleanup(docker *docker.Client, exceptions ...string) error {
+// Prune clears up unused Docker assets.
+func Prune(docker *docker.Client) error {
 	ctx := context.Background()
-	_, err := docker.ContainersPrune(ctx, filters.Args{})
+
+	_, errImages := docker.ImagesPrune(ctx, filters.Args{})
+	_, errContainers := docker.ContainersPrune(ctx, filters.Args{})
+	_, errVolumes := docker.VolumesPrune(ctx, filters.Args{})
+	if errImages != nil || errContainers != nil || errVolumes != nil {
+		return fmt.Errorf(
+			"Errors encountered: %s ; %s ; %s",
+			errImages, errContainers, errVolumes,
+		)
+	}
+	return nil
+}
+
+// PruneAll forcibly removes all images except given exceptions (repo tag names)
+func PruneAll(docker *docker.Client, exceptions ...string) error {
+	args := filters.NewArgs()
+	ctx := context.Background()
+
+	// Delete images
+	list, err := docker.ImageList(ctx, types.ImageListOptions{
+		Filters: args,
+		All:     true,
+	})
 	if err != nil {
 		return err
 	}
-	args := filters.NewArgs()
-	for _, e := range exceptions {
-		filters.ParseFlag("label!="+e, args)
+	for _, i := range list {
+		delete := true
+		for _, e := range exceptions {
+			if strings.Contains(i.RepoTags[0], e) {
+				delete = false
+			}
+		}
+		if delete {
+			docker.ImageRemove(ctx, i.ID, types.ImageRemoveOptions{
+				Force:         true,
+				PruneChildren: true,
+			})
+		}
 	}
-	_, err = docker.ImagesPrune(ctx, args)
-	return err
+
+	// Perform basic prune on containers and volumes
+	docker.ContainersPrune(ctx, filters.Args{})
+	docker.VolumesPrune(ctx, filters.Args{})
+	return nil
 }
