@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/cobra"
 
@@ -14,7 +15,11 @@ import (
 
 // GetRemotesConfigFilePath retrieves path of file in global storage ($HOME/.inertia)
 func GetRemotesConfigFilePath(projectName string) string {
-	return filepath.Join(os.Getenv("HOME"), ".inertia", projectName+".remotes")
+	path := filepath.Join(".inertia", projectName+".remotes")
+	if runtime.GOOS == "windows" {
+		return filepath.Join(os.Getenv("HOMEPATH"), path)
+	}
+	return filepath.Join(os.Getenv("HOME"), path)
 }
 
 // InitializeInertiaProject creates the inertia config folder and
