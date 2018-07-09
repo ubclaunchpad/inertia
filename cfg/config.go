@@ -55,8 +55,8 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 	}
 
 	var (
-		project *InertiaProject
-		remotes *InertiaRemotes
+		project = &InertiaProject{}
+		remotes = &InertiaRemotes{}
 	)
 
 	// If both files are present, construct config using both
@@ -88,7 +88,6 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 			return nil, fmt.Errorf("remotes config error: %s", err.Error())
 		}
 		return NewConfigFromTOML(InertiaProject{
-			Project: remotes.Project,
 			Version: remotes.Version,
 		}, *remotes)
 	}
@@ -110,9 +109,6 @@ func NewConfigFromTOML(project InertiaProject, remotes InertiaRemotes) (*Config,
 	// Check all is g
 	if *project.Version != *remotes.Version {
 		return nil, fmt.Errorf("mismatching versions %s and %s", *project.Version, *remotes.Version)
-	}
-	if *project.Project != *project.Project {
-		return nil, fmt.Errorf("mismatching projects %s and %s", *project.Project, *remotes.Project)
 	}
 
 	// Generate configuration
@@ -183,7 +179,7 @@ func (config *Config) WriteProjectConfig(filePath string, writers ...io.Writer) 
 // WriteRemoteConfig writes Inertia remote configuration. This file should NOT
 // be committed.
 func (config *Config) WriteRemoteConfig(filePath string, writers ...io.Writer) error {
-	toml := InertiaRemotes{&config.Version, &config.Project, &config.remotes}
+	toml := InertiaRemotes{&config.Version, &config.remotes}
 	return config.write(filePath, toml, writers...)
 }
 

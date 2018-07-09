@@ -22,7 +22,6 @@ type InertiaProject struct {
 // configuration for this project. This file should NOT be committed.
 type InertiaRemotes struct {
 	Version *string                `toml:"version"`
-	Project *string                `toml:"project-name"`
 	Remotes *map[string]*RemoteVPS `toml:"remotes"`
 }
 
