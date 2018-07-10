@@ -210,7 +210,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		},
 	})
 	if err != nil {
-		fmt.Fprintf(p.out, "Failed to set tags: %s", err.Error())
+		fmt.Fprintf(p.out, "Failed to set tags: %s\n", err.Error())
 	}
 
 	// Poll for SSH port to open

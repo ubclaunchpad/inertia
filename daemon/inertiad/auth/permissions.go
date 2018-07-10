@@ -254,7 +254,7 @@ func (h *PermissionsHandler) listUsersHandler(w http.ResponseWriter, r *http.Req
 	if len(users) != 0 {
 		fmt.Fprintf(w, "[SUCCESS %d] Users: \n%s\n", http.StatusOK, userList)
 	} else {
-		fmt.Fprintf(w, "[SUCCESS %d] No users registered.", http.StatusOK)
+		fmt.Fprintf(w, "[SUCCESS %d] No users registered.\n", http.StatusOK)
 	}
 }
 
