@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import TerminalView from '../../components/TerminalView/TerminalView';
 import IconHeader from '../../components/IconHeader/IconHeader';
-import Status from '../../components/Status/ActiveStatus';
+import Status from '../../components/Status/Status';
 import '../../pages/containers/index.sass';
 
 const mocklogs = [
