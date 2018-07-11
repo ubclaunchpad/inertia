@@ -498,10 +498,12 @@ var cmdDeploymentRemove = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+		println("Stopping daemon...")
 		err = deployment.DaemonDown()
 		if err != nil {
 			log.Fatal(err)
 		}
+		println("Removing Inertia directories...")
 		err = deployment.InertiaDown()
 		if err != nil {
 			log.Fatal(err)
