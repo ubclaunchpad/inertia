@@ -28,7 +28,7 @@ This user will be able to log in and view or configure the
 deployment from the web app.
 
 Use the --admin flag to create an admin user.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -77,7 +77,7 @@ var cmdDeploymentRemoveUser = &cobra.Command{
 
 This user will no longer be able to log in and view or configure the
 deployment from the web app.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -114,7 +114,6 @@ var cmdDeploymentResetUsers = &cobra.Command{
 	Long: `Removes all users credentials on your remote. All users will
 no longer be able to log in and view or configure the deployment 
 from the web app.`,
-	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)

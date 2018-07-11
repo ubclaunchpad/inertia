@@ -41,7 +41,7 @@ var cmdProvisionECS = &cobra.Command{
 	Long: `[BETA] Provision a new Amazon EC2 instance and set it up for continuous deployment
 	with Inertia. Make sure you run this command with the '-p' flag to indicate what ports
 	your project uses, since they must be exposed on your new instance.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
 		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
@@ -67,11 +67,14 @@ var cmdProvisionECS = &cobra.Command{
 				log.Fatal(err)
 			}
 			prov, err = provision.NewEC2Provisioner(id, key, os.Stdout)
+			if err != nil {
+				log.Fatal(err)
+			}
 		} else {
 			prov, err = provision.NewEC2ProvisionerFromEnv(os.Stdout)
-		}
-		if err != nil {
-			log.Fatal(err)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		// Report connected user

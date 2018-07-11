@@ -156,6 +156,21 @@ func (c *Client) DaemonDown() error {
 	return nil
 }
 
+// InertiaDown removes the inertia/ directory on the remote instance
+func (c *Client) InertiaDown() error {
+	scriptBytes, err := internal.Asset("client/scripts/inertia-down.sh")
+	if err != nil {
+		return err
+	}
+
+	_, stderr, err := c.sshRunner.Run(string(scriptBytes))
+	if err != nil {
+		return fmt.Errorf("Inertia down failed: %s: %s", err.Error(), stderr.String())
+	}
+
+	return nil
+}
+
 // installDocker installs docker on a remote vps.
 func (c *Client) installDocker(session SSHSession) error {
 	installDockerSh, err := internal.Asset("client/scripts/docker.sh")

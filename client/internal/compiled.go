@@ -3,6 +3,7 @@
 // client/scripts/daemon-down.sh
 // client/scripts/daemon-up.sh
 // client/scripts/docker.sh
+// client/scripts/inertia-down.sh
 // client/scripts/keygen.sh
 // client/scripts/token.sh
 // DO NOT EDIT!
@@ -72,7 +73,7 @@ func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
 
-var _clientScriptsDaemonDownSh = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x5c\xce\xb1\x6e\xc2\x30\x10\xc6\xf1\xfd\x9e\xe2\x2b\xb0\x1a\x9e\x20\x43\x2a\x22\x54\xa9\xb8\x12\x52\x87\x4e\x60\xe2\x73\x38\xd1\x9c\xa9\x7d\xa8\xaf\x5f\x45\x74\x88\xd8\x6e\xf8\xdf\x4f\xdf\xf2\x65\x73\x16\xdd\xd4\x0b\xd1\x12\xaf\xa1\x4a\x8f\xda\x17\xb9\x19\x52\x2e\x38\x17\xd1\x41\x74\x40\xcc\xbf\x0a\xbb\x30\x62\xe0\x31\xeb\x9a\xa8\xb2\xc1\x31\xd1\xb6\xed\xf6\x1f\xfe\xe8\xdb\x7d\xd7\x88\x72\x31\x09\xee\x11\x4d\xe2\x8e\xed\xff\x05\x7d\x56\x0b\x53\x81\xa0\x11\x16\xae\x0c\xb1\x07\x2c\x69\x3a\xa5\xa2\xdc\x55\x45\x87\x35\xb5\xef\x87\xae\xdd\x7e\x1d\x0f\x9f\xde\xbf\xf9\x5d\x73\xaa\xf7\x98\x11\x73\x7f\xe5\x82\x5b\x85\xfb\x81\x73\x49\xbe\x8d\x0b\x16\x1a\x46\x6e\x56\xb3\x21\x8b\x13\xcd\xfb\x32\xc2\x25\xac\x9e\x4c\xfa\x0b\x00\x00\xff\xff\x62\xed\x0f\x4a\xfb\x00\x00\x00")
+var _clientScriptsDaemonDownSh = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x5c\xcf\xc1\x6a\xc2\x40\x10\xc6\xf1\xfb\x3c\xc5\x67\xf4\xba\xfa\x00\x92\x43\x8a\x41\x0a\x75\x0b\x42\x0f\xa5\x14\x5d\xb3\xb3\x71\xb0\x99\xb5\xbb\x2b\x85\x3e\x7d\x09\xf6\x20\xb9\xcd\xe1\x3f\x3f\x66\xe6\xb3\xd5\x49\x74\x95\xcf\x44\x73\x3c\xb9\x2c\x1d\x72\x97\xe4\x5a\x10\x62\xc2\x29\x89\xf6\xa2\x3d\x7c\xfc\x51\x94\x33\xc3\x3b\x1e\xa2\x2e\x89\x32\x17\x18\x26\xda\x34\xed\xee\xd5\x1e\x6c\xb3\x6b\x6b\x51\x4e\x45\x9c\xb9\x47\xa3\xb8\xe5\xf2\xbf\x82\x2e\x6a\x71\x63\x01\xa7\x1e\xc5\x5d\x18\x52\xee\xb0\x84\x71\x94\x8c\x74\x53\x15\xed\x97\xd4\xbc\xec\xdb\x66\xf3\x7e\xd8\xbf\x59\xfb\x6c\xb7\xf5\x31\xdf\x7c\x84\x8f\xdd\x85\x13\xae\x19\xe6\x1b\xc6\x04\xf9\x2a\x9c\x50\xa9\x1b\xb8\x5e\x3c\x1c\x52\x1d\x49\x02\x3e\x30\x83\xf9\x45\xb5\x98\x60\x15\x3e\xd7\xe3\x2f\x4a\x00\xf0\x08\xa7\x01\x26\x60\xda\x53\x90\x35\xfd\x05\x00\x00\xff\xff\x65\x67\x1a\xbf\x28\x01\x00\x00")
 
 func clientScriptsDaemonDownShBytes() ([]byte, error) {
 	return bindataRead(
@@ -87,7 +88,7 @@ func clientScriptsDaemonDownSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/daemon-down.sh", size: 251, mode: os.FileMode(420), modTime: time.Unix(1528351521, 0)}
+	info := bindataFileInfo{name: "client/scripts/daemon-down.sh", size: 296, mode: os.FileMode(420), modTime: time.Unix(1531277394, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -107,7 +108,7 @@ func clientScriptsDaemonUpSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/daemon-up.sh", size: 1829, mode: os.FileMode(493), modTime: time.Unix(1529544404, 0)}
+	info := bindataFileInfo{name: "client/scripts/daemon-up.sh", size: 1829, mode: os.FileMode(493), modTime: time.Unix(1531274779, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -127,7 +128,27 @@ func clientScriptsDockerSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/docker.sh", size: 1248, mode: os.FileMode(493), modTime: time.Unix(1530157968, 0)}
+	info := bindataFileInfo{name: "client/scripts/docker.sh", size: 1248, mode: os.FileMode(493), modTime: time.Unix(1531018991, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _clientScriptsInertiaDownSh = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x34\xcb\x31\x0a\x42\x31\x0c\x06\xe0\x3d\xa7\xf8\xe5\xcd\xcf\xdc\xc1\xcd\x4d\x14\xdc\x5f\x6b\x5a\x33\x34\x91\xa4\xe8\xe6\xd9\x45\xc4\xf9\xe3\x5b\x76\x5c\xd4\x38\xef\x44\x0b\x0e\x5b\x6a\x45\xd6\xd0\xc7\x44\xf3\x40\x09\xb5\xae\xd6\x71\xf3\x97\xe1\x68\x12\x53\xb7\x3d\x51\xca\xc4\x2a\xdf\x72\x96\xe1\x4f\xf9\x13\x5a\xf8\xc0\xf5\x74\xa1\x18\x58\xa3\xe1\xcd\xfa\x13\xa6\x4f\x00\x00\x00\xff\xff\x6d\x58\xac\x36\x6a\x00\x00\x00")
+
+func clientScriptsInertiaDownShBytes() ([]byte, error) {
+	return bindataRead(
+		_clientScriptsInertiaDownSh,
+		"client/scripts/inertia-down.sh",
+	)
+}
+
+func clientScriptsInertiaDownSh() (*asset, error) {
+	bytes, err := clientScriptsInertiaDownShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "client/scripts/inertia-down.sh", size: 106, mode: os.FileMode(420), modTime: time.Unix(1531277389, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -147,7 +168,7 @@ func clientScriptsKeygenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1528351521, 0)}
+	info := bindataFileInfo{name: "client/scripts/keygen.sh", size: 589, mode: os.FileMode(493), modTime: time.Unix(1531018991, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -167,7 +188,7 @@ func clientScriptsTokenSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "client/scripts/token.sh", size: 292, mode: os.FileMode(493), modTime: time.Unix(1528351521, 0)}
+	info := bindataFileInfo{name: "client/scripts/token.sh", size: 292, mode: os.FileMode(493), modTime: time.Unix(1531018991, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -224,11 +245,12 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"client/scripts/daemon-down.sh": clientScriptsDaemonDownSh,
-	"client/scripts/daemon-up.sh": clientScriptsDaemonUpSh,
-	"client/scripts/docker.sh": clientScriptsDockerSh,
-	"client/scripts/keygen.sh": clientScriptsKeygenSh,
-	"client/scripts/token.sh": clientScriptsTokenSh,
+	"client/scripts/daemon-down.sh":  clientScriptsDaemonDownSh,
+	"client/scripts/daemon-up.sh":    clientScriptsDaemonUpSh,
+	"client/scripts/docker.sh":       clientScriptsDockerSh,
+	"client/scripts/inertia-down.sh": clientScriptsInertiaDownSh,
+	"client/scripts/keygen.sh":       clientScriptsKeygenSh,
+	"client/scripts/token.sh":        clientScriptsTokenSh,
 }
 
 // AssetDir returns the file names below a certain
@@ -270,14 +292,16 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
+
 var _bintree = &bintree{nil, map[string]*bintree{
 	"client": &bintree{nil, map[string]*bintree{
 		"scripts": &bintree{nil, map[string]*bintree{
-			"daemon-down.sh": &bintree{clientScriptsDaemonDownSh, map[string]*bintree{}},
-			"daemon-up.sh": &bintree{clientScriptsDaemonUpSh, map[string]*bintree{}},
-			"docker.sh": &bintree{clientScriptsDockerSh, map[string]*bintree{}},
-			"keygen.sh": &bintree{clientScriptsKeygenSh, map[string]*bintree{}},
-			"token.sh": &bintree{clientScriptsTokenSh, map[string]*bintree{}},
+			"daemon-down.sh":  &bintree{clientScriptsDaemonDownSh, map[string]*bintree{}},
+			"daemon-up.sh":    &bintree{clientScriptsDaemonUpSh, map[string]*bintree{}},
+			"docker.sh":       &bintree{clientScriptsDockerSh, map[string]*bintree{}},
+			"inertia-down.sh": &bintree{clientScriptsInertiaDownSh, map[string]*bintree{}},
+			"keygen.sh":       &bintree{clientScriptsKeygenSh, map[string]*bintree{}},
+			"token.sh":        &bintree{clientScriptsTokenSh, map[string]*bintree{}},
 		}},
 	}},
 }}
@@ -328,4 +352,3 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
-
