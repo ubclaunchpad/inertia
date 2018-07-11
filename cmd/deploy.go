@@ -115,6 +115,9 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		reset := deepCopy(cmdDeploymentReset)
 		cmd.AddCommand(reset)
 
+		remove := deepCopy(cmdDeploymentRemove)
+		cmd.AddCommand(remove)
+
 		// Attach a "short" option on all commands
 		cmd.PersistentFlags().BoolP(
 			"short", "s", false,
@@ -362,7 +365,7 @@ var cmdDeploymentSendFile = &cobra.Command{
 	Short: "Send a file to your Inertia deployment",
 	Long: `Send a file, such as a configuration or .env file, to your Inertia
 deployment. Provide a relative path to your file.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -472,5 +475,38 @@ running 'inertia [REMOTE] init'`,
 			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
 				resp.StatusCode, body)
 		}
+	},
+}
+
+var cmdDeploymentRemove = &cobra.Command{
+	Use:   "remove",
+	Short: "Remove Inertia and shutdown the daemon in the remote VPS",
+	Long: `Remove Inertia directory (~/inertia) and takes down the
+	daemon image from the VPS.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		println("WARNING: This will remove Inertia from the remote")
+		println("as well as take the daemon and is irreversible. Continue? (y/n)")
+		var response string
+		_, err := fmt.Scanln(&response)
+		if err != nil || response != "y" {
+			log.Fatal("aborting")
+		}
+
+		// Daemon down
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = deployment.DaemonDown()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = deployment.InertiaDown()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		println("Inertia and related daemon removed.")
 	},
 }
