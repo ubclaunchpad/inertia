@@ -90,9 +90,6 @@ func (b *Builder) Build(buildType string, d *Config,
 		builder = b.dockerCompose
 	}
 
-	// Clean up
-	b.Prune(cli, out)
-
 	// Build project
 	deploy, err := builder(d, cli, out)
 	if err != nil {

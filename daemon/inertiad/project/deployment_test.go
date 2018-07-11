@@ -42,11 +42,7 @@ func TestSetConfig(t *testing.T) {
 	assert.Equal(t, "/robertcompose.yml", deployment.buildFilePath)
 }
 
-func TestDeployMockSkipUpdateIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
+func TestDeployMockSkipUpdate(t *testing.T) {
 	buildCalled := false
 	stopCalled := false
 	d := Deployment{

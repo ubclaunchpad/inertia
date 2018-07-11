@@ -156,6 +156,9 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 		}
 	}
 
+	// Clean up
+	d.builder.Prune(cli, out)
+
 	// Kill active project containers if there are any
 	err := d.builder.StopContainers(cli, out)
 	if err != nil {
