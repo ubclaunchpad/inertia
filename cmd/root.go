@@ -52,12 +52,7 @@ func parseConfigArgs() error {
 			projectConfigFilePath = os.Args[i+1]
 		case "--project":
 			projectName = os.Args[i+1]
-		case "--remotes":
-			remoteConfigFilePath = os.Args[i+1]
 		}
-	}
-	if projectName != "" && remoteConfigFilePath != "" {
-		log.Fatal("cannot set both --project and --remotes")
 	}
 	return nil
 }
@@ -76,11 +71,6 @@ func setConfigFullPaths() error {
 	// relative path, or attempt to read config
 	if projectName != "" {
 		remoteConfigFilePath = local.GetRemotesConfigFilePath(projectName)
-	} else if remoteConfigFilePath != "" {
-		remoteConfigFilePath, err = common.GetFullPath(remoteConfigFilePath)
-		if err != nil {
-			log.Fatal(err)
-		}
 	} else {
 		proj, err := cfg.ReadProjectConfig(projectConfigFilePath)
 		if err != nil {
