@@ -69,15 +69,15 @@ func (c *Client) SetSSLVerification(verify bool) {
 // public-private key-pair. It outputs configuration information
 // for the user.
 func (c *Client) BootstrapRemote(repoName string) error {
-	fmt.Fprintf(c.out, "Setting up remote %s at %s", c.Name, c.IP)
+	fmt.Fprintf(c.out, "Setting up remote %s at %s\n", c.Name, c.IP)
 
-	fmt.Fprint(c.out, ">> Step 1/4: Installing docker...")
+	fmt.Fprint(c.out, ">> Step 1/4: Installing docker...\n")
 	err := c.installDocker(c.sshRunner)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprint(c.out, "\n>> Step 2/4: Building deploy key...")
+	fmt.Fprint(c.out, ">> Step 2/4: Building deploy key...\n")
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 
 	// This step needs to run before any other commands that rely on
 	// the daemon image, since the daemon is loaded here.
-	fmt.Fprint(c.out, "\n>> Step 3/4: Starting daemon...")
+	fmt.Fprint(c.out, ">> Step 3/4: Starting daemon...\n")
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 		return err
 	}
 
-	fmt.Fprint(c.out, "\n>> Step 4/4: Fetching daemon API token...")
+	fmt.Fprint(c.out, ">> Step 4/4: Fetching daemon API token...\n")
 	token, err := c.getDaemonAPIToken(c.sshRunner, c.version)
 	if err != nil {
 		return err
@@ -105,25 +105,25 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	c.Daemon.Token = token
 
 	fmt.Fprint(c.out, "\nInertia has been set up and daemon is running on remote!")
-	fmt.Fprint(c.out, "You may have to wait briefly for Inertia to set up some dependencies.")
-	fmt.Fprintf(c.out, "Use 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", c.Name)
+	fmt.Fprint(c.out, "\nYou may have to wait briefly for Inertia to set up some dependencies.")
+	fmt.Fprintf(c.out, "\nUse 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", c.Name)
 
-	fmt.Fprint(c.out, "=============================\n")
+	fmt.Fprint(c.out, "=============================\n\n")
 
 	// Output deploy key to user.
-	fmt.Fprintf(c.out, ">> GitHub Deploy Key (add to https://www.github.com/%s/settings/keys/new): ", repoName)
+	fmt.Fprintf(c.out, ">> GitHub Deploy Key (add to https://www.github.com/%s/settings/keys/new):\n", repoName)
 	fmt.Fprint(c.out, pub.String())
 
 	// Output Webhook url to user.
-	fmt.Fprintf(c.out, ">> GitHub WebHook URL (add to https://www.github.com/%s/settings/hooks/new): ", repoName)
-	fmt.Fprintf(c.out, "WebHook Address:  https://%s:%s/webhook", c.IP, c.Daemon.Port)
-	fmt.Fprint(c.out, "WebHook Secret:   "+c.Daemon.WebHookSecret)
-	fmt.Fprint(c.out, `Note that you will have to disable SSH verification in your webhook
+	fmt.Fprintf(c.out, "\n>> GitHub WebHook URL (add to https://www.github.com/%s/settings/hooks/new):\n", repoName)
+	fmt.Fprintf(c.out, "Address:  https://%s:%s/webhook\n", c.IP, c.Daemon.Port)
+	fmt.Fprintf(c.out, "Secret:   %s\n", c.Daemon.WebHookSecret)
+	fmt.Fprint(c.out, "\n"+`Note that you will have to disable SSH verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
 be able to verify.`+"\n")
 
-	fmt.Fprint(c.out, `Inertia daemon successfully deployed! Add your webhook url and deploy
-key to enable continuous deployment.`)
+	fmt.Fprint(c.out, "\n"+`Inertia daemon successfully deployed! Add your webhook url and deploy
+key to your repository to enable continuous deployment.`+"\n")
 	fmt.Fprintf(c.out, "Then run 'inertia %s up' to deploy your application.\n", c.Name)
 
 	return nil
