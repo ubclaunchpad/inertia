@@ -92,7 +92,7 @@ func run(host, port, version string) {
 	)
 
 	// GitHub webhook endpoint
-	handler.AttachPublicHandlerFunc("/webhook", gitHubWebHookHandler)
+	handler.AttachPublicHandlerFunc("/webhook", webhookHandler)
 
 	// CLI API endpoints
 	handler.AttachUserRestrictedHandlerFunc("/status", statusHandler)
