@@ -46,7 +46,7 @@ var cmdAddRemote = &cobra.Command{
 	Long: `Add a reference to a remote VPS instance. Requires 
 information about the VPS including IP address, user and a PEM
 file. Specify a VPS name.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
 		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
@@ -107,7 +107,7 @@ var cmdRemoveRemote = &cobra.Command{
 	Use:   "rm [REMOTE]",
 	Short: "Remove a remote.",
 	Long:  `Remove a remote from Inertia's configuration file.`,
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
 		if err != nil {
@@ -132,7 +132,7 @@ var cmdShowRemote = &cobra.Command{
 	Use:   "show [REMOTE]",
 	Short: "Show details about remote.",
 	Long:  `Show details about the given remote.`,
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
 		config, _, err := local.GetProjectConfigFromDisk(configFilePath)
@@ -153,7 +153,7 @@ var cmdSetRemoteProperty = &cobra.Command{
 	Use:   "set [REMOTE] [PROPERTY] [VALUE]",
 	Short: "Set details about remote.",
 	Long:  `Set details about the given remote.`,
-	Args:  cobra.MinimumNArgs(3),
+	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
 		config, path, err := local.GetProjectConfigFromDisk(configFilePath)

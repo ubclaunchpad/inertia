@@ -108,7 +108,7 @@ var cmdSetConfigProperty = &cobra.Command{
 	Use:   "set [PROPERTY] [VALUE]",
 	Short: "Set configuration property of the project",
 	Long:  `Set configuration property of the project. This will modify local toml file.`,
-	Args:  cobra.MinimumNArgs(2),
+	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
 		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
