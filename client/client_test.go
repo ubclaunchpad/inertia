@@ -374,3 +374,135 @@ func TestLogsWebsocket(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []byte("hello world"), m)
 }
+
+func TestUpdateEnv(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/env", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := getMockClient(testServer)
+	resp, err := d.UpdateEnv("", "", false, false)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestListEnv(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "GET", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/env", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := getMockClient(testServer)
+	resp, err := d.ListEnv()
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestAddUser(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/adduser", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := getMockClient(testServer)
+	resp, err := d.AddUser("", "", false)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestRemoveUser(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/removeuser", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := getMockClient(testServer)
+	resp, err := d.RemoveUser("")
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestResetUser(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/resetusers", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := getMockClient(testServer)
+	resp, err := d.ResetUsers()
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestListUsers(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "GET", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/listusers", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := getMockClient(testServer)
+	resp, err := d.ListUsers()
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}

@@ -305,18 +305,16 @@ func (c *Client) ListEnv() (*http.Response, error) {
 
 // AddUser adds an authorized user for access to Inertia Web
 func (c *Client) AddUser(username, password string, admin bool) (*http.Response, error) {
-	reqContent := &common.UserRequest{
+	return c.post("/user/adduser", &common.UserRequest{
 		Username: username,
 		Password: password,
 		Admin:    admin,
-	}
-	return c.post("/user/adduser", reqContent)
+	})
 }
 
 // RemoveUser prevents a user from accessing Inertia Web
 func (c *Client) RemoveUser(username string) (*http.Response, error) {
-	reqContent := &common.UserRequest{Username: username}
-	return c.post("/user/removeuser", reqContent)
+	return c.post("/user/removeuser", &common.UserRequest{Username: username})
 }
 
 // ResetUsers resets all users on the remote.
