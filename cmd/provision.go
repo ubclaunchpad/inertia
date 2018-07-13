@@ -62,7 +62,8 @@ var cmdProvisionECS = &cobra.Command{
 		// Create VPS instance
 		var prov *provision.EC2Provisioner
 		if !fromEnv {
-			id, key, err := enterEC2CredentialsWalkthrough(os.Stdin)
+			var id, key string
+			id, key, err = enterEC2CredentialsWalkthrough(os.Stdin)
 			if err != nil {
 				log.Fatal(err)
 			}

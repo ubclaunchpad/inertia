@@ -72,29 +72,21 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		up.Flags().String("type", "", "Specify a build method for your project")
 		cmd.AddCommand(up)
 
-		down := deepCopy(cmdDeploymentDown)
-		cmd.AddCommand(down)
-
-		status := deepCopy(cmdDeploymentStatus)
-		cmd.AddCommand(status)
-
-		logs := deepCopy(cmdDeploymentLogs)
-		cmd.AddCommand(logs)
+		cmd.AddCommand(deepCopy(cmdDeploymentDown))
+		cmd.AddCommand(deepCopy(cmdDeploymentStatus))
+		cmd.AddCommand(deepCopy(cmdDeploymentLogs))
+		cmd.AddCommand(deepCopy(cmdDeploymentPrune))
 
 		user := deepCopy(cmdDeploymentUser)
 		adduser := deepCopy(cmdDeploymentAddUser)
 		adduser.Flags().Bool("admin", false, "Create an admin user")
-		removeuser := deepCopy(cmdDeploymentRemoveUser)
-		resetusers := deepCopy(cmdDeploymentResetUsers)
-		listusers := deepCopy(cmdDeploymentListUsers)
 		user.AddCommand(adduser)
-		user.AddCommand(removeuser)
-		user.AddCommand(resetusers)
-		user.AddCommand(listusers)
+		user.AddCommand(deepCopy(cmdDeploymentRemoveUser))
+		user.AddCommand(deepCopy(cmdDeploymentResetUsers))
+		user.AddCommand(deepCopy(cmdDeploymentListUsers))
 		cmd.AddCommand(user)
 
-		ssh := deepCopy(cmdDeploymentSSH)
-		cmd.AddCommand(ssh)
+		cmd.AddCommand(deepCopy(cmdDeploymentSSH))
 
 		send := deepCopy(cmdDeploymentSendFile)
 		send.Flags().StringP("dest", "d", "", "Path relative from project root to send file to")
@@ -109,11 +101,8 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		env.AddCommand(deepCopy(cmdDeploymentEnvList))
 		cmd.AddCommand(env)
 
-		init := deepCopy(cmdDeploymentInit)
-		cmd.AddCommand(init)
-
-		reset := deepCopy(cmdDeploymentReset)
-		cmd.AddCommand(reset)
+		cmd.AddCommand(deepCopy(cmdDeploymentInit))
+		cmd.AddCommand(deepCopy(cmdDeploymentReset))
 
 		remove := deepCopy(cmdDeploymentRemove)
 		cmd.AddCommand(remove)
@@ -339,6 +328,31 @@ var cmdDeploymentLogs = &cobra.Command{
 				fmt.Print(string(line))
 			}
 		}
+	},
+}
+
+var cmdDeploymentPrune = &cobra.Command{
+	Use:   "prune",
+	Short: "Prune Docker assets and images on your remote",
+	Long:  `Prunes Docker assets and images from your remote to save storage space.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		inertia, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resp, err := inertia.Prune()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 	},
 }
 

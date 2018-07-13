@@ -15,13 +15,17 @@ import (
 
 type MockBuilder struct {
 	builder func() error
+	stopper func() error
 }
 
 func (m *MockBuilder) Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error) {
 	return m.builder, nil
 }
 
-func (m *MockBuilder) GetBuildStageName() string { return "build" }
+func (m *MockBuilder) GetBuildStageName() string                      { return "build" }
+func (m *MockBuilder) StopContainers(*docker.Client, io.Writer) error { return nil }
+func (m *MockBuilder) Prune(*docker.Client, io.Writer) error          { return m.stopper() }
+func (m *MockBuilder) PruneAll(*docker.Client, io.Writer) error       { return m.stopper() }
 
 func TestSetConfig(t *testing.T) {
 	deployment := &Deployment{}
@@ -38,11 +42,7 @@ func TestSetConfig(t *testing.T) {
 	assert.Equal(t, "/robertcompose.yml", deployment.buildFilePath)
 }
 
-func TestDeployMockSkipUpdateIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
+func TestDeployMockSkipUpdate(t *testing.T) {
 	buildCalled := false
 	stopCalled := false
 	d := Deployment{
@@ -53,10 +53,10 @@ func TestDeployMockSkipUpdateIntegration(t *testing.T) {
 				buildCalled = true
 				return nil
 			},
-		},
-		containerStopper: func(*docker.Client, io.Writer) error {
-			stopCalled = true
-			return nil
+			stopper: func() error {
+				stopCalled = true
+				return nil
+			},
 		},
 	}
 
@@ -79,9 +79,11 @@ func TestDownIntegration(t *testing.T) {
 	d := Deployment{
 		directory: "./test/",
 		buildType: "test",
-		containerStopper: func(*docker.Client, io.Writer) error {
-			called = true
-			return nil
+		builder: &MockBuilder{
+			stopper: func() error {
+				called = true
+				return nil
+			},
 		},
 	}
 
