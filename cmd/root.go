@@ -48,8 +48,6 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 func parseConfigArgs() error {
 	for i, arg := range os.Args {
 		switch arg {
-		case "--config":
-			projectConfigFilePath = os.Args[i+1]
 		case "--project":
 			projectName = os.Args[i+1]
 		}
@@ -87,14 +85,6 @@ func setConfigFullPaths() error {
 }
 
 func init() {
-	Root.PersistentFlags().StringVar(
-		&projectConfigFilePath, "config", "inertia.toml",
-		"Specify relative path to Inertia project configuration",
-	)
-	Root.PersistentFlags().StringVar(
-		&remoteConfigFilePath, "remotes", "",
-		"Specify relative path to remote configuration file",
-	)
 	Root.PersistentFlags().StringVar(
 		&remoteConfigFilePath, "project", "",
 		"Specify the name of the project Inertia should find configuration for",
