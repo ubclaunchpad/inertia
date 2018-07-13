@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
@@ -335,4 +336,41 @@ func TestLogs(t *testing.T) {
 	resp, err := d.Logs("docker-compose")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestLogsWebsocket(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		// Check request method
+		assert.Equal(t, "GET", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/logs", endpoint)
+
+		// Check body
+		defer req.Body.Close()
+		q := req.URL.Query()
+		assert.Equal(t, "docker-compose", q.Get(common.Container))
+		assert.Equal(t, "true", q.Get(common.Stream))
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+
+		socketUpgrader := websocket.Upgrader{}
+		socket, err := socketUpgrader.Upgrade(rw, req, nil)
+		assert.Nil(t, err)
+
+		err = socket.WriteMessage(websocket.TextMessage, []byte("hello world"))
+		assert.Nil(t, err)
+	}))
+	defer testServer.Close()
+
+	d := getMockClient(testServer)
+	resp, err := d.LogsWebSocket("docker-compose")
+	assert.Nil(t, err)
+
+	time.Sleep(1 * time.Second)
+	_, m, err := resp.ReadMessage()
+	assert.Nil(t, err)
+	assert.Equal(t, []byte("hello world"), m)
 }
