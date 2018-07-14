@@ -15,7 +15,7 @@ func AuthFailedErr(path ...string) error {
 	}
 	bytes, err := ioutil.ReadFile(keyLoc + ".pub")
 	if err != nil {
-		bytes = []byte(err.Error() + "\nError reading key - try running 'inertia [REMOTE] init' again: ")
+		bytes = []byte(err.Error() + "\nError reading key - try running 'inertia [remote] init' again: ")
 	}
 	return errors.New("Access to project repository rejected; did you forget to add\nInertia's deploy key to your repository settings?\n" + string(bytes))
 }

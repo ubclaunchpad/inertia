@@ -282,7 +282,7 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 	}
 	localRemoteURL := common.GetSSHRemoteURL(remotes[0].Config().URLs[0])
 	if localRemoteURL != common.GetSSHRemoteURL(remoteURL) {
-		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
+		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [remote] reset'")
 	}
 	return nil
 }

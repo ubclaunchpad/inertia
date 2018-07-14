@@ -13,18 +13,18 @@ import (
 
 // Initialize "inertia" commands regarding basic configuration
 func init() {
-	Root.PersistentFlags().StringVar(&configFilePath, "config", "inertia.toml", "Specify relative path to Inertia configuration")
+	Root.PersistentFlags().StringVar(&configFilePath, "config", "inertia.toml", "specify relative path to Inertia configuration")
 	Root.AddCommand(cmdInit)
 	Root.AddCommand(cmdReset)
 	Root.AddCommand(cmdSetConfigProperty)
 
-	cmdInit.Flags().String("version", Root.Version, "Specify Inertia daemon version to use")
+	cmdInit.Flags().String("version", Root.Version, "specify Inertia daemon version to use")
 }
 
 var cmdInit = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize an inertia project in this repository",
-	Long: `Initialize an inertia project in this GitHub repository.
+	Short: "Initialize an Inertia project in this repository",
+	Long: `Initializes an Inertia project in this GitHub repository.
 There must be a local git repository in order for initialization
 to succeed.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -81,9 +81,8 @@ to succeed.`,
 
 var cmdReset = &cobra.Command{
 	Use:   "reset",
-	Short: "Reset the Inertia project in this repository.",
-	Long: `Reset removes the existing Inertia configuration from
-	this repository.`,
+	Short: "Remove inertia configuration from this repository",
+	Long:  `Removes Inertia configuration files pertaining to this project.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		println("WARNING: This will remove your current Inertia configuration")
 		println("and is irreversible. Continue? (y/n)")
@@ -105,9 +104,9 @@ var cmdReset = &cobra.Command{
 }
 
 var cmdSetConfigProperty = &cobra.Command{
-	Use:   "set [PROPERTY] [VALUE]",
-	Short: "Set configuration property of the project",
-	Long:  `Set configuration property of the project. This will modify local toml file.`,
+	Use:   "set [property] [value]",
+	Short: "Update a property of your Inertia project configuration",
+	Long:  `Updates a property of your Inertia project configuration and save it to inertia.toml.`,
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
