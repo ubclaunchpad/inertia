@@ -82,7 +82,7 @@ to succeed.`,
 var cmdReset = &cobra.Command{
 	Use:   "reset",
 	Short: "Remove inertia configuration from this repository",
-	Long:  `Reset removes the Inertia configuration files pertaining to this project.`,
+	Long:  `Removes Inertia configuration files pertaining to this project.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		println("WARNING: This will remove your current Inertia configuration")
 		println("and is irreversible. Continue? (y/n)")
@@ -106,7 +106,7 @@ var cmdReset = &cobra.Command{
 var cmdSetConfigProperty = &cobra.Command{
 	Use:   "set [property] [value]",
 	Short: "Update a property of your Inertia project configuration",
-	Long:  `Update a property of your Inertia project configuration and save it to inertia.toml.`,
+	Long:  `Updates a property of your Inertia project configuration and save it to inertia.toml.`,
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
