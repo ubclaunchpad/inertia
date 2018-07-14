@@ -19,33 +19,33 @@ func init() {
 	cmdRemote.AddCommand(cmdShowRemote)
 	cmdRemote.AddCommand(cmdSetRemoteProperty)
 
-	cmdListRemotes.Flags().BoolP("verbose", "v", false, "Verbose output")
-	cmdAddRemote.Flags().StringP("port", "p", "4303", "Daemon port")
-	cmdAddRemote.Flags().StringP("sshPort", "s", "22", "SSH port")
+	cmdListRemotes.Flags().BoolP("verbose", "v", false, "enable verbose output")
+	cmdAddRemote.Flags().StringP("port", "p", "4303", "remote daemon port")
+	cmdAddRemote.Flags().StringP("sshPort", "s", "22", "remote SSH port")
 }
 
 var cmdRemote = &cobra.Command{
 	Use:   "remote",
-	Short: "Configure the local settings for a remote VPS instance",
-	Long: `Remote is a low level command for interacting with this VPS
-over SSH. Provides functionality such as adding new remotes, removing remotes,
-bootstrapping the server for deployment, running install scripts such as
-installing docker, starting the Inertia daemon and other low level configuration
-of the VPS. Must run 'inertia init' in your repository before using.
+	Short: "Configure the local settings for a remote host",
+	Long: `This command provides functionality such as adding new remotes, removing remotes,
+and configuring other low level configuration of the VPS. 
 
-Example:
-inerta remote add gcloud
-inerta gcloud init
-inerta remote status gcloud`,
-	Args: cobra.MinimumNArgs(1),
+Requires Inertia to be set up via 'inertia init'.
+
+For example:
+    inertia init
+    inertia remote add gcloud
+    inertia gcloud init        # set up Inertia
+	inertia gcloud status      # check on status of Inertia daemon
+`,
 }
 
 var cmdAddRemote = &cobra.Command{
-	Use:   "add [REMOTE]",
+	Use:   "add [remote]",
 	Short: "Add a reference to a remote VPS instance",
-	Long: `Add a reference to a remote VPS instance. Requires 
-information about the VPS including IP address, user and a PEM
-file. Specify a VPS name.`,
+	Long: `Add a reference to a remote VPS instance. Requires information about the VPS
+including IP address, user and a PEM file. The provided name will be used in other
+Inertia commands.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
@@ -105,7 +105,7 @@ var cmdListRemotes = &cobra.Command{
 
 var cmdRemoveRemote = &cobra.Command{
 	Use:   "rm [REMOTE]",
-	Short: "Remove a remote.",
+	Short: "Remove a configured remote",
 	Long:  `Remove a remote from Inertia's configuration file.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -129,9 +129,9 @@ var cmdRemoveRemote = &cobra.Command{
 }
 
 var cmdShowRemote = &cobra.Command{
-	Use:   "show [REMOTE]",
-	Short: "Show details about remote.",
-	Long:  `Show details about the given remote.`,
+	Use:   "show [remote]",
+	Short: "Show details about a remote",
+	Long:  `Shows details about the given remote.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
@@ -150,9 +150,9 @@ var cmdShowRemote = &cobra.Command{
 }
 
 var cmdSetRemoteProperty = &cobra.Command{
-	Use:   "set [REMOTE] [PROPERTY] [VALUE]",
-	Short: "Set details about remote.",
-	Long:  `Set details about the given remote.`,
+	Use:   "set [remote] [property] [value]",
+	Short: "Update details about remote",
+	Long:  `Updates the given property of the given remote's configuration.`,
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.

@@ -20,7 +20,7 @@ var cmdDeploymentUser = &cobra.Command{
 }
 
 var cmdDeploymentAddUser = &cobra.Command{
-	Use:   "add",
+	Use:   "add [user]",
 	Short: "Create a user with access to Inertia Web",
 	Long: `Create a user with access to the Inertia Web application.
 
@@ -71,12 +71,12 @@ Use the --admin flag to create an admin user.`,
 }
 
 var cmdDeploymentRemoveUser = &cobra.Command{
-	Use:   "rm",
-	Short: "Remove a user with access to Inertia Web",
-	Long: `Remove a user with access to the Inertia Web application.
+	Use:   "rm [user]",
+	Short: "Remove a user",
+	Long: `Removes the given user from Inertia's user database.
 
-This user will no longer be able to log in and view or configure the
-deployment from the web app.`,
+This user will no longer be able to log in and view or configure the deployment 
+from the web app.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
@@ -110,10 +110,9 @@ deployment from the web app.`,
 
 var cmdDeploymentResetUsers = &cobra.Command{
 	Use:   "reset",
-	Short: "Reset user database on your remote.",
-	Long: `Removes all users credentials on your remote. All users will
-no longer be able to log in and view or configure the deployment 
-from the web app.`,
+	Short: "Reset user database on your remote",
+	Long: `Removes all users credentials on your remote. All users will no longer 
+be able to log in and view or configure the deployment from the web app.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -147,7 +146,7 @@ from the web app.`,
 var cmdDeploymentListUsers = &cobra.Command{
 	Use:   "ls",
 	Short: "List all users registered on your remote.",
-	Long:  `List all users with access to Inertia Web on your remote.`,
+	Long:  `Lists all users registered in Inertia's user database.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
