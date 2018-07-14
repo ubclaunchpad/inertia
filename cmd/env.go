@@ -13,7 +13,7 @@ import (
 var cmdDeploymentEnv = &cobra.Command{
 	Use:   "env",
 	Short: "Manage environment variables on your remote",
-	Long: `Manage environment variables on your remote through Inertia. 
+	Long: `Manages environment variables on your remote through Inertia. 
 	
 Configured variables can be encrypted or stored in plain text, and are applied to 
 all project containers on startup.`,
@@ -22,7 +22,7 @@ all project containers on startup.`,
 var cmdDeploymentEnvSet = &cobra.Command{
 	Use:   "set [name] [value]",
 	Short: "Set an environment variable on your remote",
-	Long: `Set a persistent environment variable on your remote. Set environment
+	Long: `Sets a persistent environment variable on your remote. Set environment
 variables are applied to all deployed containers.`,
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -54,7 +54,7 @@ variables are applied to all deployed containers.`,
 var cmdDeploymentEnvRemove = &cobra.Command{
 	Use:   "rm [name]",
 	Short: "Remove an environment variable from your remote",
-	Long: `Remove the specified environment variable from deployed containers
+	Long: `Removes the specified environment variable from deployed containers
 and persistent environment storage.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

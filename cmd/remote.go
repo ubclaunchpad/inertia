@@ -27,8 +27,8 @@ func init() {
 var cmdRemote = &cobra.Command{
 	Use:   "remote",
 	Short: "Configure the local settings for a remote host",
-	Long: `This command provides functionality such as adding new remotes, removing remotes,
-and configuring other low level configuration of the VPS. 
+	Long: `Configures local settings for a remote host - add, remove, and list configured
+Inertia remotes.
 
 Requires Inertia to be set up via 'inertia init'.
 
@@ -43,7 +43,7 @@ For example:
 var cmdAddRemote = &cobra.Command{
 	Use:   "add [remote]",
 	Short: "Add a reference to a remote VPS instance",
-	Long: `Add a reference to a remote VPS instance. Requires information about the VPS
+	Long: `Adds a reference to a remote VPS instance. Requires information about the VPS
 including IP address, user and a PEM file. The provided name will be used in other
 Inertia commands.`,
 	Args: cobra.ExactArgs(1),

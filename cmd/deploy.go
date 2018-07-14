@@ -54,7 +54,7 @@ func init() {
 			Use:    remote.Name + " [command]",
 			Hidden: true,
 			Short:  "Configure deployment to " + remote.Name,
-			Long: `Manage deployment on specified remote.
+			Long: `Manages deployment on specified remote.
 
 Requires:
 1. an Inertia daemon running on your remote - use 'inertia [remote] init' to get it running.
@@ -122,7 +122,7 @@ Run 'inertia [remote] init' to gather this information.`,
 var cmdDeploymentUp = &cobra.Command{
 	Use:   "up",
 	Short: "Bring project online on remote",
-	Long: `Build and deploy your project on your remote.
+	Long: `Builds and deploy your project on your remote.
 
 This requires an Inertia daemon to be active on your remote - do this by running 'inertia [remote] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -268,7 +268,7 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 var cmdDeploymentLogs = &cobra.Command{
 	Use:   "logs [container]",
 	Short: "Access logs of containers on your remote host",
-	Long: `Access logs of containers on your remote host. 
+	Long: `Accesses logs of containers on your remote host. 
 	
 By default, this command retrieves Inertia daemon logs, but you can provide an 
 argument that specifies the name of the container you wish to retrieve logs for. 
@@ -375,7 +375,7 @@ var cmdDeploymentSSH = &cobra.Command{
 var cmdDeploymentSendFile = &cobra.Command{
 	Use:   "send [filepath]",
 	Short: "Send a file to your Inertia deployment",
-	Long:  `Send a file, such as a configuration or .env file, to your Inertia deployment.`,
+	Long:  `Sends a file, such as a configuration or .env file, to your Inertia deployment.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
@@ -427,7 +427,7 @@ var cmdDeploymentSendFile = &cobra.Command{
 var cmdDeploymentInit = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize remote host for deployment",
-	Long: `Initialize remote host for deployment.
+	Long: `Initializes this remote host for deployment.
 This command sets up your remote host and brings an Inertia daemon online on your remote.
 
 Upon successful setup, you will be provided with:
@@ -459,7 +459,7 @@ webhook URL enables continuous deployment as your repository is updated.`,
 var cmdDeploymentReset = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset the project on your remote",
-	Long: `Reset the project on your remote.
+	Long: `Resets the project on your remote.
 On this remote, this kills all active containers and clears the project directory, 
 allowing you to assign a different Inertia project to this remote.`,
 	Run: func(cmd *cobra.Command, args []string) {

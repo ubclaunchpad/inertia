@@ -23,8 +23,8 @@ func init() {
 
 var cmdInit = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize an inertia project in this repository",
-	Long: `Initialize an inertia project in this GitHub repository.
+	Short: "Initialize an Inertia project in this repository",
+	Long: `Initializes an Inertia project in this GitHub repository.
 There must be a local git repository in order for initialization
 to succeed.`,
 	Run: func(cmd *cobra.Command, args []string) {

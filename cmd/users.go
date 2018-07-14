@@ -22,7 +22,7 @@ var cmdDeploymentUser = &cobra.Command{
 var cmdDeploymentAddUser = &cobra.Command{
 	Use:   "add [user]",
 	Short: "Create a user with access to Inertia Web",
-	Long: `Create a user with access to the Inertia Web application.
+	Long: `Creates a user with access to the Inertia Web application.
 
 This user will be able to log in and view or configure the
 deployment from the web app.
