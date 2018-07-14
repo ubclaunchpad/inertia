@@ -60,7 +60,7 @@ Requires:
 1. an Inertia daemon running on your remote - use 'inertia [remote] init' to get it running.
 2. a deploy key to be registered within your remote repository for the daemon to use.
 
-Continuous deployment requires the daemon's webhook address to be registered in your remtoe repository.
+Continuous deployment requires the daemon's webhook address to be registered in your remote repository.
 
 Run 'inertia [remote] init' to gather this information.`,
 		}
