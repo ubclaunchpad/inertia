@@ -5,10 +5,9 @@ services:
   - docker
 
 env:
-  global: # DOCKER_USER, DOCKER_KEY, COVERALLS_TOKEN
+  global: # DOCKER_USER, DOCKER_KEY
     - secure: "Wmv2HWUKWM0S5Kh1IgX/VKhQ21Oi85LZgHZVYXqGppa3wHO5hKYOSoWnBBR3uNgHsYPi3RL7kRNDDuKWyDAWU+2hV2xjXfqfSwsH9Sj8pFn/60KcIoMJU8EkxydJks6+H4sf04Fei1zSXc2ySTIsvCUSUKDOi8ZJCqkDxV0hIK0TmXn7isDcRWnHTvpNqLarQ4LyN9Qi8qU/NR28cNHIdkZaWxT0gciNwT9ep/vrG32aaIsNB/Ikn43A38mx5B9iSmG7YtZzDYldMEyOhCDqZIxwOjA1J1nHYqeYq/RrF6JJYpprBfEjEDa73cUBy8JVZqb3ur5uL0FeBFfToNBdK/Qbj93pkOS8pQSgyxCCpACJBeSrzuolVKLxMLbfc6YoFXaEeu7oCE5T3P4hws6yP2MD1opAMnTCLUyWRWecH6PwVwgrlur6EvrEpimGOWk4TmmomvQMRVbDF1JYuY+4QD2M2tTkmts+pwpvEkBF+aOatSE1xUWYAtwsjnAjBSL7mhWSUeBT6MlTeaO1UqNb5qW2Fbz5KSYDh71T3DslWiCxad6x48/eXBAtApQ1mHbHtCrAALHz3h1Ioe7GA/7CWigakPayfMOYuavPDE7Ghrt8m9RlvTVoV5HgWHM9Ophrv+OnAb0RYDpPKU8+ejgqqI+kV9dy10SK6LAnXoM+kd0="
     - secure: "jloKHZ9QfPnER+X34GnQQ+GIf5d+ZHiC8Nu4mNVR0QiqK4EH2BnJExOpSUtkDCLZqPdzIAD3efTs/vgm0Od+GKbOGW/s83oy605OR13Bop6fDNoMWTf6fBlZ4JxfVmJSVbv6jKhx627HTC4U1aFDxRfgmN+113YLYCodQlB3F98m5ldD1xA+uuOeLp1FXCS9p9L+1/GWninyYEjrDVZz37c6kYsQJPhPvWAr3VcnnEE0vX0RmyKIOgM3/7gYf57HMlUo6Ri0cF4+WDUV+6R8RGbInZPErTSGR3qwyGwq1RbHkqFYCU4gVSEih2uo4pflKqoiXsDkrKg5FKxE3X0YG/rKnlZ3ElX4VYg3Pn4sGvXp45QW6tb4syVGXNgmIhtmYHoTvh48DDtvsbpVc7VwLv6E/dI53BvIv5/AKGDNWafsBRo0OZfr5V/XH6JLr2eWO+PXBiqhvUsP+r29iKVywKL5hjEJ+sKkm1O0ZXJPhGJNgajG5UHr1N+s61QmZGMKas2hO0p2ZjGxje/Fmdt+DiJ6UsPhEk5uLYWjcGFnbKYZlo2WUzO6bo1P5VQDXlr6mGRwIwOf8j/QidT+pz4cYdX63BMJw40OfKB87UcegZsncJpLK7hzJpcxZ//WCqmU/EPNfeIB4JRFlzRCxzMwKe7HOTmKwz2+tbO1GyWDuw8="
-    - secure: "GrHm6fAfnmJpMlNYH5pdac3R9rZ/ml6nVmzMVH8FrKKH50DCNBR06s47pw0oj3HsNkEz1SqQIgNG2wxDFGWoM8uTY9ndWGgREMbCxyhsezhFmfI1tGLHA0P93g+GkyVtq2Ne1/mhQQ3EUb+mPbWCSKHGyx9ypIAi1mwZYpKLRyMiTN+2rkNLV3+ccsrwhRq4T27ClKXP0qF0WaLUONC8I9qEAmko2ZP3ltTiqCDCFLEptaV3iH4vfVlvZWQyItkBaEyQH/KFgagkwQA+Xi/M9hiQA/Cb9zZ5edfFN4JMPGHzsWEv0u21iqH9OlyrBotlFvx0lxzKpYcTnhLKwV0U1K6dZRnVeq+A7f15kMFI4tjbE68I6+TjyAzZe560qwQqzqSPYM4AJ+DRkdDHilx8Jj/CckcaT9QtcVvi7/vbBAAjdd82Nxdd5/vjmVdaKiepw5ABJAxY/zg/TGl+ulz+YlvM3+Nkj+V6r12YrRjP5hB1AK9bl+ARCKGl30jj5jfFXaTETrWew/Xte3fepu8aTwZR7yHHsFtE7mecQJ80sRN0/tas5VTn2lFx62R01Evds9N5yGIeOlE7O19AE02u9eBeciCgHFpT+YVk/6dJvIGC2j2Lcnwxx80gt++bKUUTrOthGTO0bINQXrQK5tNIFa1WnqW4hjEXOCTggOlRMQE="
 
 cache:
   directories:
@@ -40,10 +39,9 @@ jobs:
       before_script:
         - make testdaemon-scp SSH_PORT=69
       script:
-        - go test -race -coverprofile=coverage.out ./...
+        - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
       after_success:
-        - go get github.com/mattn/goveralls
-        - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken "$COVERALLS_TOKEN"
+        - bash <(curl -s https://codecov.io/bash)
 
     # Make sure bootstrap works on various other VPS platforms
     - &bootstraptest 
