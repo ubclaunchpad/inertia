@@ -24,7 +24,7 @@ prod-deps:
 # Sets up test dependencies
 .PHONY: dev-deps
 dev-deps:
-	go get -u github.com/jteeuwen/go-bindata/...
+	go get -u github.com/UnnoTed/fileb0x
 	bash test/docker_deps.sh
 	bash test/lint_deps.sh
 
@@ -131,11 +131,10 @@ daemon:
 		-t ubclaunchpad/inertia:$(RELEASE) .
 	docker push ubclaunchpad/inertia:$(RELEASE)
 
-# Recompiles assets. Use whenever a script in client/bootstrap is
-# modified.
-.PHONY: bootstrap
-bootstrap:
-	go-bindata -o client/internal/compiled.go -pkg internal client/scripts/...
+# Recompiles assets. Use whenever a script in client/scripts is modified.
+.PHONY: scripts
+scripts:
+	fileb0x b0x.yml
 
 # Install Inertia Web dependencies. Use PACKAGE to install something.
 .PHONY: web-deps

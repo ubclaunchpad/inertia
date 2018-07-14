@@ -131,7 +131,7 @@ key to your repository to enable continuous deployment.`+"\n")
 
 // DaemonUp brings the daemon up on the remote instance.
 func (c *Client) DaemonUp(daemonVersion, host, daemonPort string) error {
-	scriptBytes, err := internal.Asset("client/scripts/daemon-up.sh")
+	scriptBytes, err := internal.ReadFile("client/scripts/daemon-up.sh")
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (c *Client) DaemonUp(daemonVersion, host, daemonPort string) error {
 
 // DaemonDown brings the daemon down on the remote instance
 func (c *Client) DaemonDown() error {
-	scriptBytes, err := internal.Asset("client/scripts/daemon-down.sh")
+	scriptBytes, err := internal.ReadFile("client/scripts/daemon-down.sh")
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func (c *Client) DaemonDown() error {
 
 // InertiaDown removes the inertia/ directory on the remote instance
 func (c *Client) InertiaDown() error {
-	scriptBytes, err := internal.Asset("client/scripts/inertia-down.sh")
+	scriptBytes, err := internal.ReadFile("client/scripts/inertia-down.sh")
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func (c *Client) InertiaDown() error {
 
 // installDocker installs docker on a remote vps.
 func (c *Client) installDocker(session SSHSession) error {
-	installDockerSh, err := internal.Asset("client/scripts/docker.sh")
+	installDockerSh, err := internal.ReadFile("client/scripts/docker.sh")
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func (c *Client) installDocker(session SSHSession) error {
 // keyGen creates a public-private key-pair on the remote vps
 // and returns the public key.
 func (c *Client) keyGen(session SSHSession) (*bytes.Buffer, error) {
-	scriptBytes, err := internal.Asset("client/scripts/keygen.sh")
+	scriptBytes, err := internal.ReadFile("client/scripts/keygen.sh")
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func (c *Client) keyGen(session SSHSession) (*bytes.Buffer, error) {
 // getDaemonAPIToken returns the daemon API token for RESTful access
 // to the daemon.
 func (c *Client) getDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
-	scriptBytes, err := internal.Asset("client/scripts/token.sh")
+	scriptBytes, err := internal.ReadFile("client/scripts/token.sh")
 	if err != nil {
 		return "", err
 	}
@@ -244,7 +244,7 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 	})
 }
 
-// Prune clears Docker assets on this remote.
+// Prune clears Docker ReadFiles on this remote.
 func (c *Client) Prune() (*http.Response, error) {
 	return c.post("/prune", nil)
 }
