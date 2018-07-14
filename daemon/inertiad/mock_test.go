@@ -33,6 +33,8 @@ func (f *FakeDeployment) Down(c *docker.Client, w io.Writer) error {
 	return f.DownFunc(c, w)
 }
 
+func (f *FakeDeployment) Prune(c *docker.Client, w io.Writer) error { return nil }
+
 func (f *FakeDeployment) Destroy(c *docker.Client, w io.Writer) error {
 	return f.DestroyFunc(c, w)
 }

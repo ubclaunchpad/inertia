@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ func init() {
 	cmdProvision.AddCommand(cmdProvisionECS)
 	cmdProvision.PersistentFlags().StringP("daemon-port", "d", "4303", "Daemon port")
 	cmdProvision.PersistentFlags().StringArrayP("ports", "p", []string{}, "Ports your project uses")
-	cmdRoot.AddCommand(cmdProvision)
+	Root.AddCommand(cmdProvision)
 }
 
 var cmdProvision = &cobra.Command{
@@ -41,10 +41,10 @@ var cmdProvisionECS = &cobra.Command{
 	Long: `[BETA] Provision a new Amazon EC2 instance and set it up for continuous deployment
 	with Inertia. Make sure you run this command with the '-p' flag to indicate what ports
 	your project uses, since they must be exposed on your new instance.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
-		config, path, err := local.GetProjectConfigFromDisk(ConfigFilePath)
+		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -62,16 +62,20 @@ var cmdProvisionECS = &cobra.Command{
 		// Create VPS instance
 		var prov *provision.EC2Provisioner
 		if !fromEnv {
-			id, key, err := enterEC2CredentialsWalkthrough(os.Stdin)
+			var id, key string
+			id, key, err = enterEC2CredentialsWalkthrough(os.Stdin)
 			if err != nil {
 				log.Fatal(err)
 			}
-			prov, err = provision.NewEC2Provisioner(id, key)
+			prov, err = provision.NewEC2Provisioner(id, key, os.Stdout)
+			if err != nil {
+				log.Fatal(err)
+			}
 		} else {
-			prov, err = provision.NewEC2ProvisionerFromEnv()
-		}
-		if err != nil {
-			log.Fatal(err)
+			prov, err = provision.NewEC2ProvisionerFromEnv(os.Stdout)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		// Report connected user
@@ -137,20 +141,19 @@ var cmdProvisionECS = &cobra.Command{
 		config.Write(path)
 
 		// Create inertia client
-		inertia, found := client.NewClient(args[0], config)
+		inertia, found := client.NewClient(args[0], config, os.Stdout)
 		if !found {
 			log.Fatal("vps setup did not complete properly")
-		}
-		gitURL, err := local.GetRepoRemote("origin")
-		if err != nil {
-			log.Fatal(err)
 		}
 
 		// Bootstrap remote
 		fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.RemoteVPS.IP)
-		err = inertia.BootstrapRemote(common.ExtractRepository(common.GetSSHRemoteURL(gitURL)))
+		err = inertia.BootstrapRemote(config.Project)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		// Save updated config
+		config.Write(path)
 	},
 }

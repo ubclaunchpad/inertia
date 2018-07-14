@@ -10,9 +10,9 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/git"
 	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
@@ -23,6 +23,9 @@ import (
 type Builder interface {
 	Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error)
 	GetBuildStageName() string
+	StopContainers(*docker.Client, io.Writer) error
+	Prune(*docker.Client, io.Writer) error
+	PruneAll(*docker.Client, io.Writer) error
 }
 
 // Deployer manages the deployed user project
@@ -30,8 +33,9 @@ type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) error
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
-
+	Prune(*docker.Client, io.Writer) error
 	GetStatus(*docker.Client) (*common.DeploymentStatus, error)
+
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
@@ -48,8 +52,7 @@ type Deployment struct {
 	buildType     string
 	buildFilePath string
 
-	builder          Builder
-	containerStopper containers.ContainerStopper
+	builder Builder
 
 	repo *gogit.Repository
 	auth ssh.AuthMethod
@@ -79,7 +82,7 @@ func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deplo
 	if err != nil {
 		return nil, err
 	}
-	authMethod, err := auth.GetGithubKey(pemFile)
+	authMethod, err := crypto.GetGithubKey(pemFile)
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +108,7 @@ func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deplo
 		buildType: cfg.BuildType,
 
 		// Functions
-		builder:          builder,
-		containerStopper: containers.StopActiveContainers,
+		builder: builder,
 
 		// Repository
 		auth: authMethod,
@@ -154,8 +156,11 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 		}
 	}
 
+	// Clean up
+	d.builder.Prune(cli, out)
+
 	// Kill active project containers if there are any
-	err := d.containerStopper(cli, out)
+	err := d.builder.StopContainers(cli, out)
 	if err != nil {
 		return err
 	}
@@ -163,7 +168,8 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	// Get config
 	conf, err := d.GetBuildConfiguration()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintln(out, err.Error())
+		fmt.Fprintln(out, "Continuing...")
 	}
 
 	// Build project
@@ -186,13 +192,24 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	// active
 	_, err := containers.GetActiveContainers(cli)
 	if err != nil {
-		killErr := d.containerStopper(cli, out)
+		killErr := d.builder.StopContainers(cli, out)
 		if killErr != nil {
 			println(err)
 		}
 		return err
 	}
-	return d.containerStopper(cli, out)
+	err = d.builder.StopContainers(cli, out)
+	if err != nil {
+		return err
+	}
+
+	// Do a lite prune
+	return d.builder.Prune(cli, out)
+}
+
+// Prune clears unused Docker assets
+func (d *Deployment) Prune(cli *docker.Client, out io.Writer) error {
+	return d.builder.PruneAll(cli, out)
 }
 
 // Destroy shuts down the deployment and removes the repository

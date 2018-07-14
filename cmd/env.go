@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -20,10 +20,10 @@ var cmdDeploymentEnvSet = &cobra.Command{
 	Short: "Set an environment variable on your remote",
 	Long: `Set a persistent environment variable on your remote. Set environment
 variables are applied to all deployed containers.`,
-	Args: cobra.MinimumNArgs(2),
+	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, ConfigFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -52,10 +52,10 @@ var cmdDeploymentEnvRemove = &cobra.Command{
 	Short: "Remove an environment variable from your remote",
 	Long: `Remove the specified environment variable from deployed containers
 and persistent environment storage.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, ConfigFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,7 +79,7 @@ var cmdDeploymentEnvList = &cobra.Command{
 	Short: "List currently set and saved environment variables",
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
-		deployment, err := local.GetClient(remoteName, ConfigFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}

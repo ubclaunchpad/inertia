@@ -63,11 +63,11 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	assert.Equal(t, config.Remotes["test2"], readConfig.Remotes["test2"])
 
 	// Test client read
-	client, err := GetClient("test2", "inertia.toml")
+	client, _, err := GetClient("test2", "inertia.toml")
 	assert.Nil(t, err)
 	assert.Equal(t, "test2", client.Name)
 	assert.Equal(t, "12343:80801", client.GetIPAndPort())
-	_, err = GetClient("asdf", "inertia.toml")
+	_, _, err = GetClient("asdf", "inertia.toml")
 	assert.NotNil(t, err)
 
 	// Test config remove

@@ -12,10 +12,6 @@
   version = "4.4.0"
 
 [[constraint]]
-  name = "github.com/google/go-github"
-  version = "15.0"
-
-[[constraint]]
   name = "github.com/sirupsen/logrus"
   version = "1.0.5"
 

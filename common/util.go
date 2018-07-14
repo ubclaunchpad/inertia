@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+// DevNull writes to null, since a nil io.Writer will break shit
+type DevNull struct{}
+
+func (dn DevNull) Write(p []byte) (n int, err error) {
+	return len(p), nil
+}
+
 // GetFullPath returns the absolute path of the config file.
 func GetFullPath(relPath string) (string, error) {
 	path, err := os.Getwd()

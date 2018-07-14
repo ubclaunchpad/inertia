@@ -27,16 +27,18 @@ type Builder struct {
 	buildStageName       string
 	dockerComposeVersion string
 	herokuishVersion     string
+	stopper              containers.ContainerStopper
 
 	builders map[string]ProjectBuilder
 }
 
 // NewBuilder creates a builder with given configuration
-func NewBuilder(conf cfg.Config) *Builder {
+func NewBuilder(conf cfg.Config, stopper containers.ContainerStopper) *Builder {
 	b := &Builder{
 		buildStageName:       "build",
 		dockerComposeVersion: conf.DockerComposeVersion,
 		herokuishVersion:     conf.HerokuishVersion,
+		stopper:              stopper,
 	}
 	b.builders = map[string]ProjectBuilder{
 		"herokuish":      b.herokuishBuild,
@@ -49,6 +51,21 @@ func NewBuilder(conf cfg.Config) *Builder {
 // GetBuildStageName returns the name of the intermediary container used to
 // build projects
 func (b *Builder) GetBuildStageName() string { return b.buildStageName }
+
+// StopContainers stops containers and cleans up assets
+func (b *Builder) StopContainers(docker *docker.Client, out io.Writer) error {
+	return b.stopper(docker, out)
+}
+
+// Prune cleans up Dokcer assets
+func (b *Builder) Prune(docker *docker.Client, out io.Writer) error {
+	return containers.Prune(docker)
+}
+
+// PruneAll forcibly removes Docker assets
+func (b *Builder) PruneAll(docker *docker.Client, out io.Writer) error {
+	return containers.PruneAll(docker, b.dockerComposeVersion, b.herokuishVersion)
+}
 
 // Config contains parameters required for builds to execute
 type Config struct {
@@ -73,11 +90,13 @@ func (b *Builder) Build(buildType string, d *Config,
 		builder = b.dockerCompose
 	}
 
-	// Deploy project
+	// Build project
 	deploy, err := builder(d, cli, out)
 	if err != nil {
 		return func() error { return nil }, err
 	}
+
+	// Return the deploy callback
 	return deploy, nil
 }
 

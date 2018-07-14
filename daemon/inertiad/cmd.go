@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
-
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
 // Version is the current build of Inertia
@@ -39,12 +38,12 @@ var tokenCmd = &cobra.Command{
 	Long: `Produce an API token to use with the daemon,
 Created using an RSA private key.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		keyBytes, err := auth.GetAPIPrivateKey(nil)
+		keyBytes, err := crypto.GetAPIPrivateKey(nil)
 		if err != nil {
 			panic(err)
 		}
 
-		token, err := auth.GenerateToken(keyBytes.([]byte))
+		token, err := crypto.GenerateMasterToken(keyBytes.([]byte))
 		if err != nil {
 			panic(err)
 		}

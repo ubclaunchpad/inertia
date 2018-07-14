@@ -10,7 +10,6 @@ import (
 
 var (
 	errSessionNotFound = errors.New("Session not found")
-	errCookieNotFound  = errors.New("Cookie not found")
 	errUserNotFound    = errors.New("User not found")
 )
 
@@ -28,8 +27,8 @@ type userProps struct {
 
 // userManager administers sessions and user accounts
 type userManager struct {
-	// db is a boltdb database, which is an embedded
-	// key/value database where each "bucket" is a collection
+	// db is a boltdb database, which is an embedded key/value database where
+	// each "bucket" is a collection
 	db          *bolt.DB
 	usersBucket []byte
 }
@@ -45,9 +44,21 @@ func newUserManager(dbPath string) (*userManager, error) {
 		return nil, err
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists(manager.usersBucket)
-		return err
+		users, err := tx.CreateBucketIfNotExists(manager.usersBucket)
+		if err != nil {
+			return err
+		}
+		// Add a master user - the password to this guy/gal will just be the
+		// GitHub key. It's not really meant for use.
+		bytes, err := json.Marshal(&userProps{Admin: true})
+		if err != nil {
+			return err
+		}
+		return users.Put([]byte("master"), bytes)
 	})
+	if err != nil {
+		return nil, err
+	}
 	manager.db = db
 
 	return manager, nil
@@ -134,18 +145,21 @@ func (m *userManager) HasUser(username string) error {
 
 // IsCorrectCredentials checks if username and password has a match
 // in the database
-func (m *userManager) IsCorrectCredentials(username, password string) (bool, error) {
-	correct := false
-	userbytes := []byte(username)
-	var userErr error
+func (m *userManager) IsCorrectCredentials(username, password string) (*userProps, bool, error) {
+	var (
+		userbytes = []byte(username)
+		userProps = &userProps{}
+		userErr   error
+		correct   bool
+	)
+
 	transactionErr := m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
 		propsBytes := users.Get(userbytes)
 		if propsBytes == nil {
 			return errUserNotFound
 		}
-		props := &userProps{}
-		err := json.Unmarshal(propsBytes, props)
+		err := json.Unmarshal(propsBytes, userProps)
 		if err != nil {
 			return errors.New("Corrupt user properties: " + err.Error())
 		}
@@ -156,28 +170,28 @@ func (m *userManager) IsCorrectCredentials(username, password string) (bool, err
 			return err
 		}
 
-		correct = crypto.CorrectPassword(props.HashedPassword, password)
+		correct = crypto.CorrectPassword(userProps.HashedPassword, password)
 		if !correct {
 			// Track number of login attempts and don't add
 			// user back to the database if past limit
-			props.LoginAttempts++
-			if props.LoginAttempts <= loginAttemptsLimit {
-				bytes, err := json.Marshal(props)
+			userProps.LoginAttempts++
+			if userProps.LoginAttempts <= loginAttemptsLimit {
+				bytes, err := json.Marshal(userProps)
 				if err != nil {
 					return err
 				}
 				return users.Put(userbytes, bytes)
 			}
 
-			// Rollback will occur if transaction returns and
-			// error, so store in variable
+			// Rollback will occur if transaction returns and error, so store
+			// in variable. TODO: don't delete?
 			userErr = errors.New("Too many login attempts - user deleted")
 			return nil
 		}
 
 		// Reset attempts to 0 if login successful
-		props.LoginAttempts = 0
-		bytes, err := json.Marshal(props)
+		userProps.LoginAttempts = 0
+		bytes, err := json.Marshal(userProps)
 		if err != nil {
 			return err
 		}
@@ -185,13 +199,14 @@ func (m *userManager) IsCorrectCredentials(username, password string) (bool, err
 	})
 
 	if userErr != nil {
-		return correct, userErr
+		return userProps, correct, userErr
 	}
-	return correct, transactionErr
+	return userProps, correct, transactionErr
 }
 
 // IsAdmin checks if given user is has administrator priviledges
 func (m *userManager) IsAdmin(username string) (bool, error) {
+	// Check if user is admin in database
 	admin := false
 	err := m.db.View(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
