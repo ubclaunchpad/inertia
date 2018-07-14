@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import ShutdownButton from '../../components/ShutdownButton/ShutdownButton';
+import PruneImageButton from '../../components/PruneImageButton/PruneImageButton';
 import IconHeader from '../../components/IconHeader/IconHeader';
 
 
@@ -58,6 +59,7 @@ class SettingsWrapper extends React.Component {
           </TableBody>
         </Table>
         <ShutdownButton style={{ margin: '1rem' }} />
+        <PruneImageButton style={{ margin: '1rem' }} />
       </div>
     );
   }

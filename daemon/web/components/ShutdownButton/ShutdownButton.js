@@ -5,7 +5,7 @@ import './index.sass';
 const ShutdownButton = ({ style }) =>
   (
     <div>
-      <button className="ShutdownButton" type="button" disabled style={style}>Shut down</button>
+      <button className="ShutdownButton" type="button" style={style}>Shut Down Containers</button>
     </div>
   );
 
