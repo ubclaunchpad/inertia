@@ -30,7 +30,7 @@ func parseConfigArg() {
 	}
 }
 
-// Initialize "inertia [REMOTE] [COMMAND]" commands
+// Initialize "inertia [remote] [cmd]" commands
 func init() {
 	// This is the only place configuration is read every time an `inertia`
 	// command is run - check version here.
@@ -57,7 +57,7 @@ func init() {
 			Long: `Manage deployment on specified remote.
 
 Requires:
-1. an Inertia daemon running on your remote - use 'inertia [REMOTE] init' to get it running.
+1. an Inertia daemon running on your remote - use 'inertia [remote] init' to get it running.
 2. a deploy key to be registered within your remote repository for the daemon to use.
 
 Continuous deployment requires the daemon's webhook address to be registered in your remtoe repository.

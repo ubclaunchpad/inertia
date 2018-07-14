@@ -104,7 +104,7 @@ var cmdListRemotes = &cobra.Command{
 }
 
 var cmdRemoveRemote = &cobra.Command{
-	Use:   "rm [REMOTE]",
+	Use:   "rm [remote]",
 	Short: "Remove a configured remote",
 	Long:  `Remove a remote from Inertia's configuration file.`,
 	Args:  cobra.ExactArgs(1),
