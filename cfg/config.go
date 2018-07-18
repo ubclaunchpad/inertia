@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 var (
@@ -55,7 +56,7 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 	}
 
 	var (
-		project = &InertiaProject{}
+		project = &common.InertiaProject{}
 		remotes = &InertiaRemotes{}
 	)
 
@@ -87,7 +88,7 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 		if err != nil {
 			return nil, fmt.Errorf("remotes config error: %s", err.Error())
 		}
-		return NewConfigFromTOML(InertiaProject{
+		return NewConfigFromTOML(common.InertiaProject{
 			Version: remotes.Version,
 		}, *remotes)
 	}
@@ -96,7 +97,7 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 }
 
 // NewConfigFromTOML loads configuration from TOML format structs
-func NewConfigFromTOML(project InertiaProject, remotes InertiaRemotes) (*Config, error) {
+func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*Config, error) {
 	// Set remote defaults
 	if remotes.Remotes == nil {
 		r := make(map[string]*RemoteVPS)
@@ -165,8 +166,12 @@ func (config *Config) RemoveRemote(name string) bool {
 }
 
 // GetProjectConfig gets project configuration
-func (config *Config) GetProjectConfig() *InertiaProject {
-	return &InertiaProject{&config.Version, &config.Project, &config.BuildType, &config.BuildFilePath}
+func (config *Config) GetProjectConfig() *common.InertiaProject {
+	return &common.InertiaProject{
+		Version:       &config.Version,
+		Project:       &config.Project,
+		BuildType:     &config.BuildType,
+		BuildFilePath: &config.BuildFilePath}
 }
 
 // WriteProjectConfig writes Inertia project configuration. This file should be

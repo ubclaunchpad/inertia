@@ -4,7 +4,6 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 
@@ -70,7 +69,7 @@ func setConfigFullPaths() error {
 	if projectName != "" {
 		remoteConfigFilePath = local.GetRemotesConfigFilePath(projectName)
 	} else {
-		proj, err := cfg.ReadProjectConfig(projectConfigFilePath)
+		proj, err := common.ReadProjectConfig(projectConfigFilePath)
 		if err != nil {
 			println(err.Error())
 			return nil
