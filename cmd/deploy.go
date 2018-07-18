@@ -220,7 +220,6 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 		if err != nil {
 			log.Fatal(err)
 		}
-		host := "http://" + deployment.RemoteVPS.GetIPAndPort()
 		resp, err := deployment.Status()
 		if err != nil {
 			log.Fatal(err)
@@ -228,7 +227,9 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 
 		switch resp.StatusCode {
 		case http.StatusOK:
-			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode, deployment.Name, host)
+			fmt.Printf(
+				"(Status code %d) Daemon at remote '%s' online at %s\n",
+				resp.StatusCode, deployment.Name, deployment.RemoteVPS.GetIPAndPort())
 			status := &common.DeploymentStatus{}
 			err := json.NewDecoder(resp.Body).Decode(status)
 			if err != nil {
@@ -324,7 +325,7 @@ var cmdDeploymentPrune = &cobra.Command{
 	Long:  `Prunes Docker assets and images from your remote to free up storage space.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		inertia, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		inertia, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -495,7 +496,7 @@ directory (~/inertia) from your remote host.`,
 
 		// Daemon down
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
-		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
