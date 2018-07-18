@@ -59,6 +59,7 @@ Run 'inertia [remote] init' to gather this information.`,
 
 		// Deep copy and attach each deployment command.
 		up := deepCopy(cmdDeploymentUp)
+		up.Flags().Bool("update-config", false, "update remote project configuration with local configuration")
 		cmd.AddCommand(up)
 
 		cmd.AddCommand(deepCopy(cmdDeploymentDown))
@@ -128,8 +129,44 @@ This requires an Inertia daemon to be active on your remote - do this by running
 		if err != nil {
 			log.Fatal(err)
 		}
+		sendConfig, err := cmd.Flags().GetBool("update-config")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		// TODO: send config
+		// Check if remote already has repository - if not, this is a first-time
+		// setup and the configuration should be sent to remote
+		if !sendConfig {
+			var resp *http.Response
+			if resp, err = deployment.Status(); err != nil {
+				log.Fatal(err)
+			}
+			status := &common.DeploymentStatus{}
+			if err = json.NewDecoder(resp.Body).Decode(status); err != nil {
+				log.Fatal(err)
+			}
+			if status.CommitHash == "" {
+				sendConfig = true
+			}
+		}
+
+		if sendConfig {
+			println("reading project configuration...")
+			f, err := os.Open(projectConfigFilePath)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			println("sending configuration to remote...")
+			projectPath := "$HOME/inertia/project"
+			remotePath := path.Join(projectPath, "inertia.toml")
+			session := client.NewSSHRunner(deployment.RemoteVPS)
+			err = session.CopyFile(f, remotePath, "0655")
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			println("project config delivered to remote")
+		}
 
 		// TODO: support other remotes
 		url, err := local.GetRepoRemote("origin")
