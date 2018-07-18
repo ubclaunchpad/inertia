@@ -28,7 +28,7 @@ func ReadProjectConfig(filepath string) (*InertiaProject, error) {
 	if err != nil {
 		return nil, errors.New("[WARNING] no inertia configuration found")
 	}
-	var proj *InertiaProject
+	proj := &InertiaProject{}
 	err = toml.Unmarshal(projectBytes, proj)
 	if err != nil {
 		return nil, errors.New("[WARNING] inertia configuration invalid: " + err.Error())
