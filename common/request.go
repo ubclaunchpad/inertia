@@ -20,8 +20,7 @@ type UpRequest struct {
 
 // GitOptions represents GitHub-related deployment options
 type GitOptions struct {
-	RemoteURL string `json:"remote"`
-	Branch    string `json:"branch"`
+	Branch string `json:"branch"`
 }
 
 // UserRequest is used for logging in or modifying users

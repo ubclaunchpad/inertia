@@ -24,7 +24,9 @@ func GetRemotesConfigFilePath(projectName string) string {
 
 // InitializeInertiaProject creates the inertia config folder and
 // returns an error if we're not in a git project.
-func InitializeInertiaProject(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath string) error {
+func InitializeInertiaProject(
+	projectConfigPath, remoteConfigPath, version,
+	buildType, buildFilePath, remoteURL string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -34,12 +36,12 @@ func InitializeInertiaProject(projectConfigPath, remoteConfigPath, version, buil
 		return err
 	}
 
-	return createConfigFile(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath)
+	return createConfigFile(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath, remoteURL)
 }
 
 // createConfigFile returns an error if the config directory
 // already exists (the project is already initialized).
-func createConfigFile(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath string) error {
+func createConfigFile(projectConfigPath, remoteConfigPath, version, buildType, buildFilePath, remoteURL string) error {
 	// Check if Inertia is already set up.
 	s, fileErr := os.Stat(projectConfigPath)
 	if s != nil {
@@ -52,7 +54,8 @@ func createConfigFile(projectConfigPath, remoteConfigPath, version, buildType, b
 		if err != nil {
 			return err
 		}
-		config := cfg.NewConfig(version, filepath.Base(cwd), buildType, buildFilePath)
+		config := cfg.NewConfig(
+			version, filepath.Base(cwd), buildType, buildFilePath, remoteURL)
 
 		f, err := os.Create(projectConfigPath)
 		if err != nil {

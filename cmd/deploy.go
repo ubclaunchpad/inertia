@@ -168,13 +168,7 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			println("project config delivered to remote")
 		}
 
-		// TODO: support other remotes
-		url, err := local.GetRepoRemote("origin")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		resp, err := deployment.Up(url, !short)
+		resp, err := deployment.Up(!short)
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -19,6 +19,7 @@ func init() {
 	Root.AddCommand(cmdSetConfigProperty)
 
 	cmdInit.Flags().String("version", Root.Version, "specify Inertia daemon version to use")
+	cmdInit.Flags().String("git-remote", "origin", "specify git remote to use")
 }
 
 var cmdInit = &cobra.Command{
@@ -36,6 +37,17 @@ to succeed.`,
 		if givenVersion != version {
 			version = givenVersion
 		}
+		gitRemote, err := cmd.Flags().GetString("git-remote")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Get remote URL
+		remoteURL, err := local.GetRepoRemote(gitRemote)
+		if err != nil {
+			log.Fatal(err)
+		}
+		remoteURL = common.GetSSHRemoteURL(remoteURL)
 
 		// Determine best build type for project
 		var buildType string
@@ -66,7 +78,9 @@ to succeed.`,
 		}
 
 		// Hello world config file!
-		err = local.InitializeInertiaProject(projectConfigFilePath, remoteConfigFilePath, version, buildType, buildFilePath)
+		err = local.InitializeInertiaProject(
+			projectConfigFilePath, remoteConfigFilePath,
+			version, buildType, buildFilePath, remoteURL)
 		if err != nil {
 			log.Fatal(err)
 		}

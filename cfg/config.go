@@ -25,16 +25,18 @@ type Config struct {
 	Project       string
 	BuildType     string
 	BuildFilePath string
+	RemoteURL     string
 
 	remotes map[string]*RemoteVPS
 }
 
 // NewConfig sets up Inertia configuration with given properties
-func NewConfig(version, project, buildType, buildFilePath string) *Config {
+func NewConfig(version, project, buildType, buildFilePath, remoteURL string) *Config {
 	cfg := &Config{
 		Version:   version,
 		Project:   project,
 		BuildType: buildType,
+		RemoteURL: remoteURL,
 		remotes:   make(map[string]*RemoteVPS),
 	}
 	if buildFilePath != "" {
@@ -118,6 +120,7 @@ func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*
 		Project:       *project.Project,
 		BuildType:     *project.BuildType,
 		BuildFilePath: *project.BuildFilePath,
+		RemoteURL:     *project.Repository.RemoteURL,
 		remotes:       *remotes.Remotes,
 	}, nil
 }
@@ -171,7 +174,8 @@ func (config *Config) GetProjectConfig() *common.InertiaProject {
 		Version:       &config.Version,
 		Project:       &config.Project,
 		BuildType:     &config.BuildType,
-		BuildFilePath: &config.BuildFilePath}
+		BuildFilePath: &config.BuildFilePath,
+		Repository:    &common.InertiaRepo{&config.RemoteURL}}
 }
 
 // WriteProjectConfig writes Inertia project configuration. This file should be

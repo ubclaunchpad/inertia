@@ -214,10 +214,7 @@ func TestUp(t *testing.T) {
 		var upReq common.UpRequest
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
 		assert.Equal(t, "arjan", upReq.WebHookSecret)
-		assert.Equal(t, "test_project", upReq.Project)
-		assert.Equal(t, "docker-compose", upReq.BuildType)
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
@@ -230,7 +227,7 @@ func TestUp(t *testing.T) {
 
 	d := getMockClient(testServer)
 	assert.False(t, d.verifySSL)
-	resp, err := d.Up("myremote.git", "docker-compose", false)
+	resp, err := d.Up(false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

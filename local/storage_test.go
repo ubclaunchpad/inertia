@@ -17,7 +17,7 @@ func TestInitializeInertiaProjetFail(t *testing.T) {
 	remotes, _ := common.GetFullPath("testinit.inertia.remotes")
 	defer os.Remove(project)
 	defer os.Remove(remotes)
-	err := InitializeInertiaProject(project, remotes, "", "", "")
+	err := InitializeInertiaProject(project, remotes, "", "", "", "")
 	assert.NotNil(t, err)
 }
 
@@ -27,11 +27,11 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	println(project)
 	defer os.Remove(project)
 	defer os.Remove(remotes)
-	err := createConfigFile(project, remotes, "test", "dockerfile", "")
+	err := createConfigFile(project, remotes, "test", "dockerfile", "", "")
 	assert.Nil(t, err)
 
 	// Already exists
-	err = createConfigFile(project, remotes, "test", "dockerfile", "")
+	err = createConfigFile(project, remotes, "test", "dockerfile", "", "")
 	assert.NotNil(t, err)
 
 	// Get config and add remotes

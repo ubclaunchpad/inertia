@@ -226,13 +226,12 @@ func (c *Client) getDaemonAPIToken(session SSHSession, daemonVersion string) (st
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (c *Client) Up(gitRemoteURL string, stream bool) (*http.Response, error) {
+func (c *Client) Up(stream bool) (*http.Response, error) {
 	return c.post("/up", &common.UpRequest{
 		Stream:        stream,
 		WebHookSecret: c.RemoteVPS.Daemon.WebHookSecret,
 		GitOptions: &common.GitOptions{
-			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
-			Branch:    c.Branch,
+			Branch: c.Branch,
 		},
 	})
 }

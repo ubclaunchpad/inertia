@@ -54,16 +54,19 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Println("No deployment detected")
 
 		// Spin up deployment
-		d, err := project.NewDeployment(build.NewBuilder(*conf), project.DeploymentConfig{
-			ProjectDirectory: conf.ProjectDirectory,
-			ProjectName:      *projectConfig.Project,
-			BuildType:        *projectConfig.BuildType,
-			BuildFilePath:    *projectConfig.BuildFilePath,
-			RemoteURL:        upReq.GitOptions.RemoteURL,
-			Branch:           upReq.GitOptions.Branch,
-			PemFilePath:      crypto.DaemonGithubKeyLocation,
-			DatabasePath:     path.Join(conf.DataDirectory, "project.db"),
-		}, logger)
+		d, err := project.NewDeployment(
+			build.NewBuilder(*conf, containers.StopActiveContainers),
+			project.DeploymentConfig{
+				ProjectDirectory: conf.ProjectDirectory,
+				ProjectName:      *projectConfig.Project,
+				BuildType:        *projectConfig.BuildType,
+				BuildFilePath:    *projectConfig.BuildFilePath,
+				RemoteURL:        *projectConfig.Repository.RemoteURL,
+				Branch:           upReq.GitOptions.Branch,
+				PemFilePath:      crypto.DaemonGithubKeyLocation,
+				DatabasePath:     path.Join(conf.DataDirectory, "project.db"),
+			},
+			logger)
 		if err != nil {
 			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 			return
