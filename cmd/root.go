@@ -11,16 +11,14 @@ import (
 )
 
 var (
-	// Relative paths to configuration files
-	projectConfigFilePath = "inertia.toml"
-	remoteConfigFilePath  = ""
-
 	// projectName is used to generate remoteConfigFilePath
-	projectName = ""
+	projectName string
 
 	// Setup - these functions run before init()
-	parse       = parseConfigArgs()
-	setFullPath = setConfigFullPaths()
+	parse = parseConfigArgs()
+
+	// Relative paths to configuration files
+	projectConfigFilePath, remoteConfigFilePath = setConfigFullPaths()
 )
 
 // Root is the base inertia command
@@ -55,11 +53,11 @@ func parseConfigArgs() error {
 }
 
 // setConfigFullPaths turns configuration paths into full paths
-func setConfigFullPaths() error {
+func setConfigFullPaths() (projectConfigFilePath string, remoteConfigFilePath string) {
 	var err error
 
 	// Generate full path for given relative path
-	projectConfigFilePath, err = common.GetFullPath(projectConfigFilePath)
+	projectConfigFilePath, err = common.GetFullPath("inertia.toml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,15 +70,16 @@ func setConfigFullPaths() error {
 		proj, err := common.ReadProjectConfig(projectConfigFilePath)
 		if err != nil {
 			println(err.Error())
-			return nil
+			return
 		}
 		if proj.Project == nil {
-			log.Fatal("project configuration is missing field project-name")
+			log.Fatal("project configuration is missing field 'project-name'")
 		}
-		remoteConfigFilePath = local.GetRemotesConfigFilePath(*proj.Project)
+		projectName = *proj.Project
+		remoteConfigFilePath = local.GetRemotesConfigFilePath(projectName)
 	}
 
-	return nil
+	return
 }
 
 func init() {
