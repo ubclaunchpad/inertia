@@ -24,6 +24,9 @@ import (
 type Builder interface {
 	Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error)
 	GetBuildStageName() string
+	StopContainers(*docker.Client, io.Writer) error
+	Prune(*docker.Client, io.Writer) error
+	PruneAll(*docker.Client, io.Writer) error
 }
 
 // Deployer manages the deployed user project
@@ -31,8 +34,9 @@ type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) error
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
-
+	Prune(*docker.Client, io.Writer) error
 	GetStatus(*docker.Client) (*common.DeploymentStatus, error)
+
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
@@ -49,8 +53,7 @@ type Deployment struct {
 	buildType     string
 	buildFilePath string
 
-	builder          Builder
-	containerStopper containers.ContainerStopper
+	builder Builder
 
 	repo *gogit.Repository
 	auth ssh.AuthMethod
@@ -106,8 +109,7 @@ func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deplo
 		buildType: cfg.BuildType,
 
 		// Functions
-		builder:          builder,
-		containerStopper: containers.StopActiveContainers,
+		builder: builder,
 
 		// Repository
 		auth: authMethod,
@@ -166,8 +168,11 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 		})
 	}
 
+	// Clean up
+	d.builder.Prune(cli, out)
+
 	// Kill active project containers if there are any
-	err := d.containerStopper(cli, out)
+	err := d.builder.StopContainers(cli, out)
 	if err != nil {
 		return err
 	}
@@ -175,7 +180,8 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	// Get config
 	conf, err := d.GetBuildConfiguration()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintln(out, err.Error())
+		fmt.Fprintln(out, "Continuing...")
 	}
 
 	// Build project
@@ -198,13 +204,24 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	// active
 	_, err := containers.GetActiveContainers(cli)
 	if err != nil {
-		killErr := d.containerStopper(cli, out)
+		killErr := d.builder.StopContainers(cli, out)
 		if killErr != nil {
 			println(err)
 		}
 		return err
 	}
-	return d.containerStopper(cli, out)
+	err = d.builder.StopContainers(cli, out)
+	if err != nil {
+		return err
+	}
+
+	// Do a lite prune
+	return d.builder.Prune(cli, out)
+}
+
+// Prune clears unused Docker assets
+func (d *Deployment) Prune(cli *docker.Client, out io.Writer) error {
+	return d.builder.PruneAll(cli, out)
 }
 
 // Destroy shuts down the deployment and removes the repository
@@ -277,7 +294,7 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 	}
 	localRemoteURL := common.GetSSHRemoteURL(remotes[0].Config().URLs[0])
 	if localRemoteURL != common.GetSSHRemoteURL(remoteURL) {
-		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [REMOTE] reset'")
+		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [remote] reset'")
 	}
 	return nil
 }

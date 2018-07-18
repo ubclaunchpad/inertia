@@ -75,12 +75,20 @@ $> git remote rename origin upstream   # Set the official repo as you
 $> git remote add origin https://github.com/$AMAZING_YOU/inertia.git
 ```
 
+You will also want to add `GOPATH` and `GOBIN` to your `PATH` to use any Inertia executables you install. Just add the following to your `.bashrc` or `.bash_profile`:
+
+```bash
+export PATH="$PATH:$HOME/go/bin"
+export GOPATH=$HOME/go
+export GOBIN=$HOME/go/bin
+```
+
 Inertia uses:
 - [dep](https://github.com/golang/dep) for managing Golang dependencies
 - [npm](https://www.npmjs.com) to manage dependencies for Inertia's React web app
 - [Docker](https://www.docker.com/community-edition) for various application functionalities and integration testing
 
-Make sure all of the above are installed before running:
+Make sure all of the above are installed (and that the Docker daemon is online) before running:
 
 ```bash
 $> make deps          # installs dependencies
@@ -111,16 +119,16 @@ This code should only include the CLI user interface and code used to manage loc
 
 The Inertia client package manages all clientside functionality. The client codebase is in `./client/`.
 
-To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary - instead, we use [go-bindata](https://github.com/jteeuwen/go-bindata) to compile shell scripts into our Go executables. If you make changes to the bootstrapping shell scripts in `client/bootstrap/`, convert them to `Assets` by running:
+To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary - instead, we use [fileb0x](https://github.com/UnnoTed/fileb0x) to compile shell scripts into our Go executables. If you make changes to the bootstrapping shell scripts in `client/scripts/`, compile them by running:
 
 ```bash
-$> make bootstrap
+$> make scripts
 ```
 
 Then use your asset!
 
 ```go
-shellScriptData, err := Asset("client/bootstrap/myshellscript.sh")
+shellScriptData, err := ReadFile("client/scripts/myshellscript.sh")
 if err != nil {
   log.Fatal("No asset with that name")
 }

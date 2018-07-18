@@ -21,7 +21,7 @@ flag on any command:
 
 	inertia --help
 	inertia init --help
-	inertia [REMOTE] up --help
+	inertia [remote] up --help
 
 Documentation can also be triggered by simply entering a command without the
 prerequisite arguments or additional commands:
@@ -42,7 +42,7 @@ like:
 The other set of commands are based on a remote VPS configuration, and the
 available commands can be seen by running:
 
-	inertia [REMOTE] --help
+	inertia [remote] --help
 
 In the previous example, the next steps to set up a deployment might be:
 

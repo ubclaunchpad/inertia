@@ -13,14 +13,18 @@ import (
 var cmdDeploymentEnv = &cobra.Command{
 	Use:   "env",
 	Short: "Manage environment variables on your remote",
+	Long: `Manages environment variables on your remote through Inertia. 
+	
+Configured variables can be encrypted or stored in plain text, and are applied to 
+all project containers on startup.`,
 }
 
 var cmdDeploymentEnvSet = &cobra.Command{
-	Use:   "set [NAME] [VALUE]",
+	Use:   "set [name] [value]",
 	Short: "Set an environment variable on your remote",
-	Long: `Set a persistent environment variable on your remote. Set environment
+	Long: `Sets a persistent environment variable on your remote. Set environment
 variables are applied to all deployed containers.`,
-	Args: cobra.MinimumNArgs(2),
+	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
@@ -48,11 +52,11 @@ variables are applied to all deployed containers.`,
 }
 
 var cmdDeploymentEnvRemove = &cobra.Command{
-	Use:   "rm [NAME]",
+	Use:   "rm [name]",
 	Short: "Remove an environment variable from your remote",
-	Long: `Remove the specified environment variable from deployed containers
+	Long: `Removes the specified environment variable from deployed containers
 and persistent environment storage.`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)
@@ -77,6 +81,8 @@ and persistent environment storage.`,
 var cmdDeploymentEnvList = &cobra.Command{
 	Use:   "ls",
 	Short: "List currently set and saved environment variables",
+	Long: `Lists currently set and saved environment variables. The values of encrypted
+variables are not be decrypted.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, projectConfigFilePath, remoteConfigFilePath, cmd)

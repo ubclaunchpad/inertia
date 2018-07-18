@@ -96,3 +96,82 @@ func Test_addProjectWalkthrough(t *testing.T) {
 		})
 	}
 }
+
+func Test_enterEC2CredentialsWalkthrough(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantID  string
+		wantKey string
+		wantErr bool
+	}{
+		{"bad ID", "", "asdf", true},
+		{"bad key", "asdf", "", true},
+		{"good", "asdf", "asdf", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in, err := ioutil.TempFile("", "")
+			assert.Nil(t, err)
+			defer in.Close()
+
+			fmt.Fprintln(in, tt.wantID)
+			fmt.Fprintln(in, tt.wantKey)
+
+			_, err = in.Seek(0, io.SeekStart)
+			assert.Nil(t, err)
+
+			gotID, gotKey, err := enterEC2CredentialsWalkthrough(in)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("enterEC2CredentialsWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				if gotID != tt.wantID {
+					t.Errorf("enterEC2CredentialsWalkthrough() gotId = %v, want %v", gotID, tt.wantID)
+				}
+				if gotKey != tt.wantKey {
+					t.Errorf("enterEC2CredentialsWalkthrough() gotKey = %v, want %v", gotKey, tt.wantKey)
+				}
+			}
+		})
+	}
+}
+
+func Test_chooseFromListWalkthrough(t *testing.T) {
+	type args struct {
+		optionName string
+		options    []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"bad", args{"chickens", []string{"deep fried", "baked"}}, "", true},
+		{"good", args{"chickens", []string{"deep fried", "baked"}}, "baked", false},
+	}
+	for _, tt := range tests {
+		in, err := ioutil.TempFile("", "")
+		assert.Nil(t, err)
+		defer in.Close()
+
+		fmt.Fprintln(in, tt.want)
+
+		_, err = in.Seek(0, io.SeekStart)
+		assert.Nil(t, err)
+
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := chooseFromListWalkthrough(in, tt.args.optionName, tt.args.options)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("chooseFromListWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				if got != tt.want {
+					t.Errorf("chooseFromListWalkthrough() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}

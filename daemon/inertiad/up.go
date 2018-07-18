@@ -10,6 +10,7 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
