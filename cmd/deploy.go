@@ -61,7 +61,6 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 
 		// Deep copy and attach each deployment command.
 		up := deepCopy(cmdDeploymentUp)
-		up.Flags().String("type", "", "Specify a build method for your project")
 		cmd.AddCommand(up)
 
 		down := deepCopy(cmdDeploymentDown)
@@ -139,10 +138,8 @@ var cmdDeploymentUp = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		buildType, err := cmd.Flags().GetString("type")
-		if err != nil {
-			log.Fatal(err)
-		}
+
+		// TODO: send config
 
 		// TODO: support other remotes
 		url, err := local.GetRepoRemote("origin")
@@ -150,7 +147,7 @@ var cmdDeploymentUp = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		resp, err := deployment.Up(url, buildType, !short)
+		resp, err := deployment.Up(url, !short)
 		if err != nil {
 			log.Fatal(err)
 		}

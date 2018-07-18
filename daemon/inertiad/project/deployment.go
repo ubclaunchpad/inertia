@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
 	"sync"
 
@@ -117,8 +118,8 @@ func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deplo
 	}, nil
 }
 
-// SetConfig updates the deployment's configuration. Only supports
-// ProjectName, Branch, and BuildType for now.
+// SetConfig updates the deployment's configuration. Only supports ProjectName,
+// Branch, BuildType, and BuildFilePath for now.
 func (d *Deployment) SetConfig(cfg DeploymentConfig) {
 	if cfg.ProjectName != "" {
 		d.project = cfg.ProjectName
@@ -152,6 +153,17 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 		if err != nil {
 			return err
 		}
+
+		// Parse project configuration and update settings
+		projectConfig, err := common.ReadProjectConfig(path.Join(d.directory, "inertia.toml"))
+		if err != nil {
+			return err
+		}
+		d.SetConfig(DeploymentConfig{
+			ProjectName:   *projectConfig.Project,
+			BuildType:     *projectConfig.BuildType,
+			BuildFilePath: *projectConfig.BuildFilePath,
+		})
 	}
 
 	// Kill active project containers if there are any

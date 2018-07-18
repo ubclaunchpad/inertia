@@ -14,11 +14,8 @@ const (
 // UpRequest is the configurable body of a UP request to the daemon.
 type UpRequest struct {
 	Stream        bool        `json:"stream"`
-	Project       string      `json:"project"`
-	BuildType     string      `json:"build_type"`
-	BuildFilePath string      `json:"build_file_path"`
-	GitOptions    *GitOptions `json:"git_options"`
 	WebHookSecret string      `json:"webhook_secret"`
+	GitOptions    *GitOptions `json:"git_options"`
 }
 
 // GitOptions represents GitHub-related deployment options

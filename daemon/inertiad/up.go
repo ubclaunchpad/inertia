@@ -30,7 +30,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	gitOpts := upReq.GitOptions
+	webhookSecret = upReq.WebHookSecret
 
 	// Configure logger
 	logger := log.NewLogger(log.LoggerOptions{
@@ -40,19 +40,26 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	defer logger.Close()
 
-	webhookSecret = upReq.WebHookSecret
+	// Parse project configuration
+	projectConfig, err := common.ReadProjectConfig(path.Join(conf.ProjectDirectory, "inertia.toml"))
+	if err != nil {
+		logger.WriteErr("Failed to read project configuration", http.StatusPreconditionFailed)
+		return
+	}
 
 	// Check for existing git repository, clone if no git repository exists.
 	skipUpdate := false
 	if deployment == nil {
 		logger.Println("No deployment detected")
+
+		// Spin up deployment
 		d, err := project.NewDeployment(build.NewBuilder(*conf), project.DeploymentConfig{
 			ProjectDirectory: conf.ProjectDirectory,
-			ProjectName:      upReq.Project,
-			BuildType:        upReq.BuildType,
-			BuildFilePath:    upReq.BuildFilePath,
-			RemoteURL:        gitOpts.RemoteURL,
-			Branch:           gitOpts.Branch,
+			ProjectName:      *projectConfig.Project,
+			BuildType:        *projectConfig.BuildType,
+			BuildFilePath:    *projectConfig.BuildFilePath,
+			RemoteURL:        upReq.GitOptions.RemoteURL,
+			Branch:           upReq.GitOptions.Branch,
 			PemFilePath:      crypto.DaemonGithubKeyLocation,
 			DatabasePath:     path.Join(conf.DataDirectory, "project.db"),
 		}, logger)
@@ -60,6 +67,8 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 			return
 		}
+
+		// Track deployment globally
 		deployment = d
 
 		// Project was just pulled! No need to update again.
@@ -67,7 +76,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for matching remotes
-	err = deployment.CompareRemotes(gitOpts.RemoteURL)
+	err = deployment.CompareRemotes(*projectConfig.Repository.RemoteURL)
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 		return
@@ -75,8 +84,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Change deployment parameters if necessary
 	deployment.SetConfig(project.DeploymentConfig{
-		ProjectName: upReq.Project,
-		Branch:      gitOpts.Branch,
+		Branch: upReq.GitOptions.Branch,
 	})
 
 	// Deploy project
