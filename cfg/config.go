@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 	"github.com/ubclaunchpad/inertia/common"
@@ -175,7 +176,7 @@ func (config *Config) GetProjectConfig() *common.InertiaProject {
 		Project:       &config.Project,
 		BuildType:     &config.BuildType,
 		BuildFilePath: &config.BuildFilePath,
-		Repository:    &common.InertiaRepo{&config.RemoteURL}}
+		Repository:    &common.InertiaRepo{RemoteURL: &config.RemoteURL}}
 }
 
 // WriteProjectConfig writes Inertia project configuration. This file should be
@@ -208,6 +209,7 @@ func (config *Config) write(filePath string, contents interface{}, writers ...io
 
 	// If path is given, attach file writer
 	if filePath != "" {
+		os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
 		w, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
