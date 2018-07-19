@@ -84,7 +84,7 @@ func setConfigFullPaths() (projectConfigFilePath string, remoteConfigFilePath st
 
 func init() {
 	Root.PersistentFlags().StringVar(
-		&remoteConfigFilePath, "project", "",
+		&projectName, "project", "",
 		"Specify the name of the project Inertia should find configuration for",
 	)
 }
