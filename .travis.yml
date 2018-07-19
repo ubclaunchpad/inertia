@@ -24,9 +24,10 @@ jobs:
       script: true
       install:
         - go get github.com/golang/dep/cmd/dep
-        - dep ensure              # cache vendor
-        - make testdaemon-image   # cache images
-        - make web-deps           # cache node_modules
+        - dep ensure               # cache vendor
+        - go test -run xxxxx ./... # attempt a dry test run
+        - make testdaemon-image    # cache images and attempt build
+        - make web-deps            # cache node_modules
 
     ############################
     #     Tests and Linting    #
