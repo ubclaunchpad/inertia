@@ -11,12 +11,12 @@ import (
 )
 
 func TestNewConfig(t *testing.T) {
-	cfg := NewConfig("test", "best-project", "docker-compose", "")
+	cfg := NewConfig("test", "best-project", "docker-compose", "", "")
 	assert.Equal(t, cfg.Version, "test")
 }
 
 func TestWriteFailed(t *testing.T) {
-	cfg := NewConfig("test", "best-project", "docker-compose", "")
+	cfg := NewConfig("test", "best-project", "docker-compose", "", "")
 	err := cfg.WriteProjectConfig("")
 	assert.NotNil(t, err)
 	assert.Contains(t, "nothing to write to", err.Error())
@@ -24,7 +24,7 @@ func TestWriteFailed(t *testing.T) {
 
 func TestWriteProjectConfigToPath(t *testing.T) {
 	configPath := "/test-config.toml"
-	cfg := NewConfig("test", "best-project", "docker-compose", "")
+	cfg := NewConfig("test", "best-project", "docker-compose", "", "")
 
 	cwd, err := os.Getwd()
 	assert.Nil(t, err)
@@ -42,7 +42,7 @@ func TestWriteProjectConfigToPath(t *testing.T) {
 
 func TestWritePremoteConfigToPath(t *testing.T) {
 	configPath := "/test-config.toml"
-	cfg := NewConfig("test", "best-project", "docker-compose", "")
+	cfg := NewConfig("test", "best-project", "docker-compose", "", "")
 	testRemote := &RemoteVPS{
 		Name:    "test",
 		IP:      "12343",
@@ -71,7 +71,7 @@ func TestWritePremoteConfigToPath(t *testing.T) {
 
 func TestWriteToWritersAndFile(t *testing.T) {
 	configPath := "/test-config.toml"
-	cfg := NewConfig("test", "best-project", "docker-compose", "")
+	cfg := NewConfig("test", "best-project", "docker-compose", "", "")
 
 	cwd, err := os.Getwd()
 	assert.Nil(t, err)
