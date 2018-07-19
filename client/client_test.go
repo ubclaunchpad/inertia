@@ -82,7 +82,7 @@ func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
 }
 
 func TestGetNewClient(t *testing.T) {
-	config := cfg.NewConfig("test", "robert-writes-bad-code", "", "")
+	config := cfg.NewConfig("test", "robert-writes-bad-code", "", "", "")
 	testRemote := &cfg.RemoteVPS{
 		Name:    "test",
 		IP:      "12343",
