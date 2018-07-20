@@ -15,6 +15,59 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, cfg.Version, "test")
 }
 
+func TestNewConfigFromFiles(t *testing.T) {
+	cwd, err := os.Getwd()
+	assert.Nil(t, err)
+	type args struct {
+		project string
+		remote  string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Config
+		wantErr bool
+	}{
+		{"both files do not exist", args{"asdf", "asdf"}, nil, true},
+		{"project is malformed", args{"inertia.go", ""}, nil, true},
+		{"remotes is malformed", args{"", "inertia.go"}, nil, true},
+		{
+			"both files valid",
+			args{"example.inertia.toml", "example.inertia.remotes"},
+			&Config{Version: "latest", BuildType: "dockerfile"},
+			false,
+		},
+		{
+			"only project is valid",
+			args{"example.inertia.toml", "asdf"},
+			&Config{Version: "latest", BuildType: "dockerfile"},
+			false,
+		},
+		{
+			"only remotes is valid",
+			args{"asdf", "example.inertia.remotes"},
+			&Config{Version: "latest", BuildType: ""},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		// Set paths relative to root of project
+		tt.args.project = filepath.Join(filepath.Dir(cwd), tt.args.project)
+		tt.args.remote = filepath.Join(filepath.Dir(cwd), tt.args.remote)
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewConfigFromFiles(tt.args.project, tt.args.remote)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewConfigFromFiles() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				assert.Equal(t, got.Version, tt.want.Version)
+				assert.Equal(t, got.BuildType, tt.want.BuildType)
+			}
+		})
+	}
+}
+
 func TestWriteFailed(t *testing.T) {
 	cfg := NewConfig("test", "best-project", "docker-compose", "", "")
 	err := cfg.WriteProjectConfig("")
