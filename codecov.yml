@@ -6,3 +6,24 @@ coverage:
     project:
       default:
         threshold: 3
+      client:
+        flags: client
+      daemon:
+        flags: daemon
+
+flags:
+  client:
+    paths:
+      - cfg/
+      - cmd/
+      - client/
+      - local/
+      - provision/
+      - common/
+  daemon:
+    paths:
+      - daemon/inertiad/
+      - common/
+  #web:
+  #  paths:
+  #    - daemon/web
