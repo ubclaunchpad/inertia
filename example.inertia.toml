@@ -1,4 +1,9 @@
 version = "latest"
 project-name = "inertia"
-build-type = "dockerfile"
-build-file-path = "Dockerfile"
+
+[build]
+  type = "dockerfile"
+  config = "Dockerfile"
+
+[repository]
+  remote-url = "git@github.com:ubclaunchpad/inertia.git"

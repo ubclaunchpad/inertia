@@ -119,8 +119,8 @@ func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*
 	return &Config{
 		Version:       *project.Version,
 		Project:       *project.Project,
-		BuildType:     *project.BuildType,
-		BuildFilePath: *project.BuildFilePath,
+		BuildType:     *project.Build.Type,
+		BuildFilePath: *project.Build.ConfigPath,
 		RemoteURL:     *project.Repository.RemoteURL,
 		remotes:       *remotes.Remotes,
 	}, nil
@@ -172,11 +172,10 @@ func (config *Config) RemoveRemote(name string) bool {
 // GetProjectConfig gets project configuration
 func (config *Config) GetProjectConfig() *common.InertiaProject {
 	return &common.InertiaProject{
-		Version:       &config.Version,
-		Project:       &config.Project,
-		BuildType:     &config.BuildType,
-		BuildFilePath: &config.BuildFilePath,
-		Repository:    &common.InertiaRepo{RemoteURL: &config.RemoteURL}}
+		Version:    &config.Version,
+		Project:    &config.Project,
+		Build:      common.InertiaBuild{Type: &config.BuildType, ConfigPath: &config.BuildFilePath},
+		Repository: common.InertiaRepo{RemoteURL: &config.RemoteURL}}
 }
 
 // WriteProjectConfig writes Inertia project configuration. This file should be

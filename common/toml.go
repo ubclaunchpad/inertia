@@ -10,16 +10,21 @@ import (
 // InertiaProject represents inertia.toml, which contains Inertia's persistent
 // project configurations. This file should be committed.
 type InertiaProject struct {
-	Version       *string      `toml:"version"`
-	Project       *string      `toml:"project-name"`
-	BuildType     *string      `toml:"build-type"`
-	BuildFilePath *string      `toml:"build-file-path"`
-	Repository    *InertiaRepo `toml:"repository"`
+	Version    *string      `toml:"version"`
+	Project    *string      `toml:"project-name"`
+	Build      InertiaBuild `toml:"build"`
+	Repository InertiaRepo  `toml:"repository"`
 }
 
 // InertiaRepo represents general repository settings
 type InertiaRepo struct {
 	RemoteURL *string `toml:"remote-url"`
+}
+
+// InertiaBuild represents build settings
+type InertiaBuild struct {
+	Type       *string `toml:"type"`
+	ConfigPath *string `toml:"config"`
 }
 
 // ReadProjectConfig reads project configuration from given filepath

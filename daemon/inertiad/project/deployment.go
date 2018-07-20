@@ -163,8 +163,8 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 		}
 		d.SetConfig(DeploymentConfig{
 			ProjectName:   *projectConfig.Project,
-			BuildType:     *projectConfig.BuildType,
-			BuildFilePath: *projectConfig.BuildFilePath,
+			BuildType:     *projectConfig.Build.Type,
+			BuildFilePath: *projectConfig.Build.ConfigPath,
 		})
 	}
 
