@@ -13,7 +13,7 @@ import (
 // DevNull writes to null, since a nil io.Writer will break shit
 type DevNull struct{}
 
-func (dn DevNull) Write(p []byte) (n int, err error) {
+func (dn DevNull) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
@@ -78,6 +78,22 @@ func RemoveContents(directory string) error {
 		}
 	}
 	return nil
+}
+
+// isDirEmpty checks if given directory is empty
+func isDirEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	// read in one file, and check if empty
+	_, err = f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err
 }
 
 // ParseDate parses a date in format "2006-01-02T15:04:05.000Z"

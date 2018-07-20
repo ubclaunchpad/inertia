@@ -3,10 +3,24 @@ package common
 import (
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestDevNull_Write(t *testing.T) {
+	var writer DevNull
+	bytes := []byte("hello world")
+	n, err := writer.Write(bytes)
+	assert.Nil(t, err)
+	assert.Equal(t, len(bytes), n)
+}
+
+func TestGetFullPath(t *testing.T) {
+	_, err := GetFullPath("inertia.go")
+	assert.Nil(t, err)
+}
 
 func TestGenerateRandomString(t *testing.T) {
 	randString, err := GenerateRandomString()
@@ -85,6 +99,23 @@ func TestExtract(t *testing.T) {
 
 	repoNameWithMixed := ExtractRepository("git@github.com:ubclaunchpad/inertia-deploy.test.git")
 	assert.Equal(t, "ubclaunchpad/inertia-deploy.test", repoNameWithMixed)
+}
+
+func TestRemoveContents(t *testing.T) {
+	testdir := filepath.Join(".", "test")
+	err := os.Mkdir(testdir, os.ModePerm)
+	assert.Nil(t, err)
+	f, err := os.Create(filepath.Join("./test", "somefile"))
+	assert.Nil(t, err)
+	f.Close()
+
+	err = RemoveContents(testdir)
+	assert.Nil(t, err)
+	empty, err := isDirEmpty(testdir)
+	assert.Nil(t, err)
+	assert.True(t, empty)
+
+	os.Remove(testdir)
 }
 
 func TestParseDate(t *testing.T) {
