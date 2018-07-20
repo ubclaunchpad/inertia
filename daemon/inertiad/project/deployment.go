@@ -162,9 +162,9 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 			return err
 		}
 		d.SetConfig(DeploymentConfig{
-			ProjectName:   *projectConfig.Project,
-			BuildType:     *projectConfig.Build.Type,
-			BuildFilePath: *projectConfig.Build.ConfigPath,
+			ProjectName:   common.Dereference(projectConfig.Project),
+			BuildType:     common.Dereference(projectConfig.Build.Type),
+			BuildFilePath: common.Dereference(projectConfig.Build.ConfigPath),
 		})
 	}
 

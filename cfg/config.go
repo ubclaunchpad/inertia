@@ -58,6 +58,11 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 		return nil, err
 	}
 
+	// At least one file must exist
+	if remotesBytes == nil && projectBytes == nil {
+		return nil, errors.New("configuration read incorrectly")
+	}
+
 	var (
 		project = &common.InertiaProject{}
 		remotes = &InertiaRemotes{}
@@ -104,7 +109,7 @@ func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*
 	// Set remote defaults
 	if remotes.Remotes == nil {
 		r := make(map[string]*RemoteVPS)
-		remotes.Remotes = &r
+		remotes.Remotes = r
 	}
 	if remotes.Version == nil {
 		remotes.Version = project.Version
@@ -117,12 +122,12 @@ func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*
 
 	// Generate configuration
 	return &Config{
-		Version:       *project.Version,
-		Project:       *project.Project,
-		BuildType:     *project.Build.Type,
-		BuildFilePath: *project.Build.ConfigPath,
-		RemoteURL:     *project.Repository.RemoteURL,
-		remotes:       *remotes.Remotes,
+		Version:       common.Dereference(project.Version),
+		Project:       common.Dereference(project.Project),
+		BuildType:     common.Dereference(project.Build.Type),
+		BuildFilePath: common.Dereference(project.Build.ConfigPath),
+		RemoteURL:     common.Dereference(project.Repository.RemoteURL),
+		remotes:       remotes.Remotes,
 	}, nil
 }
 
@@ -188,7 +193,7 @@ func (config *Config) WriteProjectConfig(filePath string, writers ...io.Writer) 
 // WriteRemoteConfig writes Inertia remote configuration. This file should NOT
 // be committed.
 func (config *Config) WriteRemoteConfig(filePath string, writers ...io.Writer) error {
-	toml := InertiaRemotes{&config.Version, &config.remotes}
+	toml := InertiaRemotes{&config.Version, config.remotes}
 	return config.write(filePath, toml, writers...)
 }
 

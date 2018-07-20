@@ -58,10 +58,10 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			build.NewBuilder(*conf, containers.StopActiveContainers),
 			project.DeploymentConfig{
 				ProjectDirectory: conf.ProjectDirectory,
-				ProjectName:      *projectConfig.Project,
-				BuildType:        *projectConfig.BuildType,
-				BuildFilePath:    *projectConfig.BuildFilePath,
-				RemoteURL:        *projectConfig.Repository.RemoteURL,
+				ProjectName:      common.Dereference(projectConfig.Project),
+				BuildType:        common.Dereference(projectConfig.Build.Type),
+				BuildFilePath:    common.Dereference(projectConfig.Build.ConfigPath),
+				RemoteURL:        common.Dereference(projectConfig.Repository.RemoteURL),
 				Branch:           upReq.GitOptions.Branch,
 				PemFilePath:      crypto.DaemonGithubKeyLocation,
 				DatabasePath:     path.Join(conf.DataDirectory, "project.db"),
@@ -80,7 +80,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for matching remotes
-	err = deployment.CompareRemotes(*projectConfig.Repository.RemoteURL)
+	err = deployment.CompareRemotes(common.Dereference(projectConfig.Repository.RemoteURL))
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 		return

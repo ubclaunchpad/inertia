@@ -28,15 +28,23 @@ type InertiaBuild struct {
 }
 
 // ReadProjectConfig reads project configuration from given filepath
-func ReadProjectConfig(filepath string) (*InertiaProject, error) {
+func ReadProjectConfig(filepath string) (InertiaProject, error) {
+	proj := InertiaProject{}
 	projectBytes, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		return nil, errors.New("[WARNING] no inertia configuration found")
+		return proj, errors.New("[WARNING] no inertia configuration found")
 	}
-	proj := &InertiaProject{}
-	err = toml.Unmarshal(projectBytes, proj)
+	err = toml.Unmarshal(projectBytes, &proj)
 	if err != nil {
-		return nil, errors.New("[WARNING] inertia configuration invalid: " + err.Error())
+		return proj, errors.New("[WARNING] inertia configuration invalid: " + err.Error())
 	}
 	return proj, nil
+}
+
+// Dereference gets string value or empty string
+func Dereference(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
 }
