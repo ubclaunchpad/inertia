@@ -60,26 +60,13 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 
 	// At least one file must exist
 	if remotesBytes == nil && projectBytes == nil {
-		return nil, errors.New("configuration read incorrectly")
+		return nil, errors.New(NoInertiaConfig)
 	}
 
 	var (
 		project = &common.InertiaProject{}
 		remotes = &InertiaRemotes{}
 	)
-
-	// If both files are present, construct config using both
-	if projectBytes != nil && remotesBytes != nil {
-		err = toml.Unmarshal(projectBytes, project)
-		if err != nil {
-			return nil, fmt.Errorf("project config error: %s", err.Error())
-		}
-		err = toml.Unmarshal(remotesBytes, remotes)
-		if err != nil {
-			return nil, fmt.Errorf("remotes config error: %s", err.Error())
-		}
-		return NewConfigFromTOML(*project, *remotes)
-	}
 
 	// If only project is present, construct config using project
 	if projectBytes != nil && remotesBytes == nil {
@@ -101,7 +88,16 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 		}, *remotes)
 	}
 
-	return nil, errors.New(NoInertiaConfig)
+	// If both files are present, construct config using both
+	err = toml.Unmarshal(projectBytes, project)
+	if err != nil {
+		return nil, fmt.Errorf("project config error: %s", err.Error())
+	}
+	err = toml.Unmarshal(remotesBytes, remotes)
+	if err != nil {
+		return nil, fmt.Errorf("remotes config error: %s", err.Error())
+	}
+	return NewConfigFromTOML(*project, *remotes)
 }
 
 // NewConfigFromTOML loads configuration from TOML format structs
