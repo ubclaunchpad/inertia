@@ -4,6 +4,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -113,7 +114,7 @@ var cmdReset = &cobra.Command{
 			log.Fatal(err)
 		}
 		err = os.Remove(remoteConfigFilePath)
-		if err != nil {
+		if err != nil && strings.Contains(err.Error(), "no such file") {
 			log.Fatal(err)
 		}
 		println("Inertia configuration removed.")
