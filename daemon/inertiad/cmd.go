@@ -16,7 +16,7 @@ var runCmd = &cobra.Command{
 	Version: getVersion(),
 	Use:     "run [host] [key path] [ssl directory] [userdb dir]",
 	Short:   "Run the daemon",
-	Long: `Run the daemon on a port, default 4303. Requires
+	Long: `Runs the daemon on a port, default 4303. Requires
 host address as an argument.
 
 Example:
@@ -35,8 +35,7 @@ Example:
 var tokenCmd = &cobra.Command{
 	Use:   "token",
 	Short: "Produce an API token to use with the daemon",
-	Long: `Produce an API token to use with the daemon,
-Created using an RSA private key.`,
+	Long:  `Produces an API token to use with the daemon, created using an RSA private key.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		keyBytes, err := crypto.GetAPIPrivateKey(nil)
 		if err != nil {

@@ -30,7 +30,7 @@ func parseConfigArg() {
 	}
 }
 
-// Initialize "inertia [REMOTE] [COMMAND]" commands
+// Initialize "inertia [remote] [cmd]" commands
 func init() {
 	// This is the only place configuration is read every time an `inertia`
 	// command is run - check version here.
@@ -51,25 +51,23 @@ func init() {
 	// deployment commands.
 	for _, remote := range config.Remotes {
 		cmd := &cobra.Command{
-			Use:    remote.Name + " [COMMAND]",
+			Use:    remote.Name + " [command]",
 			Hidden: true,
 			Short:  "Configure deployment to " + remote.Name,
-			Long: `Manage deployment on specified remote.
+			Long: `Manages deployment on specified remote.
 
 Requires:
-1. an Inertia daemon running on your remote - use 'inertia [REMOTE] init'
-   to set one up.
-2. a deploy key to be registered for the daemon with your GitHub repository.
+1. an Inertia daemon running on your remote - use 'inertia [remote] init' to get it running.
+2. a deploy key to be registered within your remote repository for the daemon to use.
 
-Continuous deployment requires a webhook url to registered for the daemon
-with your GitHub repository.
+Continuous deployment requires the daemon's webhook address to be registered in your remote repository.
 
-Run 'inertia [REMOTE] init' to gather this information.`,
+Run 'inertia [remote] init' to gather this information.`,
 		}
 
 		// Deep copy and attach each deployment command.
 		up := deepCopy(cmdDeploymentUp)
-		up.Flags().String("type", "", "Specify a build method for your project")
+		up.Flags().String("type", "", "specify a build method for your project")
 		cmd.AddCommand(up)
 
 		cmd.AddCommand(deepCopy(cmdDeploymentDown))
@@ -79,7 +77,7 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 
 		user := deepCopy(cmdDeploymentUser)
 		adduser := deepCopy(cmdDeploymentAddUser)
-		adduser.Flags().Bool("admin", false, "Create an admin user")
+		adduser.Flags().Bool("admin", false, "create a user with administrator permissions")
 		user.AddCommand(adduser)
 		user.AddCommand(deepCopy(cmdDeploymentRemoveUser))
 		user.AddCommand(deepCopy(cmdDeploymentResetUsers))
@@ -89,13 +87,13 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		cmd.AddCommand(deepCopy(cmdDeploymentSSH))
 
 		send := deepCopy(cmdDeploymentSendFile)
-		send.Flags().StringP("dest", "d", "", "Path relative from project root to send file to")
-		send.Flags().StringP("permissions", "p", "0655", "Permissions settings for file")
+		send.Flags().StringP("dest", "d", "", "path relative from project root to send file to")
+		send.Flags().StringP("permissions", "p", "0655", "permissions settings to create file with")
 		cmd.AddCommand(send)
 
 		env := deepCopy(cmdDeploymentEnv)
 		setenv := deepCopy(cmdDeploymentEnvSet)
-		setenv.Flags().BoolP("encrypt", "e", false, "Encrypt variable when stored")
+		setenv.Flags().BoolP("encrypt", "e", false, "encrypt variable when stored")
 		env.AddCommand(setenv)
 		env.AddCommand(deepCopy(cmdDeploymentEnvRemove))
 		env.AddCommand(deepCopy(cmdDeploymentEnvList))
@@ -110,12 +108,12 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 		// Attach a "short" option on all commands
 		cmd.PersistentFlags().BoolP(
 			"short", "s", false,
-			"Don't stream output from command",
+			"don't stream output from command",
 		)
 		// Attach "secure" option on all commands to enable SSL verification
 		cmd.PersistentFlags().Bool(
 			"verify-ssl", false,
-			"Verify SSL communications - requires a signed SSL certificate.",
+			"verify SSL communications - requires a signed SSL certificate",
 		)
 		Root.AddCommand(cmd)
 	}
@@ -124,9 +122,9 @@ Run 'inertia [REMOTE] init' to gather this information.`,
 var cmdDeploymentUp = &cobra.Command{
 	Use:   "up",
 	Short: "Bring project online on remote",
-	Long: `Bring project online on remote.
-	This will run 'docker-compose up --build'. Requires the Inertia daemon
-	to be active on your remote - do this by running 'inertia [REMOTE] init'`,
+	Long: `Builds and deploy your project on your remote.
+
+This requires an Inertia daemon to be active on your remote - do this by running 'inertia [remote] init'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -188,9 +186,9 @@ var cmdDeploymentUp = &cobra.Command{
 var cmdDeploymentDown = &cobra.Command{
 	Use:   "down",
 	Short: "Bring project offline on remote",
-	Long: `Bring project offline on remote.
-	This will kill all active project containers on your remote.
-	Requires project to be online - do this by running 'inertia [REMOTE] up`,
+	Long: `Stops your project on your remote. This will kill all active project containers on your remote.
+
+Requires project to be online - do this by running 'inertia [remote] up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -224,10 +222,9 @@ var cmdDeploymentDown = &cobra.Command{
 
 var cmdDeploymentStatus = &cobra.Command{
 	Use:   "status",
-	Short: "Print the status of deployment on remote",
-	Long: `Print the status of deployment on remote.
-	Requires the Inertia daemon to be active on your remote - do this by 
-	running 'inertia [REMOTE] up'`,
+	Short: "Print the status of the deployment on this remote",
+	Long: `Prints the status of the deployment on this remote.
+Requires the Inertia daemon to be active on your remote - do this by running 'inertia [remote] up'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -269,12 +266,13 @@ var cmdDeploymentStatus = &cobra.Command{
 }
 
 var cmdDeploymentLogs = &cobra.Command{
-	Use:   "logs",
-	Short: "Access logs of your VPS",
-	Long: `Access logs of containers of your VPS. Argument 'docker-compose'
-	will retrieve logs of the docker-compose build. The additional argument can 
-	also be used to access logs of specific containers - use  'inertia [REMOTE] 
-	status' to see what containers are accessible.`,
+	Use:   "logs [container]",
+	Short: "Access logs of containers on your remote host",
+	Long: `Accesses logs of containers on your remote host. 
+	
+By default, this command retrieves Inertia daemon logs, but you can provide an 
+argument that specifies the name of the container you wish to retrieve logs for. 
+Use 'inertia [remote] status' to see which containers are active.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -334,7 +332,7 @@ var cmdDeploymentLogs = &cobra.Command{
 var cmdDeploymentPrune = &cobra.Command{
 	Use:   "prune",
 	Short: "Prune Docker assets and images on your remote",
-	Long:  `Prunes Docker assets and images from your remote to save storage space.`,
+	Long:  `Prunes Docker assets and images from your remote to free up storage space.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		inertia, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -359,7 +357,7 @@ var cmdDeploymentPrune = &cobra.Command{
 var cmdDeploymentSSH = &cobra.Command{
 	Use:   "ssh",
 	Short: "Start an interactive SSH session",
-	Long:  `Starts up an interact SSH session with your remote.`,
+	Long:  `Starts an interact SSH session with your remote.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath)
@@ -375,11 +373,10 @@ var cmdDeploymentSSH = &cobra.Command{
 }
 
 var cmdDeploymentSendFile = &cobra.Command{
-	Use:   "send",
+	Use:   "send [filepath]",
 	Short: "Send a file to your Inertia deployment",
-	Long: `Send a file, such as a configuration or .env file, to your Inertia
-deployment. Provide a relative path to your file.`,
-	Args: cobra.ExactArgs(1),
+	Long:  `Sends a file, such as a configuration or .env file, to your Inertia deployment.`,
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -429,13 +426,16 @@ deployment. Provide a relative path to your file.`,
 
 var cmdDeploymentInit = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize the VPS for continuous deployment",
-	Long: `Initialize the VPS for continuous deployment.
-This sets up everything you might need and brings the Inertia daemon
-online on your remote.
-A URL will be provided to direct GitHub webhooks to, the daemon will
-request access to the repository via a public key, and will listen
-for updates to this repository's remote master branch.`,
+	Short: "Initialize remote host for deployment",
+	Long: `Initializes this remote host for deployment.
+This command sets up your remote host and brings an Inertia daemon online on your remote.
+
+Upon successful setup, you will be provided with:
+ - a deploy key
+ - a webhook URL
+
+The deploy key is required for the daemon to access your repository, and the
+webhook URL enables continuous deployment as your repository is updated.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		cli, write, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -459,11 +459,9 @@ for updates to this repository's remote master branch.`,
 var cmdDeploymentReset = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset the project on your remote",
-	Long: `Reset the project on your remote.
-On this remote, this kills all active containers and clears the project
-directory, allowing you to assign a different Inertia project to this
-remote. Requires Inertia daemon to be active on your remote - do this by
-running 'inertia [REMOTE] init'`,
+	Long: `Resets the project on your remote.
+On this remote, this kills all active containers and clears the project directory, 
+allowing you to assign a different Inertia project to this remote.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
 		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
@@ -494,9 +492,9 @@ running 'inertia [REMOTE] init'`,
 
 var cmdDeploymentRemove = &cobra.Command{
 	Use:   "remove",
-	Short: "Remove Inertia and shutdown the daemon in the remote VPS",
-	Long: `Remove Inertia directory (~/inertia) and takes down the
-	daemon image from the VPS.`,
+	Short: "Shut down Inertia and remove Inertia assets from remote host",
+	Long: `Shuts down and removes the Inertia daemon, and removes the Inertia 
+directory (~/inertia) from your remote host.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		println("WARNING: This will remove Inertia from the remote")
 		println("as well as take the daemon and is irreversible. Continue? (y/n)")

@@ -15,32 +15,39 @@ import (
 // Initialize "inertia" commands regarding basic configuration
 func init() {
 	cmdProvisionECS.Flags().StringP(
-		"type", "t", "t2.micro", "The ec2 instance type to instantiate",
+		"type", "t", "t2.micro", "ec2 instance type to instantiate",
 	)
 	cmdProvisionECS.Flags().StringP(
-		"user", "u", "ec2-user", "The ec2 instance type to instantiate",
+		"user", "u", "ec2-user", "ec2 instance user to execute commands as",
 	)
 	cmdProvisionECS.Flags().Bool(
-		"from-env", false, "Load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set.",
+		"from-env", false, "load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set",
 	)
 	cmdProvision.AddCommand(cmdProvisionECS)
-	cmdProvision.PersistentFlags().StringP("daemon-port", "d", "4303", "Daemon port")
-	cmdProvision.PersistentFlags().StringArrayP("ports", "p", []string{}, "Ports your project uses")
+	cmdProvision.PersistentFlags().StringP("daemon-port", "d", "4303", "daemon port")
+	cmdProvision.PersistentFlags().StringArrayP("ports", "p", []string{}, "ports your project uses")
 	Root.AddCommand(cmdProvision)
 }
 
 var cmdProvision = &cobra.Command{
 	Use:   "provision",
-	Short: "[BETA] Provision a new VPS setup for Inertia",
-	Long:  `[BETA] Provision a new VPS instance set up for continuous deployment with Inertia.`,
+	Short: "Provision a new remote host to deploy your project on",
+	Long:  `Provisions a new remote host set up for continuous deployment with Inertia.`,
 }
 
 var cmdProvisionECS = &cobra.Command{
 	Use:   "ec2 [name]",
 	Short: "[BETA] Provision a new Amazon EC2 instance",
-	Long: `[BETA] Provision a new Amazon EC2 instance and set it up for continuous deployment
-	with Inertia. Make sure you run this command with the '-p' flag to indicate what ports
-	your project uses, since they must be exposed on your new instance.`,
+	Long: `[BETA] Provisions a new Amazon EC2 instance and sets it up for continuous deployment
+with Inertia. 
+
+Make sure you run this command with the '-p' flag to indicate what ports
+your project uses - for example:
+
+	inertia provision ec2 my_ec2_instance -p 8000
+
+This ensures that your project ports are properly exposed and externally accessible.
+`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Ensure project initialized.
