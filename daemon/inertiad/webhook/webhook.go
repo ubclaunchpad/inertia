@@ -26,7 +26,7 @@ type Payload interface {
 // Parse takes in a webhook request and parses it into one of the supported types
 func Parse(r *http.Request, out io.Writer) (Payload, error) {
 	if r.Header.Get("content-type") != "application/json" {
-		return nil, errors.New("Content-Type must be JSON")
+		return nil, errors.New("Webhook Content-Type must be JSON")
 	}
 
 	// Try Github
@@ -47,7 +47,8 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 	userAgent := r.Header.Get("user-agent")
 	if strings.Contains(userAgent, "Bitbucket") {
 		fmt.Fprintln(out, "Bitbucket webhook detected")
-		return nil, errors.New("Unsupported webhook received")
+		bitbucketEventHeader := r.Header.Get("x-event-key")
+		return parseBitbucketEvent(r, bitbucketEventHeader)
 	}
 
 	return nil, errors.New("Unsupported webhook received")
