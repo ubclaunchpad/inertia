@@ -34,6 +34,21 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// specialized handler for docker webhooks
+func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
+	payload, err := webhook.ParseDocker(r, os.Stdout)
+	if err != nil {
+		fmt.Fprintln(os.Stdout, err.Error())
+		return
+	}
+
+	fmt.Fprintln(os.Stdout, payload.GetPusher())
+	fmt.Fprintln(os.Stdout, payload.GetTag())
+	fmt.Fprintln(os.Stdout, payload.GetRepoName())
+	fmt.Fprintln(os.Stdout, payload.GetName())
+	fmt.Fprintln(os.Stdout, payload.GetOwner())
+}
+
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(payload webhook.Payload, out io.Writer) {
 	branch := common.GetBranchFromRef(payload.GetRef())

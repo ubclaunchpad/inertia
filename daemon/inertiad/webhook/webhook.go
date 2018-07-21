@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -52,4 +53,15 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 	}
 
 	return nil, errors.New("Unsupported webhook received")
+}
+
+// ParseDocker takes in a Docker webhook request and parses it
+func ParseDocker(r *http.Request, out io.Writer) (DockerWebhook, error) {
+	var payload DockerWebhook
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		fmt.Println(err.Error())
+		return payload, errors.New("Unable to parse Docker Webhook")
+	}
+
+	return payload, nil
 }
