@@ -266,7 +266,9 @@
   packages = [
     "context",
     "context/ctxhttp",
-    "proxy"
+    "proxy",
+    "webdav",
+    "webdav/internal/xml"
   ]
   revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
 
@@ -360,6 +362,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cc8016e7a51b49f9e35a7d737320df97ac6fe54568d023bab664ece35ba9fa90"
+  inputs-digest = "3589834dfb273ee2606b013f31dd787ead0d9ffbbdc108f4a33883bffb77f2b7"
   solver-name = "gps-cdcl"
   solver-version = 1
