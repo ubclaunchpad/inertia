@@ -10,6 +10,25 @@ type bitbucketPushEvent struct {
 	fullName   string
 }
 
+// Due to heavy nesting, extracting keys with type assertions is preferred
+func parseBitbucketPushEvent(rawJSON map[string]interface{}) bitbucketPushEvent {
+	// Extract push details
+	push := rawJSON["push"].(map[string]interface{})
+	changes := push["changes"].([]interface{})
+	changesObj := changes[0].(map[string]interface{})
+	new := changesObj["new"].(map[string]interface{})
+	branchName := new["name"].(string)
+
+	// Extract repo details
+	repo := rawJSON["repository"].(map[string]interface{})
+	fullName := repo["full_name"].(string)
+	return bitbucketPushEvent{
+		eventType:  PushEvent,
+		branchName: branchName,
+		fullName:   fullName,
+	}
+}
+
 // GetEventType returns the event type of the webhook
 func (b bitbucketPushEvent) GetEventType() string {
 	return b.eventType
