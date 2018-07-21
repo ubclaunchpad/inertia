@@ -113,8 +113,6 @@ func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*
 	}
 	if remotes.Version == nil {
 		remotes.Version = project.Version
-	} else if *project.Version != *remotes.Version {
-		return nil, fmt.Errorf("mismatching versions %s and %s", *project.Version, *remotes.Version)
 	}
 
 	// Generate configuration
