@@ -158,13 +158,12 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			}
 
 			println("sending configuration to remote...")
-			projectPath := "$HOME/inertia/project"
-			remotePath := path.Join(projectPath, "inertia.toml")
 			session := client.NewSSHRunner(deployment.RemoteVPS)
-			err = session.CopyFile(f, remotePath, "0655")
+			err = session.CopyFile(f, "$HOME/inertia/project/inertia.toml", "0655")
 			if err != nil {
 				log.Fatal(err.Error())
 			}
+
 			println("project config delivered to remote")
 		}
 
@@ -412,11 +411,11 @@ var cmdDeploymentSendFile = &cobra.Command{
 		}
 
 		// Open file with given name
-		cwd, err := os.Getwd()
+		filePath, err := common.GetFullPath(args[0])
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		f, err := os.Open(path.Join(cwd, args[0]))
+		f, err := os.Open(filePath)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

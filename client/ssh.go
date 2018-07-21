@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/ubclaunchpad/inertia/cfg"
 	"golang.org/x/crypto/ssh"
@@ -133,14 +134,18 @@ func (runner *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions
 	}
 
 	// Send file contents
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
 		w, _ := session.StdinPipe()
 		defer w.Close()
 		fmt.Fprintln(w, "C"+permissions, len(contents), filename)
 		io.Copy(w, reader)
 		fmt.Fprintln(w, "\x00")
+		wg.Done()
 	}()
 	session.Run("mkdir -p " + directory + "; /usr/bin/scp -t " + directory)
+	wg.Wait()
 	return nil
 }
 
