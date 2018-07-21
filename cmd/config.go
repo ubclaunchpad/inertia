@@ -4,7 +4,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -109,12 +108,8 @@ var cmdReset = &cobra.Command{
 		if response != "y" {
 			log.Fatal("aborting")
 		}
-		err = os.Remove(projectConfigFilePath)
+		err = local.RemoveFiles(projectConfigFilePath, remoteConfigFilePath)
 		if err != nil {
-			log.Fatal(err)
-		}
-		err = os.Remove(remoteConfigFilePath)
-		if err != nil && strings.Contains(err.Error(), "no such file") {
 			log.Fatal(err)
 		}
 		println("Inertia configuration removed.")

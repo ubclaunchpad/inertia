@@ -6,10 +6,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/ubclaunchpad/inertia/common"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 func TestInitializeInertiaProjetFail(t *testing.T) {
@@ -124,4 +123,24 @@ lq07qdr3cY+O1F4otlDitNuhLE88dtGJM5lEyumokiH1yXwhbBtZ4w==
 	// Test config remove
 	err = os.Remove(testKeyPath)
 	assert.Nil(t, err)
+}
+
+func TestRemoveFiles(t *testing.T) {
+	type args struct {
+		paths []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"nonexistent files", args{[]string{".file", ".anotherfile"}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := RemoveFiles(tt.args.paths...); (err != nil) != tt.wantErr {
+				t.Errorf("RemoveFiles() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }

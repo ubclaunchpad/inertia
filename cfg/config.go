@@ -102,16 +102,18 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 
 // NewConfigFromTOML loads configuration from TOML format structs
 func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*Config, error) {
-	// Set remote defaults
+	// Check for validity
+	if project.Version == nil && remotes.Version == nil {
+		return nil, errors.New("no version information found in configuration")
+	}
+
+	// Set defaults
 	if remotes.Remotes == nil {
 		remotes.Remotes = make(map[string]*RemoteVPS)
 	}
 	if remotes.Version == nil {
 		remotes.Version = project.Version
-	}
-
-	// Check all is g
-	if *project.Version != *remotes.Version {
+	} else if *project.Version != *remotes.Version {
 		return nil, fmt.Errorf("mismatching versions %s and %s", *project.Version, *remotes.Version)
 	}
 

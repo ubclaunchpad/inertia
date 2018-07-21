@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -103,4 +104,15 @@ func GetClient(name, projectConfigPath, remoteConfigPath string, cmd ...*cobra.C
 // SaveKey writes a key to given path
 func SaveKey(keyMaterial string, path string) error {
 	return ioutil.WriteFile(path, []byte(keyMaterial), 0644)
+}
+
+// RemoveFiles removes all files at given filepaths
+func RemoveFiles(paths ...string) (err error) {
+	for _, p := range paths {
+		err = os.Remove(p)
+		if err != nil && !strings.Contains(err.Error(), "no such file") {
+			return
+		}
+	}
+	return nil
 }
