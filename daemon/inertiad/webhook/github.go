@@ -23,9 +23,9 @@ type GithubPushEvent struct {
 // GithubPushEventRepository represents the repository object in a Github PushEvent
 // see https://developer.github.com/v3/activity/events/types/#pushevent
 type GithubPushEventRepository struct {
-	FullName string `json:"full_name"`
-	GitURL   string `json:"clone_url"`
-	SSHURL   string `json:"ssh_url"`
+	Name   string `json:"name"`
+	GitURL string `json:"clone_url"`
+	SSHURL string `json:"ssh_url"`
 }
 
 func parseGithubEvent(r *http.Request, event string) (Payload, error) {
@@ -52,7 +52,7 @@ func (g GithubPushEvent) GetEventType() string {
 
 // GetRepoName returns the full repo name
 func (g GithubPushEvent) GetRepoName() string {
-	return g.Repo.FullName
+	return g.Repo.Name
 }
 
 // GetRef returns the full ref
