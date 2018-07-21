@@ -76,7 +76,7 @@ type DeploymentConfig struct {
 
 // NewDeployment creates a new deployment
 func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
-	common.RemoveContents(cfg.ProjectDirectory)
+	common.RemoveContents(cfg.ProjectDirectory, false)
 
 	// Set up git repository
 	pemFile, err := os.Open(cfg.PemFilePath)
@@ -234,7 +234,7 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 	if err != nil {
 		fmt.Fprint(out, "unable to clear database records: "+err.Error())
 	}
-	return common.RemoveContents(d.directory)
+	return common.RemoveContents(d.directory, true)
 }
 
 // GetStatus returns the status of the deployment

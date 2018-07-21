@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -60,8 +61,9 @@ func CheckForProcfile(cwd string) bool {
 	return !os.IsNotExist(err)
 }
 
-// RemoveContents removes all files within given directory, returns nil if successful
-func RemoveContents(directory string) error {
+// RemoveContents removes all files within given directory, returns nil if
+// successful.
+func RemoveContents(directory string, removeTOML bool) error {
 	d, err := os.Open(directory)
 	if err != nil {
 		return err
@@ -72,6 +74,10 @@ func RemoveContents(directory string) error {
 		return err
 	}
 	for _, name := range names {
+		// Do not remove configuration if
+		if strings.Contains(name, "inertia.toml") && !removeTOML {
+			continue
+		}
 		err = os.RemoveAll(filepath.Join(directory, name))
 		if err != nil {
 			return err

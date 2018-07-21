@@ -109,7 +109,7 @@ func TestRemoveContents(t *testing.T) {
 	assert.Nil(t, err)
 	f.Close()
 
-	err = RemoveContents(testdir)
+	err = RemoveContents(testdir, true)
 	assert.Nil(t, err)
 	empty, err := isDirEmpty(testdir)
 	assert.Nil(t, err)
