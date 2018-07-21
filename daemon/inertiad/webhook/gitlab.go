@@ -13,15 +13,15 @@ var (
 
 // GitlabPushEvent represents a push to a Gitlab repository
 // see https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#push-events
-type GitlabPushEvent struct {
+type gitlabPushEvent struct {
 	eventType string
 	Ref       string                    `json:"ref"`
-	Repo      GitlabPushEventRepository `json:"repository"`
+	Repo      gitlabPushEventRepository `json:"repository"`
 }
 
 // GitlabPushEventRepository represents the repository object in a Gitlab PushEvent
 // see https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#push-events
-type GitlabPushEventRepository struct {
+type gitlabPushEventRepository struct {
 	Name   string `json:"name"`
 	GitURL string `json:"git_http_url"`
 	SSHURL string `json:"git_ssh_url"`
@@ -32,7 +32,7 @@ func parseGitlabEvent(r *http.Request, event string) (Payload, error) {
 
 	switch event {
 	case GitlabPushHeader:
-		payload := GitlabPushEvent{eventType: PushEvent}
+		payload := gitlabPushEvent{eventType: PushEvent}
 
 		if err := dec.Decode(&payload); err != nil {
 			return nil, errors.New("Error parsing PushEvent")
@@ -45,26 +45,26 @@ func parseGitlabEvent(r *http.Request, event string) (Payload, error) {
 }
 
 // GetEventType returns the event type of the webhook
-func (g GitlabPushEvent) GetEventType() string {
+func (g gitlabPushEvent) GetEventType() string {
 	return g.eventType
 }
 
 // GetRepoName returns the repo name
-func (g GitlabPushEvent) GetRepoName() string {
+func (g gitlabPushEvent) GetRepoName() string {
 	return g.Repo.Name
 }
 
 // GetRef returns the full ref
-func (g GitlabPushEvent) GetRef() string {
+func (g gitlabPushEvent) GetRef() string {
 	return g.Ref
 }
 
 // GetGitURL returns the git clone URL
-func (g GitlabPushEvent) GetGitURL() string {
+func (g gitlabPushEvent) GetGitURL() string {
 	return g.Repo.GitURL
 }
 
 // GetSSHURL returns the ssh URL
-func (g GitlabPushEvent) GetSSHURL() string {
+func (g gitlabPushEvent) GetSSHURL() string {
 	return g.Repo.SSHURL
 }
