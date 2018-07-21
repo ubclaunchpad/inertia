@@ -104,8 +104,7 @@ func NewConfigFromFiles(projectConfigPath string, remoteConfigPath string) (*Con
 func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*Config, error) {
 	// Set remote defaults
 	if remotes.Remotes == nil {
-		r := make(map[string]*RemoteVPS)
-		remotes.Remotes = r
+		remotes.Remotes = make(map[string]*RemoteVPS)
 	}
 	if remotes.Version == nil {
 		remotes.Version = project.Version
@@ -150,27 +149,27 @@ func (config *Config) GetRemote(name string) (*RemoteVPS, bool) {
 	return nil, false
 }
 
-// AddRemote adds a remote to configuration
+// AddRemote adds a remote to configuration. Returns false if unsuccessful.
 func (config *Config) AddRemote(remote *RemoteVPS) bool {
-	_, ok := config.remotes[remote.Name]
-	if ok {
+	_, found := config.remotes[remote.Name]
+	if found {
 		return false
 	}
 	config.remotes[remote.Name] = remote
 	return true
 }
 
-// RemoveRemote removes remote with given name
+// RemoveRemote removes remote with given name. Returns true if successful.
 func (config *Config) RemoveRemote(name string) bool {
-	_, ok := config.remotes[name]
-	if !ok {
+	_, found := config.remotes[name]
+	if !found {
 		return false
 	}
 	delete(config.remotes, name)
 	return true
 }
 
-// GetProjectConfig gets project configuration
+// GetProjectConfig gets project configuration in Inertia TOML format.
 func (config *Config) GetProjectConfig() *common.InertiaProject {
 	return &common.InertiaProject{
 		Version:    &config.Version,

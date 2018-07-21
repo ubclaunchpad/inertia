@@ -45,7 +45,7 @@ func createConfigFile(projectConfigPath, remoteConfigPath, version, buildType, b
 	// Check if Inertia is already set up.
 	s, fileErr := os.Stat(projectConfigPath)
 	if s != nil {
-		return errors.New("inertia already properly configured in this folder")
+		return errors.New("Inertia already properly configured in this folder")
 	}
 
 	// If file does not exist, create new configuration file.
