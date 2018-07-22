@@ -72,27 +72,26 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 		return
 	}
 
-	// If branches match, deploy, otherwise ignore the event.
-	if deployment.GetBranch() == branch {
-		fmt.Fprintln(out, "Event branch matches deployed branch "+branch)
-		cli, err := docker.NewEnvClient()
-		if err != nil {
-			fmt.Fprintln(out, err.Error())
-			return
-		}
-		defer cli.Close()
+	// Check for matching branch
+	if deployment.GetBranch() != branch {
+		fmt.Fprintln(out, fmt.Sprintf("Event branch %s does not match deployed branch %s ignoring event", branch, deployment.GetBranch()))
+		return
+	}
 
-		// Deploy project
-		err = deployment.Deploy(cli, os.Stdout, project.DeployOptions{
-			SkipUpdate: false,
-		})
-		if err != nil {
-			fmt.Fprintln(out, err.Error())
-		}
-	} else {
-		fmt.Fprintln(out,
-			"Event branch "+branch+" does not match deployed branch "+
-				deployment.GetBranch()+" - ignoring event.",
-		)
+	// If branches match, deploy
+	fmt.Fprintln(out, fmt.Sprintf("Event branch matches deployed branch %s", branch))
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		fmt.Fprintln(out, err.Error())
+		return
+	}
+	defer cli.Close()
+
+	// Deploy project
+	err = deployment.Deploy(cli, os.Stdout, project.DeployOptions{
+		SkipUpdate: false,
+	})
+	if err != nil {
+		fmt.Fprintln(out, err.Error())
 	}
 }

@@ -1,6 +1,9 @@
 package webhook
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // bitbucketPushEvent represents a push to a Bitbucket repository
 // see https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html
@@ -12,14 +15,14 @@ type bitbucketPushEvent struct {
 
 // Due to heavy nesting, extracting keys with type assertions is preferred
 func parseBitbucketPushEvent(rawJSON map[string]interface{}) bitbucketPushEvent {
-	// Extract push details
+	// Extract push details - branch name is retrieved
 	push := rawJSON["push"].(map[string]interface{})
 	changes := push["changes"].([]interface{})
 	changesObj := changes[0].(map[string]interface{})
 	new := changesObj["new"].(map[string]interface{})
 	branchName := new["name"].(string)
 
-	// Extract repo details
+	// Extract repo details -- full name is retrieved
 	repo := rawJSON["repository"].(map[string]interface{})
 	fullName := repo["full_name"].(string)
 	return bitbucketPushEvent{
@@ -42,14 +45,14 @@ func (b bitbucketPushEvent) GetRepoName() string {
 
 // GetRef returns the full ref
 func (b bitbucketPushEvent) GetRef() string {
-	return "refs/heads/" + b.branchName
+	return fmt.Sprintf("refs/heads/%s", b.branchName)
 }
 
 // GetGitURL returns the git clone URL
 // Ex. https://ubclaunchpad@bitbucket.org/ubclaunchpad/inertia.git
 func (b bitbucketPushEvent) GetGitURL() string {
 	user := strings.Split(b.fullName, "/")[0]
-	return "https://" + user + "@bitbucket.org/" + b.fullName + ".git"
+	return fmt.Sprintf("https://%s@bitbucket.org/%s.git", user, b.fullName)
 }
 
 // GetSSHURL returns the ssh URL
