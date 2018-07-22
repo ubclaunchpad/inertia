@@ -103,19 +103,51 @@ func TestExtract(t *testing.T) {
 
 func TestRemoveContents(t *testing.T) {
 	testdir := filepath.Join(".", "test")
-	err := os.Mkdir(testdir, os.ModePerm)
-	assert.Nil(t, err)
-	f, err := os.Create(filepath.Join("./test", "somefile"))
-	assert.Nil(t, err)
-	f.Close()
+	type args struct {
+		directory  string
+		removeTOML bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"not a directory", args{"", true}, true},
+		{"remove all", args{testdir, true}, false},
+		{"keep toml", args{testdir, false}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create directory and remove on exit
+			err := os.Mkdir(testdir, os.ModePerm)
+			assert.Nil(t, err)
+			defer os.RemoveAll(testdir)
 
-	err = RemoveContents(testdir, true)
-	assert.Nil(t, err)
-	empty, err := isDirEmpty(testdir)
-	assert.Nil(t, err)
-	assert.True(t, empty)
+			// Set up files
+			tomlPath := filepath.Join("./test", "inertia.toml")
+			f, err := os.Create(tomlPath)
+			assert.Nil(t, err)
+			f.Close()
+			f, err = os.Create(filepath.Join("./test", "somefile"))
+			assert.Nil(t, err)
+			f.Close()
 
-	os.Remove(testdir)
+			// Run test
+			if err := RemoveContents(tt.args.directory, tt.args.removeTOML); (err != nil) != tt.wantErr {
+				t.Errorf("RemoveContents() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr {
+				if tt.args.removeTOML {
+					empty, err := isDirEmpty(testdir)
+					assert.Nil(t, err)
+					assert.True(t, empty, "Should be empty")
+				} else {
+					_, err := os.Stat(tomlPath)
+					assert.Nil(t, err, "inertia.toml should exist")
+				}
+			}
+		})
+	}
 }
 
 func TestParseDate(t *testing.T) {
