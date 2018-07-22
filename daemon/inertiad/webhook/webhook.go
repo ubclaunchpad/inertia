@@ -30,18 +30,24 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 		return nil, errors.New("Webhook Content-Type must be JSON")
 	}
 
+	var raw interface{}
+	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
+		return nil, err
+	}
+	rawJSON := raw.(map[string]interface{})
+
 	// Try Github
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
 		fmt.Fprintln(out, "Github webhook detected")
-		return parseGithubEvent(r, githubEventHeader)
+		return parseGithubEvent(rawJSON, githubEventHeader)
 	}
 
 	// Try Gitlab
 	gitlabEventHeader := r.Header.Get("x-gitlab-event")
 	if len(gitlabEventHeader) > 0 {
 		fmt.Fprintln(out, "Gitlab webhook detected")
-		return parseGitlabEvent(r, gitlabEventHeader)
+		return parseGitlabEvent(rawJSON, gitlabEventHeader)
 	}
 
 	// Try Bitbucket
@@ -49,7 +55,7 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 	if strings.Contains(userAgent, "Bitbucket") {
 		fmt.Fprintln(out, "Bitbucket webhook detected")
 		bitbucketEventHeader := r.Header.Get("x-event-key")
-		return parseBitbucketEvent(r, bitbucketEventHeader)
+		return parseBitbucketEvent(rawJSON, bitbucketEventHeader)
 	}
 
 	return nil, errors.New("Unsupported webhook received")

@@ -1,9 +1,7 @@
 package webhook
 
 import (
-	"encoding/json"
 	"errors"
-	"net/http"
 )
 
 // x-github-event header values
@@ -12,18 +10,10 @@ var (
 	// GithubPullHeader = "pull"
 )
 
-func parseGithubEvent(r *http.Request, event string) (Payload, error) {
-	dec := json.NewDecoder(r.Body)
-
+func parseGithubEvent(rawJSON map[string]interface{}, event string) (Payload, error) {
 	switch event {
 	case GithubPushHeader:
-		payload := githubPushEvent{eventType: PushEvent}
-
-		if err := dec.Decode(&payload); err != nil {
-			return nil, errors.New("Error parsing PushEvent")
-		}
-
-		return payload, nil
+		return parseGithubPushEvent(rawJSON), nil
 	default:
 		return nil, errors.New("Unsupported Github event")
 	}
