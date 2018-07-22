@@ -14,7 +14,9 @@ import (
 
 var webhookSecret = "inertia"
 
-// webhookHandler writes a response to a request into the given ResponseWriter.
+// webhookHandler receives and parses Git-based webhooks
+// Supported vendors: Github, Gitlab, Bitbucket
+// Supported events: push
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.MsgDaemonOK)
 

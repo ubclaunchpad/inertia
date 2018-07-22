@@ -1,7 +1,7 @@
 package webhook
 
-// GithubPushEvent represents a push to a Github repository
-// see https://developer.github.com/v3/activity/events/types/#pushevent
+// Implements Payload interface
+// See github_test.go for an example request body
 type githubPushEvent struct {
 	eventType string
 	ref       string

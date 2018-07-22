@@ -1,5 +1,7 @@
 package webhook
 
+// Gitlab Push Event
+// see https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#push-events
 var gitlabPushRawJSON = []byte(`
 {
 	"object_kind": "push",

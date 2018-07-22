@@ -1,5 +1,7 @@
 package webhook
 
+// Github Push Event
+// see https://developer.github.com/v3/activity/events/types/#pushevent
 var githubPushRawJSON = []byte(`
 {
 	"ref": "refs/heads/master",

@@ -5,15 +5,14 @@ import (
 	"strings"
 )
 
-// bitbucketPushEvent represents a push to a Bitbucket repository
-// see https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html
+// Implements Payload interface
+// See bitbucket_test.go for an example request body
 type bitbucketPushEvent struct {
 	eventType  string
 	branchName string
 	fullName   string
 }
 
-// Due to heavy nesting, extracting keys with type assertions is preferred
 func parseBitbucketPushEvent(rawJSON map[string]interface{}) bitbucketPushEvent {
 	// Extract push details - branch name is retrieved
 	push := rawJSON["push"].(map[string]interface{})

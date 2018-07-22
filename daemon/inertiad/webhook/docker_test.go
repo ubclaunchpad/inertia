@@ -1,5 +1,7 @@
 package webhook
 
+// Docker Push Event
+// see https://docs.docker.com/docker-hub/webhooks/
 var dockerPushRawJSON = []byte(`
 {
 	"callback_url": "https://registry.hub.docker.com/u/svendowideit/testhook/hook/2141b5bi5i5b02bec211i4eeih0242eg11000a/",
@@ -20,7 +22,7 @@ var dockerPushRawJSON = []byte(`
 	  "namespace": "inertia",
 	  "owner": "ubclaunchpad",
 	  "repo_name": "ubclaunchpad/inertia",
-	  "repo_url": "https://registry.hub.docker.com/u/svendowideit/testhook/",
+	  "repo_url": "https://registry.hub.docker.com/u/ubclaunchpad/inertia/",
 	  "star_count": 0,
 	  "status": "Active"
 	}

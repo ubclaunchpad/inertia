@@ -1,7 +1,7 @@
 package webhook
 
-// GitlabPushEvent represents a push to a Gitlab repository
-// see https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#push-events
+// Implements Payload interface
+// See gitlab_test.go for an example request body
 type gitlabPushEvent struct {
 	eventType string
 	ref       string

@@ -1,5 +1,7 @@
 package webhook
 
+// Bitbucket Push Event
+// see https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html
 var bitbucketPushRawJSON = []byte(`
 {
 	"push": {

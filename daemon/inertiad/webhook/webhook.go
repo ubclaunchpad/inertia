@@ -26,6 +26,7 @@ type Payload interface {
 
 // Parse takes in a webhook request and parses it into one of the supported types
 func Parse(r *http.Request, out io.Writer) (Payload, error) {
+	// Decode request body to raw JSON
 	if r.Header.Get("content-type") != "application/json" {
 		return nil, errors.New("Webhook Content-Type must be JSON")
 	}
@@ -36,6 +37,7 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 	}
 	rawJSON := raw.(map[string]interface{})
 
+	// Parse into one of supported types
 	// Try Github
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
@@ -62,12 +64,17 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 }
 
 // ParseDocker takes in a Docker webhook request and parses it
-func ParseDocker(r *http.Request, out io.Writer) (DockerWebhook, error) {
-	var payload DockerWebhook
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		fmt.Println(err.Error())
-		return payload, errors.New("Unable to parse Docker Webhook")
+func ParseDocker(r *http.Request, out io.Writer) (*DockerWebhook, error) {
+	// Decode request body to raw JSON
+	if r.Header.Get("content-type") != "application/json" {
+		return nil, errors.New("Webhook Content-Type must be JSON")
 	}
 
-	return payload, nil
+	var raw interface{}
+	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
+		return nil, err
+	}
+	rawJSON := raw.(map[string]interface{})
+
+	return parseDocker(rawJSON)
 }
