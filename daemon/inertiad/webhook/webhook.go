@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -25,30 +26,55 @@ type Payload interface {
 
 // Parse takes in a webhook request and parses it into one of the supported types
 func Parse(r *http.Request, out io.Writer) (Payload, error) {
+	// Decode request body to raw JSON
 	if r.Header.Get("content-type") != "application/json" {
-		return nil, errors.New("Content-Type must be JSON")
+		return nil, errors.New("Webhook Content-Type must be JSON")
 	}
 
+	var raw interface{}
+	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
+		return nil, err
+	}
+	rawJSON := raw.(map[string]interface{})
+
+	// Parse into one of supported types
 	// Try Github
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
 		fmt.Fprintln(out, "Github webhook detected")
-		return parseGithubEvent(r, githubEventHeader)
+		return parseGithubEvent(rawJSON, githubEventHeader)
 	}
 
 	// Try Gitlab
 	gitlabEventHeader := r.Header.Get("x-gitlab-event")
 	if len(gitlabEventHeader) > 0 {
 		fmt.Fprintln(out, "Gitlab webhook detected")
-		return parseGitlabEvent(r, gitlabEventHeader)
+		return parseGitlabEvent(rawJSON, gitlabEventHeader)
 	}
 
 	// Try Bitbucket
 	userAgent := r.Header.Get("user-agent")
 	if strings.Contains(userAgent, "Bitbucket") {
 		fmt.Fprintln(out, "Bitbucket webhook detected")
-		return nil, errors.New("Unsupported webhook received")
+		bitbucketEventHeader := r.Header.Get("x-event-key")
+		return parseBitbucketEvent(rawJSON, bitbucketEventHeader)
 	}
 
 	return nil, errors.New("Unsupported webhook received")
+}
+
+// ParseDocker takes in a Docker webhook request and parses it
+func ParseDocker(r *http.Request, out io.Writer) (*DockerWebhook, error) {
+	// Decode request body to raw JSON
+	if r.Header.Get("content-type") != "application/json" {
+		return nil, errors.New("Webhook Content-Type must be JSON")
+	}
+
+	var raw interface{}
+	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
+		return nil, err
+	}
+	rawJSON := raw.(map[string]interface{})
+
+	return parseDocker(rawJSON)
 }

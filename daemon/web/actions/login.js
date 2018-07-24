@@ -4,7 +4,6 @@ import {
 
 
 export const testAction = payload => (dispatch) => {
-  // remove later
   dispatch({
     type: TEST_LOGIN_ACTION,
     payload,

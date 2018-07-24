@@ -14,7 +14,9 @@ import (
 
 var webhookSecret = "inertia"
 
-// webhookHandler writes a response to a request into the given ResponseWriter.
+// webhookHandler receives and parses Git-based webhooks
+// Supported vendors: Github, Gitlab, Bitbucket
+// Supported events: push
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.MsgDaemonOK)
 
@@ -32,6 +34,21 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		fmt.Fprintln(os.Stdout, "Unrecognized event type")
 	}
+}
+
+// specialized handler for docker webhooks
+func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
+	payload, err := webhook.ParseDocker(r, os.Stdout)
+	if err != nil {
+		fmt.Fprintln(os.Stdout, err.Error())
+		return
+	}
+
+	fmt.Fprintln(os.Stdout, payload.GetPusher())
+	fmt.Fprintln(os.Stdout, payload.GetTag())
+	fmt.Fprintln(os.Stdout, payload.GetRepoName())
+	fmt.Fprintln(os.Stdout, payload.GetName())
+	fmt.Fprintln(os.Stdout, payload.GetOwner())
 }
 
 // processPushEvent prints information about the given PushEvent.
@@ -57,27 +74,26 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 		return
 	}
 
-	// If branches match, deploy, otherwise ignore the event.
-	if deployment.GetBranch() == branch {
-		fmt.Fprintln(out, "Event branch matches deployed branch "+branch)
-		cli, err := docker.NewEnvClient()
-		if err != nil {
-			fmt.Fprintln(out, err.Error())
-			return
-		}
-		defer cli.Close()
+	// Check for matching branch
+	if deployment.GetBranch() != branch {
+		fmt.Fprintln(out, fmt.Sprintf("Event branch %s does not match deployed branch %s ignoring event", branch, deployment.GetBranch()))
+		return
+	}
 
-		// Deploy project
-		err = deployment.Deploy(cli, os.Stdout, project.DeployOptions{
-			SkipUpdate: false,
-		})
-		if err != nil {
-			fmt.Fprintln(out, err.Error())
-		}
-	} else {
-		fmt.Fprintln(out,
-			"Event branch "+branch+" does not match deployed branch "+
-				deployment.GetBranch()+" - ignoring event.",
-		)
+	// If branches match, deploy
+	fmt.Fprintln(out, fmt.Sprintf("Event branch matches deployed branch %s", branch))
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		fmt.Fprintln(out, err.Error())
+		return
+	}
+	defer cli.Close()
+
+	// Deploy project
+	err = deployment.Deploy(cli, os.Stdout, project.DeployOptions{
+		SkipUpdate: false,
+	})
+	if err != nil {
+		fmt.Fprintln(out, err.Error())
 	}
 }
