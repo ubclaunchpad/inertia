@@ -16,10 +16,6 @@
   version = "1.0.5"
 
 [[constraint]]
-  name = "github.com/docker/docker"
-  version = "v17.03.2-ce"
-
-[[constraint]]
   name = "github.com/dgrijalva/jwt-go"
   version = "3.2.0"
 
@@ -38,3 +34,15 @@
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
   version = "1.14.10"
+
+[[constraint]]
+  name = "github.com/docker/docker"
+  branch = "master"
+
+[[override]]
+  name = "github.com/docker/distribution"
+  branch = "master"
+
+[[override]]
+  name = "github.com/docker/libnetwork"
+  revision = "19279f0492417475b6bfbd0aa529f73e8f178fb5"

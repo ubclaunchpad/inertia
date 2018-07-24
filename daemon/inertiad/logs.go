@@ -76,7 +76,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		Stream:    stream,
 	})
 	if err != nil {
-		if docker.IsErrContainerNotFound(err) {
+		if docker.IsErrNotFound(err) {
 			logger.WriteErr(err.Error(), http.StatusNotFound)
 		} else {
 			logger.WriteErr(err.Error(), http.StatusInternalServerError)

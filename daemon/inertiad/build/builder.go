@@ -160,15 +160,22 @@ func (b *Builder) dockerCompose(d *Config, cli *docker.Client,
 	}
 	stop := make(chan struct{})
 	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
-	status, err := cli.ContainerWait(ctx, resp.ID)
-	close(stop)
-	if err != nil {
-		return nil, err
+	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, "")
+	var status container.ContainerWaitOKBody
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return nil, err
+		}
+	case status = <-statusCh:
+		// Exit log stream
+		close(stop)
 	}
-	if status != 0 {
-		return nil, errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+	if status.StatusCode != 0 {
+		return nil, fmt.Errorf(
+			"Build exited with non-zero status %s", strconv.FormatInt(status.StatusCode, 10))
 	}
-	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
+	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status.StatusCode, 10))
 
 	// @TODO allow configuration
 	dockerComposeRelFilePath := "docker-compose.yml"
@@ -317,15 +324,22 @@ func (b *Builder) herokuishBuild(d *Config, cli *docker.Client,
 	// Attach logs and report build progress until container exits
 	stop := make(chan struct{})
 	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
-	status, err := cli.ContainerWait(ctx, resp.ID)
-	close(stop)
-	if err != nil {
-		return nil, err
+	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, "")
+	var status container.ContainerWaitOKBody
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return nil, err
+		}
+	case status = <-statusCh:
+		// Exit log stream
+		close(stop)
 	}
-	if status != 0 {
-		return nil, errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+	if status.StatusCode != 0 {
+		return nil, fmt.Errorf(
+			"Build exited with non-zero status %s", strconv.FormatInt(status.StatusCode, 10))
 	}
-	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
+	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status.StatusCode, 10))
 
 	// Save build as new image and create a container
 	imgName := "inertia-build/" + d.Name
