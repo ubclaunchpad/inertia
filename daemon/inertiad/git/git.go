@@ -46,29 +46,30 @@ func InitializeRepository(directory, remoteURL, branch string, authMethod transp
 // clone wraps gogit.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
 func clone(directory, remoteURL, branch string, auth transport.AuthMethod, out io.Writer) (*gogit.Repository, error) {
-	fmt.Fprintf(out, "Cloning branch %s from %s...\n", branch, remoteURL)
-	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch))
-	repo, err := gogit.PlainClone(directory, false, &gogit.CloneOptions{
-		URL:           remoteURL,
-		Auth:          auth,
-		Progress:      out,
-		ReferenceName: ref,
+	fmt.Fprintf(out, "Setting up repository from %s...\n", remoteURL)
+
+	// Preserve existing files by creating a repository, setting a remote, then
+	// updating the directory
+	repo, err := gogit.PlainInit(directory, false)
+	if err != nil {
+		return nil, err
+	}
+	_, err = repo.CreateRemote(&config.RemoteConfig{
+		Name:  "origin",
+		URLs:  []string{remoteURL},
+		Fetch: []config.RefSpec{"refs/*:refs/*"},
 	})
-	err = SimplifyGitErr(err)
 	if err != nil {
 		return nil, err
 	}
 
-	// Use this to confirm if pull has completed.
-	_, err = repo.Head()
-	if err != nil {
-		return nil, err
-	}
+	err = UpdateRepository(directory, repo, branch, auth, out)
 	return repo, nil
 }
 
 // UpdateRepository pulls and checkouts given branch from repository
-func UpdateRepository(directory string, repo *gogit.Repository, branch string, auth transport.AuthMethod, out io.Writer) error {
+func UpdateRepository(directory string, repo *gogit.Repository, branch string,
+	auth transport.AuthMethod, out io.Writer) error {
 	tree, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -76,9 +77,12 @@ func UpdateRepository(directory string, repo *gogit.Repository, branch string, a
 
 	fmt.Fprintln(out, "Fetching repository...")
 	err = repo.Fetch(&gogit.FetchOptions{
-		Auth:     auth,
-		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
-		Progress: out,
+		RemoteName: "origin",
+		Auth:       auth,
+		RefSpecs:   []config.RefSpec{"refs/*:refs/*"},
+		Progress:   out,
+		Tags:       gogit.AllTags,
+		Force:      true,
 	})
 	err = SimplifyGitErr(err)
 	if err != nil {
@@ -89,6 +93,7 @@ func UpdateRepository(directory string, repo *gogit.Repository, branch string, a
 	fmt.Fprintf(out, "Checking out %s...\n", ref)
 	err = tree.Checkout(&gogit.CheckoutOptions{
 		Branch: ref,
+		Force:  true,
 	})
 	err = SimplifyGitErr(err)
 	if err != nil {
@@ -102,6 +107,8 @@ func UpdateRepository(directory string, repo *gogit.Repository, branch string, a
 		Auth:          auth,
 		Progress:      out,
 		Force:         true,
+
+		RecurseSubmodules: gogit.DefaultSubmoduleRecursionDepth,
 	})
 	return SimplifyGitErr(err)
 }
