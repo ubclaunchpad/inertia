@@ -371,3 +371,34 @@ func (b *Builder) herokuishBuild(d *Config, cli *docker.Client,
 		return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	}, nil
 }
+
+// WatchContainers tracks all active project containers and pipes an error to
+// the returned channel if any container exits or errors.
+func (b *Builder) WatchContainers(client *docker.Client, stop chan struct{}) <-chan error {
+	exitCh := make(chan error, 1)
+	list, err := containers.GetActiveContainers(client)
+	if err != nil {
+		exitCh <- err
+		return exitCh
+	}
+	for _, c := range list {
+		statusCh, errCh := client.ContainerWait(context.Background(), c.ID, "")
+		go func(id string) {
+			select {
+			case err := <-errCh:
+				if err != nil {
+					exitCh <- err
+					return
+				}
+			case status := <-statusCh:
+				if status.Error != nil {
+					exitCh <- fmt.Errorf(
+						"container %s exited with status %d: %s", id, status.StatusCode, status.Error.Message)
+				}
+				exitCh <- fmt.Errorf("container %s exited with status %d", id, status.StatusCode)
+				return
+			}
+		}(c.ID)
+	}
+	return exitCh
+}
