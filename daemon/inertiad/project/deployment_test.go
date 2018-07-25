@@ -64,8 +64,10 @@ func TestDeployMockSkipUpdate(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	_, err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	deploy, err := d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
 	assert.Nil(t, err)
+
+	deploy()
 	assert.Equal(t, true, buildCalled)
 	assert.Equal(t, true, stopCalled)
 }

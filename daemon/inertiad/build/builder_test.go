@@ -62,7 +62,9 @@ func TestBuilder_Build(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"type docker-compose", args{"docker-compose"}, false},
+		{"type dockerfile", args{"dockerfile"}, false},
+		{"type herokuish", args{"herokuish"}, false},
 	}
 
 	cli, err := docker.NewEnvClient()
