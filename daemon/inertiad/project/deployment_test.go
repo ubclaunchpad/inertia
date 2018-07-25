@@ -14,11 +14,11 @@ import (
 )
 
 type MockBuilder struct {
-	builder func() error
+	builder func() <-chan error
 	stopper func() error
 }
 
-func (m *MockBuilder) Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error) {
+func (m *MockBuilder) Build(string, build.Config, *docker.Client, io.Writer) (func() <-chan error, error) {
 	return m.builder, nil
 }
 
@@ -49,7 +49,7 @@ func TestDeployMockSkipUpdate(t *testing.T) {
 		directory: "./test/",
 		buildType: "test",
 		builder: &MockBuilder{
-			builder: func() error {
+			builder: func() <-chan error {
 				buildCalled = true
 				return nil
 			},
@@ -64,7 +64,7 @@ func TestDeployMockSkipUpdate(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	_, err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
 	assert.Nil(t, err)
 	assert.Equal(t, true, buildCalled)
 	assert.Equal(t, true, stopCalled)

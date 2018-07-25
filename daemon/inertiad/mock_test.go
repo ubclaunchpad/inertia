@@ -25,8 +25,8 @@ type FakeDeployment struct {
 	GetDataManagerFunc func() *project.DeploymentDataManager
 }
 
-func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) error {
-	return f.DeployFunc(o, c, w)
+func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) (func() <-chan error, error) {
+	return func() <-chan error { return nil }, f.DeployFunc(o, c, w)
 }
 
 func (f *FakeDeployment) Down(c *docker.Client, w io.Writer) error {

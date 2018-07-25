@@ -21,7 +21,7 @@ import (
 // Builder builds projects and returns a callback that can be used to deploy the project.
 // No relation to Bob the Builder, though a Bob did write this.
 type Builder interface {
-	Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error)
+	Build(string, build.Config, *docker.Client, io.Writer) (func() <-chan error, error)
 	GetBuildStageName() string
 	StopContainers(*docker.Client, io.Writer) error
 	Prune(*docker.Client, io.Writer) error
@@ -30,7 +30,7 @@ type Builder interface {
 
 // Deployer manages the deployed user project
 type Deployer interface {
-	Deploy(*docker.Client, io.Writer, DeployOptions) error
+	Deploy(*docker.Client, io.Writer, DeployOptions) (func() <-chan error, error)
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
 	Prune(*docker.Client, io.Writer) error
@@ -143,7 +143,7 @@ type DeployOptions struct {
 
 // Deploy will update, build, and deploy the project
 func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
-	opts DeployOptions) error {
+	opts DeployOptions) (func() <-chan error, error) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	fmt.Println(out, "Preparing to deploy project")
@@ -152,7 +152,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	if !opts.SkipUpdate {
 		err := git.UpdateRepository(d.directory, d.repo, d.branch, d.auth, out)
 		if err != nil {
-			return err
+			return func() <-chan error { return nil }, err
 		}
 	}
 
@@ -162,7 +162,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	// Kill active project containers if there are any
 	err := d.builder.StopContainers(cli, out)
 	if err != nil {
-		return err
+		return func() <-chan error { return nil }, err
 	}
 
 	// Get config
@@ -173,13 +173,13 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	}
 
 	// Build project
-	deploy, err := d.builder.Build(strings.ToLower(d.buildType), conf, cli, out)
+	deploy, err := d.builder.Build(strings.ToLower(d.buildType), *conf, cli, out)
 	if err != nil {
-		return err
+		return func() <-chan error { return nil }, err
 	}
 
 	// Deploy
-	return deploy()
+	return deploy, nil
 }
 
 // Down shuts down the deployment
@@ -300,7 +300,6 @@ func (d *Deployment) GetDataManager() (manager *DeploymentDataManager, found boo
 func (d *Deployment) GetBuildConfiguration() (*build.Config, error) {
 	conf := &build.Config{
 		Name:           d.project,
-		Type:           d.buildType,
 		BuildFilePath:  d.buildFilePath,
 		BuildDirectory: d.directory,
 	}

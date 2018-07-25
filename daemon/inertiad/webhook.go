@@ -90,10 +90,19 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 	defer cli.Close()
 
 	// Deploy project
-	err = deployment.Deploy(cli, os.Stdout, project.DeployOptions{
+	deploy, err := deployment.Deploy(cli, os.Stdout, project.DeployOptions{
 		SkipUpdate: false,
 	})
 	if err != nil {
 		fmt.Fprintln(out, err.Error())
+	}
+
+	errCh := deploy()
+	select {
+	case err := <-errCh:
+		if err != nil {
+			fmt.Fprintln(os.Stdout, "Project stopped: "+err.Error())
+			return
+		}
 	}
 }

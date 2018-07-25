@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -91,7 +92,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cli.Close()
-	err = deployment.Deploy(cli, logger, project.DeployOptions{
+	deploy, err := deployment.Deploy(cli, logger, project.DeployOptions{
 		SkipUpdate: skipUpdate,
 	})
 	if err != nil {
@@ -99,5 +100,13 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	errCh := deploy()
 	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			fmt.Fprintln(os.Stdout, "Project stopped: "+err.Error())
+			return
+		}
+	}
 }
