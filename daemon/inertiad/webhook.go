@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/webhook"
 )
@@ -82,7 +82,7 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 
 	// If branches match, deploy
 	fmt.Fprintln(out, fmt.Sprintf("Event branch matches deployed branch %s", branch))
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	if err != nil {
 		fmt.Fprintln(out, err.Error())
 		return

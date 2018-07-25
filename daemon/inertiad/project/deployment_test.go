@@ -42,7 +42,7 @@ func TestSetConfig(t *testing.T) {
 	assert.Equal(t, "/robertcompose.yml", deployment.buildFilePath)
 }
 
-func TestDeployMockSkipUpdate(t *testing.T) {
+func TestDeployMock(t *testing.T) {
 	buildCalled := false
 	stopCalled := false
 	d := Deployment{
@@ -60,7 +60,7 @@ func TestDeployMockSkipUpdate(t *testing.T) {
 		},
 	}
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
@@ -89,7 +89,7 @@ func TestDownIntegration(t *testing.T) {
 		},
 	}
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
@@ -110,7 +110,7 @@ func TestGetStatusIntegration(t *testing.T) {
 	repo, err := git.PlainOpen("../../../")
 	assert.Nil(t, err)
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 

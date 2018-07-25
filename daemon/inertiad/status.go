@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 )
 
 // statusHandler returns a formatted string about the status of the
@@ -22,7 +22,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

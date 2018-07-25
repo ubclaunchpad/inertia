@@ -14,6 +14,7 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 )
 
 func TestNewBuilder(t *testing.T) {
@@ -67,7 +68,7 @@ func TestBuilder_Build(t *testing.T) {
 		{"type herokuish", args{"herokuish"}, false},
 	}
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 

@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
@@ -47,7 +48,7 @@ func run(host, port, version string) {
 	)
 
 	// Download build tools
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	if err != nil {
 		println(err.Error())
 		println("Failed to start Docker client - shutting down daemon.")

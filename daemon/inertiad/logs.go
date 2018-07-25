@@ -64,7 +64,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return

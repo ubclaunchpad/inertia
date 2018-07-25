@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 
-	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
@@ -86,7 +85,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Deploy project
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
