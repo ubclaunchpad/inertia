@@ -7,7 +7,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 )
 
 // run starts project and tracks all active project containers and pipes an error
@@ -19,34 +18,5 @@ func run(ctx context.Context, client *docker.Client, id string, out io.Writer) <
 		errCh <- err
 		return errCh
 	}
-	return watchContainers(client, nil)
-}
-
-func watchContainers(client *docker.Client, stop chan struct{}) <-chan error {
-	exitCh := make(chan error, 1)
-	list, err := containers.GetActiveContainers(client)
-	if err != nil {
-		exitCh <- err
-		return exitCh
-	}
-	for _, c := range list {
-		statusCh, errCh := client.ContainerWait(context.Background(), c.ID, "")
-		go func(id string) {
-			select {
-			case err := <-errCh:
-				if err != nil {
-					exitCh <- err
-					return
-				}
-			case status := <-statusCh:
-				if status.Error != nil {
-					exitCh <- fmt.Errorf(
-						"container %s exited with status %d: %s", id, status.StatusCode, status.Error.Message)
-				}
-				exitCh <- fmt.Errorf("container %s exited with status %d", id, status.StatusCode)
-				return
-			}
-		}(c.ID)
-	}
-	return exitCh
+	return containers.WatchContainers(client, nil)
 }
