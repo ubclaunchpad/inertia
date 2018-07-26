@@ -45,7 +45,6 @@ func killTestContainers(cli *docker.Client, w io.Writer) error {
 		}
 	}
 
-	_, err = cli.ContainersPrune(ctx, filters.Args{})
 	return err
 }
 
@@ -71,12 +70,15 @@ func TestBuilder_Build(t *testing.T) {
 	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
-	_, err = cli.ContainersPrune(context.Background(), filters.Args{})
-	assert.Nil(t, err)
 
 	// Run cases
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Clean up before test
+			_, err = cli.ContainersPrune(context.Background(), filters.Args{})
+			assert.Nil(t, err)
+			time.Sleep(5 * time.Second)
+
 			var (
 				testProjectName = "test_" + tt.args.buildType
 				testProjectDir  = path.Join(
@@ -90,6 +92,8 @@ func TestBuilder_Build(t *testing.T) {
 				}, killTestContainers)
 				out = os.Stdout
 			)
+
+			// Run build
 			deploy, err := b.Build(tt.args.buildType, Config{
 				Name:           testProjectName,
 				BuildDirectory: testProjectDir,
@@ -154,7 +158,8 @@ func TestBuilder_Build(t *testing.T) {
 			endTest = true
 			err = killTestContainers(cli, nil)
 			assert.Nil(t, err)
-			time.Sleep(10 * time.Second)
+			cli.ContainersPrune(context.Background(), filters.Args{})
+			time.Sleep(5 * time.Second)
 		})
 	}
 }
