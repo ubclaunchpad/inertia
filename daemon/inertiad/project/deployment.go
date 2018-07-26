@@ -204,7 +204,8 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	}
 
 	// Do a lite prune
-	return d.builder.Prune(cli, out)
+	d.builder.Prune(cli, out)
+	return nil
 }
 
 // Prune clears unused Docker assets
