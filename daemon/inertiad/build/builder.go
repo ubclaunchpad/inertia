@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -211,7 +212,7 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	return func() <-chan error { return run(ctx, cli, resp.ID, out) }, nil
+	return func() <-chan error { return b.run(ctx, cli, resp.ID, out) }, nil
 }
 
 // dockerBuild builds project from Dockerfile, and returns a callback function to deploy it
@@ -273,7 +274,7 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	return func() <-chan error { return run(ctx, cli, containerResp.ID, out) }, nil
+	return func() <-chan error { return b.run(ctx, cli, containerResp.ID, out) }, nil
 }
 
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
@@ -359,5 +360,69 @@ func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	return func() <-chan error { return run(ctx, cli, resp.ID, out) }, nil
+	return func() <-chan error { return b.run(ctx, cli, resp.ID, out) }, nil
+}
+
+// run starts project and tracks all active project containers and pipes an error
+// to the returned channel if any container exits or errors.
+func (b *Builder) run(ctx context.Context, client *docker.Client, id string, out io.Writer) <-chan error {
+	fmt.Fprintln(out, "Starting up project...")
+	if err := client.ContainerStart(ctx, id, types.ContainerStartOptions{}); err != nil {
+		errCh := make(chan error, 1)
+		errCh <- err
+		return errCh
+	}
+	return b.watchContainers(client, nil)
+}
+
+// WatchContainers starts goroutines that check on container activity and returns
+// a channel to pipe errors when containers shut down
+func (b *Builder) watchContainers(client *docker.Client, stop chan struct{}) <-chan error {
+	exitCh := make(chan error, 1)
+	watchEndedCh := make(chan bool, 1)
+	list, err := containers.GetActiveContainers(client)
+	if err != nil {
+		exitCh <- err
+		return exitCh
+	}
+
+	// Start goroutine for each container
+	for _, c := range list {
+		statusCh, errCh := client.ContainerWait(context.Background(), c.ID, "")
+		go func(id string) {
+			select {
+			// Pipe error if error received
+			case err := <-errCh:
+				if err != nil {
+					exitCh <- err
+					break
+				}
+
+			// Pipe exit status if container stops
+			case status := <-statusCh:
+				if status.Error != nil {
+					exitCh <- fmt.Errorf(
+						"container %s exited with status %d: %s",
+						id, status.StatusCode, status.Error.Message)
+				} else {
+					exitCh <- fmt.Errorf("container %s exited with status %d",
+						id, status.StatusCode)
+				}
+				break
+
+			// Return from goroutine if another container watcher ends - this means
+			// that StopActiveContainers has been called
+			case <-watchEndedCh:
+				return
+			}
+
+			// Shut down all containers if one fails
+			watchEndedCh <- true
+			err := b.stopper(client, os.Stdout)
+			if err != nil {
+				println("error shutting down other active containers: " + err.Error())
+			}
+		}(c.ID)
+	}
+	return exitCh
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -151,56 +150,4 @@ func PruneAll(docker *docker.Client, exceptions ...string) error {
 	docker.ContainersPrune(ctx, filters.Args{})
 	docker.VolumesPrune(ctx, filters.Args{})
 	return nil
-}
-
-// WatchContainers starts goroutines that check on container activity and returns
-// a channel to pipe errors when containers shut down
-func WatchContainers(client *docker.Client, stop chan struct{}) <-chan error {
-	exitCh := make(chan error, 1)
-	watchEndedCh := make(chan bool, 1)
-	list, err := GetActiveContainers(client)
-	if err != nil {
-		exitCh <- err
-		return exitCh
-	}
-
-	// Start goroutine for each container
-	for _, c := range list {
-		statusCh, errCh := client.ContainerWait(context.Background(), c.ID, "")
-		go func(id string) {
-			select {
-			// Pipe error if error received
-			case err := <-errCh:
-				if err != nil {
-					exitCh <- err
-					break
-				}
-
-			// Pipe exit status if container stops
-			case status := <-statusCh:
-				if status.Error != nil {
-					exitCh <- fmt.Errorf(
-						"container %s exited with status %d: %s",
-						id, status.StatusCode, status.Error.Message)
-				} else {
-					exitCh <- fmt.Errorf("container %s exited with status %d",
-						id, status.StatusCode)
-				}
-				break
-
-			// Return from goroutine if another container watcher ends - this means
-			// that StopActiveContainers has been called
-			case <-watchEndedCh:
-				return
-			}
-
-			// Shut down all containers if one fails
-			watchEndedCh <- true
-			err := StopActiveContainers(client, os.Stdout)
-			if err != nil {
-				println("error shutting down other active containers: " + err.Error())
-			}
-		}(c.ID)
-	}
-	return exitCh
 }
