@@ -46,8 +46,8 @@ ENV INERTIA_PROJECT_DIR=/app/host/inertia/project/ \
     INERTIA_GH_KEY_PATH=/app/host/.ssh/id_rsa_inertia_deploy
 
 # Build tool versions
-ENV INERTIA_DOCKERCOMPOSE=docker/compose:1.21.0 \
-    INERTIA_HEROKUISH=gliderlabs/herokuish:v0.4.0
+ENV INERTIA_DOCKERCOMPOSE=docker/compose:1.22.0 \
+    INERTIA_HEROKUISH=gliderlabs/herokuish:v0.4.3
 
 # Serve the daemon by default.
 ENTRYPOINT ["inertiad", "run"]

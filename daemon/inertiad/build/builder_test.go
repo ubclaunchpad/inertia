@@ -23,8 +23,8 @@ func TestNewBuilder(t *testing.T) {
 }
 
 const (
-	DockerComposeVersion = "docker/compose:1.21.0"
-	HerokuishVersion     = "gliderlabs/herokuish:v0.4.0"
+	DockerComposeVersion = "docker/compose:1.22.0"
+	HerokuishVersion     = "gliderlabs/herokuish:v0.4.3"
 )
 
 // killTestContainers is a helper for tests - it implements project.ContainerStopper
@@ -45,7 +45,6 @@ func killTestContainers(cli *docker.Client, w io.Writer) error {
 		}
 	}
 
-	// Prune images
 	_, err = cli.ContainersPrune(ctx, filters.Args{})
 	return err
 }
@@ -68,10 +67,14 @@ func TestBuilder_Build(t *testing.T) {
 		{"type herokuish", args{"herokuish"}, false},
 	}
 
+	// Setup
 	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
+	_, err = cli.ContainersPrune(context.Background(), filters.Args{})
+	assert.Nil(t, err)
 
+	// Run cases
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
@@ -129,8 +132,10 @@ func TestBuilder_Build(t *testing.T) {
 				}
 			}
 
-			// try again if project no up (workaround for Travis)
-			if !foundP {
+			// Wait for project to come up
+			attempts := 0
+			for !foundP && attempts < 10 {
+				attempts++
 				time.Sleep(30 * time.Second)
 				containers, err = cli.ContainerList(
 					context.Background(),
@@ -143,27 +148,13 @@ func TestBuilder_Build(t *testing.T) {
 					}
 				}
 			}
-
-			// try again if project no up (another workaround for Travis)
-			if !foundP {
-				time.Sleep(180 * time.Second)
-				containers, err = cli.ContainerList(
-					context.Background(),
-					types.ContainerListOptions{},
-				)
-				assert.Nil(t, err)
-				for _, c := range containers {
-					if strings.Contains(c.Names[0], testProjectName) {
-						foundP = true
-					}
-				}
-			}
-
 			assert.True(t, foundP, "project container should be active")
 
+			// clean up
 			endTest = true
 			err = killTestContainers(cli, nil)
 			assert.Nil(t, err)
+			time.Sleep(10 * time.Second)
 		})
 	}
 }
