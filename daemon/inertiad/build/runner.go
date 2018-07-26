@@ -7,6 +7,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 )
 
 // run starts project and tracks all active project containers and pipes an error
