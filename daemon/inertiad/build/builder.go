@@ -13,6 +13,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
@@ -378,51 +379,43 @@ func (b *Builder) run(ctx context.Context, client *docker.Client, id string, out
 // WatchContainers starts goroutines that check on container activity and returns
 // a channel to pipe errors when containers shut down
 func (b *Builder) watchContainers(client *docker.Client, stop chan struct{}) <-chan error {
+	ctx := context.Background()
+
+	// Channel to pipe container status exits to, is returned to caller
 	exitCh := make(chan error, 1)
-	watchEndedCh := make(chan bool, 1)
-	list, err := containers.GetActiveContainers(client)
-	if err != nil {
-		exitCh <- err
-		return exitCh
-	}
 
-	// Start goroutine for each container
-	for _, c := range list {
-		statusCh, errCh := client.ContainerWait(context.Background(), c.ID, "")
-		go func(id string) {
-			select {
-			// Pipe error if error received
-			case err := <-errCh:
-				if err != nil {
-					exitCh <- err
-					break
-				}
+	// Watch for any stopped containers
+	go func() {
+		defer close(exitCh)
+		// Only listen for stop events
+		args := filters.NewArgs(filters.KeyValuePair{Key: "event", Value: "stop"})
+		eventsCh, eventsErrCh := client.Events(ctx, types.EventsOptions{Filters: args})
 
-			// Pipe exit status if container stops
-			case status := <-statusCh:
-				if status.Error != nil {
-					exitCh <- fmt.Errorf(
-						"container %s exited with status %d: %s",
-						id, status.StatusCode, status.Error.Message)
-				} else {
-					exitCh <- fmt.Errorf("container %s exited with status %d",
-						id, status.StatusCode)
-				}
-				break
-
-			// Return from goroutine if another container watcher ends - this means
-			// that StopActiveContainers has been called
-			case <-watchEndedCh:
-				return
-			}
-
-			// Shut down all containers if one fails
-			watchEndedCh <- true
-			err := b.stopper(client, os.Stdout)
+		// Loop until a condition is reached
+		select {
+		// Handle errors
+		case err := <-eventsErrCh:
 			if err != nil {
-				println("error shutting down other active containers: " + err.Error())
+				exitCh <- err
+				break
 			}
-		}(c.ID)
-	}
+
+			// Handle stop events
+		case status := <-eventsCh:
+			if status.Actor.Attributes != nil {
+				exitCh <- fmt.Errorf("container %s (%s) has stopped", status.Actor.Attributes["name"], status.ID)
+			} else {
+				exitCh <- fmt.Errorf("container %s has stopped", status.ID)
+			}
+			break
+		}
+
+		// Shut down all containers if one fails
+		err := b.stopper(client, os.Stdout)
+		if err != nil {
+			println("error shutting down other active containers: " + err.Error())
+		}
+	}()
+
 	return exitCh
 }
