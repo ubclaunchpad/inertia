@@ -12,10 +12,15 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
+)
+
+const (
+	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
 )
 
 var (
@@ -32,19 +37,19 @@ var (
 	socketUpgrader = websocket.Upgrader{}
 )
 
-const (
-	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
-)
-
 // run starts the daemon
 func run(host, port, version string) {
+	// Load config and set globals
 	conf = cfg.New()
 	daemonVersion = version
 
+	// Generate paths
 	var (
-		daemonSSLCert    = path.Join(conf.SSLDirectory, "daemon.cert")
-		daemonSSLKey     = path.Join(conf.SSLDirectory, "daemon.key")
-		userDatabasePath = path.Join(conf.DataDirectory, "users.db")
+		daemonSSLCert = path.Join(conf.SSLDirectory, "daemon.cert")
+		daemonSSLKey  = path.Join(conf.SSLDirectory, "daemon.key")
+
+		userDatabasePath    = path.Join(conf.DataDirectory, "users.db")
+		projectDatabasePath = path.Join(conf.DataDirectory, "project.db")
 	)
 
 	// Download build tools
@@ -74,6 +79,22 @@ func run(host, port, version string) {
 		}
 	}
 
+	// Set up deployment
+	println("Setting up deployment manager...")
+	deployment, err = project.NewDeployment(
+		conf.ProjectDirectory, projectDatabasePath,
+		build.NewBuilder(*conf, containers.StopActiveContainers))
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	// Watch container events
+	println("Watching containers...")
+	go deployment.Watch(cli)
+
+	// Set up endpoints
+	println("Setting up server...")
 	webPrefix := "/web/"
 	handler, err := auth.NewPermissionsHandler(
 		userDatabasePath, host, 120,

@@ -2,14 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
@@ -32,6 +29,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	gitOpts := upReq.GitOptions
+	webhookSecret = upReq.WebHookSecret
 
 	// Configure logger
 	logger := log.NewLogger(log.LoggerOptions{
@@ -41,23 +39,25 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	defer logger.Close()
 
-	webhookSecret = upReq.WebHookSecret
+	cli, err := containers.NewDockerClient()
+	if err != nil {
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cli.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
 	skipUpdate := false
-	if deployment == nil {
+	if status, _ := deployment.GetStatus(cli); status.CommitHash == "" {
 		logger.Println("No deployment detected")
-		d, err := project.NewDeployment(
-			build.NewBuilder(*conf, containers.StopActiveContainers),
+		err = deployment.Initialize(
 			project.DeploymentConfig{
-				ProjectDirectory: conf.ProjectDirectory,
-				ProjectName:      upReq.Project,
-				BuildType:        upReq.BuildType,
-				BuildFilePath:    upReq.BuildFilePath,
-				RemoteURL:        gitOpts.RemoteURL,
-				Branch:           gitOpts.Branch,
-				PemFilePath:      crypto.DaemonGithubKeyLocation,
-				DatabasePath:     path.Join(conf.DataDirectory, "project.db"),
+				ProjectName:   upReq.Project,
+				BuildType:     upReq.BuildType,
+				BuildFilePath: upReq.BuildFilePath,
+				RemoteURL:     gitOpts.RemoteURL,
+				Branch:        gitOpts.Branch,
+				PemFilePath:   crypto.DaemonGithubKeyLocation,
 			},
 			logger,
 		)
@@ -65,7 +65,6 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 			return
 		}
-		deployment = d
 
 		// Project was just pulled! No need to update again.
 		skipUpdate = true
@@ -85,12 +84,6 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Deploy project
-	cli, err := containers.NewDockerClient()
-	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
 	deploy, err := deployment.Deploy(cli, logger, project.DeployOptions{
 		SkipUpdate: skipUpdate,
 	})
@@ -99,13 +92,10 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errCh := deploy()
-	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			fmt.Fprintln(os.Stdout, "Project stopped: "+err.Error())
-			return
-		}
+	err = deploy()
+	if err != nil {
+		println(err.Error())
+		return
 	}
+	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
 }

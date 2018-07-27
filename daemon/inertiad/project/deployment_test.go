@@ -14,11 +14,11 @@ import (
 )
 
 type MockBuilder struct {
-	builder func() <-chan error
+	builder func() error
 	stopper func() error
 }
 
-func (m *MockBuilder) Build(string, build.Config, *docker.Client, io.Writer) (func() <-chan error, error) {
+func (m *MockBuilder) Build(string, build.Config, *docker.Client, io.Writer) (func() error, error) {
 	return m.builder, nil
 }
 
@@ -49,7 +49,7 @@ func TestDeployMock(t *testing.T) {
 		directory: "./test/",
 		buildType: "test",
 		builder: &MockBuilder{
-			builder: func() <-chan error {
+			builder: func() error {
 				buildCalled = true
 				return nil
 			},

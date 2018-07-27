@@ -54,21 +54,27 @@ func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(payload webhook.Payload, out io.Writer) {
 	branch := common.GetBranchFromRef(payload.GetRef())
-
 	fmt.Fprintln(out, "Received PushEvent")
 	fmt.Fprintln(out, fmt.Sprintf("Repository Name: %s", payload.GetRepoName()))
 	fmt.Fprintln(out, fmt.Sprintf("Repository Git URL: %s", payload.GetGitURL()))
 	fmt.Fprintln(out, fmt.Sprintf("Branch: %s", branch))
 
+	cli, err := containers.NewDockerClient()
+	if err != nil {
+		fmt.Fprintln(out, err.Error())
+		return
+	}
+	defer cli.Close()
+
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
-	if deployment == nil {
+	if status, _ := deployment.GetStatus(cli); status.CommitHash == "" {
 		fmt.Fprintln(out, "No deployment detected - try running 'inertia $REMOTE up'")
 		return
 	}
 
 	// Check for matching remotes
-	err := deployment.CompareRemotes(payload.GetSSHURL())
+	err = deployment.CompareRemotes(payload.GetSSHURL())
 	if err != nil {
 		fmt.Fprintln(out, err.Error())
 		return
@@ -82,14 +88,6 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 
 	// If branches match, deploy
 	fmt.Fprintln(out, fmt.Sprintf("Event branch matches deployed branch %s", branch))
-	cli, err := containers.NewDockerClient()
-	if err != nil {
-		fmt.Fprintln(out, err.Error())
-		return
-	}
-	defer cli.Close()
-
-	// Deploy project
 	deploy, err := deployment.Deploy(cli, os.Stdout, project.DeployOptions{
 		SkipUpdate: false,
 	})
@@ -97,12 +95,8 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 		fmt.Fprintln(out, err.Error())
 	}
 
-	errCh := deploy()
-	select {
-	case err := <-errCh:
-		if err != nil {
-			fmt.Fprintln(os.Stdout, "Project stopped: "+err.Error())
-			return
-		}
+	err = deploy()
+	if err != nil {
+		fmt.Fprintln(out, err.Error())
 	}
 }

@@ -12,11 +12,6 @@ import (
 
 // envHandler manages requests to manage environment variables
 func envHandler(w http.ResponseWriter, r *http.Request) {
-	if deployment == nil {
-		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
-		return
-	}
-
 	if r.Method == "POST" {
 		envPostHandler(w, r)
 	} else if r.Method == "GET" {

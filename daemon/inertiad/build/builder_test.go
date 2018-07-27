@@ -107,18 +107,9 @@ func TestBuilder_Build(t *testing.T) {
 				return
 			}
 
-			// Run containers and watch for abrupt failure
-			endTest := false
-			errCh := deploy()
-			go func() {
-				select {
-				case err := <-errCh:
-					if err != nil && !endTest {
-						t.Errorf("unexpected error %v", err)
-						return
-					}
-				}
-			}()
+			// Run containers
+			err = deploy()
+			assert.Nil(t, err)
 
 			// Arbitrary wait for containers to start
 			time.Sleep(10 * time.Second)
@@ -155,7 +146,6 @@ func TestBuilder_Build(t *testing.T) {
 			assert.True(t, foundP, "project container should be active")
 
 			// clean up
-			endTest = true
 			err = killTestContainers(cli, nil)
 			assert.Nil(t, err)
 			cli.ContainersPrune(context.Background(), filters.Args{})

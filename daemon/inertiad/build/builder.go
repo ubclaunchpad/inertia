@@ -6,14 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path"
 	"strconv"
 	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
@@ -22,7 +20,7 @@ import (
 
 // ProjectBuilder builds projects and returns a callback that can be used to deploy the project.
 // No relation to Bob the Builder, though a Bob did write this.
-type ProjectBuilder func(Config, *docker.Client, io.Writer) (func() <-chan error, error)
+type ProjectBuilder func(Config, *docker.Client, io.Writer) (func() error, error)
 
 // Builder manages build tools and executes builds
 type Builder struct {
@@ -81,7 +79,7 @@ type Config struct {
 
 // Build executes build and deploy
 func (b *Builder) Build(buildType string, d Config,
-	cli *docker.Client, out io.Writer) (func() <-chan error, error) {
+	cli *docker.Client, out io.Writer) (func() error, error) {
 	// Use the appropriate build method
 	builder, found := b.builders[strings.ToLower(buildType)]
 	if !found {
@@ -94,7 +92,7 @@ func (b *Builder) Build(buildType string, d Config,
 	// Build project
 	deploy, err := builder(d, cli, out)
 	if err != nil {
-		return func() <-chan error { return nil }, err
+		return func() error { return nil }, err
 	}
 
 	// Return the deploy callback
@@ -116,7 +114,7 @@ func (b *Builder) Build(buildType string, d Config,
 // second container to require access to the docker socket.
 // See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
 func (b *Builder) dockerCompose(d Config, cli *docker.Client,
-	out io.Writer) (func() <-chan error, error) {
+	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
 
@@ -213,12 +211,12 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	return func() <-chan error { return b.run(ctx, cli, resp.ID, out) }, nil
+	return func() error { return b.run(ctx, cli, resp.ID, out) }, nil
 }
 
 // dockerBuild builds project from Dockerfile, and returns a callback function to deploy it
 func (b *Builder) dockerBuild(d Config, cli *docker.Client,
-	out io.Writer) (func() <-chan error, error) {
+	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Building Dockerfile project...")
 	ctx := context.Background()
 	buildCtx := bytes.NewBuffer(nil)
@@ -275,13 +273,13 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	return func() <-chan error { return b.run(ctx, cli, containerResp.ID, out) }, nil
+	return func() error { return b.run(ctx, cli, containerResp.ID, out) }, nil
 }
 
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
 // to build the user project.
 func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
-	out io.Writer) (func() <-chan error, error) {
+	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Setting up herokuish...")
 	ctx := context.Background()
 
@@ -361,61 +359,12 @@ func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	return func() <-chan error { return b.run(ctx, cli, resp.ID, out) }, nil
+	return func() error { return b.run(ctx, cli, resp.ID, out) }, nil
 }
 
 // run starts project and tracks all active project containers and pipes an error
 // to the returned channel if any container exits or errors.
-func (b *Builder) run(ctx context.Context, client *docker.Client, id string, out io.Writer) <-chan error {
+func (b *Builder) run(ctx context.Context, client *docker.Client, id string, out io.Writer) error {
 	fmt.Fprintln(out, "Starting up project...")
-	if err := client.ContainerStart(ctx, id, types.ContainerStartOptions{}); err != nil {
-		errCh := make(chan error, 1)
-		errCh <- err
-		return errCh
-	}
-	return b.watchContainers(client, nil)
-}
-
-// WatchContainers starts goroutines that check on container activity and returns
-// a channel to pipe errors when containers shut down
-func (b *Builder) watchContainers(client *docker.Client, stop chan struct{}) <-chan error {
-	ctx := context.Background()
-
-	// Channel to pipe container status exits to, is returned to caller
-	exitCh := make(chan error, 1)
-
-	// Watch for any stopped containers
-	go func() {
-		defer close(exitCh)
-		// Only listen for stop events
-		args := filters.NewArgs(filters.KeyValuePair{Key: "event", Value: "stop"})
-		eventsCh, eventsErrCh := client.Events(ctx, types.EventsOptions{Filters: args})
-
-		// Loop until a condition is reached
-		select {
-		// Handle errors
-		case err := <-eventsErrCh:
-			if err != nil {
-				exitCh <- err
-				break
-			}
-
-			// Handle stop events
-		case status := <-eventsCh:
-			if status.Actor.Attributes != nil {
-				exitCh <- fmt.Errorf("container %s (%s) has stopped", status.Actor.Attributes["name"], status.ID)
-			} else {
-				exitCh <- fmt.Errorf("container %s has stopped", status.ID)
-			}
-			break
-		}
-
-		// Shut down all containers if one fails
-		err := b.stopper(client, os.Stdout)
-		if err != nil {
-			println("error shutting down other active containers: " + err.Error())
-		}
-	}()
-
-	return exitCh
+	return client.ContainerStart(ctx, id, types.ContainerStartOptions{})
 }
