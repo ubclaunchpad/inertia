@@ -40,7 +40,7 @@ const config = {
       {
         test: /\.svg$/,
         use: ['babel-loader', 'react-svg-loader'],
-      }
+      },
     ],
   },
   plugins: [
