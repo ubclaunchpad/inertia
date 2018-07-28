@@ -11,6 +11,7 @@ import {
 import InertiaAPI from '../../common/API';
 import Containers from '../containers/Containers';
 import Dashboard from '../dashboard/Dashboard';
+import Settings from '../settings/Settings';
 import * as mainActions from '../../actions/main';
 import Footer from '../../components/Footer/Footer';
 
@@ -233,6 +234,7 @@ class MainWrapper extends React.Component {
 
           <Link to={`${this.props.match.url}/dashboard`}>Click to go to Dashboard</Link>
           <Link to={`${this.props.match.url}/containers`}>Click to go to Containers</Link>
+          <Link to={`${this.props.match.url}/settings`}>Click to go to Settings</Link>
         </header>
 
         <div style={styles.innerContainer}>
@@ -259,7 +261,12 @@ class MainWrapper extends React.Component {
               <Route
                 exact
                 path={`${this.props.match.url}/containers`}
-                component={() => <Containers />}
+                component={() => <Containers dateUpdated="2018-01-01 00:00" />}
+              />
+              <Route
+                exact
+                path={`${this.props.match.url}/settings`}
+                component={() => <Settings />}
               />
             </Switch>
           </div>
