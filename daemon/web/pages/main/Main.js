@@ -13,6 +13,7 @@ import Containers from '../containers/Containers';
 import Dashboard from '../dashboard/Dashboard';
 import Settings from '../settings/Settings';
 import * as mainActions from '../../actions/main';
+import Footer from '../../components/Footer/Footer';
 
 // hardcode all styles for now, until we flesh out UI
 const styles = {
@@ -270,6 +271,7 @@ class MainWrapper extends React.Component {
             </Switch>
           </div>
         </div>
+        <Footer version="v0.0.0" />
       </div>
     );
   }
