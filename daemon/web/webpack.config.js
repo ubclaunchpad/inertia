@@ -38,8 +38,12 @@ const config = {
         use: ['style-loader', 'css-loader', 'sass-loader'],
       },
       {
-        test: /\.png($|\?)|\.jgp($|\?)|\.ico($|\?)|\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)|\.svg($|\?)/,
+        test: /\.png($|\?)|\.jgp($|\?)|\.ico($|\?)|\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)/,
         loader: 'url-loader',
+      },
+      {
+        test: /\.svg$/,
+        use: ['babel-loader', 'react-svg-loader'],
       },
     ],
   },
