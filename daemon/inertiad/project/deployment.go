@@ -334,8 +334,7 @@ func (d *Deployment) Watch(client *docker.Client) {
 	// Only listen for stop events
 	eventsCh, eventsErrCh := client.Events(ctx,
 		types.EventsOptions{Filters: filters.NewArgs(
-			filters.KeyValuePair{Key: "event", Value: "stop"},
-			filters.KeyValuePair{Key: "event", Value: "create"}),
+			filters.KeyValuePair{Key: "event", Value: "stop"}),
 		})
 
 	// Listen on channels
