@@ -62,4 +62,4 @@ func (f *FakeDeployment) UpdateContainerEnvironmentValues(cli *docker.Client) er
 	return nil
 }
 
-func (f *FakeDeployment) Watch(cli *docker.Client) {}
+func (f *FakeDeployment) Watch(cli *docker.Client) (<-chan string, <-chan error) { return nil, nil }

@@ -46,7 +46,7 @@ type Deployer interface {
 
 	GetDataManager() (*DeploymentDataManager, bool)
 
-	Watch(*docker.Client)
+	Watch(*docker.Client) (<-chan string, <-chan error)
 }
 
 // Deployment represents the deployed project
@@ -322,7 +322,7 @@ func (d *Deployment) GetBuildConfiguration() (*build.Config, error) {
 }
 
 // Watch watches for container stops
-func (d *Deployment) Watch(client *docker.Client) {
+func (d *Deployment) Watch(client *docker.Client) (<-chan string, <-chan error) {
 	var (
 		ctx    = context.Background()
 		logsCh = make(chan string)
@@ -361,4 +361,5 @@ func (d *Deployment) Watch(client *docker.Client) {
 			}
 		}
 	}
+	return logsCh, errCh
 }
