@@ -37,6 +37,10 @@ const config = {
         exclude: /node_modules/,
         use: ['style-loader', 'css-loader', 'sass-loader'],
       },
+      {
+        test: /\.svg$/,
+        use: ['babel-loader', 'react-svg-loader'],
+      }
     ],
   },
   plugins: [
