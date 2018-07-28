@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
-import footerLaunchpad from '../../assets/icons/launchpad-logo-lightblue.png';
 import './index.sass';
+import FooterLaunchpad from '../../assets/logo/launchpad-logo-light-blue-01.svg';
+
+const backgroundColor = '#474d5e';
 
 const Footer = ({ version }) => {
   const icons = [
@@ -13,28 +14,37 @@ const Footer = ({ version }) => {
     },
     {
       id: 2,
-      link: 'https://medium.com/ubc-launch-pad-software-engineering-blog',
-      name: 'fab fa-medium-m',
-    },
-    {
-      id: 3,
       link: 'https://github.com/ubclaunchpad/inertia/issues/new/choose',
       name: 'fas fa-comments',
     },
+    {
+      id: 3,
+      link: 'https://medium.com/ubc-launch-pad-software-engineering-blog',
+      name: 'fab fa-medium-m',
+    },
   ].map(socialFooterIcon => (
     <span className="icons">
-      <a key={socialFooterIcon.id} href={socialFooterIcon.link}>
+      <a
+        key={socialFooterIcon.id}
+        href={socialFooterIcon.link}
+        style={{ backgroundColor }}
+        rel="noopener noreferrer"
+        target="_blank">
         <span className={socialFooterIcon.name} />
       </a>
     </span>));
   return (
-    <footer className="footer">
-      <span className="left-side"><p className="daemon-version">Daemon {version}</p></span>
+    <footer className="footer" style={{ backgroundColor }}>
+      <span className="left-side"><p className="daemon-version">inertiad {version}</p></span>
       <span className="right-side">
         {icons}
-        <a href="https://www.ubclaunchpad.com">
-          <span className="launchpad"><img src={footerLaunchpad} height="18" width="130" alt="ubc launchpad" /></span>
-        </a>
+        <span className="icons">
+          <div>
+            <a href="https://www.ubclaunchpad.com" rel="noopener noreferrer" target="_blank" >
+              <FooterLaunchpad className="launchpad" />
+            </a>
+          </div>
+        </span>
       </span>
     </footer>
   );
