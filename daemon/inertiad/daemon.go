@@ -59,11 +59,9 @@ func run(host, port, version string) {
 		println("Failed to start Docker client - shutting down daemon.")
 		return
 	}
-	println("Downloading build tools...")
 	go downloadDeps(cli, conf.DockerComposeVersion, conf.HerokuishVersion)
 
 	// Check if the cert files are available.
-	println("Checking for existing SSL certificates in " + conf.SSLDirectory + "...")
 	_, err = os.Stat(daemonSSLCert)
 	certNotPresent := os.IsNotExist(err)
 	_, err = os.Stat(daemonSSLKey)
@@ -71,16 +69,17 @@ func run(host, port, version string) {
 
 	// If they are not available, generate new ones.
 	if keyNotPresent && certNotPresent {
-		println("No certificates found - generating new ones...")
+		fmt.Printf("No certificates found in %s - generating new ones...", conf.SSLDirectory)
 		err = crypto.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
 		if err != nil {
 			println(err.Error())
 			return
 		}
+	} else {
+		fmt.Printf("Found certificates in %s (%s, %s)", conf.SSLDirectory, daemonSSLCert, daemonSSLKey)
 	}
 
 	// Set up deployment
-	println("Setting up deployment manager...")
 	deployment, err = project.NewDeployment(
 		conf.ProjectDirectory, projectDatabasePath,
 		build.NewBuilder(*conf, containers.StopActiveContainers))
@@ -88,9 +87,9 @@ func run(host, port, version string) {
 		println(err.Error())
 		return
 	}
+	println("Deployment manager successfully created")
 
 	// Watch container events
-	println("Watching containers...")
 	go func() {
 		logsCh, errCh := deployment.Watch(cli)
 		for {
@@ -107,7 +106,6 @@ func run(host, port, version string) {
 	}()
 
 	// Set up endpoints
-	println("Setting up server...")
 	webPrefix := "/web/"
 	handler, err := auth.NewPermissionsHandler(
 		userDatabasePath, host, 120,
@@ -117,6 +115,7 @@ func run(host, port, version string) {
 		return
 	}
 	defer handler.Close()
+	println("Permissions manager successfully created")
 
 	// Inertia web
 	handler.AttachPublicHandler(
@@ -145,7 +144,7 @@ func run(host, port, version string) {
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)
-	fmt.Println(http.ListenAndServeTLS(
+	println(http.ListenAndServeTLS(
 		":"+port,
 		daemonSSLCert,
 		daemonSSLKey,
