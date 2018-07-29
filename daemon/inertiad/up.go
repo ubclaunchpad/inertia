@@ -94,7 +94,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = deploy()
 	if err != nil {
-		println(err.Error())
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
