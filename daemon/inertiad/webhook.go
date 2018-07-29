@@ -69,7 +69,7 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
 	if status, _ := deployment.GetStatus(cli); status.CommitHash == "" {
-		fmt.Fprintln(out, "No deployment detected - try running 'inertia $REMOTE up'")
+		fmt.Fprintln(out, msgNoDeployment)
 		return
 	}
 
