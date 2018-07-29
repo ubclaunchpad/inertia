@@ -15,8 +15,8 @@ func TestStatusHandlerBuildInProgress(t *testing.T) {
 	defer func() { deployment = nil }()
 	// Set up condition
 	deployment = &FakeDeployment{
-		GetStatusFunc: func(*docker.Client) (*common.DeploymentStatus, error) {
-			return &common.DeploymentStatus{
+		GetStatusFunc: func(*docker.Client) (common.DeploymentStatus, error) {
+			return common.DeploymentStatus{
 				Branch:               "wow",
 				CommitHash:           "abcde",
 				CommitMessage:        "",
@@ -42,8 +42,8 @@ func TestStatusHandlerNoContainers(t *testing.T) {
 	defer func() { deployment = nil }()
 	// Set up condition
 	deployment = &FakeDeployment{
-		GetStatusFunc: func(*docker.Client) (*common.DeploymentStatus, error) {
-			return &common.DeploymentStatus{
+		GetStatusFunc: func(*docker.Client) (common.DeploymentStatus, error) {
+			return common.DeploymentStatus{
 				Branch:               "wow",
 				CommitHash:           "abcde",
 				CommitMessage:        "",
@@ -69,8 +69,8 @@ func TestStatusHandlerActiveContainers(t *testing.T) {
 	defer func() { deployment = nil }()
 	// Set up condition
 	deployment = &FakeDeployment{
-		GetStatusFunc: func(*docker.Client) (*common.DeploymentStatus, error) {
-			return &common.DeploymentStatus{
+		GetStatusFunc: func(*docker.Client) (common.DeploymentStatus, error) {
+			return common.DeploymentStatus{
 				Branch:               "wow",
 				CommitHash:           "abcde",
 				CommitMessage:        "",
@@ -98,8 +98,8 @@ func TestStatusHandlerStatusError(t *testing.T) {
 	defer func() { deployment = nil }()
 	// Set up condition
 	deployment = &FakeDeployment{
-		GetStatusFunc: func(*docker.Client) (*common.DeploymentStatus, error) {
-			return nil, errors.New("uh oh")
+		GetStatusFunc: func(*docker.Client) (common.DeploymentStatus, error) {
+			return common.DeploymentStatus{CommitHash: "1234"}, errors.New("uh oh")
 		},
 	}
 
@@ -113,18 +113,4 @@ func TestStatusHandlerStatusError(t *testing.T) {
 
 	handler.ServeHTTP(recorder, req)
 	assert.Equal(t, recorder.Code, http.StatusInternalServerError)
-}
-
-func TestStatusHandlerNoDeployment(t *testing.T) {
-	// Assmble request
-	req, err := http.NewRequest("GET", "/status", nil)
-	assert.Nil(t, err)
-
-	// Record responses
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(statusHandler)
-
-	handler.ServeHTTP(recorder, req)
-	assert.Equal(t, recorder.Code, http.StatusOK)
-	assert.Contains(t, recorder.Body.String(), "\"branch\":\"\"")
 }

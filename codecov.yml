@@ -5,7 +5,7 @@ coverage:
   status:
     patch:
       default:
-        threshold: null
+        enabled: no
     project:
       default:
         threshold: 3

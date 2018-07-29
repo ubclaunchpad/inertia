@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"path"
-	"strconv"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -20,7 +19,7 @@ import (
 
 // ProjectBuilder builds projects and returns a callback that can be used to deploy the project.
 // No relation to Bob the Builder, though a Bob did write this.
-type ProjectBuilder func(*Config, *docker.Client, io.Writer) (func() error, error)
+type ProjectBuilder func(Config, *docker.Client, io.Writer) (func() error, error)
 
 // Builder manages build tools and executes builds
 type Builder struct {
@@ -70,7 +69,6 @@ func (b *Builder) PruneAll(docker *docker.Client, out io.Writer) error {
 // Config contains parameters required for builds to execute
 type Config struct {
 	Name string
-	Type string
 
 	BuildFilePath  string
 	BuildDirectory string
@@ -79,13 +77,13 @@ type Config struct {
 }
 
 // Build executes build and deploy
-func (b *Builder) Build(buildType string, d *Config,
+func (b *Builder) Build(buildType string, d Config,
 	cli *docker.Client, out io.Writer) (func() error, error) {
 	// Use the appropriate build method
-	builder, found := b.builders[strings.ToLower(d.Type)]
+	builder, found := b.builders[strings.ToLower(buildType)]
 	if !found {
 		// @todo: attempt a guess at project type instead
-		fmt.Println(out, "Unknown project type "+d.Type)
+		fmt.Println(out, "Unknown project type "+buildType)
 		fmt.Println(out, "Defaulting to docker-compose build")
 		builder = b.dockerCompose
 	}
@@ -114,7 +112,7 @@ func (b *Builder) Build(buildType string, d *Config,
 // separate from the daemon and the user's project, and is the
 // second container to require access to the docker socket.
 // See https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os
-func (b *Builder) dockerCompose(d *Config, cli *docker.Client,
+func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Setting up docker-compose...")
 	ctx := context.Background()
@@ -160,15 +158,14 @@ func (b *Builder) dockerCompose(d *Config, cli *docker.Client,
 	}
 	stop := make(chan struct{})
 	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
-	status, err := cli.ContainerWait(ctx, resp.ID)
-	close(stop)
+	exitCode, err := containers.Wait(cli, resp.ID, stop)
 	if err != nil {
 		return nil, err
 	}
-	if status != 0 {
-		return nil, errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+	if exitCode != 0 {
+		return nil, fmt.Errorf("Build exited with non-zero status %d", exitCode)
 	}
-	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
+	fmt.Fprintf(out, "Build exited with status code %d", exitCode)
 
 	// @TODO allow configuration
 	dockerComposeRelFilePath := "docker-compose.yml"
@@ -205,14 +202,11 @@ func (b *Builder) dockerCompose(d *Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	return func() error {
-		fmt.Fprintln(out, "Starting up project...")
-		return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-	}, nil
+	return func() error { return b.run(ctx, cli, resp.ID, out) }, nil
 }
 
 // dockerBuild builds project from Dockerfile, and returns a callback function to deploy it
-func (b *Builder) dockerBuild(d *Config, cli *docker.Client,
+func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Building Dockerfile project...")
 	ctx := context.Background()
@@ -270,15 +264,12 @@ func (b *Builder) dockerBuild(d *Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	return func() error {
-		fmt.Fprintln(out, "Starting up project in container "+d.Name+"...")
-		return cli.ContainerStart(ctx, containerResp.ID, types.ContainerStartOptions{})
-	}, nil
+	return func() error { return b.run(ctx, cli, containerResp.ID, out) }, nil
 }
 
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
 // to build the user project.
-func (b *Builder) herokuishBuild(d *Config, cli *docker.Client,
+func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
 	out io.Writer) (func() error, error) {
 	fmt.Fprintln(out, "Setting up herokuish...")
 	ctx := context.Background()
@@ -317,15 +308,14 @@ func (b *Builder) herokuishBuild(d *Config, cli *docker.Client,
 	// Attach logs and report build progress until container exits
 	stop := make(chan struct{})
 	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
-	status, err := cli.ContainerWait(ctx, resp.ID)
-	close(stop)
+	exitCode, err := containers.Wait(cli, resp.ID, stop)
 	if err != nil {
 		return nil, err
 	}
-	if status != 0 {
-		return nil, errors.New("Build exited with non-zero status: " + strconv.FormatInt(status, 10))
+	if exitCode != 0 {
+		return nil, fmt.Errorf("Build exited with non-zero status %d", exitCode)
 	}
-	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status, 10))
+	fmt.Fprintf(out, "Build exited with status code %d", exitCode)
 
 	// Save build as new image and create a container
 	imgName := "inertia-build/" + d.Name
@@ -352,8 +342,12 @@ func (b *Builder) herokuishBuild(d *Config, cli *docker.Client,
 		return nil, errors.New(warnings)
 	}
 
-	fmt.Fprintln(out, "Starting up project in container "+d.Name+"...")
-	return func() error {
-		return cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-	}, nil
+	return func() error { return b.run(ctx, cli, resp.ID, out) }, nil
+}
+
+// run starts project and tracks all active project containers and pipes an error
+// to the returned channel if any container exits or errors.
+func (b *Builder) run(ctx context.Context, client *docker.Client, id string, out io.Writer) error {
+	fmt.Fprintln(out, "Starting up project...")
+	return client.ContainerStart(ctx, id, types.ContainerStartOptions{})
 }

@@ -8,12 +8,11 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
-	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestContainerLogs(t *testing.T) {
-	cli, err := docker.NewEnvClient()
+	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
@@ -22,7 +21,7 @@ func TestContainerLogs(t *testing.T) {
 }
 
 func TestStreamContainerLogs(t *testing.T) {
-	cli, err := docker.NewEnvClient()
+	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
@@ -34,7 +33,7 @@ func TestStreamContainerLogs(t *testing.T) {
 }
 
 func TestGetActiveContainers(t *testing.T) {
-	cli, err := docker.NewEnvClient()
+	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
@@ -43,7 +42,7 @@ func TestGetActiveContainers(t *testing.T) {
 }
 
 func TestPrune(t *testing.T) {
-	cli, err := docker.NewEnvClient()
+	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
@@ -52,7 +51,7 @@ func TestPrune(t *testing.T) {
 }
 
 func TestPruneAll(t *testing.T) {
-	cli, err := docker.NewEnvClient()
+	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 

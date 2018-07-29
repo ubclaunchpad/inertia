@@ -1,6 +1,7 @@
 package project
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -8,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
@@ -21,7 +24,7 @@ import (
 // Builder builds projects and returns a callback that can be used to deploy the project.
 // No relation to Bob the Builder, though a Bob did write this.
 type Builder interface {
-	Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error)
+	Build(string, build.Config, *docker.Client, io.Writer) (func() error, error)
 	GetBuildStageName() string
 	StopContainers(*docker.Client, io.Writer) error
 	Prune(*docker.Client, io.Writer) error
@@ -30,21 +33,25 @@ type Builder interface {
 
 // Deployer manages the deployed user project
 type Deployer interface {
-	Deploy(*docker.Client, io.Writer, DeployOptions) error
+	Deploy(*docker.Client, io.Writer, DeployOptions) (func() error, error)
+	Initialize(cfg DeploymentConfig, out io.Writer) error
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
 	Prune(*docker.Client, io.Writer) error
-	GetStatus(*docker.Client) (*common.DeploymentStatus, error)
+	GetStatus(*docker.Client) (common.DeploymentStatus, error)
 
 	SetConfig(DeploymentConfig)
 	GetBranch() string
 	CompareRemotes(string) error
 
 	GetDataManager() (*DeploymentDataManager, bool)
+
+	Watch(*docker.Client) (<-chan string, <-chan error)
 }
 
 // Deployment represents the deployed project
 type Deployment struct {
+	active    bool
 	directory string
 
 	project       string
@@ -63,60 +70,50 @@ type Deployment struct {
 
 // DeploymentConfig is used to configure Deployment
 type DeploymentConfig struct {
-	ProjectDirectory string
-	ProjectName      string
-	BuildType        string
-	BuildFilePath    string
-	RemoteURL        string
-	Branch           string
-	PemFilePath      string
-	DatabasePath     string
+	ProjectName   string
+	BuildType     string
+	BuildFilePath string
+	RemoteURL     string
+	Branch        string
+	PemFilePath   string
 }
 
 // NewDeployment creates a new deployment
-func NewDeployment(builder Builder, cfg DeploymentConfig, out io.Writer) (*Deployment, error) {
-	common.RemoveContents(cfg.ProjectDirectory)
-
-	// Set up git repository
-	pemFile, err := os.Open(cfg.PemFilePath)
-	if err != nil {
-		return nil, err
-	}
-	authMethod, err := crypto.GetGithubKey(pemFile)
-	if err != nil {
-		return nil, err
-	}
-	repo, err := git.InitializeRepository(
-		cfg.ProjectDirectory, cfg.RemoteURL, cfg.Branch, authMethod, out,
-	)
-	if err != nil {
-		return nil, err
-	}
-
+func NewDeployment(projectDirectory, databasePath string, builder Builder) (*Deployment, error) {
 	// Set up deployment database
-	manager, err := newDataManager(cfg.DatabasePath)
+	manager, err := newDataManager(databasePath)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create deployment
 	return &Deployment{
-		// Properties
-		directory: cfg.ProjectDirectory,
-		project:   cfg.ProjectName,
-		branch:    cfg.Branch,
-		buildType: cfg.BuildType,
-
-		// Functions
-		builder: builder,
-
-		// Repository
-		auth: authMethod,
-		repo: repo,
-
-		// Persistent data manager
+		directory:   projectDirectory,
+		builder:     builder,
 		dataManager: manager,
 	}, nil
+}
+
+// Initialize sets up deployment repository
+func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
+	common.RemoveContents(d.directory)
+	d.SetConfig(cfg)
+
+	// Retrieve authentication
+	pemFile, err := os.Open(cfg.PemFilePath)
+	if err != nil {
+		return err
+	}
+	d.auth, err = crypto.GetGithubKey(pemFile)
+	if err != nil {
+		return err
+	}
+
+	// Initialize repository
+	d.repo, err = git.InitializeRepository(
+		d.directory, cfg.RemoteURL, cfg.Branch, d.auth, out,
+	)
+	return err
 }
 
 // SetConfig updates the deployment's configuration. Only supports
@@ -143,7 +140,7 @@ type DeployOptions struct {
 
 // Deploy will update, build, and deploy the project
 func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
-	opts DeployOptions) error {
+	opts DeployOptions) (func() error, error) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	fmt.Println(out, "Preparing to deploy project")
@@ -152,7 +149,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	if !opts.SkipUpdate {
 		err := git.UpdateRepository(d.directory, d.repo, d.branch, d.auth, out)
 		if err != nil {
-			return err
+			return func() error { return nil }, err
 		}
 	}
 
@@ -162,7 +159,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	// Kill active project containers if there are any
 	err := d.builder.StopContainers(cli, out)
 	if err != nil {
-		return err
+		return func() error { return nil }, err
 	}
 
 	// Get config
@@ -173,13 +170,16 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	}
 
 	// Build project
-	deploy, err := d.builder.Build(strings.ToLower(d.buildType), conf, cli, out)
+	deploy, err := d.builder.Build(strings.ToLower(d.buildType), *conf, cli, out)
 	if err != nil {
-		return err
+		return func() error { return nil }, err
 	}
 
 	// Deploy
-	return deploy()
+	return func() error {
+		d.active = true
+		return deploy()
+	}, nil
 }
 
 // Down shuts down the deployment
@@ -202,9 +202,11 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	d.active = false
 
 	// Do a lite prune
-	return d.builder.Prune(cli, out)
+	d.builder.Prune(cli, out)
+	return nil
 }
 
 // Prune clears unused Docker assets
@@ -226,28 +228,36 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 }
 
 // GetStatus returns the status of the deployment
-func (d *Deployment) GetStatus(cli *docker.Client) (*common.DeploymentStatus, error) {
+func (d *Deployment) GetStatus(cli *docker.Client) (common.DeploymentStatus, error) {
+	var (
+		activeContainers     = make([]string, 0)
+		buildContainerActive = false
+		ignore               = map[string]bool{
+			"/inertia-daemon":                   true,
+			"/" + d.builder.GetBuildStageName(): true,
+		}
+	)
+
+	// No repository set up
+	if d.repo == nil {
+		return common.DeploymentStatus{Containers: activeContainers}, nil
+	}
+
 	// Get repository status
 	head, err := d.repo.Head()
 	if err != nil {
-		return nil, err
+		return common.DeploymentStatus{Containers: activeContainers}, err
 	}
 	commit, err := d.repo.CommitObject(head.Hash())
 	if err != nil {
-		return nil, err
+		return common.DeploymentStatus{Containers: activeContainers}, err
 	}
 
 	// Get containers, filtering out non-project containers
-	buildContainerActive := false
 	c, err := containers.GetActiveContainers(cli)
 	if err != nil && err != containers.ErrNoContainers {
-		return nil, err
+		return common.DeploymentStatus{Containers: activeContainers}, err
 	}
-	ignore := map[string]bool{
-		"/inertia-daemon":                   true,
-		"/" + d.builder.GetBuildStageName(): true,
-	}
-	activeContainers := make([]string, 0)
 	for _, container := range c {
 		if !ignore[container.Names[0]] {
 			activeContainers = append(activeContainers, container.Names[0])
@@ -258,7 +268,7 @@ func (d *Deployment) GetStatus(cli *docker.Client) (*common.DeploymentStatus, er
 		}
 	}
 
-	return &common.DeploymentStatus{
+	return common.DeploymentStatus{
 		Branch:               strings.TrimSpace(head.Name().Short()),
 		CommitHash:           strings.TrimSpace(head.Hash().String()),
 		CommitMessage:        strings.TrimSpace(commit.Message),
@@ -300,7 +310,6 @@ func (d *Deployment) GetDataManager() (manager *DeploymentDataManager, found boo
 func (d *Deployment) GetBuildConfiguration() (*build.Config, error) {
 	conf := &build.Config{
 		Name:           d.project,
-		Type:           d.buildType,
 		BuildFilePath:  d.buildFilePath,
 		BuildDirectory: d.directory,
 	}
@@ -314,4 +323,54 @@ func (d *Deployment) GetBuildConfiguration() (*build.Config, error) {
 		return conf, errors.New("no data manager")
 	}
 	return conf, nil
+}
+
+// Watch watches for container stops
+func (d *Deployment) Watch(client *docker.Client) (<-chan string, <-chan error) {
+	var (
+		ctx    = context.Background()
+		logsCh = make(chan string)
+		errCh  = make(chan error)
+	)
+
+	// Listen on channels
+	go func() {
+		defer close(errCh)
+
+		// Only listen for die events
+		eventsCh, eventsErrCh := client.Events(ctx,
+			types.EventsOptions{Filters: filters.NewArgs(
+				filters.KeyValuePair{Key: "event", Value: "die"}),
+			})
+
+		for {
+			select {
+			case err := <-eventsErrCh:
+				if err != nil {
+					errCh <- err
+					break
+				}
+
+			case status := <-eventsCh:
+				if status.Actor.Attributes != nil {
+					logsCh <- fmt.Sprintf("container %s (%s) has stopped", status.Actor.Attributes["name"], status.ID[:11])
+				} else {
+					logsCh <- fmt.Sprintf("container %s has stopped", status.ID[:11])
+				}
+
+				if d.active {
+					// Shut down all containers if one stops while project is active
+					d.active = false
+					logsCh <- "container stoppage was unexpected, project is active"
+					err := containers.StopActiveContainers(client, os.Stdout)
+					if err != nil {
+						logsCh <- ("error shutting down other active containers: " + err.Error())
+					}
+				}
+			}
+
+		}
+	}()
+
+	return logsCh, errCh
 }

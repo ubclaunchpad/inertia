@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
@@ -150,4 +151,20 @@ func PruneAll(docker *docker.Client, exceptions ...string) error {
 	docker.ContainersPrune(ctx, filters.Args{})
 	docker.VolumesPrune(ctx, filters.Args{})
 	return nil
+}
+
+// Wait blocks until given container ID stops
+func Wait(cli *docker.Client, id string, stop chan struct{}) (int64, error) {
+	var status container.ContainerWaitOKBody
+	statusCh, errCh := cli.ContainerWait(context.Background(), id, "")
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return 0, err
+		}
+	case status = <-statusCh:
+		// Exit log stream
+		close(stop)
+	}
+	return status.StatusCode, nil
 }
