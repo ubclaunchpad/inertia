@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"path"
-	"strconv"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -172,9 +171,9 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 	}
 	if status.StatusCode != 0 {
 		return nil, fmt.Errorf(
-			"Build exited with non-zero status %s", strconv.FormatInt(status.StatusCode, 10))
+			"Build exited with non-zero status %d", status.StatusCode)
 	}
-	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status.StatusCode, 10))
+	fmt.Fprintf(out, "Build exited with status code %d", status.StatusCode)
 
 	// @TODO allow configuration
 	dockerComposeRelFilePath := "docker-compose.yml"
@@ -330,9 +329,9 @@ func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
 	}
 	if status.StatusCode != 0 {
 		return nil, fmt.Errorf(
-			"Build exited with non-zero status %s", strconv.FormatInt(status.StatusCode, 10))
+			"Build exited with non-zero status %d", status.StatusCode)
 	}
-	fmt.Fprintln(out, "Build exited with status "+strconv.FormatInt(status.StatusCode, 10))
+	fmt.Fprintf(out, "Build exited with status code %d", status.StatusCode)
 
 	// Save build as new image and create a container
 	imgName := "inertia-build/" + d.Name
