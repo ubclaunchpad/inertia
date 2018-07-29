@@ -158,22 +158,14 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 	}
 	stop := make(chan struct{})
 	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
-	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, "")
-	var status container.ContainerWaitOKBody
-	select {
-	case err := <-errCh:
-		if err != nil {
-			return nil, err
-		}
-	case status = <-statusCh:
-		// Exit log stream
-		close(stop)
+	exitCode, err := containers.Wait(cli, resp.ID, stop)
+	if err != nil {
+		return nil, err
 	}
-	if status.StatusCode != 0 {
-		return nil, fmt.Errorf(
-			"Build exited with non-zero status %d", status.StatusCode)
+	if exitCode != 0 {
+		return nil, fmt.Errorf("Build exited with non-zero status %d", exitCode)
 	}
-	fmt.Fprintf(out, "Build exited with status code %d", status.StatusCode)
+	fmt.Fprintf(out, "Build exited with status code %d", exitCode)
 
 	// @TODO allow configuration
 	dockerComposeRelFilePath := "docker-compose.yml"
@@ -316,22 +308,14 @@ func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
 	// Attach logs and report build progress until container exits
 	stop := make(chan struct{})
 	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
-	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, "")
-	var status container.ContainerWaitOKBody
-	select {
-	case err := <-errCh:
-		if err != nil {
-			return nil, err
-		}
-	case status = <-statusCh:
-		// Exit log stream
-		close(stop)
+	exitCode, err := containers.Wait(cli, resp.ID, stop)
+	if err != nil {
+		return nil, err
 	}
-	if status.StatusCode != 0 {
-		return nil, fmt.Errorf(
-			"Build exited with non-zero status %d", status.StatusCode)
+	if exitCode != 0 {
+		return nil, fmt.Errorf("Build exited with non-zero status %d", exitCode)
 	}
-	fmt.Fprintf(out, "Build exited with status code %d", status.StatusCode)
+	fmt.Fprintf(out, "Build exited with status code %d", exitCode)
 
 	// Save build as new image and create a container
 	imgName := "inertia-build/" + d.Name
