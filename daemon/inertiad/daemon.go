@@ -93,14 +93,16 @@ func run(host, port, version string) {
 	println("Watching containers...")
 	go func() {
 		logsCh, errCh := deployment.Watch(cli)
-		select {
-		case err := <-errCh:
-			if err != nil {
-				println(err.Error())
-				return
+		for {
+			select {
+			case err := <-errCh:
+				if err != nil {
+					println(err.Error())
+					return
+				}
+			case event := <-logsCh:
+				println(event)
 			}
-		case event := <-logsCh:
-			println(event)
 		}
 	}()
 

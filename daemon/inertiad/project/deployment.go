@@ -329,37 +329,44 @@ func (d *Deployment) Watch(client *docker.Client) (<-chan string, <-chan error) 
 		errCh  = make(chan error)
 	)
 
-	defer close(errCh)
-
-	// Only listen for stop events
-	eventsCh, eventsErrCh := client.Events(ctx,
-		types.EventsOptions{Filters: filters.NewArgs(
-			filters.KeyValuePair{Key: "event", Value: "stop"}),
-		})
-
 	// Listen on channels
-	select {
-	case err := <-eventsErrCh:
-		if err != nil {
-			errCh <- err
-			break
-		}
+	go func() {
+		defer close(errCh)
 
-	case status := <-eventsCh:
-		if status.Actor.Attributes != nil {
-			logsCh <- fmt.Sprintf("container %s (%s) has stopped", status.Actor.Attributes["name"], status.ID)
-		} else {
-			logsCh <- fmt.Sprintf("container %s has stopped", status.ID)
-		}
+		// Only listen for die events
+		eventsCh, eventsErrCh := client.Events(ctx,
+			types.EventsOptions{Filters: filters.NewArgs(
+				filters.KeyValuePair{Key: "event", Value: "die"}),
+			})
 
-		if d.active {
-			// Shut down all containers if one stops while project is active
-			d.active = false
-			err := containers.StopActiveContainers(client, os.Stdout)
-			if err != nil {
-				logsCh <- ("error shutting down other active containers: " + err.Error())
+		for {
+			select {
+			case err := <-eventsErrCh:
+				if err != nil {
+					errCh <- err
+					break
+				}
+
+			case status := <-eventsCh:
+				if status.Actor.Attributes != nil {
+					logsCh <- fmt.Sprintf("container %s (%s) has stopped", status.Actor.Attributes["name"], status.ID[:11])
+				} else {
+					logsCh <- fmt.Sprintf("container %s has stopped", status.ID[:11])
+				}
+
+				if d.active {
+					// Shut down all containers if one stops while project is active
+					d.active = false
+					logsCh <- "container stoppage was unexpected, project is active"
+					err := containers.StopActiveContainers(client, os.Stdout)
+					if err != nil {
+						logsCh <- ("error shutting down other active containers: " + err.Error())
+					}
+				}
 			}
+
 		}
-	}
+	}()
+
 	return logsCh, errCh
 }
