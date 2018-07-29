@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
+	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia [remote] up'"
 )
 
 var (
