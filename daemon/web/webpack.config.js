@@ -54,6 +54,7 @@ const config = {
       template: './index.html',
       filename: 'index.html',
       inject: 'body',
+      favicon: 'assets/logo/favicon.ico',
     }),
   ],
 };
