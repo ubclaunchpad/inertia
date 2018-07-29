@@ -176,7 +176,10 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	}
 
 	// Deploy
-	return deploy, nil
+	return func() error {
+		d.active = true
+		return deploy()
+	}, nil
 }
 
 // Down shuts down the deployment
@@ -199,6 +202,7 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	d.active = false
 
 	// Do a lite prune
 	d.builder.Prune(cli, out)
