@@ -10,7 +10,7 @@ import (
 const (
 	msgBuildInProgress    = "It appears that your build is still in progress."
 	msgNoContainersActive = "No containers are active."
-	msgNoDeployment       = "No deployment found - try running 'inertia [VPS] up'"
+	msgNoDeployment       = "No deployment found - try running 'inertia [remote] up'"
 )
 
 func formatStatus(s *common.DeploymentStatus) string {
