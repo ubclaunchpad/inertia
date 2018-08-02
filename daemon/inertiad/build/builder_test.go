@@ -75,8 +75,7 @@ func TestBuilder_Build(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clean up before test
-			_, err = cli.ContainersPrune(context.Background(), filters.Args{})
-			assert.Nil(t, err)
+			cli.ContainersPrune(context.Background(), filters.Args{})
 			time.Sleep(5 * time.Second)
 
 			var (

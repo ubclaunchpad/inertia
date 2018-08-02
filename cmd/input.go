@@ -111,6 +111,7 @@ func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string
 	case "herokuish":
 		return
 	default:
+		println("Please enter the path to your build configuration file:")
 		_, err := fmt.Fscanln(in, &response)
 		if err != nil {
 			return "", "", errInvalidBuildFilePath
