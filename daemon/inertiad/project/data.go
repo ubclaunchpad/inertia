@@ -125,6 +125,10 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 
 func (c *DeploymentDataManager) destroy() error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		return tx.DeleteBucket(envVariableBucket)
+		if err := tx.DeleteBucket(envVariableBucket); err != nil {
+			return err
+		}
+		_, err := tx.CreateBucket(envVariableBucket)
+		return err
 	})
 }
