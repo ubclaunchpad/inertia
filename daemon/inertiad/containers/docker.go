@@ -1,11 +1,18 @@
 package containers
 
-import docker "github.com/docker/docker/client"
+import (
+	"context"
 
-// MaxDockerVersion is the maximum supported API version
-const MaxDockerVersion = "1.37"
+	docker "github.com/docker/docker/client"
+)
 
-// NewDockerClient creates a new Docker Client set to a predefined Docker API
+// NewDockerClient creates a new Docker Client from ENV values and negotiates
+// the correct API version
 func NewDockerClient() (*docker.Client, error) {
-	return docker.NewClientWithOpts(docker.WithVersion(MaxDockerVersion))
+	c, err := docker.NewEnvClient()
+	if err != nil {
+		return nil, err
+	}
+	c.NegotiateAPIVersion(context.Background())
+	return c, nil
 }
