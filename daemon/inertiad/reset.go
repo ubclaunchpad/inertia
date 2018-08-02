@@ -34,7 +34,6 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
-	deployment = nil
 
 	logger.WriteSuccess("Project removed from remote.", http.StatusOK)
 }
