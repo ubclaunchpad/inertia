@@ -41,6 +41,13 @@ func NewEC2ProvisionerFromEnv(out ...io.Writer) (*EC2Provisioner, error) {
 	return prov, prov.init(credentials.NewEnvCredentials(), out)
 }
 
+// NewEC2ProvisionerFromProfile creates a client to interact with Amazon EC2 using
+// credentials for user (optional) from given profile file
+func NewEC2ProvisionerFromProfile(path, user string, out ...io.Writer) (*EC2Provisioner, error) {
+	prov := &EC2Provisioner{}
+	return prov, prov.init(credentials.NewSharedCredentials(path, user), out)
+}
+
 // GetUser returns the user attached to given credentials
 func (p *EC2Provisioner) GetUser() string { return p.user }
 
