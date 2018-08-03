@@ -94,10 +94,13 @@ func StopActiveContainers(docker *docker.Client, out io.Writer) error {
 		if container.Names[0] != "/inertia-daemon" {
 			fmt.Fprintln(out, "Stopping "+container.Names[0]+"...")
 			timeout := 10 * time.Second
-			err := docker.ContainerStop(ctx, container.ID, &timeout)
-			if err != nil {
+			if err := docker.ContainerStop(ctx, container.ID, &timeout); err != nil {
 				return err
 			}
+
+			// Archive container
+			docker.ContainerRename(
+				ctx, container.ID, fmt.Sprintf("%s-%d", container.Names[0], time.Now().Unix()))
 		}
 	}
 	return nil
