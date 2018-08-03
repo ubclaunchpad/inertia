@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	docker "github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
@@ -151,7 +152,7 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 	}
 
 	// Start container to build project
-	fmt.Fprintln(out, "Building project...")
+	fmt.Fprintf(out, "Building project %s...\n", d.Name)
 	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	if err != nil {
 		return nil, err
@@ -208,11 +209,14 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 // dockerBuild builds project from Dockerfile, and returns a callback function to deploy it
 func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	out io.Writer) (func() error, error) {
-	fmt.Fprintln(out, "Building Dockerfile project...")
-	ctx := context.Background()
-	buildCtx := bytes.NewBuffer(nil)
-	err := buildTar(d.BuildDirectory, buildCtx)
-	if err != nil {
+	fmt.Fprintf(out, "Building Dockerfile project %s...\n", d.Name)
+
+	var (
+		ctx      = context.Background()
+		buildCtx = bytes.NewBuffer(nil)
+	)
+
+	if err := buildTar(d.BuildDirectory, buildCtx); err != nil {
 		return nil, err
 	}
 
@@ -243,6 +247,16 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	buildResp.Body.Close()
 	fmt.Fprintf(out, "%s (%s) build has exited\n", imageName, buildResp.OSType)
 
+	// Get image details
+	image, _, err := cli.ImageInspectWithRaw(ctx, imageName)
+	if err != nil {
+		return nil, err
+	}
+	portMap := nat.PortMap{}
+	for p := range image.Config.ExposedPorts {
+		portMap[p] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: p.Port()}}
+	}
+
 	// Create container from image
 	containerResp, err := cli.ContainerCreate(
 		ctx, &container.Config{
@@ -250,9 +264,8 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 			Env:   d.EnvValues,
 		},
 		&container.HostConfig{
-			AutoRemove: true,
-		}, nil, d.Name,
-	)
+			PortBindings: portMap,
+		}, nil, d.Name)
 	if err != nil {
 		if strings.Contains(err.Error(), "No such image") {
 			return nil, errors.New("Image build was unsuccessful")
@@ -299,7 +312,7 @@ func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
 	}
 
 	// Start the herokuish container to build project
-	fmt.Fprintln(out, "Building project...")
+	fmt.Fprintf(out, "Building project %s...\n", d.Name)
 	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 	if err != nil {
 		return nil, err
