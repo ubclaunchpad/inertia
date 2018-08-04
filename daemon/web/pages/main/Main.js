@@ -70,22 +70,6 @@ class MainWrapper extends React.Component {
     this.props.history.push('/login');
   }
 
-  async handleGetStatus() {
-    const response = await InertiaAPI.getRemoteStatus();
-    if (response.status !== 200) return new Error('bad response: ' + response);
-    const status = await response.json();
-    this.setState({
-      remoteVersion: status.version,
-      repoBranch: status.branch,
-      repoBuilding: status.build_active,
-      repoBuildType: status.build_type,
-      repoCommitHash: status.commit_hash,
-      repoCommitMessage: status.commit_message,
-      containers: status.containers,
-    });
-    return null;
-  }
-
   render() {
     return (
       <div style={styles.container}>
@@ -119,7 +103,8 @@ class MainWrapper extends React.Component {
               <Route
                 exact
                 path={`${this.props.match.url}/dashboard`}
-                component={() => <Dashboard />}               />
+                component={() => <Dashboard />}
+              />
               <Route
                 exact
                 path={`${this.props.match.url}/containers`}

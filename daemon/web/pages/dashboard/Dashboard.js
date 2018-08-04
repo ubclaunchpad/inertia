@@ -88,7 +88,7 @@ class DashboardWrapper extends React.Component {
             </TableRow>
           </TableHeader>
           <TableBody>
-            { containers.map(container => (
+            {containers.map(container => (
               <TableRowExpandable
                 key={container.name}
                 height={300}
@@ -106,6 +106,7 @@ class DashboardWrapper extends React.Component {
     );
   }
 }
+
 DashboardWrapper.propTypes = {
   logs: PropTypes.array,
   containers: PropTypes.arrayOf(PropTypes.shape({
