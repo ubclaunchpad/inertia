@@ -3,8 +3,10 @@ package build
 import (
 	"context"
 	"io"
+	"math/rand"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -54,16 +56,19 @@ func TestBuilder_Build(t *testing.T) {
 	}
 
 	type args struct {
-		buildType string
+		buildType     string
+		buildFilePath string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name           string
+		args           args
+		wantErr        bool
+		expectedErrMsg string
 	}{
-		{"type docker-compose", args{"docker-compose"}, false},
-		{"type dockerfile", args{"dockerfile"}, false},
-		{"type herokuish", args{"herokuish"}, false},
+		{"type docker-compose", args{"docker-compose", ""}, false, ""},
+		{"type dockerfile", args{"dockerfile", ""}, false, ""},
+		{"type dockerfile should fail", args{"dockerfile", "fail.Dockerfile"}, true, "image build failed"},
+		{"type herokuish", args{"herokuish", ""}, false, ""},
 	}
 
 	// Setup
@@ -79,7 +84,8 @@ func TestBuilder_Build(t *testing.T) {
 			time.Sleep(5 * time.Second)
 
 			var (
-				testProjectName = "test_" + tt.args.buildType
+				// Generate random project name
+				testProjectName = "test_" + tt.args.buildType + "_" + strconv.Itoa(rand.Intn(100))
 				testProjectDir  = path.Join(
 					os.Getenv("GOPATH"),
 					"/src/github.com/ubclaunchpad/inertia/test/build/"+tt.args.buildType,
@@ -95,16 +101,15 @@ func TestBuilder_Build(t *testing.T) {
 			// Run build
 			deploy, err := b.Build(tt.args.buildType, Config{
 				Name:           testProjectName,
+				BuildFilePath:  tt.args.buildFilePath,
 				BuildDirectory: testProjectDir,
 			}, cli, out)
-			if err != nil {
-				if tt.wantErr {
-					t.Errorf("Builder.Build() error = %v, wantErr %v", err, tt.wantErr)
-				} else {
-					t.Errorf("unexpected error %v", err)
-				}
+			if tt.wantErr {
+				assert.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErrMsg)
 				return
 			}
+			assert.Nil(t, err)
 
 			// Run containers
 			err = deploy()
