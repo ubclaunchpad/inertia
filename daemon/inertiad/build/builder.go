@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	docker "github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
@@ -89,6 +90,7 @@ func (b *Builder) Build(buildType string, d Config,
 	}
 
 	// Build project
+	reportDeployInit(buildType, d.Name, out)
 	deploy, err := builder(d, cli, out)
 	if err != nil {
 		return func() error { return nil }, err
@@ -151,30 +153,22 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 	}
 
 	// Start container to build project
-	fmt.Fprintln(out, "Building project...")
-	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-	if err != nil {
+	reportProjectBuildBegin(d.Name, out)
+	if err := containers.StartAndWait(cli, resp.ID, out); err != nil {
 		return nil, err
 	}
-	stop := make(chan struct{})
-	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
-	exitCode, err := containers.Wait(cli, resp.ID, stop)
-	if err != nil {
-		return nil, err
-	}
-	if exitCode != 0 {
-		return nil, fmt.Errorf("Build exited with non-zero status %d", exitCode)
-	}
-	fmt.Fprintf(out, "Build exited with status code %d", exitCode)
+	reportProjectBuildComplete(d.Name, out)
 
 	// @TODO allow configuration
-	dockerComposeRelFilePath := "docker-compose.yml"
-	dockerComposeFilePath := path.Join(
-		getTrueDirectory(d.BuildDirectory), dockerComposeRelFilePath,
+	var (
+		dockerComposeRelFilePath = "docker-compose.yml"
+		dockerComposeFilePath    = path.Join(
+			getTrueDirectory(d.BuildDirectory), dockerComposeRelFilePath,
+		)
 	)
 
 	// Set up docker-compose up
-	fmt.Fprintln(out, "Preparing to start project...")
+	reportProjectContainerCreateBegin(d.Name, out)
 	resp, err = cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      b.dockerComposeVersion,
@@ -201,18 +195,21 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 		warnings := strings.Join(resp.Warnings, "\n")
 		return nil, errors.New(warnings)
 	}
+	reportProjectContainerCreateComplete(d.Name, out)
 
-	return func() error { return b.run(ctx, cli, resp.ID, out) }, nil
+	return func() error { return b.run(ctx, cli, d.Name, resp.ID, out) }, nil
 }
 
 // dockerBuild builds project from Dockerfile, and returns a callback function to deploy it
 func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	out io.Writer) (func() error, error) {
-	fmt.Fprintln(out, "Building Dockerfile project...")
-	ctx := context.Background()
-	buildCtx := bytes.NewBuffer(nil)
-	err := buildTar(d.BuildDirectory, buildCtx)
-	if err != nil {
+	var (
+		ctx      = context.Background()
+		buildCtx = bytes.NewBuffer(nil)
+	)
+
+	// Create build context
+	if err := buildTar(d.BuildDirectory, buildCtx); err != nil {
 		return nil, err
 	}
 
@@ -223,6 +220,7 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	}
 
 	// Build image
+	reportProjectBuildBegin(d.Name, out)
 	imageName := "inertia-build/" + d.Name
 	buildResp, err := cli.ImageBuild(
 		ctx, buildCtx, types.ImageBuildOptions{
@@ -235,24 +233,33 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	if err != nil {
 		return nil, err
 	}
-
-	// Output build progress
 	stop := make(chan struct{})
 	log.FlushRoutine(out, buildResp.Body, stop)
 	close(stop)
 	buildResp.Body.Close()
-	fmt.Fprintf(out, "%s (%s) build has exited\n", imageName, buildResp.OSType)
+	// todo: detect failures
+	reportProjectBuildComplete(d.Name, out)
+
+	// Get image details
+	image, _, err := cli.ImageInspectWithRaw(ctx, imageName)
+	if err != nil {
+		return nil, err
+	}
+	portMap := nat.PortMap{}
+	for p := range image.Config.ExposedPorts {
+		portMap[p] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: p.Port()}}
+	}
 
 	// Create container from image
+	reportProjectContainerCreateBegin(d.Name, out)
 	containerResp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image: imageName,
 			Env:   d.EnvValues,
 		},
 		&container.HostConfig{
-			AutoRemove: true,
-		}, nil, d.Name,
-	)
+			PortBindings: portMap,
+		}, nil, d.Name)
 	if err != nil {
 		if strings.Contains(err.Error(), "No such image") {
 			return nil, errors.New("Image build was unsuccessful")
@@ -263,8 +270,9 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 		warnings := strings.Join(containerResp.Warnings, "\n")
 		return nil, errors.New(warnings)
 	}
+	reportProjectContainerCreateComplete(d.Name, out)
 
-	return func() error { return b.run(ctx, cli, containerResp.ID, out) }, nil
+	return func() error { return b.run(ctx, cli, d.Name, containerResp.ID, out) }, nil
 }
 
 // herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
@@ -299,27 +307,15 @@ func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
 	}
 
 	// Start the herokuish container to build project
-	fmt.Fprintln(out, "Building project...")
-	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-	if err != nil {
+	reportProjectBuildBegin(d.Name, out)
+	if err := containers.StartAndWait(cli, resp.ID, out); err != nil {
 		return nil, err
 	}
-
-	// Attach logs and report build progress until container exits
-	stop := make(chan struct{})
-	go containers.StreamContainerLogs(cli, resp.ID, out, stop)
-	exitCode, err := containers.Wait(cli, resp.ID, stop)
-	if err != nil {
-		return nil, err
-	}
-	if exitCode != 0 {
-		return nil, fmt.Errorf("Build exited with non-zero status %d", exitCode)
-	}
-	fmt.Fprintf(out, "Build exited with status code %d", exitCode)
+	reportProjectBuildComplete(d.Name, out)
 
 	// Save build as new image and create a container
 	imgName := "inertia-build/" + d.Name
-	fmt.Fprintln(out, "Saving build...")
+	reportProjectContainerCreateBegin(d.Name, out)
 	_, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
 		Reference: imgName,
 	})
@@ -341,13 +337,14 @@ func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
 		warnings := strings.Join(resp.Warnings, "\n")
 		return nil, errors.New(warnings)
 	}
+	reportProjectContainerCreateComplete(d.Name, out)
 
-	return func() error { return b.run(ctx, cli, resp.ID, out) }, nil
+	return func() error { return b.run(ctx, cli, d.Name, resp.ID, out) }, nil
 }
 
 // run starts project and tracks all active project containers and pipes an error
 // to the returned channel if any container exits or errors.
-func (b *Builder) run(ctx context.Context, client *docker.Client, id string, out io.Writer) error {
-	fmt.Fprintln(out, "Starting up project...")
+func (b *Builder) run(ctx context.Context, client *docker.Client, name, id string, out io.Writer) error {
+	reportProjectStartup(name, out)
 	return client.ContainerStart(ctx, id, types.ContainerStartOptions{})
 }

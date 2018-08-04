@@ -68,7 +68,7 @@ func (l *DaemonLogger) Println(a interface{}) {
 // WriteErr directs message and status to http.Error when appropriate
 func (l *DaemonLogger) WriteErr(msg string, status int) {
 	fmt.Fprintf(l.Writer, "[ERROR %s] %s\n", strconv.Itoa(status), msg)
-	if l.socket == nil && !l.httpStream {
+	if l.socket == nil {
 		http.Error(l.httpWriter, msg, status)
 	}
 }
