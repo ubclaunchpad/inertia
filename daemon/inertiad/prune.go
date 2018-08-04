@@ -33,5 +33,5 @@ func pruneHandler(w http.ResponseWriter, r *http.Request) {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
-	logger.WriteSuccess("Project removed from remote.", http.StatusOK)
+	logger.WriteSuccess("Docker assets have been pruned.", http.StatusOK)
 }
