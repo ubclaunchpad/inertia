@@ -9,27 +9,22 @@
 <p align="center">
   <a href="https://travis-ci.org/ubclaunchpad/inertia">
     <img src="https://travis-ci.org/ubclaunchpad/inertia.svg?branch=master"
-      alt="Build Status" />
+      alt="Travis Build Status" />
+  </a>
+
+  <a href="https://ci.appveyor.com/project/ubclaunchpad/inertia">
+    <img src="https://ci.appveyor.com/api/projects/status/2fll6p9677bujb7q/branch/master?svg=true"
+      alt="Appveyor Build Status" />
   </a>
 
   <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia"
       alt="Clean code" />
   </a>
-  
-  <a href="https://github.com/ubclaunchpad/inertia/blob/master/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" 
-      alt="Contributions welcome"/>
-  </a>
 
   <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
     <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg"
        alt="GoDocs available" />
-  </a>
-  
-  <a href="https://microbadger.com/images/ubclaunchpad/inertia">
-    <img src="https://img.shields.io/microbadger/image-size/ubclaunchpad/inertia.svg" 
-       alt="Docker image" />
   </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases/latest">

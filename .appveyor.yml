@@ -1,0 +1,46 @@
+version: "{build}-{branch}"
+
+# Source Config
+
+clone_folder: c:\gopath\src\github.com\ubclaunchpad\inertia
+
+# Build host
+
+environment:
+  GOPATH: c:\gopath
+  DEPTESTBYPASS501: 1
+  GOVERSION: "1.10"
+
+init:
+  - git config --global core.autocrlf input
+
+# Build
+
+install:
+  # Install the specific Go version.
+  - rmdir c:\go /s /q
+  - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
+  - msiexec /i go%GOVERSION%.windows-amd64.msi /q
+  - set Path=c:\go\bin;c:\gopath\bin;%PATH%
+  - go version
+  - go env
+  - go get -u github.com/golang/dep/cmd/dep
+  - dep ensure
+
+deploy: false
+
+build_script:
+  - ps: Write-Host "$env:APPVEYOR_PULL_REQUEST_NUMBER"
+  - ps: Write-Host "$env:APPVEYOR_REPO_BRANCH $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"
+  - ps: if (!$env:APPVEYOR_PULL_REQUEST_NUMBER) { git checkout -q $env:APPVEYOR_REPO_BRANCH }
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER) { git checkout -q $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH }
+  - git branch
+  - go build
+
+test_script:
+  - go test ./cfg -short --cover
+  - go test ./client -short --cover
+  - go test ./cmd -short --cover
+  - go test ./common -short --cover
+  - go test ./local -short --cover
+  - go test ./provision -short --cover
