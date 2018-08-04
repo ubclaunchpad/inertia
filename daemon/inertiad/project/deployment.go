@@ -147,8 +147,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 
 	// Update repository
 	if !opts.SkipUpdate {
-		err := git.UpdateRepository(d.directory, d.repo, d.branch, d.auth, out)
-		if err != nil {
+		if err := git.UpdateRepository(d.directory, d.repo, d.branch, d.auth, out); err != nil {
 			return func() error { return nil }, err
 		}
 	}
