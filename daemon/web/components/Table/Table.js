@@ -19,7 +19,7 @@ export const TableRow = ({ style, children }) => (
 );
 TableRow.propTypes = {
   style: PropTypes.object,
-  children: PropTypes.arrayOf(TableCell),
+  children: PropTypes.any,
 };
 
 export class TableRowExpandable extends React.Component {
@@ -40,11 +40,13 @@ export class TableRowExpandable extends React.Component {
       style,
       children,
       panel,
+      onClick,
     } = this.props;
 
     return (
       <div
         className="table-tr-expandable"
+        onClick={onClick}
         style={style}>
         <div
           className={`table-tr-expandable-inner ${this.state.expanded && 'expanded'}`}
@@ -65,6 +67,7 @@ TableRowExpandable.propTypes = {
   children: PropTypes.arrayOf(TableCell),
   panel: PropTypes.any,
   height: PropTypes.number,
+  onClick: PropTypes.func,
 };
 
 export const TableHeader = ({ children, style }) => (
