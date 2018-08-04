@@ -178,14 +178,10 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 
 	// Loop until intance is running
 	fmt.Fprintln(p.out, "Checking status of requested instance...")
-	var (
-		attempts = 0
-		instance ec2.Instance
-	)
+	var instance ec2.Instance
 	for {
 		// Wait briefly between checks
 		time.Sleep(3 * time.Second)
-		attempts++
 
 		// Request instance status
 		result, err := p.client.DescribeInstances(&ec2.DescribeInstancesInput{
