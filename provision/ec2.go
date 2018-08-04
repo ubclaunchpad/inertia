@@ -20,6 +20,11 @@ import (
 	"github.com/ubclaunchpad/inertia/local"
 )
 
+const (
+	// Code returned by AWS when EC2 instance is successfully created
+	codeEC2InstanceStarted = 16
+)
+
 // EC2Provisioner creates Amazon EC2 instances
 type EC2Provisioner struct {
 	out     io.Writer
@@ -207,7 +212,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		}
 
 		// Code 16 means instance has started, and we can continue!
-		if s.Code != nil && *s.Code == 16 {
+		if s.Code != nil && *s.Code == codeEC2InstanceStarted {
 			fmt.Fprintln(p.out, "Instance is running!")
 			instance = *result.Reservations[0].Instances[0]
 			break
