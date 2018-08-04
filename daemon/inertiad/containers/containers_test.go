@@ -46,8 +46,7 @@ func TestPrune(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	err = Prune(cli)
-	assert.Nil(t, err)
+	Prune(cli)
 }
 
 func TestPruneAll(t *testing.T) {
@@ -55,8 +54,7 @@ func TestPruneAll(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	err = PruneAll(cli, "gliderlabs/herokuish", "docker/compose")
-	assert.Nil(t, err)
+	PruneAll(cli, "gliderlabs/herokuish", "docker/compose")
 
 	// Exceptions should still be present
 	found := false
