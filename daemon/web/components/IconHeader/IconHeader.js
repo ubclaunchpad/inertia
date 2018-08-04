@@ -9,8 +9,8 @@ const icons = {
   settings: <i className="fas fa-cog" />,
 };
 
-const IconHeader = ({ title, type }) => (
-  <div className="iconheader">
+const IconHeader = ({ title, type, style }) => (
+  <div className="iconheader" style={style}>
     {icons[type]}
     <h1 className="header">{title}</h1>
   </div>
