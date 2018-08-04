@@ -3,15 +3,23 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import InertiaAPI from '../../common/API';
-import LogView from '../../components/LogView';
 import * as dashboardActions from '../../actions/dashboard';
+import TerminalView from '../../components/TerminalView/TerminalView';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+  TableRowExpandable,
+} from '../../components/Table/Table';
+import IconHeader from '../../components/IconHeader/IconHeader';
 
 const styles = {
   container: {
     display: 'flex',
-    height: '100%',
-    alignItems: 'center',
+    flexFlow: 'column',
+    height: 'min-content',
     justifyContent: 'center',
     position: 'relative',
   },
@@ -22,116 +30,106 @@ const styles = {
   },
 };
 
-function promiseState(p) {
-  const t = {};
-
-  return Promise.race([p, t])
-    .then(v => (v === t ? 'pending' : ('fulfilled', () => 'rejected')));
-}
-
 class DashboardWrapper extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      errored: false,
-      logEntries: [],
-      logReader: null,
-    };
-    this.getLogs = this.getLogs.bind(this);
-    this.getMessage = this.getMessage.bind(this);
-  }
-
-  componentDidMount() {
-    this.getLogs();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.container !== this.props.container) {
-      this.getLogs();
-    }
-  }
-
-  async getLogs() {
-    if (this.state.logReader) await this.state.logReader.cancel();
-    this.setState({
-      errored: false,
-      logEntries: [],
-      logReader: null,
-    });
-    try {
-      let resp;
-      if (!this.props.container) {
-        resp = await InertiaAPI.getContainerLogs();
-      } else {
-        resp = await InertiaAPI.getContainerLogs(this.props.container);
-      }
-      if (resp.status !== 200) {
-        this.setState({
-          errored: true,
-          logEntries: [],
-        });
-      }
-
-      const reader = resp.body.getReader();
-      this.setState({ logReader: reader });
-
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '';
-      const stream = () => promiseState(reader.closed)
-        .then((s) => {
-          if (s === 'pending') {
-            return reader.read()
-              .then((data) => {
-                const chunk = decoder.decode(data.value);
-                const parts = chunk.split('\n')
-                  .filter(c => c);
-
-                parts[0] = buffer + parts[0];
-                buffer = '';
-                if (!chunk.endsWith('\n')) {
-                  buffer = parts.pop();
-                }
-
-                this.setState({
-                  logEntries: this.state.logEntries.concat(parts),
-                });
-
-                return stream();
-              });
-          }
-          return null;
-        });
-      stream();
-    } catch (e) {
-      // TODO: Log error message
-    }
-  }
-
-  getMessage() {
-    if (this.state.errored) {
-      return <p style={styles.underConstruction}>Yikes, something went wrong</p>;
-    } else if (this.state.logEntries.length === 0) {
-      return <p style={styles.underConstruction}>No logs to show</p>;
-    }
-    return null;
+  componentWillMount() {
+    this.props.handleGetProjectDetails();
+    this.props.handleGetContainers();
   }
 
   render() {
+    const {
+      name,
+      branch,
+      commit,
+      message,
+      buildType,
+    } = this.props.project;
+    const {
+      containers,
+      handleGetLogs,
+      logs,
+    } = this.props;
+
     return (
       <div style={styles.container}>
-        {this.getMessage()}
-        <LogView logs={this.state.logEntries} />
+        <IconHeader title={branch} type="dashboard" />
+
+        <Table style={{ margin: '0 30px 10px 30px' }}>
+          <TableHeader>
+            <TableRow>
+              <TableCell>{name}</TableCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell>Branch</TableCell>
+              <TableCell>{branch}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Commit</TableCell>
+              <TableCell>{commit}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Message</TableCell>
+              <TableCell>{message}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Build Type</TableCell>
+              <TableCell>{buildType}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+        <Table style={{ margin: '0 30px' }}>
+          <TableHeader>
+            <TableRow>
+              <TableCell style={{ flex: '0 0 30%' }}>Type/Name</TableCell>
+              <TableCell style={{ flex: '0 0 20%' }}>Status</TableCell>
+              <TableCell>Last Updated</TableCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            { containers.map(container => (
+              <TableRowExpandable
+                key={container.name}
+                height={300}
+                onClick={() => handleGetLogs({ container: container.name })}
+                panel={<TerminalView logs={logs} />}>
+                <TableCell style={{ flex: '0 0 30%' }}>Commit</TableCell>
+                <TableCell style={{ flex: '0 0 20%' }} />
+                <TableCell>{commit}</TableCell>
+              </TableRowExpandable>
+            ))
+            }
+          </TableBody>
+        </Table>
       </div>
     );
   }
 }
 DashboardWrapper.propTypes = {
-  container: PropTypes.string,
+  logs: PropTypes.array,
+  containers: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    status: PropTypes.string.isRequired,
+    lastUpdated: PropTypes.string.isRequired,
+  })),
+  project: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    branch: PropTypes.string.isRequired,
+    commit: PropTypes.string.isRequired,
+    message: PropTypes.string.isRequired,
+    buildType: PropTypes.string.isRequired,
+  }),
+  handleGetLogs: PropTypes.func,
+  handleGetContainers: PropTypes.func,
+  handleGetProjectDetails: PropTypes.func,
 };
 
 const mapStateToProps = ({ Dashboard }) => {
   return {
-    testState: Dashboard.testState,
+    project: Dashboard.project,
+    logs: Dashboard.logs,
+    containers: Dashboard.containers,
   };
 };
 
