@@ -171,3 +171,23 @@ func Wait(cli *docker.Client, id string, stop chan struct{}) (int64, error) {
 	}
 	return status.StatusCode, nil
 }
+
+// StartAndWait starts and waits for container to exit
+func StartAndWait(cli *docker.Client, containerID string, out io.Writer) error {
+	ctx := context.Background()
+	if err := cli.ContainerStart(ctx, containerID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	stop := make(chan struct{})
+	go StreamContainerLogs(cli, containerID, out, stop)
+	exitCode, err := Wait(cli, containerID, stop)
+	if err != nil {
+		return err
+	}
+	if exitCode != 0 {
+		return fmt.Errorf("Container exited with non-zero status %d", exitCode)
+	}
+
+	return nil
+}
