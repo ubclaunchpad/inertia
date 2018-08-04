@@ -89,8 +89,7 @@ This ensures that your project ports are properly exposed and externally accessi
 				log.Fatal(err)
 			}
 		} else {
-			var id, key string
-			id, key, err = enterEC2CredentialsWalkthrough(os.Stdin)
+			id, key, err := enterEC2CredentialsWalkthrough(os.Stdin)
 			if err != nil {
 				log.Fatal(err)
 			}
