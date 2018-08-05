@@ -9,9 +9,9 @@ import {
 } from 'react-router-dom';
 
 import InertiaAPI from '../../common/API';
-import Containers from '../containers/Containers';
-import Dashboard from '../dashboard/Dashboard';
-import Settings from '../settings/Settings';
+import Containers from '../Containers';
+import Dashboard from '../Dashboard';
+import Settings from '../Settings';
 import * as mainActions from '../../actions/main';
 import Footer from '../../components/Footer';
 
