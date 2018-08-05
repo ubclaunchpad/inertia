@@ -62,15 +62,17 @@ class MainWrapper extends React.Component {
   }
 
   async handleLogout() {
+    const { history } = this.props;
     const response = await InertiaAPI.logout();
     if (response.status !== 200) {
       // TODO: Log Error
       return;
     }
-    this.props.history.push('/login');
+    history.push('/login');
   }
 
   render() {
+    const { match: { url } } = this.props;
     return (
       <div style={styles.container}>
 
@@ -84,6 +86,7 @@ class MainWrapper extends React.Component {
           </p>
 
           <button
+            type="submit"
             onClick={this.handleLogout}
             style={{
               textDecoration: 'none',
@@ -92,13 +95,13 @@ class MainWrapper extends React.Component {
             logout
           </button>
 
-          <Link to={`${this.props.match.url}/dashboard`}>
+          <Link to={`${url}/dashboard`}>
 Click to go to Dashboard
           </Link>
-          <Link to={`${this.props.match.url}/containers`}>
+          <Link to={`${url}/containers`}>
 Click to go to Containers
           </Link>
-          <Link to={`${this.props.match.url}/settings`}>
+          <Link to={`${url}/settings`}>
 Click to go to Settings
           </Link>
         </header>
@@ -108,17 +111,17 @@ Click to go to Settings
             <Switch>
               <Route
                 exact
-                path={`${this.props.match.url}/dashboard`}
+                path={`${url}/dashboard`}
                 component={() => <Dashboard />}
               />
               <Route
                 exact
-                path={`${this.props.match.url}/containers`}
+                path={`${url}/containers`}
                 component={() => <Containers dateUpdated="2018-01-01 00:00" />}
               />
               <Route
                 exact
-                path={`${this.props.match.url}/settings`}
+                path={`${url}/settings`}
                 component={() => <Settings />}
               />
             </Switch>

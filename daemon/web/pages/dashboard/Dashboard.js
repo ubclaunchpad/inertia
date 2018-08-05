@@ -32,18 +32,21 @@ const styles = {
 
 class DashboardWrapper extends React.Component {
   componentWillMount() {
-    this.props.handleGetProjectDetails();
-    this.props.handleGetContainers();
+    const { handleGetProjectDetails, handleGetContainers } = this.props;
+    handleGetProjectDetails();
+    handleGetContainers();
   }
 
   render() {
     const {
-      name,
-      branch,
-      commit,
-      message,
-      buildType,
-    } = this.props.project;
+      project: {
+        name,
+        branch,
+        commit,
+        message,
+        buildType,
+      },
+    } = this.props;
     const {
       containers,
       handleGetLogs,
@@ -165,6 +168,5 @@ const mapStateToProps = ({ Dashboard }) => {
 const mapDispatchToProps = dispatch => bindActionCreators({ ...dashboardActions }, dispatch);
 
 const Dashboard = connect(mapStateToProps, mapDispatchToProps)(DashboardWrapper);
-
 
 export default Dashboard;

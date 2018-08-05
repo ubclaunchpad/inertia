@@ -44,21 +44,23 @@ class LoginWrapper extends React.Component {
   }
 
   async handleLoginSubmit() {
+    const { testAction, history } = this.props;
+    const { username, password } = this.state;
     // TODO: disable authentication until we get it working
     /* eslint-disable no-console */
-    console.log(this.state.username, this.state.password);
+    console.log(username, password);
     /* eslint-enable no-console */
-    this.props.testAction();
+    testAction();
     // const response = await InertiaAPI.login(
-    //   this.state.username,
-    //   this.state.password,
+    //   username,
+    //   password,
     // );
 
     // if (response.status !== 200) {
     //   this.setState({ loginAlert: 'Username and/or password is incorrect' });
     //   return;
     // }
-    this.props.history.push('/home');
+    history.push('/home');
   }
 
   handleUsernameBlur(e) {
@@ -70,6 +72,7 @@ class LoginWrapper extends React.Component {
   }
 
   render() {
+    const { loginAlert } = this.state;
     return (
       <div style={styles.container}>
         <p align="center">
@@ -87,11 +90,11 @@ class LoginWrapper extends React.Component {
             onBlur={this.handlePasswordBlur}
             placeholder="Password"
           />
-          <button onClick={this.handleLoginSubmit}>
+          <button type="submit" onClick={this.handleLoginSubmit}>
 Login
           </button>
           <p style={styles.loginAlert}>
-            {this.state.loginAlert}
+            {loginAlert}
           </p>
         </div>
       </div>

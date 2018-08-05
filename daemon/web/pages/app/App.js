@@ -83,7 +83,9 @@ export default class App extends React.Component {
   }
 
   render() {
-    if (this.state.loading) {
+    const { loading, authenticated } = this.state;
+
+    if (loading) {
       return (
         <p align="center">
           Loading...
@@ -104,7 +106,7 @@ export default class App extends React.Component {
             props={this.props} />
           <AuthRoute
             path="/home"
-            authenticated={this.state.authenticated}
+            authenticated={authenticated}
             component={Main}
             props={this.props} />
         </div>

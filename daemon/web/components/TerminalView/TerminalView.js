@@ -2,12 +2,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './index.sass';
 
-const TerminalView = props => (
+const TerminalView = ({ logs }) => (
   <div className="terminalView">
     <textarea
       className="textArea"
       readOnly
-      value={!props.logs ? '' : props.logs.reduce((accumulator, currentVal) => accumulator + '\r\n' + currentVal)} />
+      value={!logs ? '' : logs.reduce((accumulator, currentVal) => accumulator + '\r\n' + currentVal)} />
   </div>
 );
 

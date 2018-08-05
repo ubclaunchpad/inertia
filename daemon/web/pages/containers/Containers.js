@@ -23,6 +23,7 @@ class ContainersWrapper extends React.Component {
   }
 
   render() {
+    const { dateUpdated } = this.props;
     return (
       <div>
         <IconHeader type="containers" title="/inertia-deploy-test_dev_1" />
@@ -32,7 +33,7 @@ class ContainersWrapper extends React.Component {
 Last Updated:
           </h3>
           <h4>
-            {this.props.dateUpdated}
+            {dateUpdated}
           </h4>
         </div>
         <TerminalView logs={mocklogs} />
