@@ -13,7 +13,7 @@ import Containers from '../containers/Containers';
 import Dashboard from '../dashboard/Dashboard';
 import Settings from '../settings/Settings';
 import * as mainActions from '../../actions/main';
-import Footer from '../../components/Footer/Footer';
+import Footer from '../../components/Footer';
 
 // hardcode all styles for now, until we flesh out UI
 const styles = {

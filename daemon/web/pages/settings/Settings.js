@@ -1,9 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import ShutdownButton from '../../components/ShutdownButton/ShutdownButton';
-import PruneImageButton from '../../components/PruneImageButton/PruneImageButton';
-import IconHeader from '../../components/IconHeader/IconHeader';
-
+import {
+  ShutdownButton,
+  PruneImageButton,
+} from '../../components/buttons';
+import IconHeader from '../../components/IconHeader';
 
 import {
   Table,
@@ -11,7 +12,7 @@ import {
   TableRow,
   TableHeader,
   TableBody,
-} from '../../components/Table/Table';
+} from '../../components/Table';
 
 class SettingsWrapper extends React.Component {
   constructor(props) {

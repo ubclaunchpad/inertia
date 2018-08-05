@@ -4,30 +4,30 @@ $table-row-height: 48px
 $table-row-padding: 38px
 
 .table
-  position: relative
+  background-color: $white
   border-radius: 2px
-  box-shadow: 0 2px 4px 0 rgba(155, 155, 155, 0.14)
-  background-color: #ffffff
+  box-shadow: 0 2px 4px 0 $shadow
+  position: relative
 
 .table-tbody
+  color: $greyblue
   font-family: Rubik
   font-size: 14px
   font-weight: 500
-  color: $greyblue
 
 .table-thead
   border-bottom: 1px solid $separator
 
 .table-tr-expandable
-  position: relative
   display: flex
   flex-wrap: wrap
+  position: relative
   width: 100%
 
 .table-tr-expandable-inner
-  position: relative
   display: flex
   padding: 0 $table-row-padding
+  position: relative
   width: 100%
 
   .table-td
@@ -42,20 +42,20 @@ $table-row-padding: 38px
 
 .table-tr
   display: flex
+  height: $table-row-height
   padding: 0 $table-row-padding
   width: 100%
-  height: $table-row-height
 
 .table-tr-panel
-  width: 100%
-  transition: all 0.25s ease-in-out
-  overflow: auto
   opacity: 0
+  overflow: auto
+  transition: all .25s ease-in-out
+  width: 100%
 
   &.expanded
     opacity: 1
 
 .table-td
+  align-items: center
   display: flex
   flex: 1
-  align-items: center

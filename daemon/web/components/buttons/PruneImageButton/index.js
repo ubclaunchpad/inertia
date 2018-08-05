@@ -1,10 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './index.sass';
+import '../index.sass';
 
 const PruneImageButton = ({ style }) => (
   <div>
-    <button className="PruneImageButton" type="button" style={style}>
+    <button className="button" type="button" style={style}>
 Prune Docker Image
     </button>
   </div>

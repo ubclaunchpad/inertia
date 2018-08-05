@@ -3,14 +3,13 @@ import PropTypes from 'prop-types';
 import './index.sass';
 
 const TerminalView = ({ logs }) => (
-  <div className="terminalView">
+  <div className="terminal-view">
     <textarea
-      className="textArea"
+      className="text-area"
       readOnly
       value={!logs ? '' : logs.reduce((accumulator, currentVal) => accumulator + '\r\n' + currentVal)} />
   </div>
 );
-
 
 TerminalView.propTypes = {
   logs: PropTypes.array,

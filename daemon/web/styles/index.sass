@@ -1,5 +1,6 @@
-@import ./colors
-@import ./typography
+@import './colors'
+@import './typography'
+
 
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
@@ -14,11 +15,11 @@ article, aside, canvas, details, embed,
 figure, figcaption, footer, header,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video
+  border: 0
   box-sizing: border-box
+  font: inherit
   margin: 0
   padding: 0
-  border: 0
-  font: inherit
   vertical-align: baseline
 
 html
@@ -26,14 +27,14 @@ html
   width: 100vw
 
 body
+  background: $background
+  font-family: 'Rubik', sans-serif
   height: 100%
   width: 100%
-  font-family: 'Rubik', sans-serif;
-  background: $background;
 
 code
   font-family: 'Ubuntu Mono', monospace
 
-#app
+.app
   height: 100%
   width: 100%

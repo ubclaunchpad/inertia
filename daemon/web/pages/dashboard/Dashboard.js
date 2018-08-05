@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import * as dashboardActions from '../../actions/dashboard';
-import TerminalView from '../../components/TerminalView/TerminalView';
+import TerminalView from '../../components/TerminalView';
 import {
   Table,
   TableBody,
@@ -12,8 +12,8 @@ import {
   TableHeader,
   TableRow,
   TableRowExpandable,
-} from '../../components/Table/Table';
-import IconHeader from '../../components/IconHeader/IconHeader';
+} from '../../components/Table';
+import IconHeader from '../../components/IconHeader';
 
 const styles = {
   container: {

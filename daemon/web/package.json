@@ -7,11 +7,13 @@
   "license": "MIT",
   "main": "index.js",
   "proxy": "https://127.0.0.1:4303",
+  "sasslintConfig": ".sass-lint.yml",
   "scripts": {
     "start": "NODE_ENV=development webpack-dev-server --host=127.0.0.1",
     "build": "NODE_ENV=production webpack --config webpack.prod.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint . --ignore-pattern public/"
+    "lint": "eslint . --ignore-pattern public/s",
+    "sass-lint": "sass-lint -v"
   },
   "dependencies": {
     "babel-core": "6.26.3",
@@ -45,6 +47,7 @@
     "eslint-config-airbnb": "17.0.0",
     "eslint-plugin-import": "2.13.0",
     "eslint-plugin-jsx-a11y": "6.1.1",
-    "eslint-plugin-react": "7.10.0"
+    "eslint-plugin-react": "7.10.0",
+    "sass-lint": "1.12.1"
   }
 }
