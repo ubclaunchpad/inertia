@@ -12,7 +12,9 @@ const icons = {
 const IconHeader = ({ title, type, style }) => (
   <div className="iconheader" style={style}>
     {icons[type]}
-    <h1 className="header">{title}</h1>
+    <h1 className="header">
+      {title}
+    </h1>
   </div>
 );
 

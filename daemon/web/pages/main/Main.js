@@ -92,9 +92,15 @@ class MainWrapper extends React.Component {
             logout
           </button>
 
-          <Link to={`${this.props.match.url}/dashboard`}>Click to go to Dashboard</Link>
-          <Link to={`${this.props.match.url}/containers`}>Click to go to Containers</Link>
-          <Link to={`${this.props.match.url}/settings`}>Click to go to Settings</Link>
+          <Link to={`${this.props.match.url}/dashboard`}>
+Click to go to Dashboard
+          </Link>
+          <Link to={`${this.props.match.url}/containers`}>
+Click to go to Containers
+          </Link>
+          <Link to={`${this.props.match.url}/settings`}>
+Click to go to Settings
+          </Link>
         </header>
 
         <div style={styles.innerContainer}>

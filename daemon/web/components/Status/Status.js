@@ -4,8 +4,12 @@ import './index.sass';
 
 const Status = ({ title, status }) => (
   <div className="badge">
-    <h3 className="title">{title}</h3>
-    <div className="badge badge-pill-active">{status}</div>
+    <h3 className="title">
+      {title}
+    </h3>
+    <div className="badge badge-pill-active">
+      {status}
+    </div>
   </div>
 );
 

@@ -35,12 +35,17 @@ const Footer = ({ version }) => {
     </span>));
   return (
     <footer className="footer" style={{ backgroundColor }}>
-      <span className="left-side"><p className="daemon-version">inertiad {version}</p></span>
+      <span className="left-side">
+        <p className="daemon-version">
+inertiad
+          {version}
+        </p>
+      </span>
       <span className="right-side">
         {icons}
         <span className="icons">
           <div>
-            <a href="https://www.ubclaunchpad.com" rel="noopener noreferrer" target="_blank" >
+            <a href="https://www.ubclaunchpad.com" rel="noopener noreferrer" target="_blank">
               <FooterLaunchpad className="launchpad" />
             </a>
           </div>

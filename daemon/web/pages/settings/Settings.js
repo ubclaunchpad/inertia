@@ -27,7 +27,9 @@ class SettingsWrapper extends React.Component {
         <Table style={{ width: '90%', margin: '1rem' }}>
           <TableHeader>
             <TableRow>
-              <TableCell style={{ fontWeight: '900', fontSize: '14px' }}>Project-name</TableCell>
+              <TableCell style={{ fontWeight: '900', fontSize: '14px' }}>
+Project-name
+              </TableCell>
               <TableCell />
               <TableCell />
             </TableRow>
@@ -35,25 +37,41 @@ class SettingsWrapper extends React.Component {
 
           <TableBody>
             <TableRow>
-              <TableCell>Branch</TableCell>
-              <TableCell>somebranch</TableCell>
+              <TableCell>
+Branch
+              </TableCell>
+              <TableCell>
+somebranch
+              </TableCell>
               <TableCell />
             </TableRow>
 
             <TableRow>
-              <TableCell>Commit</TableCell>
-              <TableCell>commit hash</TableCell>
+              <TableCell>
+Commit
+              </TableCell>
+              <TableCell>
+commit hash
+              </TableCell>
               <TableCell />
             </TableRow>
 
             <TableRow>
-              <TableCell>Message</TableCell>
-              <TableCell>penguin</TableCell>
+              <TableCell>
+Message
+              </TableCell>
+              <TableCell>
+penguin
+              </TableCell>
               <TableCell />
             </TableRow>
             <TableRow>
-              <TableCell>Build Type</TableCell>
-              <TableCell>docker-compose</TableCell>
+              <TableCell>
+Build Type
+              </TableCell>
+              <TableCell>
+docker-compose
+              </TableCell>
               <TableCell />
             </TableRow>
           </TableBody>

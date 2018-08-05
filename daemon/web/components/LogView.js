@@ -34,7 +34,12 @@ export default class LogView extends React.Component {
     let i = 0;
     return this.props.logs.map((l) => {
       i += 1;
-      return (<code key={i}>{l}<br /></code>);
+      return (
+        <code key={i}>
+          {l}
+          <br />
+        </code>
+      );
     });
   }
 

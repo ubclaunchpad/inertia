@@ -87,8 +87,12 @@ class LoginWrapper extends React.Component {
             onBlur={this.handlePasswordBlur}
             placeholder="Password"
           />
-          <button onClick={this.handleLoginSubmit}>Login</button>
-          <p style={styles.loginAlert}>{this.state.loginAlert}</p>
+          <button onClick={this.handleLoginSubmit}>
+Login
+          </button>
+          <p style={styles.loginAlert}>
+            {this.state.loginAlert}
+          </p>
         </div>
       </div>
     );

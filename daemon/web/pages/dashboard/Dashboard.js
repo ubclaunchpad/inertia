@@ -57,34 +57,58 @@ class DashboardWrapper extends React.Component {
         <Table style={{ margin: '0 30px 10px 30px' }}>
           <TableHeader>
             <TableRow>
-              <TableCell>{name}</TableCell>
+              <TableCell>
+                {name}
+              </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell>Branch</TableCell>
-              <TableCell>{branch}</TableCell>
+              <TableCell>
+Branch
+              </TableCell>
+              <TableCell>
+                {branch}
+              </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Commit</TableCell>
-              <TableCell>{commit}</TableCell>
+              <TableCell>
+Commit
+              </TableCell>
+              <TableCell>
+                {commit}
+              </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Message</TableCell>
-              <TableCell>{message}</TableCell>
+              <TableCell>
+Message
+              </TableCell>
+              <TableCell>
+                {message}
+              </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Build Type</TableCell>
-              <TableCell>{buildType}</TableCell>
+              <TableCell>
+Build Type
+              </TableCell>
+              <TableCell>
+                {buildType}
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>
         <Table style={{ margin: '0 30px' }}>
           <TableHeader>
             <TableRow>
-              <TableCell style={{ flex: '0 0 30%' }}>Type/Name</TableCell>
-              <TableCell style={{ flex: '0 0 20%' }}>Status</TableCell>
-              <TableCell>Last Updated</TableCell>
+              <TableCell style={{ flex: '0 0 30%' }}>
+Type/Name
+              </TableCell>
+              <TableCell style={{ flex: '0 0 20%' }}>
+Status
+              </TableCell>
+              <TableCell>
+Last Updated
+              </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -94,9 +118,13 @@ class DashboardWrapper extends React.Component {
                 height={300}
                 onClick={() => handleGetLogs({ container: container.name })}
                 panel={<TerminalView logs={logs} />}>
-                <TableCell style={{ flex: '0 0 30%' }}>Commit</TableCell>
+                <TableCell style={{ flex: '0 0 30%' }}>
+Commit
+                </TableCell>
                 <TableCell style={{ flex: '0 0 20%' }} />
-                <TableCell>{commit}</TableCell>
+                <TableCell>
+                  {commit}
+                </TableCell>
               </TableRowExpandable>
             ))
             }

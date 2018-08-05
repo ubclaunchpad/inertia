@@ -22,7 +22,7 @@ const AuthRoute = ({ authenticated, component: Component, props, ...rest }) => (
       authenticated
         ? <Component {...Object.assign({}, routeProps, props)} />
         : <Redirect to="/login" />
-  )} />
+    )} />
 );
 AuthRoute.propTypes = {
   authenticated: PropTypes.bool,
@@ -36,7 +36,7 @@ const PropsRoute = ({ component: Component, props, ...rest }) => (
   <Route
     {...rest}
     render={routeProps => (<Component {...Object.assign({}, routeProps, props)} />
-  )} />
+    )} />
 );
 PropsRoute.propTypes = {
   component: PropTypes.any,
@@ -112,4 +112,3 @@ export default class App extends React.Component {
     );
   }
 }
-
