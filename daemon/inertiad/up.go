@@ -23,14 +23,21 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	var upReq common.UpRequest
-	err = json.Unmarshal(body, &upReq)
-	if err != nil {
+
+	var (
+		upReq   common.UpRequest
+		gitOpts common.GitOptions
+	)
+
+	if err := json.Unmarshal(body, &upReq); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	gitOpts := upReq.GitOptions
+
 	webhookSecret = upReq.WebHookSecret
+	if upReq.GitOptions != nil {
+		gitOpts = *upReq.GitOptions
+	}
 
 	// Configure logger
 	logger := log.NewLogger(log.LoggerOptions{
@@ -46,6 +53,8 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		logger.WriteErr("Failed to read project configuration", http.StatusPreconditionFailed)
 		return
 	}
+
+	// Set up Docker
 	cli, err := containers.NewDockerClient()
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
@@ -63,9 +72,8 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 				BuildType:     common.Dereference(projectConfig.Build.Type),
 				BuildFilePath: common.Dereference(projectConfig.Build.ConfigPath),
 				RemoteURL:     common.Dereference(projectConfig.Repository.RemoteURL),
-				Branch:        upReq.GitOptions.Branch,
+				Branch:        gitOpts.Branch,
 				PemFilePath:   crypto.DaemonGithubKeyLocation,
-				DatabasePath:  path.Join(conf.DataDirectory, "project.db"),
 			},
 			logger)
 		if err != nil {
@@ -78,18 +86,17 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for matching remotes
-	err = deployment.CompareRemotes(common.Dereference(projectConfig.Repository.RemoteURL))
-	if err != nil {
+	if err := deployment.CompareRemotes(common.Dereference(projectConfig.Repository.RemoteURL)); err != nil {
 		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 		return
 	}
 
 	// Change deployment parameters if necessary
 	deployment.SetConfig(project.DeploymentConfig{
-		Branch: upReq.GitOptions.Branch,
+		Branch: gitOpts.Branch,
 	})
 
-	// Deploy project
+	// Build project
 	deploy, err := deployment.Deploy(cli, logger, project.DeployOptions{
 		SkipUpdate: skipUpdate,
 	})
@@ -98,10 +105,11 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = deploy()
-	if err != nil {
+	// Deploy project
+	if err := deploy(); err != nil {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
 }
