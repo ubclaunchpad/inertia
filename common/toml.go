@@ -41,8 +41,8 @@ func ReadProjectConfig(filepath string) (InertiaProject, error) {
 	return proj, nil
 }
 
-// Dereference gets string value or empty string
-func Dereference(p *string) string {
+// StrDeref gets string value or empty string
+func StrDeref(p *string) string {
 	if p == nil {
 		return ""
 	}

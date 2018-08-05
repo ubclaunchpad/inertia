@@ -117,11 +117,11 @@ func NewConfigFromTOML(project common.InertiaProject, remotes InertiaRemotes) (*
 
 	// Generate configuration
 	return &Config{
-		Version:       common.Dereference(project.Version),
-		Project:       common.Dereference(project.Project),
-		BuildType:     common.Dereference(project.Build.Type),
-		BuildFilePath: common.Dereference(project.Build.ConfigPath),
-		RemoteURL:     common.Dereference(project.Repository.RemoteURL),
+		Version:       common.StrDeref(project.Version),
+		Project:       common.StrDeref(project.Project),
+		BuildType:     common.StrDeref(project.Build.Type),
+		BuildFilePath: common.StrDeref(project.Build.ConfigPath),
+		RemoteURL:     common.StrDeref(project.Repository.RemoteURL),
 		remotes:       remotes.Remotes,
 	}, nil
 }

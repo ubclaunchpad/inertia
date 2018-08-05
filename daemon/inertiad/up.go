@@ -68,10 +68,10 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Println("No deployment detected")
 		err = deployment.Initialize(
 			project.DeploymentConfig{
-				ProjectName:   common.Dereference(projectConfig.Project),
-				BuildType:     common.Dereference(projectConfig.Build.Type),
-				BuildFilePath: common.Dereference(projectConfig.Build.ConfigPath),
-				RemoteURL:     common.Dereference(projectConfig.Repository.RemoteURL),
+				ProjectName:   common.StrDeref(projectConfig.Project),
+				BuildType:     common.StrDeref(projectConfig.Build.Type),
+				BuildFilePath: common.StrDeref(projectConfig.Build.ConfigPath),
+				RemoteURL:     common.StrDeref(projectConfig.Repository.RemoteURL),
 				Branch:        gitOpts.Branch,
 				PemFilePath:   crypto.DaemonGithubKeyLocation,
 			},
@@ -86,7 +86,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for matching remotes
-	if err := deployment.CompareRemotes(common.Dereference(projectConfig.Repository.RemoteURL)); err != nil {
+	if err := deployment.CompareRemotes(common.StrDeref(projectConfig.Repository.RemoteURL)); err != nil {
 		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 		return
 	}
