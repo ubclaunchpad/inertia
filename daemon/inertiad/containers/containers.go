@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
@@ -93,10 +94,13 @@ func StopActiveContainers(docker *docker.Client, out io.Writer) error {
 		if container.Names[0] != "/inertia-daemon" {
 			fmt.Fprintln(out, "Stopping "+container.Names[0]+"...")
 			timeout := 10 * time.Second
-			err := docker.ContainerStop(ctx, container.ID, &timeout)
-			if err != nil {
+			if err := docker.ContainerStop(ctx, container.ID, &timeout); err != nil {
 				return err
 			}
+
+			// Archive container
+			docker.ContainerRename(
+				ctx, container.ID, fmt.Sprintf("%s-%d", container.Names[0], time.Now().Unix()))
 		}
 	}
 	return nil
@@ -149,5 +153,41 @@ func PruneAll(docker *docker.Client, exceptions ...string) error {
 	// Perform basic prune on containers and volumes
 	docker.ContainersPrune(ctx, filters.Args{})
 	docker.VolumesPrune(ctx, filters.Args{})
+	return nil
+}
+
+// Wait blocks until given container ID stops
+func Wait(cli *docker.Client, id string, stop chan struct{}) (int64, error) {
+	var status container.ContainerWaitOKBody
+	statusCh, errCh := cli.ContainerWait(context.Background(), id, "")
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return 0, err
+		}
+	case status = <-statusCh:
+		// Exit log stream
+		close(stop)
+	}
+	return status.StatusCode, nil
+}
+
+// StartAndWait starts and waits for container to exit
+func StartAndWait(cli *docker.Client, containerID string, out io.Writer) error {
+	ctx := context.Background()
+	if err := cli.ContainerStart(ctx, containerID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	stop := make(chan struct{})
+	go StreamContainerLogs(cli, containerID, out, stop)
+	exitCode, err := Wait(cli, containerID, stop)
+	if err != nil {
+		return err
+	}
+	if exitCode != 0 {
+		return fmt.Errorf("Container exited with non-zero status %d", exitCode)
+	}
+
 	return nil
 }

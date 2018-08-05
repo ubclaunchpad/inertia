@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
@@ -21,7 +21,7 @@ func pruneHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	defer logger.Close()
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
@@ -33,5 +33,5 @@ func pruneHandler(w http.ResponseWriter, r *http.Request) {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
-	logger.WriteSuccess("Project removed from remote.", http.StatusOK)
+	logger.WriteSuccess("Docker assets have been pruned.", http.StatusOK)
 }

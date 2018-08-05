@@ -7,9 +7,7 @@ import (
 	"os"
 	"path"
 
-	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
@@ -31,6 +29,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	gitOpts := upReq.GitOptions
 	webhookSecret = upReq.WebHookSecret
 
 	// Configure logger
@@ -47,33 +46,32 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		logger.WriteErr("Failed to read project configuration", http.StatusPreconditionFailed)
 		return
 	}
+	cli, err := containers.NewDockerClient()
+	if err != nil {
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cli.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
 	skipUpdate := false
-	if deployment == nil {
+	if status, _ := deployment.GetStatus(cli); status.CommitHash == "" {
 		logger.Println("No deployment detected")
-
-		// Spin up deployment
-		d, err := project.NewDeployment(
-			build.NewBuilder(*conf, containers.StopActiveContainers),
+		err = deployment.Initialize(
 			project.DeploymentConfig{
-				ProjectDirectory: conf.ProjectDirectory,
-				ProjectName:      common.Dereference(projectConfig.Project),
-				BuildType:        common.Dereference(projectConfig.Build.Type),
-				BuildFilePath:    common.Dereference(projectConfig.Build.ConfigPath),
-				RemoteURL:        common.Dereference(projectConfig.Repository.RemoteURL),
-				Branch:           upReq.GitOptions.Branch,
-				PemFilePath:      crypto.DaemonGithubKeyLocation,
-				DatabasePath:     path.Join(conf.DataDirectory, "project.db"),
+				ProjectName:   common.Dereference(projectConfig.Project),
+				BuildType:     common.Dereference(projectConfig.Build.Type),
+				BuildFilePath: common.Dereference(projectConfig.Build.ConfigPath),
+				RemoteURL:     common.Dereference(projectConfig.Repository.RemoteURL),
+				Branch:        upReq.GitOptions.Branch,
+				PemFilePath:   crypto.DaemonGithubKeyLocation,
+				DatabasePath:  path.Join(conf.DataDirectory, "project.db"),
 			},
 			logger)
 		if err != nil {
 			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 			return
 		}
-
-		// Track deployment globally
-		deployment = d
 
 		// Project was just pulled! No need to update again.
 		skipUpdate = true
@@ -92,13 +90,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Deploy project
-	cli, err := docker.NewEnvClient()
-	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-	err = deployment.Deploy(cli, logger, project.DeployOptions{
+	deploy, err := deployment.Deploy(cli, logger, project.DeployOptions{
 		SkipUpdate: skipUpdate,
 	})
 	if err != nil {
@@ -106,5 +98,10 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = deploy()
+	if err != nil {
+		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		return
+	}
 	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
 }

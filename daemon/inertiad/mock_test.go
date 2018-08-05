@@ -16,17 +16,18 @@ import (
 // pointer will be thrown.
 type FakeDeployment struct {
 	CompareRemotesFunc func(in1 string) error
-	DeployFunc         func(in1 project.DeployOptions, in2 *docker.Client, in3 io.Writer) error
 	DestroyFunc        func(in1 *docker.Client, in2 io.Writer) error
 	DownFunc           func(in1 *docker.Client, in2 io.Writer) error
 	GetBranchFunc      func() string
-	GetStatusFunc      func(in1 *docker.Client) (*common.DeploymentStatus, error)
+	GetStatusFunc      func(in1 *docker.Client) (common.DeploymentStatus, error)
 	UpdateEnvFunc      func(cli *docker.Client) error
 	GetDataManagerFunc func() *project.DeploymentDataManager
 }
 
-func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) error {
-	return f.DeployFunc(o, c, w)
+func (f *FakeDeployment) Initialize(project.DeploymentConfig, io.Writer) error { return nil }
+
+func (f *FakeDeployment) Deploy(c *docker.Client, w io.Writer, o project.DeployOptions) (func() error, error) {
+	return func() error { return nil }, nil
 }
 
 func (f *FakeDeployment) Down(c *docker.Client, w io.Writer) error {
@@ -39,7 +40,7 @@ func (f *FakeDeployment) Destroy(c *docker.Client, w io.Writer) error {
 	return f.DestroyFunc(c, w)
 }
 
-func (f *FakeDeployment) GetStatus(c *docker.Client) (*common.DeploymentStatus, error) {
+func (f *FakeDeployment) GetStatus(c *docker.Client) (common.DeploymentStatus, error) {
 	return f.GetStatusFunc(c)
 }
 
@@ -60,3 +61,5 @@ func (f *FakeDeployment) GetDataManager() (*project.DeploymentDataManager, bool)
 func (f *FakeDeployment) UpdateContainerEnvironmentValues(cli *docker.Client) error {
 	return nil
 }
+
+func (f *FakeDeployment) Watch(cli *docker.Client) (<-chan string, <-chan error) { return nil, nil }

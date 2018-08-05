@@ -13,6 +13,7 @@ import Containers from '../containers/Containers';
 import Dashboard from '../dashboard/Dashboard';
 import Settings from '../settings/Settings';
 import * as mainActions from '../../actions/main';
+import Footer from '../../components/Footer/Footer';
 
 // hardcode all styles for now, until we flesh out UI
 const styles = {
@@ -40,116 +41,17 @@ const styles = {
     borderBottom: '1px solid #c1c1c1',
   },
 
-  sidebar: {
-    display: 'flex',
-    flexFlow: 'column',
-    width: '20rem',
-    height: '100%',
-    paddingTop: '0.5rem',
-    borderRight: '1px solid #c1c1c1',
-    backgroundColor: '#f0f0f0',
-  },
-
   main: {
     height: '100%',
     width: '100%',
     overflowY: 'scroll',
   },
-
-  button: {
-    flex: 'none',
-  },
 };
 
-const sidebarHeaderStyles = {
-  container: {
-    display: 'flex',
-    alignItems: 'center',
-    height: '3rem',
-    width: '100%',
-    paddingLeft: '1.5rem',
-    paddingTop: '1rem',
-  },
-
-  text: {
-    textDecoration: 'none',
-    color: '#5f5f5f',
-  },
-};
-
-const sidebarTextStyles = {
-  container: {
-    display: 'flex',
-    alignItems: 'center',
-    height: 'flex',
-    width: '100%',
-    paddingLeft: '2rem',
-    paddingTop: '0.5rem',
-  },
-
-  text: {
-    fontSize: '80%',
-    textDecoration: 'none',
-    color: '#101010',
-  },
-
-  button: {
-    fontSize: '80%',
-    textDecoration: 'none',
-    color: '#101010',
-  },
-};
-
-const SidebarHeader = ({ children, onClick }) => (
-  <div style={sidebarHeaderStyles.container}>
-    <button onClick={onClick} style={sidebarHeaderStyles.text}>
-      {children}
-    </button>
-  </div>
-);
-SidebarHeader.propTypes = {
-  children: PropTypes.node,
-  onClick: PropTypes.func,
-};
-
-const SidebarButton = ({ children, onClick }) => (
-  <div style={sidebarTextStyles.container}>
-    <button onClick={onClick} style={sidebarTextStyles.button}>
-      {children}
-    </button>
-  </div>
-);
-SidebarButton.propTypes = {
-  children: PropTypes.node,
-  onClick: PropTypes.func,
-};
-
-const SidebarText = ({ children }) => (
-  <div style={sidebarTextStyles.container}>
-    <p style={sidebarTextStyles.text}>
-      {children}
-    </p>
-  </div>
-);
-SidebarText.propTypes = {
-  children: PropTypes.node,
-};
 
 class MainWrapper extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      remoteVersion: '',
-
-      repoBranch: '',
-      repoCommitHash: '',
-      repoCommitMessage: '',
-      repoBuildType: '',
-      repoBuilding: false,
-      containers: [],
-
-      viewContainer: '',
-    };
 
     this.handleLogout = this.handleLogout.bind(this);
     this.handleGetStatus = this.handleGetStatus.bind(this);
@@ -168,48 +70,7 @@ class MainWrapper extends React.Component {
     this.props.history.push('/login');
   }
 
-  async handleGetStatus() {
-    const response = await InertiaAPI.getRemoteStatus();
-    if (response.status !== 200) return new Error('bad response: ' + response);
-    const status = await response.json();
-    this.setState({
-      remoteVersion: status.version,
-      repoBranch: status.branch,
-      repoBuilding: status.build_active,
-      repoBuildType: status.build_type,
-      repoCommitHash: status.commit_hash,
-      repoCommitMessage: status.commit_message,
-      containers: status.containers,
-    });
-    return null;
-  }
-
   render() {
-    // Render container list
-    const containers = this.state.containers.map(c => (
-      <SidebarButton
-        onClick={() => { this.setState({ viewContainer: c }); }}
-        key={c}>
-        <code>{c}</code>
-      </SidebarButton>
-    ));
-
-    // Report repository status
-    const buildMessage = this.state.repoBuilding
-      ? <SidebarText>Build in progress</SidebarText>
-      : null;
-    const repoState = this.state.repoCommitHash
-      ? (
-        <div>
-          <SidebarText>Type: <code>{this.state.repoBuildType}</code></SidebarText>
-          <SidebarText>Branch: <code>{this.state.repoBranch}</code></SidebarText>
-          <SidebarText>Commit: <code>{this.state.repoCommitHash.substr(1, 8)}</code>
-            <br />&quot;{this.state.repoCommitMessage}&quot;
-          </SidebarText>
-        </div>
-      )
-      : null;
-
     return (
       <div style={styles.container}>
 
@@ -237,25 +98,12 @@ class MainWrapper extends React.Component {
         </header>
 
         <div style={styles.innerContainer}>
-
-          <div style={styles.sidebar}>
-            <SidebarHeader onClick={() => { this.setState({ viewContainer: '' }); }}>
-              Daemon
-            </SidebarHeader>
-            <SidebarText><code>{this.state.remoteVersion}</code></SidebarText>
-            <SidebarHeader>Repository Status</SidebarHeader>
-            {buildMessage}
-            {repoState}
-            <SidebarHeader>Active Containers</SidebarHeader>
-            {containers}
-          </div>
-
           <div style={styles.main}>
             <Switch>
               <Route
                 exact
                 path={`${this.props.match.url}/dashboard`}
-                component={() => <Dashboard container={this.state.viewContainer} />}
+                component={() => <Dashboard />}
               />
               <Route
                 exact
@@ -270,6 +118,7 @@ class MainWrapper extends React.Component {
             </Switch>
           </div>
         </div>
+        <Footer version="v0.0.0" />
       </div>
     );
   }

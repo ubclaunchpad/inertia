@@ -12,9 +12,15 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/auth"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
+)
+
+const (
+	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia [remote] up'"
 )
 
 var (
@@ -31,33 +37,31 @@ var (
 	socketUpgrader = websocket.Upgrader{}
 )
 
-const (
-	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia $REMOTE up'"
-)
-
 // run starts the daemon
 func run(host, port, version string) {
+	// Load config and set globals
 	conf = cfg.New()
 	daemonVersion = version
 
+	// Generate paths
 	var (
-		daemonSSLCert    = path.Join(conf.SSLDirectory, "daemon.cert")
-		daemonSSLKey     = path.Join(conf.SSLDirectory, "daemon.key")
-		userDatabasePath = path.Join(conf.DataDirectory, "users.db")
+		daemonSSLCert = path.Join(conf.SSLDirectory, "daemon.cert")
+		daemonSSLKey  = path.Join(conf.SSLDirectory, "daemon.key")
+
+		userDatabasePath    = path.Join(conf.DataDirectory, "users.db")
+		projectDatabasePath = path.Join(conf.DataDirectory, "project.db")
 	)
 
 	// Download build tools
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	if err != nil {
 		println(err.Error())
 		println("Failed to start Docker client - shutting down daemon.")
 		return
 	}
-	println("Downloading build tools...")
 	go downloadDeps(cli, conf.DockerComposeVersion, conf.HerokuishVersion)
 
 	// Check if the cert files are available.
-	println("Checking for existing SSL certificates in " + conf.SSLDirectory + "...")
 	_, err = os.Stat(daemonSSLCert)
 	certNotPresent := os.IsNotExist(err)
 	_, err = os.Stat(daemonSSLKey)
@@ -65,14 +69,43 @@ func run(host, port, version string) {
 
 	// If they are not available, generate new ones.
 	if keyNotPresent && certNotPresent {
-		println("No certificates found - generating new ones...")
+		fmt.Printf("No certificates found in %s - generating new ones...", conf.SSLDirectory)
 		err = crypto.GenerateCertificate(daemonSSLCert, daemonSSLKey, host+":"+port, "RSA")
 		if err != nil {
 			println(err.Error())
 			return
 		}
+	} else {
+		fmt.Printf("Found certificates in %s (%s, %s)", conf.SSLDirectory, daemonSSLCert, daemonSSLKey)
 	}
 
+	// Set up deployment
+	deployment, err = project.NewDeployment(
+		conf.ProjectDirectory, projectDatabasePath,
+		build.NewBuilder(*conf, containers.StopActiveContainers))
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	println("Deployment manager successfully created")
+
+	// Watch container events
+	go func() {
+		logsCh, errCh := deployment.Watch(cli)
+		for {
+			select {
+			case err := <-errCh:
+				if err != nil {
+					println(err.Error())
+					return
+				}
+			case event := <-logsCh:
+				println(event)
+			}
+		}
+	}()
+
+	// Set up endpoints
 	webPrefix := "/web/"
 	handler, err := auth.NewPermissionsHandler(
 		userDatabasePath, host, 120,
@@ -82,6 +115,7 @@ func run(host, port, version string) {
 		return
 	}
 	defer handler.Close()
+	println("Permissions manager successfully created")
 
 	// Inertia web
 	handler.AttachPublicHandler(
@@ -110,7 +144,7 @@ func run(host, port, version string) {
 
 	// Serve daemon on port
 	println("Serving daemon on port " + port)
-	fmt.Println(http.ListenAndServeTLS(
+	println(http.ListenAndServeTLS(
 		":"+port,
 		daemonSSLCert,
 		daemonSSLKey,

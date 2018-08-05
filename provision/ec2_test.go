@@ -15,3 +15,7 @@ func TestNewEC2ProvisionerFromEnv(t *testing.T) {
 	prov, _ := NewEC2Provisioner("id", "key")
 	assert.NotNil(t, prov.client.Config.Credentials)
 }
+
+func TestNewEC2ProvisionerFromProfile(t *testing.T) {
+	_, _ = NewEC2ProvisionerFromProfile("", "")
+}

@@ -18,7 +18,7 @@ type MockBuilder struct {
 	stopper func() error
 }
 
-func (m *MockBuilder) Build(string, *build.Config, *docker.Client, io.Writer) (func() error, error) {
+func (m *MockBuilder) Build(string, build.Config, *docker.Client, io.Writer) (func() error, error) {
 	return m.builder, nil
 }
 
@@ -42,7 +42,7 @@ func TestSetConfig(t *testing.T) {
 	assert.Equal(t, "/robertcompose.yml", deployment.buildFilePath)
 }
 
-func TestDeployMockSkipUpdate(t *testing.T) {
+func TestDeployMock(t *testing.T) {
 	buildCalled := false
 	stopCalled := false
 	d := Deployment{
@@ -60,12 +60,14 @@ func TestDeployMockSkipUpdate(t *testing.T) {
 		},
 	}
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	err = d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
+	deploy, err := d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
 	assert.Nil(t, err)
+
+	deploy()
 	assert.Equal(t, true, buildCalled)
 	assert.Equal(t, true, stopCalled)
 }
@@ -87,7 +89,7 @@ func TestDownIntegration(t *testing.T) {
 		},
 	}
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
@@ -108,7 +110,7 @@ func TestGetStatusIntegration(t *testing.T) {
 	repo, err := git.PlainOpen("../../../")
 	assert.Nil(t, err)
 
-	cli, err := docker.NewEnvClient()
+	cli, err := containers.NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 

@@ -62,3 +62,22 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 		})
 	}
 }
+
+func TestDataManager_destroy(t *testing.T) {
+	dir := "./test_config"
+	err := os.Mkdir(dir, os.ModePerm)
+	assert.Nil(t, err)
+	defer os.RemoveAll(dir)
+
+	// Instantiate
+	c, err := newDataManager(path.Join(dir, "deployment.db"))
+	assert.Nil(t, err)
+
+	// Reset
+	err = c.destroy()
+	assert.Nil(t, err)
+
+	// Check if bucket is still usable
+	_, err = c.GetEnvVariables(false)
+	assert.Nil(t, err)
+}

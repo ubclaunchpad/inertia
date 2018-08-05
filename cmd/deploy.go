@@ -288,10 +288,10 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 var cmdDeploymentLogs = &cobra.Command{
 	Use:   "logs [container]",
 	Short: "Access logs of containers on your remote host",
-	Long: `Accesses logs of containers on your remote host. 
-	
-By default, this command retrieves Inertia daemon logs, but you can provide an 
-argument that specifies the name of the container you wish to retrieve logs for. 
+	Long: `Accesses logs of containers on your remote host.
+
+By default, this command retrieves Inertia daemon logs, but you can provide an
+argument that specifies the name of the container you wish to retrieve logs for.
 Use 'inertia [remote] status' to see which containers are active.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
@@ -480,7 +480,7 @@ var cmdDeploymentReset = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset the project on your remote",
 	Long: `Resets the project on your remote.
-On this remote, this kills all active containers and clears the project directory, 
+On this remote, this kills all active containers and clears the project directory,
 allowing you to assign a different Inertia project to this remote.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
@@ -513,7 +513,7 @@ allowing you to assign a different Inertia project to this remote.`,
 var cmdDeploymentRemove = &cobra.Command{
 	Use:   "remove",
 	Short: "Shut down Inertia and remove Inertia assets from remote host",
-	Long: `Shuts down and removes the Inertia daemon, and removes the Inertia 
+	Long: `Shuts down and removes the Inertia daemon, and removes the Inertia
 directory (~/inertia) from your remote host.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		println("WARNING: This will remove Inertia from the remote")
@@ -540,7 +540,11 @@ directory (~/inertia) from your remote host.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		println("Shutting down project...")
+		_, err = deployment.Down()
+		if err != nil {
+			log.Fatal(err)
+		}
 		println("Inertia and related daemon removed.")
 	},
 }

@@ -5,10 +5,20 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/common"
 )
 
 func TestLogHandlerNoDeployment(t *testing.T) {
+	deployment = &FakeDeployment{
+		GetStatusFunc: func(*docker.Client) (common.DeploymentStatus, error) {
+			return common.DeploymentStatus{
+				Containers: []string{},
+			}, nil
+		},
+	}
+
 	// Assmble request
 	req, err := http.NewRequest("POST", "/down", nil)
 	assert.Nil(t, err)

@@ -37,6 +37,14 @@ const config = {
         exclude: /node_modules/,
         use: ['style-loader', 'css-loader', 'sass-loader'],
       },
+      {
+        test: /\.png($|\?)|\.jgp($|\?)|\.ico($|\?)|\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)/,
+        loader: 'url-loader',
+      },
+      {
+        test: /\.svg$/,
+        use: ['babel-loader', 'react-svg-loader'],
+      },
     ],
   },
   plugins: [
@@ -54,6 +62,7 @@ const config = {
       template: './index.html',
       filename: 'index.html',
       inject: 'body',
+      favicon: 'assets/logo/favicon.ico',
     }),
   ],
 };

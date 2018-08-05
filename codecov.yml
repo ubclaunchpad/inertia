@@ -3,6 +3,9 @@ coverage:
   round: up
   range: "50...75"
   status:
+    patch:
+      default:
+        enabled: no
     project:
       default:
         threshold: 3
