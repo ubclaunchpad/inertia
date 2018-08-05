@@ -17,16 +17,16 @@ coverage:
 flags:
   client:
     paths:
-      - cfg/
-      - cmd/
-      - client/
-      - local/
-      - provision/
-      - common/
+      - cfg/*
+      - cmd/*
+      - client/*
+      - local/*
+      - provision/*
+      - common/*
   daemon:
     paths:
-      - daemon/inertiad/
-      - common/
+      - daemon/inertiad/*
+      - common/*
   #web:
   #  paths:
   #    - daemon/web
