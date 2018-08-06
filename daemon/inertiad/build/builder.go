@@ -237,18 +237,16 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	log.FlushRoutine(out, buildResp.Body, stop)
 	close(stop)
 	buildResp.Body.Close()
-	// todo: detect failures
-	reportProjectBuildComplete(d.Name, out)
-
-	// Get image details
+	// Get image details - this will check if image build was successful
 	image, _, err := cli.ImageInspectWithRaw(ctx, imageName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("image build failed: %s", err.Error())
 	}
 	portMap := nat.PortMap{}
 	for p := range image.Config.ExposedPorts {
 		portMap[p] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: p.Port()}}
 	}
+	reportProjectBuildComplete(d.Name, out)
 
 	// Create container from image
 	reportProjectContainerCreateBegin(d.Name, out)

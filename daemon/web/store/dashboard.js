@@ -1,15 +1,40 @@
 import {
-  TEST_DASHBOARD_ACTION,
+  GET_PROJECT_DETAILS_SUCCESS,
+  GET_PROJECT_LOGS_SUCCESS,
+  GET_CONTAINERS_SUCCESS,
 } from '../actions/_constants';
 
 const initialState = {
-  testState: 'tree',
+  project: {
+    name: '',
+    branch: '',
+    commit: '',
+    message: '',
+    buildType: '',
+  },
+  logs: ['no logs'],
+  containers: [],
 };
 
 const Dashboard = (state = initialState, action) => {
   switch (action.type) {
-    case TEST_DASHBOARD_ACTION: {
-      return { ...state, testState: action.payload };
+    case GET_PROJECT_DETAILS_SUCCESS: {
+      return {
+        ...state,
+        project: action.payload.project,
+      };
+    }
+    case GET_PROJECT_LOGS_SUCCESS: {
+      return {
+        ...state,
+        logs: action.payload.logs,
+      };
+    }
+    case GET_CONTAINERS_SUCCESS: {
+      return {
+        ...state,
+        containers: action.payload.containers,
+      };
     }
 
     default: {

@@ -20,6 +20,12 @@ func init() {
 	cmdProvisionECS.Flags().StringP(
 		"user", "u", "ec2-user", "ec2 instance user to execute commands as",
 	)
+	cmdProvisionECS.Flags().String(
+		"profile-path", "", "path to aws credentials file",
+	)
+	cmdProvisionECS.Flags().String(
+		"profile-user", "", "user profile for aws credentials file",
+	)
 	cmdProvisionECS.Flags().Bool(
 		"from-env", false, "load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set",
 	)
@@ -60,26 +66,34 @@ This ensures that your project ports are properly exposed and externally accessi
 			log.Fatal("remote with name already exists")
 		}
 
-		// Load flags
+		// Load flags for credentials
 		fromEnv, _ := cmd.Flags().GetBool("from-env")
-		instanceType, _ := cmd.Flags().GetString("type")
+		profilePath, _ := cmd.Flags().GetString("profile-path")
+
+		// Load flags for setup configuration
 		user, _ := cmd.Flags().GetString("user")
+		instanceType, _ := cmd.Flags().GetString("type")
 		stringProjectPorts, _ := cmd.Flags().GetStringArray("ports")
 
 		// Create VPS instance
 		var prov *provision.EC2Provisioner
-		if !fromEnv {
-			var id, key string
-			id, key, err = enterEC2CredentialsWalkthrough(os.Stdin)
+		if fromEnv {
+			prov, err = provision.NewEC2ProvisionerFromEnv(os.Stdout)
 			if err != nil {
 				log.Fatal(err)
 			}
-			prov, err = provision.NewEC2Provisioner(id, key, os.Stdout)
+		} else if profilePath != "" {
+			profileUser, _ := cmd.Flags().GetString("profile-user")
+			prov, err = provision.NewEC2ProvisionerFromProfile(profilePath, profileUser, os.Stdout)
 			if err != nil {
 				log.Fatal(err)
 			}
 		} else {
-			prov, err = provision.NewEC2ProvisionerFromEnv(os.Stdout)
+			id, key, err := enterEC2CredentialsWalkthrough(os.Stdin)
+			if err != nil {
+				log.Fatal(err)
+			}
+			prov, err = provision.NewEC2Provisioner(id, key, os.Stdout)
 			if err != nil {
 				log.Fatal(err)
 			}
