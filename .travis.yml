@@ -47,7 +47,7 @@ jobs:
     - &bootstraptest 
       <<: *test
       install: make testenv VPS_OS=debian VPS_VERSION=9.3 SSH_PORT=69
-      script: go test ./... -v -run 'TestBootstrapIntegration' -ldflags "-X main.Version=test"
+      script: go test ./... -v -run 'TestBootstrapIntegration' -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
       after_success: true
     - <<: *bootstraptest
       install: make testenv VPS_OS=centos VPS_VERSION=7 SSH_PORT=69

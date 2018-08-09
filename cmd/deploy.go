@@ -40,10 +40,10 @@ func init() {
 		println("[WARNING] Inertia configuration not found in " + configFilePath)
 		return
 	}
-	if config.Version != Root.Version {
+	if config.Version != Version {
 		fmt.Printf(
 			"[WARNING] Configuration version '%s' does not match your Inertia CLI version '%s'\n",
-			config.Version, Root.Version,
+			config.Version, Version,
 		)
 	}
 
