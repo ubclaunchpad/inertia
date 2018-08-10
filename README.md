@@ -206,3 +206,12 @@ Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome!
 Please see our [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/CONTRIBUTING.md) for contribution guidelines as well as a detailed guide to help you get started with Inertia's codebase.
 
 <br>
+
+[![0](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/images/0)](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/links/0)
+[![1](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/images/1)](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/links/1)
+[![2](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/images/2)](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/links/2)
+[![3](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/images/3)](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/links/3)
+[![4](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/images/4)](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/links/4)
+[![5](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/images/5)](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/links/5)
+[![6](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/images/6)](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/links/6)
+[![7](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/images/7)](https://sourcerer.io/fame/bobheadxi/ubclaunchpad/inertia/links/7)
