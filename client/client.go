@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -272,9 +273,10 @@ func (c *Client) Reset() (*http.Response, error) {
 }
 
 // Logs get logs of given container
-func (c *Client) Logs(container string) (*http.Response, error) {
-	reqContent := map[string]string{
-		common.Container: container,
+func (c *Client) Logs(container string, entries int) (*http.Response, error) {
+	reqContent := map[string]string{common.Container: container}
+	if entries > 0 {
+		reqContent[common.Entries] = strconv.Itoa(entries)
 	}
 
 	return c.get("/logs", reqContent)

@@ -9,6 +9,9 @@ const (
 
 	// Stream is a constant used in HTTP GET query strings
 	Stream = "stream"
+
+	// Entries is a constant used in HTTP GET query strings
+	Entries = "entries"
 )
 
 // UpRequest is the configurable body of a UP request to the daemon.
