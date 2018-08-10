@@ -11,6 +11,10 @@
   name = "gopkg.in/src-d/go-git.v4"
   version = "4.5.0"
 
+[[override]]
+  name = "gopkg.in/src-d/go-billy.v4"
+  version = "4.2.0"
+
 [[constraint]]
   name = "github.com/sirupsen/logrus"
   version = "1.0.6"

@@ -327,8 +327,8 @@
     "osfs",
     "util"
   ]
-  revision = "027dceab1aa836eb310d92c2eb2266e4dc9f4b81"
-  version = "v4.1.0"
+  revision = "83cf655d40b15b427014d7875d10850f96edba14"
+  version = "v4.2.0"
 
 [[projects]]
   name = "gopkg.in/src-d/go-git.v4"
@@ -386,6 +386,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0103985b533d12aa2263b7c79066df65e25646615e9d0031c237b5b29a673802"
+  inputs-digest = "9a005a1c5b815fbb81a4ea71a970dbcaaaffea924645f76a6bb00fed76058746"
   solver-name = "gps-cdcl"
   solver-version = 1
