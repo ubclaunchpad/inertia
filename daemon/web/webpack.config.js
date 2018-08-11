@@ -36,6 +36,9 @@ const config = {
         test: /\.sass($|\?)/,
         exclude: /node_modules/,
         use: ['style-loader', 'css-loader', 'sass-loader'],
+        resolve: {
+          mainFiles: ['index.sass'],
+        },
       },
       {
         test: /\.png($|\?)|\.jpg($|\?)|\.ico($|\?)|\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)/,

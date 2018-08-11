@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './index.sass';
 
 const icons = {
   dashboard: <i className="fas fa-th-large" />,

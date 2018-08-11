@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import TerminalView from '../../components/TerminalView';
 import IconHeader from '../../components/IconHeader';
 import Status from '../../components/Status';
-import './index.sass';
 
 const mocklogs = [
   'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',

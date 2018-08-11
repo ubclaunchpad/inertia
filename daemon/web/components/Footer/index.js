@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './index.sass';
 import FooterLaunchpad from '../../assets/logo/launchpad-logo-light-blue-01.svg';
 
 const backgroundColor = '#474d5e';

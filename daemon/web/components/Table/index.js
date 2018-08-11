@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './index.sass';
 
 export const TableCell = ({ children, style }) => (
   <div className="table-td" style={style}>
