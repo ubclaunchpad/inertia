@@ -156,6 +156,7 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 	d.builder.Prune(cli, out)
 
 	// Kill active project containers if there are any
+	d.active = false
 	err := d.builder.StopContainers(cli, out)
 	if err != nil {
 		return func() error { return nil }, err
@@ -189,6 +190,7 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	// Error if no project containers are active, but try to kill
 	// everything anyway in case the docker-compose image is still
 	// active
+	d.active = false
 	_, err := containers.GetActiveContainers(cli)
 	if err != nil {
 		killErr := d.builder.StopContainers(cli, out)
@@ -201,7 +203,6 @@ func (d *Deployment) Down(cli *docker.Client, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	d.active = false
 
 	// Do a lite prune
 	d.builder.Prune(cli, out)

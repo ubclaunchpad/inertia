@@ -33,12 +33,15 @@ const config = {
         ],
       },
       {
-        test: /\.sass/,
+        test: /\.sass($|\?)/,
         exclude: /node_modules/,
         use: ['style-loader', 'css-loader', 'sass-loader'],
+        resolve: {
+          mainFiles: ['index.sass'],
+        },
       },
       {
-        test: /\.png($|\?)|\.jgp($|\?)|\.ico($|\?)|\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)/,
+        test: /\.png($|\?)|\.jpg($|\?)|\.ico($|\?)|\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)/,
         loader: 'url-loader',
       },
       {

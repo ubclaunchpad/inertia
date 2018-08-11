@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './index.sass';
 
 export const TableCell = ({ children, style }) => (
   <div className="table-td" style={style}>
@@ -41,7 +40,9 @@ export class TableRowExpandable extends React.Component {
       children,
       panel,
       onClick,
+      height,
     } = this.props;
+    const { expanded } = this.state;
 
     return (
       <div
@@ -49,13 +50,13 @@ export class TableRowExpandable extends React.Component {
         onClick={onClick}
         style={style}>
         <div
-          className={`table-tr-expandable-inner ${this.state.expanded && 'expanded'}`}
-          onClick={() => this.handleClick(this.state.expanded)}>
+          className={`table-tr-expandable-inner ${expanded && 'expanded'}`}
+          onClick={() => this.handleClick(expanded)}>
           {children}
         </div>
         <div
-          style={{ height: this.state.expanded ? this.props.height : 0 }}
-          className={`table-tr-panel ${this.state.expanded && 'expanded'}`}>
+          style={{ height: expanded ? height : 0 }}
+          className={`table-tr-panel ${expanded && 'expanded'}`}>
           {panel}
         </div>
       </div>

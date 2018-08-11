@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -272,16 +273,17 @@ func (c *Client) Reset() (*http.Response, error) {
 }
 
 // Logs get logs of given container
-func (c *Client) Logs(container string) (*http.Response, error) {
-	reqContent := map[string]string{
-		common.Container: container,
+func (c *Client) Logs(container string, entries int) (*http.Response, error) {
+	reqContent := map[string]string{common.Container: container}
+	if entries > 0 {
+		reqContent[common.Entries] = strconv.Itoa(entries)
 	}
 
 	return c.get("/logs", reqContent)
 }
 
 // LogsWebSocket opens a websocket connection to given container's logs
-func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
+func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, error) {
 	host, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
 	if err != nil {
 		return nil, err
@@ -289,10 +291,14 @@ func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
 
 	// Set up request
 	url := &url.URL{Scheme: "wss", Host: host.Host, Path: "/logs"}
-	encodeQuery(url, map[string]string{
+	params := map[string]string{
 		common.Container: container,
 		common.Stream:    "true",
-	})
+	}
+	if entries > 0 {
+		params[common.Entries] = strconv.Itoa(entries)
+	}
+	encodeQuery(url, params)
 
 	// Set up authorization
 	header := http.Header{}

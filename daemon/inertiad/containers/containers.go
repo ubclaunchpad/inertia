@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,7 @@ type LogOptions struct {
 	Stream       bool
 	Detailed     bool
 	NoTimestamps bool
+	Entries      int
 }
 
 // ContainerLogs get logs ;)
@@ -37,6 +39,7 @@ func ContainerLogs(docker *docker.Client, opts LogOptions) (io.ReadCloser, error
 		Follow:     opts.Stream,
 		Timestamps: !opts.NoTimestamps,
 		Details:    opts.Detailed,
+		Tail:       strconv.Itoa(opts.Entries),
 	})
 }
 

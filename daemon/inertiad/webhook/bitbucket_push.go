@@ -31,6 +31,11 @@ func parseBitbucketPushEvent(rawJSON map[string]interface{}) bitbucketPushEvent 
 	}
 }
 
+// GetSource returns the source of the webhook
+func (b bitbucketPushEvent) GetSource() string {
+	return BitBucket
+}
+
 // GetEventType returns the event type of the webhook
 func (b bitbucketPushEvent) GetEventType() string {
 	return b.eventType

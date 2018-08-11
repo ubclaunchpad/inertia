@@ -3,8 +3,8 @@ import { HashRouter, Redirect, Route } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import createHistory from 'history/createBrowserHistory';
 
-import Login from '../login/Login';
-import Main from '../main/Main';
+import Login from '../Login';
+import Main from '../Main';
 
 const styles = {
   container: {
@@ -22,7 +22,7 @@ const AuthRoute = ({ authenticated, component: Component, props, ...rest }) => (
       authenticated
         ? <Component {...Object.assign({}, routeProps, props)} />
         : <Redirect to="/login" />
-  )} />
+    )} />
 );
 AuthRoute.propTypes = {
   authenticated: PropTypes.bool,
@@ -36,7 +36,7 @@ const PropsRoute = ({ component: Component, props, ...rest }) => (
   <Route
     {...rest}
     render={routeProps => (<Component {...Object.assign({}, routeProps, props)} />
-  )} />
+    )} />
 );
 PropsRoute.propTypes = {
   component: PropTypes.any,
@@ -83,7 +83,9 @@ export default class App extends React.Component {
   }
 
   render() {
-    if (this.state.loading) {
+    const { loading, authenticated } = this.state;
+
+    if (loading) {
       return (
         <p align="center">
           Loading...
@@ -104,7 +106,7 @@ export default class App extends React.Component {
             props={this.props} />
           <AuthRoute
             path="/home"
-            authenticated={this.state.authenticated}
+            authenticated={authenticated}
             component={Main}
             props={this.props} />
         </div>
@@ -112,4 +114,3 @@ export default class App extends React.Component {
     );
   }
 }
-

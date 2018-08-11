@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './index.sass';
 import FooterLaunchpad from '../../assets/logo/launchpad-logo-light-blue-01.svg';
 
 const backgroundColor = '#474d5e';
 
 const Footer = ({ version }) => {
+  const inertiadVersion = `inertiad ${version}`;
   const icons = [
     {
       id: 1,
@@ -35,12 +35,16 @@ const Footer = ({ version }) => {
     </span>));
   return (
     <footer className="footer" style={{ backgroundColor }}>
-      <span className="left-side"><p className="daemon-version">inertiad {version}</p></span>
+      <span className="left-side">
+        <p className="daemon-version">
+          {inertiadVersion}
+        </p>
+      </span>
       <span className="right-side">
         {icons}
         <span className="icons">
           <div>
-            <a href="https://www.ubclaunchpad.com" rel="noopener noreferrer" target="_blank" >
+            <a href="https://www.ubclaunchpad.com" rel="noopener noreferrer" target="_blank">
               <FooterLaunchpad className="launchpad" />
             </a>
           </div>
