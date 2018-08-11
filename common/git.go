@@ -30,7 +30,7 @@ func GetSSHRemoteURL(url string) string {
 // GetBranchFromRef gets the branch name from a git ref of form refs/...
 func GetBranchFromRef(ref string) string {
 	parts := strings.Split(ref, "/")
-	return parts[len(parts)-1]
+	return strings.Join(parts[2:], "/")
 }
 
 // ExtractRepository gets the project name from its URL in the form [username]/[project]

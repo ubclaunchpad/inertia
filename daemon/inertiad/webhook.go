@@ -44,12 +44,12 @@ func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(os.Stdout, "Docker webhook event: %s:%s\n", p.GetRepoName(), p.GetTag())
+	fmt.Fprintf(os.Stdout, "Received dockerhub webhook event: %s:%s\n", p.GetRepoName(), p.GetTag())
 }
 
 // processPushEvent prints information about the given PushEvent.
 func processPushEvent(p webhook.Payload, out io.Writer) {
-	fmt.Fprintf(out, "%s push event: %s (%s)\n",
+	fmt.Fprintf(out, "Received %s push event: %s (%s)\n",
 		p.GetSource(), p.GetRepoName(), p.GetRef())
 
 	cli, err := containers.NewDockerClient()
@@ -76,23 +76,21 @@ func processPushEvent(p webhook.Payload, out io.Writer) {
 	// Check for matching branch
 	branch := common.GetBranchFromRef(p.GetRef())
 	if deployment.GetBranch() != branch {
-		fmt.Fprintf(out, "Ignoring event: event branch %s does not match deployed branch %s",
+		fmt.Fprintf(out, "Ignoring event: event branch %s does not match deployed branch %s\n",
 			branch, deployment.GetBranch())
 		return
 	}
 
 	// If branches match, deploy
-	fmt.Fprintf(out, "Accepting event: event branch %s matches deployed branch %s",
+	fmt.Fprintf(out, "Accepting event: event branch %s matches deployed branch %s\n",
 		branch, deployment.GetBranch())
-	deploy, err := deployment.Deploy(cli, os.Stdout, project.DeployOptions{
-		SkipUpdate: false,
-	})
+	deploy, err := deployment.Deploy(cli, os.Stdout, project.DeployOptions{})
 	if err != nil {
-		fmt.Fprintln(out, err.Error())
+		fmt.Fprintln(out, "Build failed: "+err.Error())
 	}
 
 	err = deploy()
 	if err != nil {
-		fmt.Fprintln(out, err.Error())
+		fmt.Fprintln(out, "Deploy failed: "+err.Error())
 	}
 }
