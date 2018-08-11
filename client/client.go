@@ -283,7 +283,7 @@ func (c *Client) Logs(container string, entries int) (*http.Response, error) {
 }
 
 // LogsWebSocket opens a websocket connection to given container's logs
-func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
+func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, error) {
 	host, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
 	if err != nil {
 		return nil, err
@@ -291,10 +291,14 @@ func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
 
 	// Set up request
 	url := &url.URL{Scheme: "wss", Host: host.Host, Path: "/logs"}
-	encodeQuery(url, map[string]string{
+	params := map[string]string{
 		common.Container: container,
 		common.Stream:    "true",
-	})
+	}
+	if entries > 0 {
+		params[common.Entries] = strconv.Itoa(entries)
+	}
+	encodeQuery(url, params)
 
 	// Set up authorization
 	header := http.Header{}
