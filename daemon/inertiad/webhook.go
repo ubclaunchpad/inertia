@@ -20,7 +20,7 @@ var webhookSecret = "inertia"
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, common.MsgDaemonOK)
 
-	payload, err := webhook.Parse(r, os.Stdout)
+	payload, err := webhook.Parse(r)
 	if err != nil {
 		fmt.Fprintln(os.Stdout, err.Error())
 		return
@@ -38,26 +38,19 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 // specialized handler for docker webhooks
 func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
-	payload, err := webhook.ParseDocker(r, os.Stdout)
+	p, err := webhook.ParseDocker(r)
 	if err != nil {
 		fmt.Fprintln(os.Stdout, err.Error())
 		return
 	}
 
-	fmt.Fprintln(os.Stdout, payload.GetPusher())
-	fmt.Fprintln(os.Stdout, payload.GetTag())
-	fmt.Fprintln(os.Stdout, payload.GetRepoName())
-	fmt.Fprintln(os.Stdout, payload.GetName())
-	fmt.Fprintln(os.Stdout, payload.GetOwner())
+	fmt.Fprintf(os.Stdout, "Docker webhook event: %s:%s\n", p.GetRepoName(), p.GetTag())
 }
 
 // processPushEvent prints information about the given PushEvent.
-func processPushEvent(payload webhook.Payload, out io.Writer) {
-	branch := common.GetBranchFromRef(payload.GetRef())
-	fmt.Fprintln(out, "Received PushEvent")
-	fmt.Fprintln(out, fmt.Sprintf("Repository Name: %s", payload.GetRepoName()))
-	fmt.Fprintln(out, fmt.Sprintf("Repository Git URL: %s", payload.GetGitURL()))
-	fmt.Fprintln(out, fmt.Sprintf("Branch: %s", branch))
+func processPushEvent(p webhook.Payload, out io.Writer) {
+	fmt.Fprintf(out, "%s push event: %s (%s)\n",
+		p.GetSource(), p.GetRepoName(), p.GetRef())
 
 	cli, err := containers.NewDockerClient()
 	if err != nil {
@@ -74,20 +67,23 @@ func processPushEvent(payload webhook.Payload, out io.Writer) {
 	}
 
 	// Check for matching remotes
-	err = deployment.CompareRemotes(payload.GetSSHURL())
+	err = deployment.CompareRemotes(p.GetSSHURL())
 	if err != nil {
 		fmt.Fprintln(out, err.Error())
 		return
 	}
 
 	// Check for matching branch
+	branch := common.GetBranchFromRef(p.GetRef())
 	if deployment.GetBranch() != branch {
-		fmt.Fprintln(out, fmt.Sprintf("Event branch %s does not match deployed branch %s ignoring event", branch, deployment.GetBranch()))
+		fmt.Fprintf(out, "Ignoring event: event branch %s does not match deployed branch %s",
+			branch, deployment.GetBranch())
 		return
 	}
 
 	// If branches match, deploy
-	fmt.Fprintln(out, fmt.Sprintf("Event branch matches deployed branch %s", branch))
+	fmt.Fprintf(out, "Accepting event: event branch %s matches deployed branch %s",
+		branch, deployment.GetBranch())
 	deploy, err := deployment.Deploy(cli, os.Stdout, project.DeployOptions{
 		SkipUpdate: false,
 	})

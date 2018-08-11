@@ -3,8 +3,6 @@ package webhook
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"strings"
 )
@@ -13,10 +11,15 @@ import (
 var (
 	PushEvent = "push"
 	// PullEvent = "pull"
+
+	GitHub    = "github"
+	GitLab    = "gitlab"
+	BitBucket = "bitbucket"
 )
 
 // Payload represents a generic webhook payload
 type Payload interface {
+	GetSource() string
 	GetEventType() string
 	GetRepoName() string
 	GetRef() string
@@ -25,7 +28,7 @@ type Payload interface {
 }
 
 // Parse takes in a webhook request and parses it into one of the supported types
-func Parse(r *http.Request, out io.Writer) (Payload, error) {
+func Parse(r *http.Request) (Payload, error) {
 	// Decode request body to raw JSON
 	if r.Header.Get("content-type") != "application/json" {
 		return nil, errors.New("Webhook Content-Type must be JSON")
@@ -41,21 +44,18 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 	// Try Github
 	githubEventHeader := r.Header.Get("x-github-event")
 	if len(githubEventHeader) > 0 {
-		fmt.Fprintln(out, "Github webhook detected")
 		return parseGithubEvent(rawJSON, githubEventHeader)
 	}
 
 	// Try Gitlab
 	gitlabEventHeader := r.Header.Get("x-gitlab-event")
 	if len(gitlabEventHeader) > 0 {
-		fmt.Fprintln(out, "Gitlab webhook detected")
 		return parseGitlabEvent(rawJSON, gitlabEventHeader)
 	}
 
 	// Try Bitbucket
 	userAgent := r.Header.Get("user-agent")
 	if strings.Contains(userAgent, "Bitbucket") {
-		fmt.Fprintln(out, "Bitbucket webhook detected")
 		bitbucketEventHeader := r.Header.Get("x-event-key")
 		return parseBitbucketEvent(rawJSON, bitbucketEventHeader)
 	}
@@ -64,7 +64,7 @@ func Parse(r *http.Request, out io.Writer) (Payload, error) {
 }
 
 // ParseDocker takes in a Docker webhook request and parses it
-func ParseDocker(r *http.Request, out io.Writer) (*DockerWebhook, error) {
+func ParseDocker(r *http.Request) (*DockerWebhook, error) {
 	// Decode request body to raw JSON
 	if r.Header.Get("content-type") != "application/json" {
 		return nil, errors.New("Webhook Content-Type must be JSON")
