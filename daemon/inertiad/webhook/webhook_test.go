@@ -3,7 +3,6 @@ package webhook
 import (
 	"bytes"
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,13 +17,14 @@ func getMockRequest(endpoint string, rawBody []byte) *http.Request {
 }
 func TestParse(t *testing.T) {
 	testCases := []struct {
+		source      string
 		reqBody     []byte
 		eventHeader string
 		eventValue  string
 	}{
-		{githubPushRawJSON, "x-github-event", GithubPushHeader},
-		{gitlabPushRawJSON, "x-gitlab-event", GitlabPushHeader},
-		{bitbucketPushRawJSON, "x-event-key", BitbucketPushHeader},
+		{GitHub, githubPushRawJSON, "x-github-event", GithubPushHeader},
+		{GitLab, gitlabPushRawJSON, "x-gitlab-event", GitlabPushHeader},
+		{BitBucket, bitbucketPushRawJSON, "x-event-key", BitbucketPushHeader},
 	}
 
 	for _, tc := range testCases {
@@ -36,9 +36,10 @@ func TestParse(t *testing.T) {
 			req.Header.Add("User-Agent", "Bitbucket")
 		}
 
-		payload, err := Parse(req, os.Stdout)
+		payload, err := Parse(req)
 		assert.Nil(t, err)
 
+		assert.Equal(t, tc.source, payload.GetSource())
 		assert.Equal(t, "push", payload.GetEventType())
 		assert.Equal(t, "inertia-deploy-test", payload.GetRepoName())
 		assert.Equal(t, "refs/heads/master", payload.GetRef())
@@ -47,7 +48,7 @@ func TestParse(t *testing.T) {
 
 func TestParseDocker(t *testing.T) {
 	req := getMockRequest("/docker-webhook", dockerPushRawJSON)
-	payload, err := ParseDocker(req, os.Stdout)
+	payload, err := ParseDocker(req)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "briannguyen", payload.GetPusher())
