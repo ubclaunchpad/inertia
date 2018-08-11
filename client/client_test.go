@@ -375,6 +375,7 @@ func TestLogsWebsocket(t *testing.T) {
 		q := req.URL.Query()
 		assert.Equal(t, "docker-compose", q.Get(common.Container))
 		assert.Equal(t, "true", q.Get(common.Stream))
+		assert.Equal(t, "10", q.Get(common.Entries))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -389,7 +390,7 @@ func TestLogsWebsocket(t *testing.T) {
 	defer testServer.Close()
 
 	d := getMockClient(testServer)
-	resp, err := d.LogsWebSocket("docker-compose")
+	resp, err := d.LogsWebSocket("docker-compose", 10)
 	assert.Nil(t, err)
 
 	time.Sleep(1 * time.Second)

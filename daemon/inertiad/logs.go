@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
 	docker "github.com/docker/docker/client"
 	"github.com/ubclaunchpad/inertia/common"
@@ -17,7 +16,6 @@ import (
 // logHandler handles requests for container logs
 func logHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		logger *log.DaemonLogger
 		stream bool
 		err    error
 	)
@@ -39,19 +37,21 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Determine number of entries to fetch
-	entriesParam := params.Get("entries")
+	entriesParam := params.Get(common.Entries)
 	var entries int
 	if entriesParam != "" {
 		if entries, err = strconv.Atoi(entriesParam); err != nil {
 			http.Error(w, "invalid number of entries", http.StatusBadRequest)
 			return
 		}
-	} else {
+	}
+	if entries == 0 {
 		entries = 500
 	}
 
 	// Upgrade to websocket connection if required, otherwise just set up a
 	// standard logger
+	var logger *log.DaemonLogger
 	if stream {
 		socket, err := socketUpgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -70,13 +70,6 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	defer logger.Close()
-
-	// If no deployment is online, error unless the client is requesting for
-	// the daemon's logs
-	if deployment == nil && !strings.Contains(container, "inertia-daemon") {
-		logger.WriteErr(msgNoDeployment, http.StatusPreconditionFailed)
-		return
-	}
 
 	cli, err := containers.NewDockerClient()
 	if err != nil {

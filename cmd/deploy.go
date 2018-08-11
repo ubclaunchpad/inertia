@@ -313,7 +313,7 @@ Use 'inertia [remote] status' to see which containers are active.`,
 					resp.StatusCode, body)
 			}
 		} else {
-			socket, err := deployment.LogsWebSocket(container)
+			socket, err := deployment.LogsWebSocket(container, entries)
 			if err != nil {
 				log.Fatal(err)
 			}
