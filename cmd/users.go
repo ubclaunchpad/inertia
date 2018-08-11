@@ -75,7 +75,7 @@ var cmdDeploymentRemoveUser = &cobra.Command{
 	Short: "Remove a user",
 	Long: `Removes the given user from Inertia's user database.
 
-This user will no longer be able to log in and view or configure the deployment 
+This user will no longer be able to log in and view or configure the deployment
 from the web app.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -111,7 +111,7 @@ from the web app.`,
 var cmdDeploymentResetUsers = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset user database on your remote",
-	Long: `Removes all users credentials on your remote. All users will no longer 
+	Long: `Removes all users credentials on your remote. All users will no longer
 be able to log in and view or configure the deployment from the web app.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
@@ -170,6 +170,40 @@ var cmdDeploymentListUsers = &cobra.Command{
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 		case http.StatusForbidden:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
+		default:
+			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
+				resp.StatusCode, body)
+		}
+	},
+}
+
+var cmdDeploymentGenerateToken = &cobra.Command{
+	Use:   "token",
+	Short: "Generate tokens associated with permission levels for admin to share.",
+	Long:  `Generate tokens associated with permission levels for team leads to share`,
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
+		client, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resp, err := client.GenerateToken()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err)
+		}
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, string(body))
+		case http.StatusForbidden:
+			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, string(body))
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
 				resp.StatusCode, body)

@@ -85,6 +85,7 @@ Run 'inertia [remote] init' to gather this information.`,
 		user.AddCommand(deepCopy(cmdDeploymentRemoveUser))
 		user.AddCommand(deepCopy(cmdDeploymentResetUsers))
 		user.AddCommand(deepCopy(cmdDeploymentListUsers))
+		user.AddCommand(deepCopy(cmdDeploymentGenerateToken))
 		cmd.AddCommand(user)
 
 		cmd.AddCommand(deepCopy(cmdDeploymentSSH))

@@ -65,6 +65,7 @@ func NewPermissionsHandler(
 	}
 	userHandler.HandleFunc("/validate", handler.validateHandler)
 	handler.adminPaths = []string{
+		"/token",
 		"/user/adduser",
 		"/user/removeuser",
 		"/user/resetusers",
@@ -75,6 +76,7 @@ func NewPermissionsHandler(
 	userHandler.HandleFunc("/resetusers", handler.resetUsersHandler)
 	userHandler.HandleFunc("/listusers", handler.listUsersHandler)
 	mux.Handle("/user/", http.StripPrefix("/user", userHandler))
+	mux.HandleFunc("/token", handler.tokenHandler)
 
 	return handler, nil
 }
@@ -167,6 +169,24 @@ func (h *PermissionsHandler) AttachAdminRestrictedHandlerFunc(path string, handl
 	// Add path as one that requires elevated permissions
 	h.adminPaths = append(h.adminPaths, path)
 	h.mux.HandleFunc(path, handler)
+}
+
+func (h *PermissionsHandler) tokenHandler(w http.ResponseWriter, r *http.Request) {
+	keyBytes, err := crypto.GetAPIPrivateKey(nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	token, err := crypto.GenerateMasterToken(keyBytes.([]byte))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(token))
 }
 
 func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Request) {

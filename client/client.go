@@ -344,6 +344,11 @@ func (c *Client) ListUsers() (*http.Response, error) {
 	return c.get("/user/listusers", nil)
 }
 
+// GenerateToken generates token on the remote.
+func (c *Client) GenerateToken() (*http.Response, error) {
+	return c.get("/token", nil)
+}
+
 // Sends a GET request. "queries" contains query string arguments.
 func (c *Client) get(endpoint string, queries map[string]string) (*http.Response, error) {
 	// Assemble request
