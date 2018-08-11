@@ -30,15 +30,15 @@
     "react-dom": "16.4.1",
     "react-redux": "5.0.7",
     "react-router-dom": "4.3.1",
-    "react-svg-loader": "2.1.0",
+    "react-svg-loader": "^2.1.0",
     "redux": "4.0.0",
     "redux-thunk": "2.3.0",
     "sass-loader": "7.0.3",
     "style-loader": "0.21.0",
+    "url-loader": "1.0.1",
     "webpack": "4.16.2",
     "webpack-cli": "3.1.0",
-    "webpack-dev-server": "3.1.5",
-    "url-loader": "1.0.1"
+    "webpack-dev-server": "3.1.5"
   },
   "devDependencies": {
     "eslint": "4.19.1",
