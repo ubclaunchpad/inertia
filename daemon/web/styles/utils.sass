@@ -13,6 +13,18 @@
   > *
     width: 50%
 
+.height
+  &-xxl
+    height: $spacing-xxl
+
+//////////////////////////
+//   POSITION CLASSES   //
+//////////////////////////
+
+.pos
+  &-relative
+    position: relative
+
 //////////////////////////
 //   FLEXBOX CLASSES    //
 //////////////////////////
@@ -49,3 +61,24 @@
   &.ai
     &-center
       align-items: center
+
+  &.f
+    &-single
+      flex: 1
+
+//////////////////////////
+//  VISIBILITY CLASSES  //
+//////////////////////////
+
+.hidden
+  opacity: 0
+
+.visible
+  opacity: 1
+
+//////////////////////////
+//   OVERFLOW CLASSES   //
+//////////////////////////
+
+.scroll
+  overflow: auto

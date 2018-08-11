@@ -6,7 +6,7 @@ $spacing-xs: 8px
 $spacing-s: 16px
 $spacing-m: 24px
 $spacing-l: 32px
-$spacing-xl: 40px
+$spacing-xl: 38px
 $spacing-xxl: 48px
 $spacing-mega: 56px
 $spacing-giga: 60px
@@ -17,12 +17,18 @@ $spacing-giga: 60px
 
 
   &-left, &-sides
+    &-xl
+      padding-left: $spacing-xl
+
     &-xxl
       padding-left: $spacing-xxl
 
   &-right, &-sides
+    &-xl
+      padding-right: $spacing-xl
+
     &-xxl
-      padding-right: $spacing-xxl
+      padding-left: $spacing-xxl
 
 
   &-top, &-ends
@@ -45,7 +51,7 @@ $spacing-giga: 60px
       padding-left: $spacing-xs
 
     &-m
-      padding-left: $spacing-s
+      padding-left: $spacing-m
 
     &-l
       padding-left: $spacing-l
@@ -55,7 +61,7 @@ $spacing-giga: 60px
       padding-right: $spacing-xs
 
     &-m
-      padding-right: $spacing-s
+      padding-right: $spacing-m
 
     &-l
       padding-right: $spacing-l
