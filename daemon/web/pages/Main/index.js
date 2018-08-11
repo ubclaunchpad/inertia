@@ -55,6 +55,7 @@ class MainWrapper extends React.Component {
 
     this.handleLogout = this.handleLogout.bind(this);
     this.handleGetStatus = this.handleGetStatus.bind(this);
+    this.state = { status: {} };
 
     this.handleGetStatus()
       .then(() => {})
@@ -71,8 +72,20 @@ class MainWrapper extends React.Component {
     history.push('/login');
   }
 
+  async handleGetStatus() {
+    const response = await InertiaAPI.getRemoteStatus();
+    if (response.status !== 200) {
+      // TODO: Log Error
+      return;
+    }
+    // just a stub for now
+    this.setState({ status: await response.json() });
+  }
+
   render() {
     const { match: { url } } = this.props;
+    const { status } = this.state;
+    console.log(status);
     return (
       <div style={styles.container}>
 
