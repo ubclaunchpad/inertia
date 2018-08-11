@@ -23,9 +23,8 @@ const Footer = ({ version }) => {
       name: 'fab fa-medium-m',
     },
   ].map(socialFooterIcon => (
-    <span className="icons">
+    <span key={socialFooterIcon.id} className="icons">
       <a
-        key={socialFooterIcon.id}
         href={socialFooterIcon.link}
         style={{ backgroundColor }}
         rel="noopener noreferrer"

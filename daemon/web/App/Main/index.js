@@ -8,12 +8,14 @@ import {
   Switch,
 } from 'react-router-dom';
 
-import InertiaAPI from '../../common/API';
-import Containers from '../Containers';
-import Dashboard from '../Dashboard';
-import Settings from '../Settings';
 import * as mainActions from '../../actions/main';
+
+import InertiaAPI from '../../common/API';
+
+import { Containers, Dashboard, Settings } from '../../pages';
+
 import Footer from '../../components/Footer';
+import NavBar from '../../components/NavBar';
 
 // hardcode all styles for now, until we flesh out UI
 const styles = {
@@ -84,40 +86,28 @@ class MainWrapper extends React.Component {
 
   render() {
     const { match: { url } } = this.props;
+    /*
+      this.props = {
+        match: {
+          url: "value"
+        },
+        julia： "value",
+        inertia: {
+          my: {
+            lunch: "chicken"
+          }
+        }
+      }
+      const { julia = "optional" } = this.props;
+      console.log(julia);
+      const { inertia, inertia: { my } } = this.props;
+      console.log(my);
+    */
     const { status } = this.state;
     console.log(status);
     return (
       <div style={styles.container}>
-
-        <header style={styles.headerBar}>
-          <p style={{
-            fontWeight: 500,
-            fontSize: 24,
-            color: '#101010',
-          }}>
-            Inertia Web
-          </p>
-
-          <button
-            type="submit"
-            onClick={this.handleLogout}
-            style={{
-              textDecoration: 'none',
-              color: '#5f5f5f',
-            }}>
-            logout
-          </button>
-
-          <Link to={`${url}/dashboard`}>
-Click to go to Dashboard
-          </Link>
-          <Link to={`${url}/containers`}>
-Click to go to Containers
-          </Link>
-          <Link to={`${url}/settings`}>
-Click to go to Settings
-          </Link>
-        </header>
+        <NavBar url={url} />
 
         <div style={styles.innerContainer}>
           <div style={styles.main}>
@@ -140,6 +130,7 @@ Click to go to Settings
             </Switch>
           </div>
         </div>
+
         <Footer version="v0.0.0" />
       </div>
     );
