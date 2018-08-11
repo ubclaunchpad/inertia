@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -17,6 +18,11 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
+)
+
+const (
+	// Code returned by AWS when EC2 instance is successfully created
+	codeEC2InstanceStarted = 16
 )
 
 // EC2Provisioner creates Amazon EC2 instances
@@ -39,6 +45,13 @@ func NewEC2Provisioner(id, key string, out ...io.Writer) (*EC2Provisioner, error
 func NewEC2ProvisionerFromEnv(out ...io.Writer) (*EC2Provisioner, error) {
 	prov := &EC2Provisioner{}
 	return prov, prov.init(credentials.NewEnvCredentials(), out)
+}
+
+// NewEC2ProvisionerFromProfile creates a client to interact with Amazon EC2 using
+// credentials for user (optional) from given profile file
+func NewEC2ProvisionerFromProfile(path, user string, out ...io.Writer) (*EC2Provisioner, error) {
+	prov := &EC2Provisioner{}
+	return prov, prov.init(credentials.NewSharedCredentials(path, user), out)
 }
 
 // GetUser returns the user attached to given credentials
@@ -165,12 +178,18 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		return nil, err
 	}
 
+	// Check response validity
+	if runResp.Instances == nil || len(runResp.Instances) == 0 {
+		return nil, errors.New("Unable to start instances: " + runResp.String())
+	}
+
 	// Loop until intance is running
-	fmt.Fprint(p.out, "Checking status of requested instance...")
-	attempts := 0
-	var instanceStatus *ec2.DescribeInstancesOutput
+	fmt.Fprintln(p.out, "Checking status of requested instance...")
+	var instance ec2.Instance
 	for {
-		attempts++
+		// Wait briefly between checks
+		time.Sleep(3 * time.Second)
+
 		// Request instance status
 		result, err := p.client.DescribeInstances(&ec2.DescribeInstancesInput{
 			InstanceIds: []*string{runResp.Instances[0].InstanceId},
@@ -178,26 +197,47 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		if err != nil {
 			return nil, err
 		}
-		if len(result.Reservations) == 0 || len(result.Reservations[0].Instances) == 0 {
+
+		// Check if reservations are present
+		if result.Reservations == nil || len(result.Reservations) == 0 ||
+			len(result.Reservations[0].Instances) == 0 {
 			// A reservation corresponds to a command to start instances
-			time.Sleep(3 * time.Second)
-			continue
-		} else if *result.Reservations[0].Instances[0].State.Code == 16 {
-			// Code 16 means we can continue!
-			fmt.Fprint(p.out, "Instance is running!")
-			instanceStatus = result
-			break
-		} else {
-			// Keep polling
-			fmt.Fprint(p.out, "Instance status: "+*result.Reservations[0].Instances[0].State.Name)
-			time.Sleep(3 * time.Second)
+			// If nothing is here... we gotta keep waiting
+			fmt.Fprintln(p.out, "No reservations found yet.")
 			continue
 		}
+
+		// Get status
+		s := result.Reservations[0].Instances[0].State
+		if s == nil {
+			fmt.Println(p.out, "Status unknown.")
+			continue
+		}
+
+		// Code 16 means instance has started, and we can continue!
+		if s.Code != nil && *s.Code == codeEC2InstanceStarted {
+			fmt.Fprintln(p.out, "Instance is running!")
+			instance = *result.Reservations[0].Instances[0]
+			break
+		}
+
+		// Otherwise, keep polling
+		if s.Name != nil {
+			fmt.Fprintln(p.out, "Instance status: "+*s.Name)
+		} else {
+			fmt.Fprintln(p.out, "Instance status: "+s.String())
+		}
+		continue
+	}
+
+	// Check instance validity
+	if instance.PublicDnsName == nil {
+		return nil, errors.New("Unable to find public IP address for instance: " + instance.String())
 	}
 
 	// Set tags
 	_, err = p.client.CreateTags(&ec2.CreateTagsInput{
-		Resources: []*string{runResp.Instances[0].InstanceId},
+		Resources: []*string{instance.InstanceId},
 		Tags: []*ec2.Tag{
 			{
 				Key:   aws.String("Name"),
@@ -210,17 +250,17 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		},
 	})
 	if err != nil {
-		fmt.Fprintf(p.out, "Failed to set tags: %s", err.Error())
+		fmt.Fprintln(p.out, "Failed to set tags: "+err.Error())
 	}
 
 	// Poll for SSH port to open
-	fmt.Fprint(p.out, "Waiting for ports to open...")
+	fmt.Fprintln(p.out, "Waiting for ports to open...")
 	for {
 		time.Sleep(3 * time.Second)
-		fmt.Fprint(p.out, "Checking ports...")
-		conn, err := net.Dial("tcp", *instanceStatus.Reservations[0].Instances[0].PublicDnsName+":22")
+		fmt.Fprintln(p.out, "Checking ports...")
+		conn, err := net.Dial("tcp", *instance.PublicDnsName+":22")
 		if err == nil {
-			fmt.Fprint(p.out, "Connection established!")
+			fmt.Fprintln(p.out, "Connection established!")
 			conn.Close()
 			break
 		}
@@ -229,15 +269,15 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	// Generate webhook secret
 	webhookSecret, err := common.GenerateRandomString()
 	if err != nil {
-		fmt.Fprint(p.out, err.Error())
-		fmt.Fprint(p.out, "Using default secret 'inertia'")
+		fmt.Fprintln(p.out, err.Error())
+		fmt.Fprintln(p.out, "Using default secret 'inertia'")
 		webhookSecret = "interia"
 	}
 
 	// Return remote configuration
 	return &cfg.RemoteVPS{
 		Name:    opts.Name,
-		IP:      *instanceStatus.Reservations[0].Instances[0].PublicDnsName,
+		IP:      *instance.PublicDnsName,
 		User:    p.user,
 		PEM:     keyPath,
 		SSHPort: "22",

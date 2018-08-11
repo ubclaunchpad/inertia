@@ -16,8 +16,32 @@ func TestContainerLogs(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	_, err = ContainerLogs(cli, LogOptions{Container: "/testvps"})
-	assert.Nil(t, err)
+	type args struct {
+		opts LogOptions
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"successfully get logs", args{
+			LogOptions{Container: "/testvps"}}, false},
+		{"successfully get logs with lines", args{
+			LogOptions{Container: "/testvps", Entries: 100}}, false},
+		{"successfully get logs without leading slash", args{
+			LogOptions{Container: "testvps", Entries: 100}}, false},
+		{"fail on unknown container", args{
+			LogOptions{Container: "asdf"}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ContainerLogs(cli, tt.args.opts)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ContainerLogs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
 }
 
 func TestStreamContainerLogs(t *testing.T) {
@@ -46,8 +70,7 @@ func TestPrune(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	err = Prune(cli)
-	assert.Nil(t, err)
+	Prune(cli)
 }
 
 func TestPruneAll(t *testing.T) {
@@ -55,8 +78,7 @@ func TestPruneAll(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	err = PruneAll(cli, "gliderlabs/herokuish", "docker/compose")
-	assert.Nil(t, err)
+	PruneAll(cli, "gliderlabs/herokuish", "docker/compose")
 
 	// Exceptions should still be present
 	found := false

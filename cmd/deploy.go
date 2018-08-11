@@ -40,10 +40,10 @@ func init() {
 		println("[WARNING] Inertia configuration not found in " + configFilePath)
 		return
 	}
-	if config.Version != Root.Version {
+	if config.Version != Version {
 		fmt.Printf(
 			"[WARNING] Configuration version '%s' does not match your Inertia CLI version '%s'\n",
-			config.Version, Root.Version,
+			config.Version, Version,
 		)
 	}
 
@@ -72,7 +72,10 @@ Run 'inertia [remote] init' to gather this information.`,
 
 		cmd.AddCommand(deepCopy(cmdDeploymentDown))
 		cmd.AddCommand(deepCopy(cmdDeploymentStatus))
-		cmd.AddCommand(deepCopy(cmdDeploymentLogs))
+
+		logs := deepCopy(cmdDeploymentLogs)
+		logs.Flags().Int("entries", 0, "Number of log entries to fetch")
+		cmd.AddCommand(logs)
 		cmd.AddCommand(deepCopy(cmdDeploymentPrune))
 
 		user := deepCopy(cmdDeploymentUser)
@@ -279,10 +282,8 @@ Use 'inertia [remote] status' to see which containers are active.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-		short, err := cmd.Flags().GetBool("short")
-		if err != nil {
-			log.Fatal(err)
-		}
+		short, _ := cmd.Flags().GetBool("short")
+		entries, _ := cmd.Flags().GetInt("entries")
 
 		container := "/inertia-daemon"
 		if len(args) > 0 {
@@ -290,7 +291,7 @@ Use 'inertia [remote] status' to see which containers are active.`,
 		}
 
 		if short {
-			resp, err := deployment.Logs(container)
+			resp, err := deployment.Logs(container, entries)
 			if err != nil {
 				log.Fatal(err)
 			}

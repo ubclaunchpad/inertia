@@ -30,6 +30,11 @@ func parseGithubPushEvent(rawJSON map[string]interface{}) githubPushEvent {
 	}
 }
 
+// GetSource returns the source of the webhook
+func (g githubPushEvent) GetSource() string {
+	return GitHub
+}
+
 // GetEventType returns the event type of the webhook
 func (g githubPushEvent) GetEventType() string {
 	return g.eventType

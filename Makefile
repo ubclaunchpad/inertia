@@ -3,6 +3,7 @@ SSH_PORT = 69
 VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = test
+CLI_VERSION_VAR = github.com/ubclaunchpad/inertia/cmd.Version
 
 all: prod-deps cli
 
@@ -31,12 +32,12 @@ dev-deps:
 # Install Inertia with release version
 .PHONY: cli
 cli:
-	go install -ldflags "-X main.Version=$(RELEASE)"
+	go install -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)"
 
 # Install Inertia with git tag as release version
 .PHONY: cli-tagged
 cli-tagged:
-	go install -ldflags "-X main.Version=$(TAG)"
+	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
 
 # Remove Inertia binaries
 .PHONY: clean
@@ -50,16 +51,17 @@ clean:
 lint:
 	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=120s ./...'
 	(cd ./daemon/web; npm run lint)
+	(cd ./daemon/web; npm run sass-lint)
 
 # Run test suite without Docker ops
 .PHONY: test
 test:
-	go test ./... -short -ldflags "-X main.Version=test" --cover
+	go test ./... -short -ldflags "-X $(CLI_VERSION_VAR)=test" --cover
 
 # Run test suite without Docker ops
 .PHONY: test-v
 test-v:
-	go test ./... -short -ldflags "-X main.Version=test" -v --cover
+	go test ./... -short -ldflags "-X $(CLI_VERSION_VAR)=test" -v --cover
 
 # Run unit and integration tests - creates fresh test VPS and test daemon beforehand
 # Also attempts to run linter
@@ -67,20 +69,20 @@ test-v:
 test-all:
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
-	go test ./... -ldflags "-X main.Version=test" --cover
+	go test ./... -ldflags "-X $(CLI_VERSION_VAR)=test" --cover
 
 # Run integration tests verbosely - creates fresh test VPS and test daemon beforehand
 .PHONY: test-integration
 test-integration:
 	make testenv VPS_OS=$(VPS_OS) VPS_VERSION=$(VPS_VERSION)
 	make testdaemon
-	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
+	go test ./... -v -run 'Integration' -ldflags "-X $(CLI_VERSION_VAR)=test" --cover
 
 # Run integration tests verbosely without recreating test VPS
 .PHONY: test-integration-fast
 test-integration-fast:
 	make testdaemon
-	go test ./... -v -run 'Integration' -ldflags "-X main.Version=test" --cover
+	go test ./... -v -run 'Integration' -ldflags "-X $(CLI_VERSION_VAR)=test" --cover
 
 # Create test VPS
 .PHONY: testenv

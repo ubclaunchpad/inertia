@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './index.sass';
 
 const icons = {
   dashboard: <i className="fas fa-th-large" />,
@@ -12,7 +11,9 @@ const icons = {
 const IconHeader = ({ title, type, style }) => (
   <div className="iconheader" style={style}>
     {icons[type]}
-    <h1 className="header">{title}</h1>
+    <h1 className="header">
+      {title}
+    </h1>
   </div>
 );
 
