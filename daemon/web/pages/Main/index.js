@@ -9,11 +9,11 @@ import {
 } from 'react-router-dom';
 
 import InertiaAPI from '../../common/API';
-import Containers from '../containers/Containers';
-import Dashboard from '../dashboard/Dashboard';
-import Settings from '../settings/Settings';
+import Containers from '../Containers';
+import Dashboard from '../Dashboard';
+import Settings from '../Settings';
 import * as mainActions from '../../actions/main';
-import Footer from '../../components/Footer/Footer';
+import Footer from '../../components/Footer';
 
 // hardcode all styles for now, until we flesh out UI
 const styles = {
@@ -55,6 +55,7 @@ class MainWrapper extends React.Component {
 
     this.handleLogout = this.handleLogout.bind(this);
     this.handleGetStatus = this.handleGetStatus.bind(this);
+    this.state = { status: {} };
 
     this.handleGetStatus()
       .then(() => {})
@@ -62,15 +63,29 @@ class MainWrapper extends React.Component {
   }
 
   async handleLogout() {
+    const { history } = this.props;
     const response = await InertiaAPI.logout();
     if (response.status !== 200) {
       // TODO: Log Error
       return;
     }
-    this.props.history.push('/login');
+    history.push('/login');
+  }
+
+  async handleGetStatus() {
+    const response = await InertiaAPI.getRemoteStatus();
+    if (response.status !== 200) {
+      // TODO: Log Error
+      return;
+    }
+    // just a stub for now
+    this.setState({ status: await response.json() });
   }
 
   render() {
+    const { match: { url } } = this.props;
+    const { status } = this.state;
+    console.log(status);
     return (
       <div style={styles.container}>
 
@@ -84,6 +99,7 @@ class MainWrapper extends React.Component {
           </p>
 
           <button
+            type="submit"
             onClick={this.handleLogout}
             style={{
               textDecoration: 'none',
@@ -92,9 +108,15 @@ class MainWrapper extends React.Component {
             logout
           </button>
 
-          <Link to={`${this.props.match.url}/dashboard`}>Click to go to Dashboard</Link>
-          <Link to={`${this.props.match.url}/containers`}>Click to go to Containers</Link>
-          <Link to={`${this.props.match.url}/settings`}>Click to go to Settings</Link>
+          <Link to={`${url}/dashboard`}>
+Click to go to Dashboard
+          </Link>
+          <Link to={`${url}/containers`}>
+Click to go to Containers
+          </Link>
+          <Link to={`${url}/settings`}>
+Click to go to Settings
+          </Link>
         </header>
 
         <div style={styles.innerContainer}>
@@ -102,17 +124,17 @@ class MainWrapper extends React.Component {
             <Switch>
               <Route
                 exact
-                path={`${this.props.match.url}/dashboard`}
+                path={`${url}/dashboard`}
                 component={() => <Dashboard />}
               />
               <Route
                 exact
-                path={`${this.props.match.url}/containers`}
+                path={`${url}/containers`}
                 component={() => <Containers dateUpdated="2018-01-01 00:00" />}
               />
               <Route
                 exact
-                path={`${this.props.match.url}/settings`}
+                path={`${url}/settings`}
                 component={() => <Settings />}
               />
             </Switch>

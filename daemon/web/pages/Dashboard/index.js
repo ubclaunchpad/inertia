@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import * as dashboardActions from '../../actions/dashboard';
-import TerminalView from '../../components/TerminalView/TerminalView';
+import TerminalView from '../../components/TerminalView';
 import {
   Table,
   TableBody,
@@ -12,8 +12,8 @@ import {
   TableHeader,
   TableRow,
   TableRowExpandable,
-} from '../../components/Table/Table';
-import IconHeader from '../../components/IconHeader/IconHeader';
+} from '../../components/Table';
+import IconHeader from '../../components/IconHeader';
 
 const styles = {
   container: {
@@ -32,18 +32,21 @@ const styles = {
 
 class DashboardWrapper extends React.Component {
   componentWillMount() {
-    this.props.handleGetProjectDetails();
-    this.props.handleGetContainers();
+    const { handleGetProjectDetails, handleGetContainers } = this.props;
+    handleGetProjectDetails();
+    handleGetContainers();
   }
 
   render() {
     const {
-      name,
-      branch,
-      commit,
-      message,
-      buildType,
-    } = this.props.project;
+      project: {
+        name,
+        branch,
+        commit,
+        message,
+        buildType,
+      },
+    } = this.props;
     const {
       containers,
       handleGetLogs,
@@ -57,34 +60,58 @@ class DashboardWrapper extends React.Component {
         <Table style={{ margin: '0 30px 10px 30px' }}>
           <TableHeader>
             <TableRow>
-              <TableCell>{name}</TableCell>
+              <TableCell>
+                {name}
+              </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell>Branch</TableCell>
-              <TableCell>{branch}</TableCell>
+              <TableCell>
+Branch
+              </TableCell>
+              <TableCell>
+                {branch}
+              </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Commit</TableCell>
-              <TableCell>{commit}</TableCell>
+              <TableCell>
+Commit
+              </TableCell>
+              <TableCell>
+                {commit}
+              </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Message</TableCell>
-              <TableCell>{message}</TableCell>
+              <TableCell>
+Message
+              </TableCell>
+              <TableCell>
+                {message}
+              </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Build Type</TableCell>
-              <TableCell>{buildType}</TableCell>
+              <TableCell>
+Build Type
+              </TableCell>
+              <TableCell>
+                {buildType}
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>
         <Table style={{ margin: '0 30px' }}>
           <TableHeader>
             <TableRow>
-              <TableCell style={{ flex: '0 0 30%' }}>Type/Name</TableCell>
-              <TableCell style={{ flex: '0 0 20%' }}>Status</TableCell>
-              <TableCell>Last Updated</TableCell>
+              <TableCell style={{ flex: '0 0 30%' }}>
+Type/Name
+              </TableCell>
+              <TableCell style={{ flex: '0 0 20%' }}>
+Status
+              </TableCell>
+              <TableCell>
+Last Updated
+              </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -94,9 +121,13 @@ class DashboardWrapper extends React.Component {
                 height={300}
                 onClick={() => handleGetLogs({ container: container.name })}
                 panel={<TerminalView logs={logs} />}>
-                <TableCell style={{ flex: '0 0 30%' }}>Commit</TableCell>
+                <TableCell style={{ flex: '0 0 30%' }}>
+Commit
+                </TableCell>
                 <TableCell style={{ flex: '0 0 20%' }} />
-                <TableCell>{commit}</TableCell>
+                <TableCell>
+                  {commit}
+                </TableCell>
               </TableRowExpandable>
             ))
             }
@@ -137,6 +168,5 @@ const mapStateToProps = ({ Dashboard }) => {
 const mapDispatchToProps = dispatch => bindActionCreators({ ...dashboardActions }, dispatch);
 
 const Dashboard = connect(mapStateToProps, mapDispatchToProps)(DashboardWrapper);
-
 
 export default Dashboard;
