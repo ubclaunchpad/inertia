@@ -31,6 +31,7 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	// Get config and add remotes
 	config, configPath, err := GetProjectConfigFromDisk("inertia.toml")
 	assert.Nil(t, err)
+	defer os.Remove(configPath)
 	config.AddRemote(&cfg.RemoteVPS{
 		Name:    "test",
 		IP:      "1234",
@@ -69,10 +70,6 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	assert.Equal(t, "12343:80801", client.GetIPAndPort())
 	_, _, err = GetClient("asdf", "inertia.toml")
 	assert.NotNil(t, err)
-
-	// Test config remove
-	err = os.Remove(configPath)
-	assert.Nil(t, err)
 }
 
 func TestSaveKey(t *testing.T) {

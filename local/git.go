@@ -2,6 +2,7 @@ package local
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -30,9 +31,8 @@ func GetRepoCurrentBranch() (string, error) {
 // checkForGit returns an error if we're not in a git repository.
 func checkForGit(cwd string) error {
 	// Quick failure if no .git folder.
-	gitFolder := filepath.Join(cwd, ".git")
-	if _, err := os.Stat(gitFolder); os.IsNotExist(err) {
-		return errors.New("this does not appear to be a git repository")
+	if _, err := os.Stat(filepath.Join(cwd, ".git")); os.IsNotExist(err) {
+		return fmt.Errorf("directory %s does not appear to be a git repository", cwd)
 	}
 
 	// Also fail if no origin detected

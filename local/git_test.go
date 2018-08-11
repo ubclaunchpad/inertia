@@ -3,7 +3,7 @@ package local
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,6 +32,6 @@ func TestCheckForGit(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.Nil(t, err)
 	assert.NotNil(t, checkForGit(cwd))
-	inertia, _ := path.Split(cwd)
+	inertia, _ := filepath.Split(cwd)
 	assert.Nil(t, checkForGit(inertia))
 }

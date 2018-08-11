@@ -5,7 +5,17 @@ import "github.com/spf13/cobra"
 var (
 	// configFilePath is the relative path to Inertia's configuration file
 	configFilePath = "inertia.toml"
+
+	// Version is the current build of Inertia
+	Version string
 )
+
+func getVersion() string {
+	if Version == "" {
+		Version = "latest"
+	}
+	return Version
+}
 
 // Root is the base inertia command
 var Root = &cobra.Command{
@@ -22,5 +32,5 @@ One you have set up a remote with 'inertia remote add [remote]', use
 
 Repository:    https://github.com/ubclaunchpad/inertia/
 Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
-	Version: "latest",
+	Version: getVersion(),
 }
