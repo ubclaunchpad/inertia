@@ -13,7 +13,7 @@ Table.propTypes = {
 };
 
 export const TableCell = ({ children, className = '', style }) => (
-  <div className={`flex ai-center f-single height-xxl ${className}`} style={style}>
+  <div className={`flex ai-center f-single height-xl ${className}`} style={style}>
     {children}
   </div>
 );
@@ -24,7 +24,7 @@ TableCell.propTypes = {
 };
 
 export const TableRow = ({ children, className = '', style }) => (
-  <div className={`flex fill-width pad-sides-xl height-xxl ${className}`} style={style}>
+  <div className={`flex fill-width pad-sides-l height-xl ${className}`} style={style}>
     {children}
   </div>
 );
@@ -86,8 +86,8 @@ export class TableRowExpandable extends React.Component {
         onClick={onClick}
         style={style}>
         <div
-          className={`flex fill-width pos-relative pad-sides-xl clickable
-            hover-highlight-light ${expanded && 'bg-highlight-light '}`}
+          className={`flex fill-width pos-relative pad-sides-l clickable
+            hover-bg-highlight-light ${expanded && 'bg-highlight-light '}`}
           onClick={() => this.handleClick(expanded)}>
           {children}
         </div>

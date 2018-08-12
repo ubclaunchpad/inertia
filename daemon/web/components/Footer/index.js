@@ -27,25 +27,24 @@ const Footer = ({ version }) => {
       <a
         key={socialFooterIcon.id}
         href={socialFooterIcon.link}
-        style={{ backgroundColor }}
         rel="noopener noreferrer"
         target="_blank">
-        <span className={socialFooterIcon.name} />
+        <span className={`${socialFooterIcon.name} pad-right-xs hover-color-lightred`} />
       </a>
     </span>));
   return (
-    <footer className="footer" style={{ backgroundColor }}>
-      <span className="left-side">
+    <footer className="footer flex flow-row ai-center jc-between fill-width" style={{ backgroundColor }}>
+      <span className="pad-left-xs">
         <p className="daemon-version">
           {inertiadVersion}
         </p>
       </span>
-      <span className="right-side">
+      <span className="pad-right-xs">
         {icons}
         <span className="icons">
-          <div>
+          <div className="fill-height vertical-middle">
             <a href="https://www.ubclaunchpad.com" rel="noopener noreferrer" target="_blank">
-              <FooterLaunchpad className="launchpad" />
+              <FooterLaunchpad className=" hover-fill-lightred launchpad" />
             </a>
           </div>
         </span>

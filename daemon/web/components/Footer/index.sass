@@ -1,45 +1,19 @@
 .footer
-  align-items: center
-  display: flex
-  flex-flow: row
-  height: 4rem
-  justify-content: space-between
-  width: 100%
+  height: $navbar
 
   .icons
     font-size: 20px
     object-fit: contain
-    padding: .5rem
 
     *
       display: inline-block
 
-    > div
-      height: 100%
-      vertical-align: middle
-
     > a
       color: $lightblue
 
-      &:hover
-        color: $lightred
+  .launchpad
+    fill: $lightblue
+    width: 105px
 
-.launchpad
-  fill: $lightblue
-  height: 100%
-  padding-left: .1rem
-  width: 105px
-
-  &:hover
-    fill: $lightred
-
-.right-side
-  padding-right: 10px
-
-.left-side
-  padding-left: 18px
-
-.daemon-version
-  color: $lightblue
-  font-size: 10px
-  letter-spacing: 1px
+  .daemon-version
+    color: $lightblue
