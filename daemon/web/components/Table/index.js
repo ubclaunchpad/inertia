@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import './index.sass';
+
 export const Table = ({ children, className = '', style }) => (
   <div className={`shadow rounded pos-relative bg-white ${className}`} style={style}>
     {children}

@@ -6,7 +6,6 @@ This is the codebase for Inertia Web.
 
 - Use the `eslint` and `sass-lint` defined in `package.json`
 - Use `index.js` and `index.sass`
-- All stylesheets must be imported by `styles/index.sass`
 - Stick to global classes whenever possible
 
 ### Development
