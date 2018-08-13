@@ -22,7 +22,7 @@ WORKDIR ${BUILD_HOME}
 RUN if [ ! -d "vendor" ]; then \
     apk add --update --no-cache git; \
     go get -u github.com/golang/dep/cmd/dep; \
-    dep ensure; \
+    dep ensure -v; \
     fi
 # Build daemon binary.
 RUN go build -o /bin/inertiad \

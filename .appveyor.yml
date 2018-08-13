@@ -25,7 +25,7 @@ install:
   - go version
   - go env
   - go get -u github.com/golang/dep/cmd/dep
-  - dep ensure
+  - dep ensure -v
 
 deploy: false
 
