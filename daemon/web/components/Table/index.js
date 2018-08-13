@@ -1,24 +1,61 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-export const TableCell = ({ children, style }) => (
-  <div className="table-td" style={style}>
+import './index.sass';
+
+export const Table = ({ children, className = '', style }) => (
+  <div className={`shadow rounded pos-relative bg-white ${className}`} style={style}>
+    {children}
+  </div>
+);
+Table.propTypes = {
+  children: PropTypes.any,
+  className: PropTypes.string,
+  style: PropTypes.object,
+};
+
+export const TableCell = ({ children, className = '', style }) => (
+  <div className={`flex ai-center f-single height-xl ${className}`} style={style}>
     {children}
   </div>
 );
 TableCell.propTypes = {
   style: PropTypes.object,
   children: PropTypes.any,
+  className: PropTypes.string,
 };
 
-export const TableRow = ({ style, children }) => (
-  <div className="table-tr" style={style}>
+export const TableRow = ({ children, className = '', style }) => (
+  <div className={`flex fill-width pad-sides-l height-xl ${className}`} style={style}>
     {children}
   </div>
 );
 TableRow.propTypes = {
   style: PropTypes.object,
   children: PropTypes.any,
+  className: PropTypes.string,
+};
+
+export const TableHeader = ({ children, className = '', style }) => (
+  <div className={`border-end ${className}`} style={style}>
+    {children}
+  </div>
+);
+TableHeader.propTypes = {
+  children: PropTypes.objectOf(TableRow),
+  className: PropTypes.string,
+  style: PropTypes.object,
+};
+
+export const TableBody = ({ children, className = '', style }) => (
+  <div className={`table-body ${className}`} style={style}>
+    {children}
+  </div>
+);
+TableBody.propTypes = {
+  children: PropTypes.arrayOf(TableRow),
+  className: PropTypes.string,
+  style: PropTypes.object,
 };
 
 export class TableRowExpandable extends React.Component {
@@ -36,27 +73,30 @@ export class TableRowExpandable extends React.Component {
 
   render() {
     const {
-      style,
       children,
       panel,
       onClick,
       height,
+      style,
+      className = '',
     } = this.props;
     const { expanded } = this.state;
 
     return (
       <div
-        className="table-tr-expandable"
+        className={`flex wrap fill-width pos-relative ${className}`}
         onClick={onClick}
         style={style}>
         <div
-          className={`table-tr-expandable-inner ${expanded && 'expanded'}`}
+          className={`flex fill-width pos-relative pad-sides-l clickable
+            hover-bg-highlight-light ${expanded && 'bg-highlight-light '}`}
           onClick={() => this.handleClick(expanded)}>
           {children}
         </div>
         <div
           style={{ height: expanded ? height : 0 }}
-          className={`table-tr-panel ${expanded && 'expanded'}`}>
+          className={`transition-ease fill-width scroll
+            ${expanded ? 'visible' : 'hidden'}`}>
           {panel}
         </div>
       </div>
@@ -64,39 +104,10 @@ export class TableRowExpandable extends React.Component {
   }
 }
 TableRowExpandable.propTypes = {
-  style: PropTypes.object,
   children: PropTypes.arrayOf(TableCell),
   panel: PropTypes.any,
   height: PropTypes.number,
   onClick: PropTypes.func,
-};
-
-export const TableHeader = ({ children, style }) => (
-  <div className="table-thead" style={style}>
-    {children}
-  </div>
-);
-TableHeader.propTypes = {
+  className: PropTypes.string,
   style: PropTypes.object,
-  children: PropTypes.objectOf(TableRow),
-};
-
-export const TableBody = ({ children, style }) => (
-  <div className="table-tbody" style={style}>
-    {children}
-  </div>
-);
-TableBody.propTypes = {
-  style: PropTypes.object,
-  children: PropTypes.arrayOf(TableRow),
-};
-
-export const Table = ({ children, style }) => (
-  <div className="table" style={style}>
-    {children}
-  </div>
-);
-Table.propTypes = {
-  style: PropTypes.object,
-  children: PropTypes.any,
 };
