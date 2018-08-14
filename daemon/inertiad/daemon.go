@@ -59,7 +59,7 @@ func run(host, port, version string) {
 		println("Failed to start Docker client - shutting down daemon.")
 		return
 	}
-	go downloadDeps(cli, conf.DockerComposeVersion, conf.HerokuishVersion)
+	go downloadDeps(cli, conf.DockerComposeVersion)
 
 	// Check if the cert files are available.
 	_, err = os.Stat(daemonSSLCert)

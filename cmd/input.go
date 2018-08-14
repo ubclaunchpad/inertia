@@ -98,7 +98,6 @@ func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string
 	println("Please enter the build type of your project - this could be one of:")
 	println("  - docker-compose")
 	println("  - dockerfile")
-	println("  - herokuish")
 
 	var response string
 	_, err := fmt.Fscanln(in, &response)
@@ -107,17 +106,12 @@ func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string
 	}
 	buildType = response
 
-	switch buildType {
-	case "herokuish":
-		return
-	default:
-		println("Please enter the path to your build configuration file:")
-		_, err := fmt.Fscanln(in, &response)
-		if err != nil {
-			return "", "", errInvalidBuildFilePath
-		}
-		buildFilePath = response
+	println("Please enter the path to your build configuration file:")
+	_, err = fmt.Fscanln(in, &response)
+	if err != nil {
+		return "", "", errInvalidBuildFilePath
 	}
+	buildFilePath = response
 	return
 }
 

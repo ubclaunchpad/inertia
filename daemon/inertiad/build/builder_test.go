@@ -26,7 +26,6 @@ func TestNewBuilder(t *testing.T) {
 
 const (
 	DockerComposeVersion = "docker/compose:1.22.0"
-	HerokuishVersion     = "gliderlabs/herokuish:v0.4.3"
 )
 
 // killTestContainers is a helper for tests - it implements project.ContainerStopper
@@ -68,7 +67,6 @@ func TestBuilder_Build(t *testing.T) {
 		{"type docker-compose", args{"docker-compose", ""}, false, ""},
 		{"type dockerfile", args{"dockerfile", ""}, false, ""},
 		{"type dockerfile should fail", args{"dockerfile", "fail.Dockerfile"}, true, "image build failed"},
-		{"type herokuish", args{"herokuish", ""}, false, ""},
 	}
 
 	// Setup
@@ -93,7 +91,6 @@ func TestBuilder_Build(t *testing.T) {
 				b = NewBuilder(cfg.Config{
 					ProjectDirectory:     testProjectDir,
 					DockerComposeVersion: DockerComposeVersion,
-					HerokuishVersion:     HerokuishVersion,
 				}, killTestContainers)
 				out = os.Stdout
 			)

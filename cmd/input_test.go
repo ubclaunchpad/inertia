@@ -65,7 +65,6 @@ func Test_addProjectWalkthrough(t *testing.T) {
 	}{
 		{"invalid build type", "", "", true},
 		{"invalid build file path", "dockerfile", "", true},
-		{"herokuish", "herokuish", "", false},
 		{"docker-compose", "docker-compose", "docker-compose.yml", false},
 	}
 	for _, tt := range tests {
