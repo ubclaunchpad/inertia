@@ -8,10 +8,12 @@ import (
 )
 
 // Constants for the generic webhook interface
-var (
+const (
+	// Events
 	PushEvent = "push"
-	// PullEvent = "pull"
+	PullEvent = "pull"
 
+	// Hosts
 	GitHub    = "github"
 	GitLab    = "gitlab"
 	BitBucket = "bitbucket"
@@ -28,12 +30,13 @@ type Payload interface {
 }
 
 // Parse takes in a webhook request and parses it into one of the supported types
-func Parse(r *http.Request) (Payload, error) {
-	// Decode request body to raw JSON
+func Parse(host, eventHeader string, r *http.Request) (Payload, error) {
+	// todo: more content-types
 	if r.Header.Get("content-type") != "application/json" {
 		return nil, errors.New("Webhook Content-Type must be JSON")
 	}
 
+	// Decode request body to raw JSON
 	var raw interface{}
 	if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
 		return nil, err
@@ -41,26 +44,16 @@ func Parse(r *http.Request) (Payload, error) {
 	rawJSON := raw.(map[string]interface{})
 
 	// Parse into one of supported types
-	// Try Github
-	githubEventHeader := r.Header.Get("x-github-event")
-	if len(githubEventHeader) > 0 {
-		return parseGithubEvent(rawJSON, githubEventHeader)
+	switch host {
+	case GitHub:
+		return parseGithubEvent(rawJSON, eventHeader)
+	case GitLab:
+		return parseGitlabEvent(rawJSON, eventHeader)
+	case BitBucket:
+		return parseBitbucketEvent(rawJSON, eventHeader)
+	default:
+		return nil, errors.New("Unsupported webhook received")
 	}
-
-	// Try Gitlab
-	gitlabEventHeader := r.Header.Get("x-gitlab-event")
-	if len(gitlabEventHeader) > 0 {
-		return parseGitlabEvent(rawJSON, gitlabEventHeader)
-	}
-
-	// Try Bitbucket
-	userAgent := r.Header.Get("user-agent")
-	if strings.Contains(userAgent, "Bitbucket") {
-		bitbucketEventHeader := r.Header.Get("x-event-key")
-		return parseBitbucketEvent(rawJSON, bitbucketEventHeader)
-	}
-
-	return nil, errors.New("Unsupported webhook received")
 }
 
 // ParseDocker takes in a Docker webhook request and parses it
@@ -77,4 +70,32 @@ func ParseDocker(r *http.Request) (*DockerWebhook, error) {
 	rawJSON := raw.(map[string]interface{})
 
 	return parseDocker(rawJSON)
+}
+
+// Type returns the git host and event header of given webhook request
+func Type(r *http.Request) (host string, eventHeader string) {
+	// Parse into one of supported types
+	// Try Github
+	githubEventHeader := r.Header.Get("x-github-event")
+	if len(githubEventHeader) > 0 {
+		host = GitHub
+		eventHeader = githubEventHeader
+		return
+	}
+
+	// Try Gitlab
+	gitlabEventHeader := r.Header.Get("x-gitlab-event")
+	if len(gitlabEventHeader) > 0 {
+		host = GitLab
+		eventHeader = gitlabEventHeader
+		return
+	}
+
+	// Try Bitbucket
+	userAgent := r.Header.Get("user-agent")
+	if strings.Contains(userAgent, "Bitbucket") {
+		host = BitBucket
+		eventHeader = r.Header.Get("x-event-key")
+	}
+	return
 }

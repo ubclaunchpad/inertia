@@ -18,9 +18,20 @@ var webhookSecret = "inertia"
 // Supported vendors: Github, Gitlab, Bitbucket
 // Supported events: push
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
-	payload, err := webhook.Parse(r)
+	// check type
+	host, event := webhook.Type(r)
+
+	// ensure validity
+	if err := webhook.Verify(host, webhookSecret, r); err != nil {
+		http.Error(w, "unable to verify payload: "+err.Error(), http.StatusBadRequest)
+		fmt.Fprintln(os.Stdout, err.Error())
+		return
+	}
+
+	// retrieve payload
+	payload, err := webhook.Parse(host, event, r)
 	if err != nil {
-		http.Error(w, "unable to parse payload", http.StatusBadRequest)
+		http.Error(w, "unable to parse payload: "+err.Error(), http.StatusBadRequest)
 		fmt.Fprintln(os.Stdout, err.Error())
 		return
 	}
