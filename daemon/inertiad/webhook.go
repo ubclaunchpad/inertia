@@ -13,7 +13,7 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/webhook"
 )
 
-var webhookSecret = "inertia"
+var webhookSecret = ""
 
 // webhookHandler receives and parses Git-based webhooks
 // Supported vendors: Github, Gitlab, Bitbucket
@@ -24,7 +24,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := "unable to read payload: " + err.Error()
 		http.Error(w, msg, http.StatusBadRequest)
-		fmt.Fprintln(os.Stdout, msg)
+		println(msg)
 		return
 	}
 
@@ -32,10 +32,13 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	host, event := webhook.Type(r.Header)
 
 	// ensure validity
+	if webhookSecret == "" {
+		println("warning: no webhook secret is set up yet! set one in inertia.toml and run inertia [remote] up")
+	}
 	if err := webhook.Verify(host, webhookSecret, r.Header, body); err != nil {
 		msg := "unable to verify payload: " + err.Error()
 		http.Error(w, msg, http.StatusBadRequest)
-		fmt.Fprintln(os.Stdout, msg)
+		println(msg)
 		return
 	}
 
@@ -44,7 +47,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := "unable to parse payload: " + err.Error()
 		http.Error(w, msg, http.StatusBadRequest)
-		fmt.Fprintln(os.Stdout, msg)
+		println(msg)
 		return
 	}
 
@@ -58,7 +61,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	// 	processPullRequestEvent(payload)
 	default:
 		http.Error(w, "unrecognized event type", http.StatusBadRequest)
-		fmt.Fprintln(os.Stdout, "Unrecognized event type")
+		println("unrecognized event type")
 	}
 }
 
@@ -70,7 +73,7 @@ func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(os.Stdout, "Received dockerhub webhook event: %s:%s\n", p.GetRepoName(), p.GetTag())
+	fmt.Printf("Received dockerhub webhook event: %s:%s\n", p.GetRepoName(), p.GetTag())
 }
 
 // processPushEvent prints information about the given PushEvent.
