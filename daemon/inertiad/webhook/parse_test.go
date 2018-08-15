@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -37,10 +38,14 @@ func TestTypeAndParse(t *testing.T) {
 		}
 
 		// Parse type
-		host, event := Type(req)
+		host, event := Type(req.Header)
+
+		// Read
+		body, err := ioutil.ReadAll(req.Body)
+		assert.Nil(t, err)
 
 		// Parse payload
-		payload, err := Parse(host, event, req)
+		payload, err := Parse(host, event, req.Header, body)
 		assert.Nil(t, err)
 
 		assert.Equal(t, tc.source, payload.GetSource())

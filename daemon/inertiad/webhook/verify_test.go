@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -34,6 +35,11 @@ func TestVerify(t *testing.T) {
 			false,
 		},
 		{
+			"bitbucket",
+			args{BitBucket, testBody, xHubSignatureHeader, "", testKey},
+			false,
+		},
+		{
 			"github",
 			args{GitHub, testBody, xHubSignatureHeader, testSignature, testKey},
 			false,
@@ -47,7 +53,7 @@ func TestVerify(t *testing.T) {
 		// not ok cases
 		{
 			"no signature",
-			args{BitBucket, testBody, xHubSignatureHeader, "", testKey},
+			args{GitHub, testBody, xHubSignatureHeader, "", testKey},
 			true,
 		},
 		{
@@ -66,11 +72,13 @@ func TestVerify(t *testing.T) {
 			buf := bytes.NewBufferString(tt.args.body)
 			req, err := http.NewRequest("GET", "http://127.0.0.1/webhook", buf)
 			assert.Nil(t, err)
-
 			req.Header.Set(tt.args.header, tt.args.signature)
 			req.Header.Set("Content-Type", "application/json")
 
-			if err := Verify(tt.args.host, tt.args.key, req); (err != nil) != tt.wantErr {
+			body, err := ioutil.ReadAll(req.Body)
+			assert.Nil(t, err)
+
+			if err := Verify(tt.args.host, tt.args.key, req.Header, body); (err != nil) != tt.wantErr {
 				t.Errorf("Verify() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

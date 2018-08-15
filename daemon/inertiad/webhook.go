@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -18,24 +19,36 @@ var webhookSecret = "inertia"
 // Supported vendors: Github, Gitlab, Bitbucket
 // Supported events: push
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
+	// read
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		msg := "unable to read payload: " + err.Error()
+		http.Error(w, msg, http.StatusBadRequest)
+		fmt.Fprintln(os.Stdout, msg)
+		return
+	}
+
 	// check type
-	host, event := webhook.Type(r)
+	host, event := webhook.Type(r.Header)
 
 	// ensure validity
-	if err := webhook.Verify(host, webhookSecret, r); err != nil {
-		http.Error(w, "unable to verify payload: "+err.Error(), http.StatusBadRequest)
-		fmt.Fprintln(os.Stdout, err.Error())
+	if err := webhook.Verify(host, webhookSecret, r.Header, body); err != nil {
+		msg := "unable to verify payload: " + err.Error()
+		http.Error(w, msg, http.StatusBadRequest)
+		fmt.Fprintln(os.Stdout, msg)
 		return
 	}
 
 	// retrieve payload
-	payload, err := webhook.Parse(host, event, r)
+	payload, err := webhook.Parse(host, event, r.Header, body)
 	if err != nil {
-		http.Error(w, "unable to parse payload: "+err.Error(), http.StatusBadRequest)
-		fmt.Fprintln(os.Stdout, err.Error())
+		msg := "unable to parse payload: " + err.Error()
+		http.Error(w, msg, http.StatusBadRequest)
+		fmt.Fprintln(os.Stdout, msg)
 		return
 	}
 
+	// process event
 	switch event := payload.GetEventType(); event {
 	case webhook.PushEvent:
 		fmt.Fprint(w, common.MsgDaemonOK)
