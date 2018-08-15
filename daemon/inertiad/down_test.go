@@ -10,7 +10,7 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-func TestLogHandlerNoDeployment(t *testing.T) {
+func TestDownHandlerNoDeployment(t *testing.T) {
 	deployment = &FakeDeployment{
 		GetStatusFunc: func(*docker.Client) (common.DeploymentStatus, error) {
 			return common.DeploymentStatus{

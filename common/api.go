@@ -16,12 +16,12 @@ const (
 
 // UpRequest is the configurable body of a UP request to the daemon.
 type UpRequest struct {
-	Stream        bool        `json:"stream"`
-	Project       string      `json:"project"`
-	BuildType     string      `json:"build_type"`
-	BuildFilePath string      `json:"build_file_path"`
-	GitOptions    *GitOptions `json:"git_options"`
-	WebHookSecret string      `json:"webhook_secret"`
+	Stream        bool       `json:"stream"`
+	Project       string     `json:"project"`
+	BuildType     string     `json:"build_type"`
+	BuildFilePath string     `json:"build_file_path"`
+	GitOptions    GitOptions `json:"git_options"`
+	WebHookSecret string     `json:"webhook_secret"`
 }
 
 // GitOptions represents GitHub-related deployment options
@@ -45,4 +45,15 @@ type EnvRequest struct {
 	Encrypt bool   `json:"encrypt,omitempty"`
 
 	Remove bool `json:"remove,omitempty"`
+}
+
+// DeploymentStatus lists details about the deployed project
+type DeploymentStatus struct {
+	InertiaVersion       string   `json:"version"`
+	Branch               string   `json:"branch"`
+	CommitHash           string   `json:"commit_hash"`
+	CommitMessage        string   `json:"commit_message"`
+	BuildType            string   `json:"build_type"`
+	Containers           []string `json:"containers"`
+	BuildContainerActive bool     `json:"build_active"`
 }

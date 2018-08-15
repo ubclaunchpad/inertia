@@ -5,12 +5,11 @@ import (
 	"os"
 	"testing"
 
+	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
-	git "gopkg.in/src-d/go-git.v4"
-
-	docker "github.com/docker/docker/client"
+	gogit "gopkg.in/src-d/go-git.v4"
 )
 
 type MockBuilder struct {
@@ -107,7 +106,7 @@ func TestGetStatusIntegration(t *testing.T) {
 	}
 
 	// Traverse back down to root directory of repository
-	repo, err := git.PlainOpen("../../../")
+	repo, err := gogit.PlainOpen("../../../")
 	assert.Nil(t, err)
 
 	cli, err := containers.NewDockerClient()
@@ -130,19 +129,28 @@ func TestGetBranch(t *testing.T) {
 	assert.Equal(t, "master", deployment.GetBranch())
 }
 
-func TestCompareRemotes(t *testing.T) {
-	urlVariations := []string{
-		"https://github.com/ubclaunchpad/inertia.git",
-		"git://github.com/ubclaunchpad/inertia.git",
-	}
-
-	// Traverse back down to root directory of repository
-	repo, err := git.PlainOpen("../../../")
+func TestDeployment_CompareRemotes(t *testing.T) {
+	repo, err := gogit.PlainOpen("../../../")
 	assert.Nil(t, err)
-
-	deployment := &Deployment{repo: repo}
-	for _, url := range urlVariations {
-		err = deployment.CompareRemotes(url)
-		assert.Nil(t, err)
+	type args struct {
+		remoteURL string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"blank arg", args{""}, false},
+		{"http url matches", args{"https://github.com/ubclaunchpad/inertia.git"}, false},
+		{"ssh url matches", args{"git://github.com/ubclaunchpad/inertia.git"}, false},
+		{"invalid url does not match", args{"https://www.ubclaunchpad.com"}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &Deployment{repo: repo}
+			if err := d.CompareRemotes(tt.args.remoteURL); (err != nil) != tt.wantErr {
+				t.Errorf("Deployment.CompareRemotes() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
