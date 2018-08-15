@@ -100,8 +100,6 @@ func (h *PermissionsHandler) Close() error {
 
 // nolint: gocyclo
 func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	// http.StripPrefix removes the leading slash, but in the interest of
 	// maintaining similar behaviour to stdlib handler functions, we manually
 	// add a leading "/" here instead of having users not add a leading "/" on
