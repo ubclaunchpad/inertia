@@ -24,8 +24,8 @@ class SettingsWrapper extends React.Component {
     return (
 
       <div>
-        <IconHeader type="settings" title="PROJECT INFORMATION" style={{ margin: '1rem' }} />
-        <Table style={{ width: '90%', margin: '1rem' }}>
+        <IconHeader type="settings" title="Project Information" />
+        <Table style={{ margin: '0 30px 10px 30px' }}>
           <TableHeader>
             <TableRow>
               <TableCell style={{ fontWeight: '900', fontSize: '14px' }}>

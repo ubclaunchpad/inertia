@@ -5,7 +5,7 @@ import './index.sass';
 
 const icons = {
   dashboard: <i className="fas fa-th-large" />,
-  containers: <i className="fas fa-database fa-lg" />,
+  containers: <i className="fas fa-database" />,
   team: <i className="fas fa-users" />,
   settings: <i className="fas fa-cog" />,
 };
