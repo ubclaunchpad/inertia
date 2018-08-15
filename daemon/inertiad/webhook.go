@@ -18,20 +18,22 @@ var webhookSecret = "inertia"
 // Supported vendors: Github, Gitlab, Bitbucket
 // Supported events: push
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, common.MsgDaemonOK)
-
 	payload, err := webhook.Parse(r)
 	if err != nil {
+		http.Error(w, "unable to parse payload", http.StatusBadRequest)
 		fmt.Fprintln(os.Stdout, err.Error())
 		return
 	}
 
 	switch event := payload.GetEventType(); event {
 	case webhook.PushEvent:
+		fmt.Fprint(w, common.MsgDaemonOK)
 		processPushEvent(payload, os.Stdout)
 	// case webhook.PullEvent:
+	//	fmt.Fprint(w, common.MsgDaemonOK)
 	// 	processPullRequestEvent(payload)
 	default:
+		http.Error(w, "unrecognized event type", http.StatusBadRequest)
 		fmt.Fprintln(os.Stdout, "Unrecognized event type")
 	}
 }
