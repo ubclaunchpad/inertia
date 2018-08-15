@@ -119,7 +119,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	token := string(tokenBytes)
 
 	// Attempt to validate
-	req, err = http.NewRequest("POST", ts.URL+"/user/validate", nil)
+	req, err = http.NewRequest("GET", ts.URL+"/user/validate", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
@@ -137,7 +137,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	assert.Equal(t, http.StatusOK, logoutResp.StatusCode)
 
 	// Attempt to validate again
-	req, err = http.NewRequest("POST", ts.URL+"/user/validate", nil)
+	req, err = http.NewRequest("GET", ts.URL+"/user/validate", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err = http.DefaultClient.Do(req)
@@ -332,7 +332,7 @@ func TestUserControlHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// List users
-	req, err = http.NewRequest("POST", ts.URL+"/user/list", nil)
+	req, err = http.NewRequest("GET", ts.URL+"/user/list", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", bearerTokenString)
 	resp, err = http.DefaultClient.Do(req)
