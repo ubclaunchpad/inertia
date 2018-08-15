@@ -238,7 +238,7 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 		BuildType:     buildType,
 		WebHookSecret: c.RemoteVPS.Daemon.WebHookSecret,
 		BuildFilePath: c.buildFilePath,
-		GitOptions: &common.GitOptions{
+		GitOptions: common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
 			Branch:    c.Branch,
 		},
