@@ -452,7 +452,7 @@ func TestAddUser(t *testing.T) {
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
-		assert.Equal(t, "/user/adduser", endpoint)
+		assert.Equal(t, "/user/add", endpoint)
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -474,7 +474,7 @@ func TestRemoveUser(t *testing.T) {
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
-		assert.Equal(t, "/user/removeuser", endpoint)
+		assert.Equal(t, "/user/remove", endpoint)
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -496,7 +496,7 @@ func TestResetUser(t *testing.T) {
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
-		assert.Equal(t, "/user/resetusers", endpoint)
+		assert.Equal(t, "/user/reset", endpoint)
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -518,7 +518,7 @@ func TestListUsers(t *testing.T) {
 
 		// Check correct endpoint called
 		endpoint := req.URL.Path
-		assert.Equal(t, "/user/listusers", endpoint)
+		assert.Equal(t, "/user/list", endpoint)
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
