@@ -17,28 +17,69 @@ const (
 	testKey       = "0123456789abcdef"
 )
 
-func TestWebhookHandler_notPush(t *testing.T) {
-	webhookSecret = testKey
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(webhookHandler)
+func Test_webhookHandler(t *testing.T) {
+	type args struct {
+		secret  string
+		headers map[string]string
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantCode int
+		wantErr  string
+	}{
+		{"okay but unsupported", args{
+			testKey,
+			map[string]string{
+				"content-type":    "application/json",
+				"User-Agent":      "GitHub-Hookshot/539d755",
+				"X-GitHub-Event":  "watch",
+				"X-Hub-Signature": testSignature,
+			},
+		}, http.StatusBadRequest, "Unsupported Github event"},
+		{"no signature", args{
+			testKey,
+			map[string]string{
+				"content-type":   "application/json",
+				"User-Agent":     "GitHub-Hookshot/539d755",
+				"X-GitHub-Event": "push",
+			},
+		}, http.StatusBadRequest, "missing signature"},
+		{"no secret", args{
+			"",
+			map[string]string{
+				"content-type":    "application/json",
+				"User-Agent":      "GitHub-Hookshot/539d755",
+				"X-GitHub-Event":  "push",
+				"X-Hub-Signature": testSignature,
+			},
+		}, http.StatusBadRequest, "payload signature check failed"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			webhookSecret = tt.args.secret
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(webhookHandler)
 
-	handler.ServeHTTP(recorder, getTestWebhookEvent())
-	assert.Equal(t, recorder.Code, http.StatusBadRequest)
+			handler.ServeHTTP(recorder, getTestWebhookEvent(tt.args.headers))
+			assert.Equal(t, recorder.Code, tt.wantCode)
 
-	b, err := ioutil.ReadAll(recorder.Body)
-	assert.Nil(t, err)
-	assert.Contains(t, string(b), "Unsupported Github event")
+			b, err := ioutil.ReadAll(recorder.Body)
+			assert.Nil(t, err)
+			assert.Contains(t, string(b), tt.wantErr)
+		})
+	}
 }
 
-func getTestWebhookEvent() *http.Request {
+func getTestWebhookEvent(headers map[string]string) *http.Request {
 	buf := bytes.NewBufferString(testBody)
 	req, err := http.NewRequest("POST", "http://127.0.0.1/webhook", buf)
 	if err != nil {
+		println(err.Error())
 		os.Exit(1)
 	}
-	req.Header.Set("content-type", "application/json")
-	req.Header.Set("User-Agent", "GitHub-Hookshot/539d755")
-	req.Header.Set("X-GitHub-Event", "watch")
-	req.Header.Set("X-Hub-Signature", testSignature)
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
 	return req
 }
