@@ -128,14 +128,21 @@ func run(host, port, version string) {
 	// GitHub webhook endpoint
 	handler.AttachPublicHandlerFunc("/webhook", webhookHandler)
 
-	// CLI API endpoints
-	handler.AttachUserRestrictedHandlerFunc("/status", statusHandler)
-	handler.AttachUserRestrictedHandlerFunc("/logs", logHandler)
-	handler.AttachAdminRestrictedHandlerFunc("/up", upHandler)
-	handler.AttachAdminRestrictedHandlerFunc("/down", downHandler)
-	handler.AttachAdminRestrictedHandlerFunc("/reset", resetHandler)
-	handler.AttachAdminRestrictedHandlerFunc("/env", envHandler)
-	handler.AttachAdminRestrictedHandlerFunc("/prune", pruneHandler)
+	// API endpoints
+	handler.AttachUserRestrictedHandlerFunc("/status",
+		statusHandler, http.MethodGet)
+	handler.AttachUserRestrictedHandlerFunc("/logs",
+		logHandler, http.MethodGet)
+	handler.AttachAdminRestrictedHandlerFunc("/up",
+		upHandler, http.MethodPost)
+	handler.AttachAdminRestrictedHandlerFunc("/down",
+		downHandler, http.MethodPost)
+	handler.AttachAdminRestrictedHandlerFunc("/reset",
+		resetHandler, http.MethodPost)
+	handler.AttachAdminRestrictedHandlerFunc("/env",
+		envHandler, http.MethodGet, http.MethodPost)
+	handler.AttachAdminRestrictedHandlerFunc("/prune",
+		pruneHandler, http.MethodGet)
 
 	// Root "ok" endpoint
 	handler.AttachPublicHandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {
