@@ -14,6 +14,6 @@ func parseGitlabEvent(rawJSON map[string]interface{}, event string) (Payload, er
 	case GitlabPushHeader:
 		return parseGitlabPushEvent(rawJSON), nil
 	default:
-		return nil, errors.New("Unsupported Gitlab event")
+		return nil, errors.New("unsupported Gitlab event")
 	}
 }

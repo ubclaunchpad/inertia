@@ -36,7 +36,7 @@ func Test_webhookHandler(t *testing.T) {
 				"X-GitHub-Event":  "watch",
 				"X-Hub-Signature": testSignature,
 			},
-		}, http.StatusBadRequest, "Unsupported Github event"},
+		}, http.StatusBadRequest, "unsupported Github event"},
 		{"no signature", args{
 			testKey,
 			map[string]string{
