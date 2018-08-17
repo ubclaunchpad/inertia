@@ -15,6 +15,6 @@ func parseGithubEvent(rawJSON map[string]interface{}, event string) (Payload, er
 	case GithubPushHeader:
 		return parseGithubPushEvent(rawJSON), nil
 	default:
-		return nil, errors.New("Unsupported Github event")
+		return nil, errors.New("unsupported Github event")
 	}
 }
