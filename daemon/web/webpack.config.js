@@ -51,12 +51,8 @@ const config = {
     ],
   },
   plugins: [
-    new webpack.DefinePlugin({
-      'process.env': {
-        // define environment variables here
-        NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-      },
-    }),
+    new webpack.EnvironmentPlugin(['NODE_ENV']),
+    new webpack.EnvironmentPlugin(['INERTIA_API']),
     new webpack.DefinePlugin({
       // suppress react devtools console warning
       __REACT_DEVTOOLS_GLOBAL_HOOK__: '({ isDisabled: true })',

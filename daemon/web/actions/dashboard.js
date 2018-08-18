@@ -5,36 +5,11 @@ import {
   GET_CONTAINERS_SUCCESS,
 } from './_constants';
 
-const MOCK_DETAILS = {
-  name: 'your-project-name',
-  branch: 'master',
-  commit: 'e51e133565bd0b0fda6caf69014dd2b2b24bfbaa',
-  message: 'commit message goes here',
-  buildType: 'docker-compose',
-};
-
-const MOCK_LOGS = [
-  'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',
-  'log2asdasdasdasdsdassdasdasdssdasdasdssdasdasdssdasdasdsdsdasds',
-  'log3dasdsdazxcxzsdasdasdssdasdasdssdasdasdssdasdasdsxxxxxxxxxx',
-  'log4dasdsdasdsdasdasdssdasdasdssdasdasdssdasdasdsxzczxczxs',
-  'log5dasdsdaasdsdasdasdssdasdasdssdasdasdssdasdasdsasdasdsds',
-  'log6dasdsdaszsdasdasdssdasdasdssdasdasdssdasdasdsxczxczxczxcwqdqds',
-  'log7dasdsdaxcsdasdasdssdasdasdssdasdasdssdasdasdszxczzxcsds',
-];
-
-const MOCK_CONTAINERS = [
-  {
-    name: '/inertia-deploy-test',
-    status: 'ACTIVE',
-    lastUpdated: '2018-01-01 00:00',
-  },
-  {
-    name: '/docker-compose',
-    status: 'ACTIVE',
-    lastUpdated: '2018-01-01 00:00',
-  },
-];
+import {
+  MOCK_DETAILS,
+  MOCK_LOGS,
+  MOCK_CONTAINERS,
+} from './_mock';
 
 function promiseState(p) {
   const t = {};

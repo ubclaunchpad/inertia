@@ -1,5 +1,7 @@
 import encodeURL from './encodeURL';
 
+const api = process.env.INERTIA_API || '';
+
 export default class InertiaAPI {
   static async logout() {
     const endpoint = '/user/logout';
@@ -8,7 +10,17 @@ export default class InertiaAPI {
         Accept: 'application/json',
       },
     };
-    return InertiaAPI.post(endpoint, params);
+
+    const resp = await InertiaAPI.post(endpoint, params);
+    const body = await resp.json();
+    switch (resp.status) {
+      case 200:
+        return body;
+      default:
+        throw new Error(
+          `logout failed with status ${resp.status}: ${JSON.stringify(body)}`
+        );
+    }
   }
 
   static async login(username, password) {
@@ -23,7 +35,17 @@ export default class InertiaAPI {
         password,
       }),
     };
-    return InertiaAPI.post(endpoint, params);
+
+    const resp = await InertiaAPI.post(endpoint, params);
+    const body = await resp.json();
+    switch (resp.status) {
+      case 200:
+        return body;
+      default:
+        throw new Error(
+          `login failed with status ${resp.status}: ${JSON.stringify(body)}`
+        );
+    }
   }
 
   static async validate() {
@@ -42,6 +64,7 @@ export default class InertiaAPI {
       },
     };
 
+    // todo: websockets
     return InertiaAPI.post(endpoint, params, queryParams);
   }
 
@@ -53,7 +76,17 @@ export default class InertiaAPI {
         Accept: 'application/json',
       },
     };
-    return InertiaAPI.get(endpoint, params);
+
+    const resp = await InertiaAPI.post(endpoint, params);
+    const body = await resp.json();
+    switch (resp.status) {
+      case 200:
+        return body;
+      default:
+        throw new Error(
+          `status check failed with status ${resp.status}: ${JSON.stringify(body)}`
+        );
+    }
   }
 
   /**
@@ -69,15 +102,8 @@ export default class InertiaAPI {
       credentials: 'include',
     };
     const queryString = queryParams ? encodeURL(queryParams) : '';
-    const url = endpoint + queryString;
-
-    const request = new Request(url, newParams);
-
-    try {
-      return await fetch(request);
-    } catch (e) {
-      throw e;
-    }
+    const url = api + endpoint + queryString;
+    return fetch(new Request(url, newParams));
   }
 
   /**
@@ -91,13 +117,6 @@ export default class InertiaAPI {
       method: 'POST',
       credentials: 'include',
     };
-
-    const request = new Request(endpoint, newParams);
-
-    try {
-      return await fetch(request);
-    } catch (e) {
-      throw e;
-    }
+    return fetch(new Request(api + endpoint, newParams));
   }
 }
