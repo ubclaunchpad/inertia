@@ -290,17 +290,17 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 
 	// Log in user if password is correct
 	props, correct, err := h.users.IsCorrectCredentials(userReq.Username, userReq.Password)
-	if err != nil {
+	if err != nil && err != errUserNotFound {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if !correct {
-		http.Error(w, "Login failed", http.StatusForbidden)
+		http.Error(w, "Login failed", http.StatusUnauthorized)
 		return
 	}
 	_, token, err := h.sessions.BeginSession(userReq.Username, props.Admin)
 	if err != nil {
-		http.Error(w, "Login failed: "+err.Error(), http.StatusForbidden)
+		http.Error(w, "Login failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
