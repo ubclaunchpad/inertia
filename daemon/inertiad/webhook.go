@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -12,27 +13,55 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/webhook"
 )
 
-var webhookSecret = "inertia"
+var webhookSecret = ""
 
 // webhookHandler receives and parses Git-based webhooks
 // Supported vendors: Github, Gitlab, Bitbucket
 // Supported events: push
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, common.MsgDaemonOK)
-
-	payload, err := webhook.Parse(r)
+	// read
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err.Error())
+		msg := "unable to read payload: " + err.Error()
+		http.Error(w, msg, http.StatusBadRequest)
+		println(msg)
 		return
 	}
 
+	// check type
+	host, event := webhook.Type(r.Header)
+
+	// ensure validity
+	if webhookSecret == "" {
+		println("warning: no webhook secret is set up yet! set one in inertia.toml and run inertia [remote] up")
+	}
+	if err := webhook.Verify(host, webhookSecret, r.Header, body); err != nil {
+		msg := "unable to verify payload: " + err.Error()
+		http.Error(w, msg, http.StatusBadRequest)
+		println(msg)
+		return
+	}
+
+	// retrieve payload
+	payload, err := webhook.Parse(host, event, r.Header, body)
+	if err != nil {
+		msg := "unable to parse payload: " + err.Error()
+		http.Error(w, msg, http.StatusBadRequest)
+		println(msg)
+		return
+	}
+
+	// process event
 	switch event := payload.GetEventType(); event {
 	case webhook.PushEvent:
+		fmt.Fprint(w, common.MsgDaemonOK)
 		processPushEvent(payload, os.Stdout)
 	// case webhook.PullEvent:
+	//	fmt.Fprint(w, common.MsgDaemonOK)
 	// 	processPullRequestEvent(payload)
 	default:
-		fmt.Fprintln(os.Stdout, "Unrecognized event type")
+		http.Error(w, "unrecognized event type", http.StatusBadRequest)
+		println("unrecognized event type")
 	}
 }
 
@@ -44,7 +73,7 @@ func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(os.Stdout, "Received dockerhub webhook event: %s:%s\n", p.GetRepoName(), p.GetTag())
+	fmt.Printf("Received dockerhub webhook event: %s:%s\n", p.GetRepoName(), p.GetTag())
 }
 
 // processPushEvent prints information about the given PushEvent.

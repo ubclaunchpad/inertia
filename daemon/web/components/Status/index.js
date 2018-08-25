@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import './index.sass';
+
 const Status = ({ title, status }) => (
   <div className="badge">
     <h3 className="title">

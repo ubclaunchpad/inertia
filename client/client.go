@@ -238,7 +238,7 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 		BuildType:     buildType,
 		WebHookSecret: c.RemoteVPS.Daemon.WebHookSecret,
 		BuildFilePath: c.buildFilePath,
-		GitOptions: &common.GitOptions{
+		GitOptions: common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
 			Branch:    c.Branch,
 		},
@@ -326,7 +326,7 @@ func (c *Client) ListEnv() (*http.Response, error) {
 
 // AddUser adds an authorized user for access to Inertia Web
 func (c *Client) AddUser(username, password string, admin bool) (*http.Response, error) {
-	return c.post("/user/adduser", &common.UserRequest{
+	return c.post("/user/add", &common.UserRequest{
 		Username: username,
 		Password: password,
 		Admin:    admin,
@@ -335,17 +335,17 @@ func (c *Client) AddUser(username, password string, admin bool) (*http.Response,
 
 // RemoveUser prevents a user from accessing Inertia Web
 func (c *Client) RemoveUser(username string) (*http.Response, error) {
-	return c.post("/user/removeuser", &common.UserRequest{Username: username})
+	return c.post("/user/remove", &common.UserRequest{Username: username})
 }
 
 // ResetUsers resets all users on the remote.
 func (c *Client) ResetUsers() (*http.Response, error) {
-	return c.post("/user/resetusers", nil)
+	return c.post("/user/reset", nil)
 }
 
 // ListUsers lists all users on the remote.
 func (c *Client) ListUsers() (*http.Response, error) {
-	return c.get("/user/listusers", nil)
+	return c.get("/user/list", nil)
 }
 
 // Sends a GET request. "queries" contains query string arguments.

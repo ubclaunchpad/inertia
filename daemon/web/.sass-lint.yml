@@ -9,3 +9,4 @@ rules:
   single-line-per-selector: 0
   nesting-depth: 0
   no-transition-all: 0
+  no-important: 0

@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -15,7 +16,8 @@ func getMockRequest(endpoint string, rawBody []byte) *http.Request {
 	req.Header.Add("Content-Type", "application/json")
 	return req
 }
-func TestParse(t *testing.T) {
+
+func TestTypeAndParse(t *testing.T) {
 	testCases := []struct {
 		source      string
 		reqBody     []byte
@@ -26,7 +28,6 @@ func TestParse(t *testing.T) {
 		{GitLab, gitlabPushRawJSON, "x-gitlab-event", GitlabPushHeader},
 		{BitBucket, bitbucketPushRawJSON, "x-event-key", BitbucketPushHeader},
 	}
-
 	for _, tc := range testCases {
 		req := getMockRequest("/webhook", tc.reqBody)
 		req.Header.Add(tc.eventHeader, tc.eventValue)
@@ -36,7 +37,15 @@ func TestParse(t *testing.T) {
 			req.Header.Add("User-Agent", "Bitbucket")
 		}
 
-		payload, err := Parse(req)
+		// Parse type
+		host, event := Type(req.Header)
+
+		// Read
+		body, err := ioutil.ReadAll(req.Body)
+		assert.Nil(t, err)
+
+		// Parse payload
+		payload, err := Parse(host, event, req.Header, body)
 		assert.Nil(t, err)
 
 		assert.Equal(t, tc.source, payload.GetSource())

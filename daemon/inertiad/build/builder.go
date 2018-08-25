@@ -26,7 +26,6 @@ type ProjectBuilder func(Config, *docker.Client, io.Writer) (func() error, error
 type Builder struct {
 	buildStageName       string
 	dockerComposeVersion string
-	herokuishVersion     string
 	stopper              containers.ContainerStopper
 
 	builders map[string]ProjectBuilder
@@ -37,11 +36,9 @@ func NewBuilder(conf cfg.Config, stopper containers.ContainerStopper) *Builder {
 	b := &Builder{
 		buildStageName:       "build",
 		dockerComposeVersion: conf.DockerComposeVersion,
-		herokuishVersion:     conf.HerokuishVersion,
 		stopper:              stopper,
 	}
 	b.builders = map[string]ProjectBuilder{
-		"herokuish":      b.herokuishBuild,
 		"dockerfile":     b.dockerBuild,
 		"docker-compose": b.dockerCompose,
 	}
@@ -64,7 +61,7 @@ func (b *Builder) Prune(docker *docker.Client, out io.Writer) error {
 
 // PruneAll forcibly removes Docker assets
 func (b *Builder) PruneAll(docker *docker.Client, out io.Writer) error {
-	return containers.PruneAll(docker, b.dockerComposeVersion, b.herokuishVersion)
+	return containers.PruneAll(docker, b.dockerComposeVersion)
 }
 
 // Config contains parameters required for builds to execute
@@ -271,73 +268,6 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	reportProjectContainerCreateComplete(d.Name, out)
 
 	return func() error { return b.run(ctx, cli, d.Name, containerResp.ID, out) }, nil
-}
-
-// herokuishBuild uses the Herokuish tool to use Heroku's official buidpacks
-// to build the user project.
-func (b *Builder) herokuishBuild(d Config, cli *docker.Client,
-	out io.Writer) (func() error, error) {
-	fmt.Fprintln(out, "Setting up herokuish...")
-	ctx := context.Background()
-
-	// Configure herokuish container to build project when run
-	resp, err := cli.ContainerCreate(
-		ctx, &container.Config{
-			Image: b.herokuishVersion,
-			Cmd:   []string{"/build"},
-			Env:   d.EnvValues,
-		},
-		&container.HostConfig{
-			Binds: []string{
-				// "/tmp/app" is the directory herokuish looks
-				// for during a build, so mount project there
-				getTrueDirectory(d.BuildDirectory) + ":/tmp/app",
-			},
-		}, nil, b.buildStageName,
-	)
-	if err != nil {
-		return nil, err
-	}
-	if len(resp.Warnings) > 0 {
-		fmt.Fprintln(out, "Warnings encountered on herokuish setup.")
-		warnings := strings.Join(resp.Warnings, "\n")
-		return nil, errors.New(warnings)
-	}
-
-	// Start the herokuish container to build project
-	reportProjectBuildBegin(d.Name, out)
-	if err := containers.StartAndWait(cli, resp.ID, out); err != nil {
-		return nil, err
-	}
-	reportProjectBuildComplete(d.Name, out)
-
-	// Save build as new image and create a container
-	imgName := "inertia-build/" + d.Name
-	reportProjectContainerCreateBegin(d.Name, out)
-	_, err = cli.ContainerCommit(ctx, resp.ID, types.ContainerCommitOptions{
-		Reference: imgName,
-	})
-	if err != nil {
-		return nil, err
-	}
-	resp, err = cli.ContainerCreate(ctx, &container.Config{
-		Image: imgName + ":latest",
-		// Currently, only start the standard "web" process
-		// @todo more processes
-		Cmd: []string{"/start", "web"},
-		Env: d.EnvValues,
-	}, nil, nil, d.Name)
-	if err != nil {
-		return nil, err
-	}
-	if len(resp.Warnings) > 0 {
-		fmt.Fprintln(out, "Warnings encountered on herokuish startup.")
-		warnings := strings.Join(resp.Warnings, "\n")
-		return nil, errors.New(warnings)
-	}
-	reportProjectContainerCreateComplete(d.Name, out)
-
-	return func() error { return b.run(ctx, cli, d.Name, resp.ID, out) }, nil
 }
 
 // run starts project and tracks all active project containers and pipes an error
