@@ -10,7 +10,7 @@
   "sasslintConfig": ".sass-lint.yml",
   "scripts": {
     "start": "webpack-dev-server --host=127.0.0.1",
-    "build": "NODE_ENV=production webpack --config webpack.prod.js",
+    "start:sandbox": "NODE_ENV=test webpack-dev-server --host=127.0.0.1",
     "build": "webpack --config webpack.prod.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ignore-pattern public/",

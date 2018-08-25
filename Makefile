@@ -148,6 +148,11 @@ web-deps:
 web-run:
 	(cd ./daemon/web; npm start)
 
+# Run sandboxed development instance of Inertia Web.
+.PHONY: web-run
+web-run-sandbox:
+	(cd ./daemon/web; npm start:sandbox)
+
 # Build and minify Inertia Web.
 .PHONY: web-build
 web-build:
