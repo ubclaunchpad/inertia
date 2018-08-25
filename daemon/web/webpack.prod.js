@@ -12,7 +12,7 @@ const config = {
   },
   module: mainConfig.module,
   plugins: [
-    new webpack.EnvironmentPlugin(['NODE_ENV']),
+    new webpack.EnvironmentPlugin({ NODE_ENV: 'production' }),
     new HtmlWebpackPlugin({
       template: './index.html',
       filename: 'index.html',

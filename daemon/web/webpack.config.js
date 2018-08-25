@@ -51,8 +51,8 @@ const config = {
     ],
   },
   plugins: [
-    new webpack.EnvironmentPlugin(['NODE_ENV']),
-    new webpack.EnvironmentPlugin(['INERTIA_API']),
+    new webpack.EnvironmentPlugin({ NODE_ENV: 'development' }),
+    new webpack.EnvironmentPlugin({ INERTIA_API: '' }),
     new webpack.DefinePlugin({
       // suppress react devtools console warning
       __REACT_DEVTOOLS_GLOBAL_HOOK__: '({ isDisabled: true })',
