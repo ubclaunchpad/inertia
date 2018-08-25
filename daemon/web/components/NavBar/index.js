@@ -5,36 +5,42 @@ import {
 } from 'react-router-dom';
 
 import InertiaLogo from '../../assets/logo/inertia-horizontal-black.png';
-import DashboardIcon from '../../assets/icons/dashboard-icon.png';
-import TeamIcon from '../../assets/icons/team-icon.png';
-import SettingIcon from '../../assets/icons/settings-icon.png';
 
 import './index.sass';
 
 const NavBar = ({ url }) => (
-  <div>
-    <img src={InertiaLogo} alt="inertia-icon" height="14" />
-    <button
-      type="submit"
-      style={{
-        textDecoration: 'none',
-        color: '#5f5f5f',
-      }}>
-    logout
-    </button>
-    <Link to={`${url}/dashboard`}>
-      <img src={DashboardIcon} alt="dashboard-icon" height="12" />
+  <nav className="flex fill-width ai-center bg-white shadow">
+    <img className="margin-sides-m " src={InertiaLogo} alt="inertia-icon" height="38" />
+    <div className="flex jc-end fill-width">
+      <Link to={`${url}/dashboard`} className="flex ai-center pad-sides-xs hover-color-lightred-all">
+        <i className="fas fa-th-large" />
+        <h1>
 Dashboard
-    </Link>
-    <Link to={`${url}/team`}>
-      <img src={TeamIcon} alt="team-icon" height="12" />
+        </h1>
+      </Link>
+      <Link to={`${url}/team`} className="flex ai-center pad-sides-xs hover-color-lightred-all">
+        <i className="fas fa-users" />
+        <h1>
 Team
-    </Link>
-    <Link to={`${url}/settings`}>
-      <img src={SettingIcon} alt="setting-icon" height="12" />
+        </h1>
+      </Link>
+      <Link to={`${url}/settings`} className="flex ai-center pad-sides-xs hover-color-lightred-all">
+        <i className="fas fa-cog" />
+        <h1>
 Settings
-    </Link>
-  </div>
+        </h1>
+      </Link>
+
+      <button
+        type="submit"
+        style={{
+          textDecoration: 'none',
+          color: '#5f5f5f',
+        }}>
+    logout
+      </button>
+    </div>
+  </nav>
 );
 
 NavBar.propTypes = {
