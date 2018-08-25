@@ -36,14 +36,15 @@ export default class InertiaAPI {
       }),
     };
 
+    let data;
     const resp = await InertiaAPI.post(endpoint, params);
-    const body = await resp.json();
     switch (resp.status) {
       case 200:
-        return body;
+        return resp.json();
       default:
+        data = await resp.text();
         throw new Error(
-          `login failed with status ${resp.status}: ${JSON.stringify(body)}`
+          `login failed with status ${resp.status}: ${data}`
         );
     }
   }
@@ -77,14 +78,15 @@ export default class InertiaAPI {
       },
     };
 
+    let data;
     const resp = await InertiaAPI.post(endpoint, params);
-    const body = await resp.json();
     switch (resp.status) {
       case 200:
-        return body;
+        return resp.json();
       default:
+        data = await resp.text();
         throw new Error(
-          `status check failed with status ${resp.status}: ${JSON.stringify(body)}`
+          `status check failed with status ${resp.status}: ${data}`
         );
     }
   }

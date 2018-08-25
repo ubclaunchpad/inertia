@@ -44,13 +44,9 @@ class LoginWrapper extends React.Component {
   }
 
   async handleLoginSubmit() {
-    const { testAction, history } = this.props;
+    const { loginAction, history } = this.props;
     const { username, password } = this.state;
-    // TODO: disable authentication until we get it working
-    /* eslint-disable no-console */
-    console.log(username, password);
-    /* eslint-enable no-console */
-    testAction();
+    loginAction({ username, password });
     // const response = await InertiaAPI.login(
     //   username,
     //   password,
@@ -103,19 +99,17 @@ Login
 }
 LoginWrapper.propTypes = {
   history: PropTypes.object,
-  testAction: PropTypes.func,
+  loginAction: PropTypes.func,
 };
-
 
 const mapStateToProps = ({ Login }) => {
   return {
-    testState: Login.testState,
+    authState: Login,
   };
 };
 
 const mapDispatchToProps = dispatch => bindActionCreators({ ...loginActions }, dispatch);
 
 const Login = connect(mapStateToProps, mapDispatchToProps)(LoginWrapper);
-
 
 export default Login;

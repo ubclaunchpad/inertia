@@ -2,12 +2,12 @@ import { combineReducers, createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import Dashboard from './dashboard';
 import Main from './main';
-import Login from './login';
+import Auth from './auth';
 
 const rootReducer = combineReducers({
   Dashboard,
   Main,
-  Login,
+  Auth,
 });
 
 const store = createStore(

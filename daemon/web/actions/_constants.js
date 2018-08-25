@@ -1,7 +1,14 @@
+// state
+export const TEST = (process.env.NODE_ENV === 'test');
+
+// test actions
 export const TEST_DASHBOARD_ACTION = 'TEST_DASHBOARD_ACTION';
-export const TEST_LOGIN_ACTION = 'TEST_LOGIN_ACTION';
 export const TEST_HOME_ACTION = 'TEST_HOME_ACTION';
 export const TEST_MAIN_ACTION = 'TEST_MAIN_ACTION';
+
+// authentication
+export const LOGIN_ACTION = 'LOGIN_ACTION';
+export const LOGOUT_ACTION = 'LOGOUT_ACTION';
 
 // dashboard page
 export const GET_PROJECT_DETAILS_SUCCESS = 'GET_PROJECT_DETAILS_SUCCESS';
