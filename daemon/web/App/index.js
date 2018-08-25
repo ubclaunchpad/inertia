@@ -3,8 +3,8 @@ import { HashRouter, Redirect, Route } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import createHistory from 'history/createBrowserHistory';
 
-import Login from '../Login';
-import Main from '../Main';
+import Main from './Main';
+import Login from '../pages/Login';
 
 const styles = {
   container: {
