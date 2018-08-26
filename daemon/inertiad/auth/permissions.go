@@ -149,7 +149,7 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !admin {
-			http.Error(w, "Admin privileges required", http.StatusForbidden)
+			http.Error(w, "admin privileges required", http.StatusForbidden)
 			return
 		}
 	}
@@ -291,16 +291,16 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 	// Log in user if password is correct
 	props, correct, err := h.users.IsCorrectCredentials(userReq.Username, userReq.Password)
 	if err != nil && err != errUserNotFound {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "login failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if !correct {
-		http.Error(w, "Login failed", http.StatusUnauthorized)
+		http.Error(w, "credentials invalid", http.StatusUnauthorized)
 		return
 	}
 	_, token, err := h.sessions.BeginSession(userReq.Username, props.Admin)
 	if err != nil {
-		http.Error(w, "Login failed: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "login failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -312,7 +312,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	err := h.sessions.EndSession(r)
 	if err != nil {
-		http.Error(w, "Logout failed: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "logout failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

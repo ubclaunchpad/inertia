@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	errSessionNotFound = errors.New("Session not found")
-	errUserNotFound    = errors.New("User not found")
+	errSessionNotFound = errors.New("session not found")
+	errUserNotFound    = errors.New("user not found")
 )
 
 const (
@@ -161,7 +161,7 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 		}
 		err := json.Unmarshal(propsBytes, userProps)
 		if err != nil {
-			return errors.New("Corrupt user properties: " + err.Error())
+			return errors.New("corrupt user properties: " + err.Error())
 		}
 
 		// Delete user since LoginAttempts must be updated
@@ -185,7 +185,7 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 
 			// Rollback will occur if transaction returns and error, so store
 			// in variable. TODO: don't delete?
-			userErr = errors.New("Too many login attempts - user deleted")
+			userErr = errors.New("too many login attempts - user deleted")
 			return nil
 		}
 
