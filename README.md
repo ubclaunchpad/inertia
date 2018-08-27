@@ -55,12 +55,11 @@ Inertia is a simple cross-platform command line application that enables quick a
 ----|-----------------
 🚀  | Simple setup from your computer without ever having to manually SSH into your remote
 🍰  | Use any Linux-based remote virtual private server platform you want
-📦  | Easily provision new VPS instances on supported platforms such as Amazon EC2
-⚒  | Deploy a wide range of supported project types (including Dockerfile, docker-compose, and Heroku projects)
-🚄  | Have your project automatically updated, rebuilt, and deployed as soon as you `git push`
-🛂  | Start up, shut down, and monitor your deployment with ease
-🏷  | Configure deployment to your liking with branch settings and more
-🌐  | Add users and check on your deployment anywhere through Inertia Web
+📦  | Easily provision VPS instances for your project with supported providers such as Amazon EC2
+⚒  | Deploy any Dockerfile or docker-compose project
+🚄  | Webhook integration for GitHub, GitLab, and Bitbucket allow your project to be automatically updated, rebuilt, and deployed as soon as you `git push`
+🛂  | Start up, shut down, and monitor your deployment with ease from the command line
+🏷  | Configure deployment to your liking with branch settings, build configuration, and more
 🔑  | Secured with tokens and HTTPS across the board
 
 <br>
@@ -195,7 +194,7 @@ The deployment daemon runs persistently in the background on the server, receivi
   <img src="https://bobheadxi.github.io/assets/images/posts/inertia-diagram.png" width="70%" />
 </p>
 
-Inertia is set up serverside by executing a script over SSH that installs Docker and starts an Inertia daemon image with [access to the host Docker socket](https://bobheadxi.github.io/dockerception/#docker-in-docker). This Docker-in-Docker configuration gives the daemon the ability to start up other containers *alongside* it, rather than *within* it, as required. Once the daemon is set up, we avoid using further SSH commands and execute Docker commands through Docker's Golang API. Instead of installing the docker-compose toolset, we [use a docker-compose image](https://bobheadxi.github.io/dockerception/#docker-compose-in-docker) to build and deploy user projects. Inertia also supports projects configured for Heroku buildpacks using the [gliderlabs/herokuish](https://github.com/gliderlabs/herokuish) Docker image for builds and deployments.
+Inertia is set up serverside by executing a script over SSH that installs Docker and starts an Inertia daemon image with [access to the host Docker socket](https://bobheadxi.github.io/dockerception/#docker-in-docker). This Docker-in-Docker configuration gives the daemon the ability to start up other containers *alongside* it, rather than *within* it, as required. Once the daemon is set up, we avoid using further SSH commands and execute Docker commands through Docker's Golang API. Instead of installing the docker-compose toolset, we [use a docker-compose image](https://bobheadxi.github.io/dockerception/#docker-compose-in-docker) to build and deploy user projects.
 
 <br><br>
 

@@ -1,61 +1,6 @@
-@import '../../styles/index'
+@import '../../styles'
+@import '../../styles'
 
-$table-row-height: 48px
-$table-row-padding: 38px
 
-.table
-  position: relative
-  border-radius: 2px
-  box-shadow: 0 2px 4px 0 rgba(155, 155, 155, 0.14)
-  background-color: #ffffff
-
-.table-tbody
-  font-family: Rubik
-  font-size: 14px
-  font-weight: 500
-  color: $greyblue
-
-.table-thead
-  border-bottom: 1px solid $separator
-
-.table-tr-expandable
-  position: relative
-  display: flex
-  flex-wrap: wrap
-  width: 100%
-
-.table-tr-expandable-inner
-  position: relative
-  display: flex
-  padding: 0 $table-row-padding
-  width: 100%
-
-  .table-td
-    height: $table-row-height
-
-  &.expanded
-    background-color: $selection-highlight
-
-  &:hover
-    background-color: $selection-highlight
-    cursor: pointer
-
-.table-tr
-  display: flex
-  padding: 0 $table-row-padding
-  width: 100%
-  height: $table-row-height
-
-.table-tr-panel
-  width: 100%
-  transition: all 0.25s ease-in-out
-  overflow: auto
-  opacity: 0
-
-  &.expanded
-    opacity: 1
-
-.table-td
-  display: flex
-  flex: 1
-  align-items: center
+.table-body
+  @extend %h4

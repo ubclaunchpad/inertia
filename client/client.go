@@ -238,7 +238,7 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 		BuildType:     buildType,
 		WebHookSecret: c.RemoteVPS.Daemon.WebHookSecret,
 		BuildFilePath: c.buildFilePath,
-		GitOptions: &common.GitOptions{
+		GitOptions: common.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
 			Branch:    c.Branch,
 		},
@@ -288,7 +288,7 @@ func (c *Client) Logs(container string, entries int) (*http.Response, error) {
 }
 
 // LogsWebSocket opens a websocket connection to given container's logs
-func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
+func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, error) {
 	host, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
 	if err != nil {
 		return nil, err
@@ -296,10 +296,14 @@ func (c *Client) LogsWebSocket(container string) (SocketReader, error) {
 
 	// Set up request
 	url := &url.URL{Scheme: "wss", Host: host.Host, Path: "/logs"}
-	encodeQuery(url, map[string]string{
+	params := map[string]string{
 		common.Container: container,
 		common.Stream:    "true",
-	})
+	}
+	if entries > 0 {
+		params[common.Entries] = strconv.Itoa(entries)
+	}
+	encodeQuery(url, params)
 
 	// Set up authorization
 	header := http.Header{}
@@ -327,7 +331,7 @@ func (c *Client) ListEnv() (*http.Response, error) {
 
 // AddUser adds an authorized user for access to Inertia Web
 func (c *Client) AddUser(username, password string, admin bool) (*http.Response, error) {
-	return c.post("/user/adduser", &common.UserRequest{
+	return c.post("/user/add", &common.UserRequest{
 		Username: username,
 		Password: password,
 		Admin:    admin,
@@ -336,17 +340,17 @@ func (c *Client) AddUser(username, password string, admin bool) (*http.Response,
 
 // RemoveUser prevents a user from accessing Inertia Web
 func (c *Client) RemoveUser(username string) (*http.Response, error) {
-	return c.post("/user/removeuser", &common.UserRequest{Username: username})
+	return c.post("/user/remove", &common.UserRequest{Username: username})
 }
 
 // ResetUsers resets all users on the remote.
 func (c *Client) ResetUsers() (*http.Response, error) {
-	return c.post("/user/resetusers", nil)
+	return c.post("/user/reset", nil)
 }
 
 // ListUsers lists all users on the remote.
 func (c *Client) ListUsers() (*http.Response, error) {
-	return c.get("/user/listusers", nil)
+	return c.get("/user/list", nil)
 }
 
 // Sends a GET request. "queries" contains query string arguments.

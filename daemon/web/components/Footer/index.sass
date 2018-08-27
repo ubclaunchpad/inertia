@@ -1,44 +1,21 @@
-@import ../../styles/index
-   
+@import '../../styles'
+
 .footer
-    display: flex
-    flex-flow: row
-    width: 100%
-    height: 4rem
-    align-items: center
-    justify-content: space-between
+  height: $navbar
 
-    .icons 
-        font-size: 20px
-        object-fit: contain
-        padding: 0.5rem
+  .icons
+    font-size: 20px
+    object-fit: contain
 
-        *
-            display: inline-block
+    *
+      display: inline-block
 
-        > div
-            height: 100%
-            vertical-align: middle
-        > a
-            color: $lightblue
-            &:hover
-                color: $lightred
+    > a
+      color: $lightblue
 
-.launchpad
-     width: 105px
-     height: 100%
-     padding-left: 0.1rem
-     fill: $lightblue
-     &:hover
-        fill: $lightred
+  .launchpad
+    fill: $lightblue
+    width: 105px
 
-.right-side
-    padding-right: 10px
-
-.left-side
-    padding-left: 18px
-
-.daemon-version
+  .daemon-version
     color: $lightblue
-    letter-spacing: 1px
-    font-size: 10px

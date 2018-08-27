@@ -96,6 +96,10 @@ func NewDeployment(projectDirectory, databasePath string, builder Builder) (*Dep
 
 // Initialize sets up deployment repository
 func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
+	if cfg.RemoteURL == "" {
+		return errors.New("remote URL is required for first setup")
+	}
+
 	common.RemoveContents(d.directory)
 	d.SetConfig(cfg)
 
@@ -283,9 +287,13 @@ func (d *Deployment) GetBranch() string {
 	return d.branch
 }
 
-// CompareRemotes will compare the remote of the deployment
-// with given remote URL and return nil if they match
+// CompareRemotes will compare the remote of the deployment  with given remote
+// URL and return nil if they don't conflict
 func (d *Deployment) CompareRemotes(remoteURL string) error {
+	// Ignore if no remote given
+	if remoteURL == "" {
+		return nil
+	}
 	remotes, err := d.repo.Remotes()
 	if err != nil {
 		return err

@@ -19,7 +19,7 @@ deps: prod-deps dev-deps
 # Sets up production dependencies
 .PHONY: prod-deps
 prod-deps:
-	dep ensure
+	dep ensure -v
 	make web-deps
 
 # Sets up test dependencies
@@ -51,6 +51,7 @@ clean:
 lint:
 	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=120s ./...'
 	(cd ./daemon/web; npm run lint)
+	(cd ./daemon/web; npm run sass-lint)
 
 # Run test suite without Docker ops
 .PHONY: test

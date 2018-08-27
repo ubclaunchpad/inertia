@@ -52,14 +52,6 @@ func CheckForDockerfile(cwd string) bool {
 	return !os.IsNotExist(err)
 }
 
-// CheckForProcfile returns false if current directory is not a
-// Heroku project
-func CheckForProcfile(cwd string) bool {
-	procfilePath := filepath.Join(cwd, "Procfile")
-	_, err := os.Stat(procfilePath)
-	return !os.IsNotExist(err)
-}
-
 // RemoveContents removes all files within given directory, returns nil if successful
 func RemoveContents(directory string) error {
 	d, err := os.Open(directory)

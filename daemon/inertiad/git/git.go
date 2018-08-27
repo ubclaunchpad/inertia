@@ -79,6 +79,7 @@ func UpdateRepository(directory string, repo *gogit.Repository, branch string, a
 		Auth:     auth,
 		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
 		Progress: out,
+		Force:    true,
 	})
 	err = SimplifyGitErr(err)
 	if err != nil {

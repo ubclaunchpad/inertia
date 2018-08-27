@@ -1,19 +1,16 @@
-@import '../../styles/index'
+@import '../../styles'
 
-.textArea
-  position: relative
-  top: 1px
-  width: 100%
-  height: 100%
-  color: #ffffff
-  background-color: #212b36
-  font-size: 15px
-  resize: none
-  padding-top: 8px
-  padding-right: 38px
-  padding-bottom: 8px
-  padding-left: 38px
-
-.terminalView
-  height: 100%
+.terminal-view
   box-sizing: border-box
+  height: 100%
+
+  > .text-area
+    background: $darkgrey
+    color: $white
+    font-size: 15px
+    height: 100%
+    padding: 8px 38px
+    position: relative
+    resize: none
+    top: 1px
+    width: 100%

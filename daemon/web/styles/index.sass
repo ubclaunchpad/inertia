@@ -1,8 +1,17 @@
-@import ./colors
-@import ./typography
+// Core styles
+@import './colors'
+@import './typography'
+@import './spacing'
+@import './utils'
+@import './decoration'
+@import './animation'
+
+// Container styles
+@import '../App'
+
 
 html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+h2, h3, h4, h5, h6, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
 del, dfn, em, img, ins, kbd, q, s, samp,
 small, strike, strong, sub, sup, tt, var,
@@ -14,11 +23,11 @@ article, aside, canvas, details, embed,
 figure, figcaption, footer, header,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video
+  border: 0
   box-sizing: border-box
+  font: inherit
   margin: 0
   padding: 0
-  border: 0
-  font: inherit
   vertical-align: baseline
 
 html
@@ -26,14 +35,7 @@ html
   width: 100vw
 
 body
-  height: 100%
-  width: 100%
-  font-family: 'Rubik', sans-serif;
-  background: $background;
-
-code
-  font-family: 'Ubuntu Mono', monospace
-
-#app
+  background: $background
+  font-family: 'Rubik', sans-serif
   height: 100%
   width: 100%

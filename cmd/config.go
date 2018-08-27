@@ -54,9 +54,6 @@ to succeed.`,
 			println("Dockerfile project detected")
 			buildType = "dockerfile"
 			buildFilePath = "Dockerfile"
-		} else if common.CheckForProcfile(cwd) {
-			println("Heroku project detected")
-			buildType = "herokuish"
 		} else {
 			println("No build file detected")
 			buildType, buildFilePath, err = addProjectWalkthrough(os.Stdin)

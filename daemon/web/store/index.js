@@ -4,7 +4,6 @@ import Dashboard from './dashboard';
 import Main from './main';
 import Login from './login';
 
-
 const rootReducer = combineReducers({
   Dashboard,
   Main,

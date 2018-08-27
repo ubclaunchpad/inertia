@@ -52,41 +52,6 @@ func TestCheckForDockerfile(t *testing.T) {
 	os.Remove(path)
 }
 
-func TestCheckForProcfile(t *testing.T) {
-	cwd, err := os.Getwd()
-	assert.Nil(t, err)
-
-	path := path.Join(cwd, "/Procfile")
-
-	// No!
-	b := CheckForProcfile(cwd)
-	assert.False(t, b)
-
-	// Yes!
-	file, err := os.Create(path)
-	assert.Nil(t, err)
-	file.Close()
-	b = CheckForProcfile(cwd)
-	assert.True(t, b)
-	os.Remove(path)
-}
-
-func TestExtract(t *testing.T) {
-	for _, url := range remoteURLVariations {
-		repoName := ExtractRepository(url)
-		assert.Equal(t, "ubclaunchpad/inertia", repoName)
-	}
-
-	repoNameWithHyphens := ExtractRepository("git@github.com:ubclaunchpad/inertia-deploy-test.git")
-	assert.Equal(t, "ubclaunchpad/inertia-deploy-test", repoNameWithHyphens)
-
-	repoNameWithDots := ExtractRepository("git@github.com:ubclaunchpad/inertia.deploy.test.git")
-	assert.Equal(t, "ubclaunchpad/inertia.deploy.test", repoNameWithDots)
-
-	repoNameWithMixed := ExtractRepository("git@github.com:ubclaunchpad/inertia-deploy.test.git")
-	assert.Equal(t, "ubclaunchpad/inertia-deploy.test", repoNameWithMixed)
-}
-
 func TestParseDate(t *testing.T) {
 	assert.NotNil(t, ParseDate("2006-01-02T15:04:05.000Z"))
 }

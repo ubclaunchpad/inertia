@@ -10,6 +10,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/util"
 )
 
 const (
@@ -58,22 +59,34 @@ func NewPermissionsHandler(
 
 	// The following endpoints are for user administration and session administration
 	userHandler := http.NewServeMux()
-	userHandler.HandleFunc("/login", handler.loginHandler)
-	userHandler.HandleFunc("/logout", handler.logoutHandler)
+	userHandler.HandleFunc("/login",
+		util.WithMethods(handler.loginHandler, http.MethodPost))
+	userHandler.HandleFunc("/logout",
+		util.WithMethods(handler.logoutHandler, http.MethodPost))
+
+	// User-only paths
 	handler.userPaths = []string{
 		"/user/validate",
+		"/user/list",
 	}
-	userHandler.HandleFunc("/validate", handler.validateHandler)
+	userHandler.HandleFunc("/validate",
+		util.WithMethods(handler.validateHandler, http.MethodGet))
+	userHandler.HandleFunc("/list",
+		util.WithMethods(handler.listUsersHandler, http.MethodGet))
+
+	// Admin-only paths
 	handler.adminPaths = []string{
-		"/user/adduser",
-		"/user/removeuser",
-		"/user/resetusers",
-		"/user/listusers",
+		"/user/add",
+		"/user/remove",
+		"/user/reset",
 	}
-	userHandler.HandleFunc("/adduser", handler.addUserHandler)
-	userHandler.HandleFunc("/removeuser", handler.removeUserHandler)
-	userHandler.HandleFunc("/resetusers", handler.resetUsersHandler)
-	userHandler.HandleFunc("/listusers", handler.listUsersHandler)
+	userHandler.HandleFunc("/add",
+		util.WithMethods(handler.addUserHandler, http.MethodPost))
+	userHandler.HandleFunc("/remove",
+		util.WithMethods(handler.removeUserHandler, http.MethodPost))
+	userHandler.HandleFunc("/reset",
+		util.WithMethods(handler.resetUsersHandler, http.MethodPost))
+
 	mux.Handle("/user/", http.StripPrefix("/user", userHandler))
 
 	return handler, nil
@@ -156,17 +169,19 @@ func (h *PermissionsHandler) AttachPublicHandlerFunc(path string, handler http.H
 }
 
 // AttachUserRestrictedHandlerFunc attaches and restricts given path and handler to logged in users.
-func (h *PermissionsHandler) AttachUserRestrictedHandlerFunc(path string, handler http.HandlerFunc) {
+func (h *PermissionsHandler) AttachUserRestrictedHandlerFunc(path string,
+	handler http.HandlerFunc, methods ...string) {
 	// Add path to user-restricted paths
 	h.userPaths = append(h.userPaths, path)
-	h.mux.HandleFunc(path, handler)
+	h.mux.HandleFunc(path, util.WithMethods(handler, methods...))
 }
 
 // AttachAdminRestrictedHandlerFunc attaches and restricts given path and handler to logged in admins.
-func (h *PermissionsHandler) AttachAdminRestrictedHandlerFunc(path string, handler http.HandlerFunc) {
+func (h *PermissionsHandler) AttachAdminRestrictedHandlerFunc(path string,
+	handler http.HandlerFunc, methods ...string) {
 	// Add path as one that requires elevated permissions
 	h.adminPaths = append(h.adminPaths, path)
-	h.mux.HandleFunc(path, handler)
+	h.mux.HandleFunc(path, util.WithMethods(handler, methods...))
 }
 
 func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Request) {
