@@ -245,6 +245,11 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 	})
 }
 
+// Token generates token on this remote.
+func (c *Client) Token() (*http.Response, error) {
+	return c.get("/token", nil)
+}
+
 // Prune clears Docker ReadFiles on this remote.
 func (c *Client) Prune() (*http.Response, error) {
 	return c.post("/prune", nil)
@@ -342,11 +347,6 @@ func (c *Client) ResetUsers() (*http.Response, error) {
 // ListUsers lists all users on the remote.
 func (c *Client) ListUsers() (*http.Response, error) {
 	return c.get("/user/listusers", nil)
-}
-
-// GenerateToken generates token on the remote.
-func (c *Client) GenerateToken() (*http.Response, error) {
-	return c.get("/token", nil)
 }
 
 // Sends a GET request. "queries" contains query string arguments.

@@ -136,6 +136,7 @@ func run(host, port, version string) {
 	handler.AttachAdminRestrictedHandlerFunc("/reset", resetHandler)
 	handler.AttachAdminRestrictedHandlerFunc("/env", envHandler)
 	handler.AttachAdminRestrictedHandlerFunc("/prune", pruneHandler)
+	handler.AttachAdminRestrictedHandlerFunc("/token", tokenHandler)
 
 	// Root "ok" endpoint
 	handler.AttachPublicHandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {
