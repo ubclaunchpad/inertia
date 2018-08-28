@@ -23,7 +23,7 @@ class SettingsWrapper extends React.Component {
   render() {
     return (
 
-      <div>
+      <div className="pad-sides-s">
         <IconHeader type="settings" title="Project Information" />
         <Table style={{ margin: '0 30px 10px 30px' }}>
           <TableHeader>
@@ -77,8 +77,8 @@ docker-compose
             </TableRow>
           </TableBody>
         </Table>
-        <ShutdownButton style={{ margin: '1rem' }} />
-        <PruneImageButton style={{ margin: '1rem' }} />
+        <ShutdownButton style={{ margin: '30px' }} />
+        <PruneImageButton style={{ margin: '30px' }} />
       </div>
     );
   }

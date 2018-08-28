@@ -25,7 +25,7 @@ const styles = {
   },
   underConstruction: {
     textAlign: 'center',
-    fontSize: 24,
+    fontSize: 14,
     color: '#9f9f9f',
   },
 };
