@@ -1,11 +1,13 @@
 $navbar: 64px
 
+$spacing-xxs: 8px
 $spacing-xs: 15px
 $spacing-s: 30px
 $spacing-m: 40px
 $spacing-l: 80px
 $spacing-xl: 60px
 $spacing-xxl: 112px
+$spacing-xxxl: 496px
 
 .pad
   &-nav
@@ -13,8 +15,14 @@ $spacing-xxl: 112px
 
 
   &-left, &-sides
+    &-xxs
+      padding-left: $spacing-xxs
+
     &-xs
       padding-left: $spacing-xs
+
+    &-s
+      padding-left: $spacing-s
 
     &-l
       padding-left: $spacing-l
@@ -40,6 +48,9 @@ $spacing-xxl: 112px
 
 
   &-top, &-ends
+    &-xxs
+      padding-top: $spacing-xxs 
+
     &-xxl
       padding-top: $spacing-xxl
 
