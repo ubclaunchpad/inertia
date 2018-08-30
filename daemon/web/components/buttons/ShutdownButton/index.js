@@ -1,18 +1,18 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+
 
 import '../index.sass';
 
-const ShutdownButton = ({ style }) => (
+const ShutdownButton = () => (
   <div>
-    <button className="button" type="button" style={style}>
+    <button className="button" type="button">
 Shut Down Containers
     </button>
   </div>
 );
 
 ShutdownButton.propTypes = {
-  style: PropTypes.object,
+
 };
 
 export default ShutdownButton;
