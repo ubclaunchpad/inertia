@@ -1,18 +1,13 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import '../index.sass';
 
-const LogoutButton = ({ style }) => (
+const LogoutButton = () => (
   <div>
-    <button className="button" type="button" style={style}>
+    <button className="button" type="button">
 Logout
     </button>
   </div>
 );
-
-LogoutButton.propTypes = {
-  style: PropTypes.object,
-};
 
 export default LogoutButton;
