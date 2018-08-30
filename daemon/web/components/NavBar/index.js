@@ -7,6 +7,7 @@ import {
 import InertiaLogo from '../../assets/logo/inertia-horizontal-black.png';
 
 import './index.sass';
+import LogoutButton from '../buttons/LogoutButton/index';
 
 const NavBar = ({ url }) => (
   <nav className="flex fill-width ai-center bg-white shadow">
@@ -31,14 +32,8 @@ Settings
         </h1>
       </Link>
 
-      <button
-        type="submit"
-        style={{
-          textDecoration: 'none',
-          color: '#5f5f5f',
-        }}>
-    logout
-      </button>
+      <LogoutButton />
+
     </div>
   </nav>
 );
