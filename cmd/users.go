@@ -75,7 +75,7 @@ var cmdDeploymentRemoveUser = &cobra.Command{
 	Short: "Remove a user",
 	Long: `Removes the given user from Inertia's user database.
 
-This user will no longer be able to log in and view or configure the deployment 
+This user will no longer be able to log in and view or configure the deployment
 from the web app.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -111,7 +111,7 @@ from the web app.`,
 var cmdDeploymentResetUsers = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset user database on your remote",
-	Long: `Removes all users credentials on your remote. All users will no longer 
+	Long: `Removes all users credentials on your remote. All users will no longer
 be able to log in and view or configure the deployment from the web app.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
