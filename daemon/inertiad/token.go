@@ -10,13 +10,13 @@ import (
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	keyBytes, err := crypto.GetAPIPrivateKey(nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	token, err := crypto.GenerateMasterToken(keyBytes.([]byte))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
