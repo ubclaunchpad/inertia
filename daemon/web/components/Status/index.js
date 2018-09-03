@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import './index.sass';
 
 const Status = ({ title, status }) => (
-  <div className="badge">
+  <div className="badge color-grey">
     <h3 className="title">
       {title}
     </h3>

@@ -9,12 +9,6 @@ import './index.sass';
 
 const mocklogs = [
   'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',
-  'log2asdasdasdasdsdassdasdasdssdasdasdssdasdasdssdasdasdsdsdasds',
-  'log3dasdsdazxcxzsdasdasdssdasdasdssdasdasdssdasdasdsxxxxxxxxxx',
-  'log4dasdsdasdsdasdasdssdasdasdssdasdasdssdasdasdsxzczxczxs',
-  'log5dasdsdaasdsdasdasdssdasdasdssdasdasdssdasdasdsasdasdsds',
-  'log6dasdsdaszsdasdasdssdasdasdssdasdasdssdasdasdsxczxczxczxcwqdqds',
-  'log7dasdsdaxcsdasdasdssdasdasdssdasdasdssdasdasdszxczzxcsds',
 ];
 
 class ContainersWrapper extends React.Component {
@@ -26,18 +20,18 @@ class ContainersWrapper extends React.Component {
   render() {
     const { dateUpdated } = this.props;
     return (
-      <div className="container">
+      <div className="container pad-sides-s">
         <IconHeader type="containers" title="/inertia-deploy-test_dev_1" />
         <div className="container-info">
           <Status title="Status:" status="Active" />
-          <h3>
+          <h3 className="pad-left-s">
 Last Updated:
           </h3>
-          <h4>
+          <h4 className="pad-bottom-xs">
             {dateUpdated}
           </h4>
         </div>
-        <div className="terminalview margin-sides-s flex-center">
+        <div className="terminalview jc-center flex-dir-col">
           <TerminalView logs={mocklogs} />
         </div>
       </div>

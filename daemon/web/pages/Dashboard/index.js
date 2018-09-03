@@ -55,7 +55,9 @@ class DashboardWrapper extends React.Component {
 
     return (
       <div style={styles.container}>
-        <IconHeader title={branch} type="dashboard" />
+        <div className="pad-sides-s">
+          <IconHeader title={branch} type="dashboard" />
+        </div>
 
         <Table style={{ margin: '0 30px 10px 30px' }}>
           <TableHeader>

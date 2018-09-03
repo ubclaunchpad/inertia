@@ -4,16 +4,16 @@ import PropTypes from 'prop-types';
 import './index.sass';
 
 const icons = {
-  dashboard: <i className="fas fa-th-large" />,
-  containers: <i className="fas fa-database" />,
-  team: <i className="fas fa-users" />,
-  settings: <i className="fas fa-cog" />,
+  dashboard: <i className="fas fa-th-large color-grey" />,
+  containers: <i className="fas fa-database color-grey" />,
+  team: <i className="fas fa-users color-grey" />,
+  settings: <i className="fas fa-cog color-grey" />,
 };
 
 const IconHeader = ({ title, type, style }) => (
-  <div className="iconheader" style={style}>
+  <div className="iconheader color-white pad-top-m pad-bottom-xs" style={style}>
     {icons[type]}
-    <h1 className="header">
+    <h1 className="header color-grey pad-left-xxs">
       {title}
     </h1>
   </div>
