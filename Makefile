@@ -26,8 +26,8 @@ prod-deps:
 .PHONY: dev-deps
 dev-deps:
 	go get -u github.com/UnnoTed/fileb0x
+	go get -u golang.org/x/lint/golint
 	bash test/docker_deps.sh
-	bash test/lint_deps.sh
 
 # Install Inertia with release version
 .PHONY: cli
@@ -49,7 +49,10 @@ clean:
 # Run static analysis
 .PHONY: lint
 lint:
-	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=120s ./...'
+	go vet ./...
+	go test -run xxxx ./...
+	go fmt ./...
+	golint `go list ./... | grep -v /vendor/`
 	(cd ./daemon/web; npm run lint)
 	(cd ./daemon/web; npm run sass-lint)
 

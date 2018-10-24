@@ -152,7 +152,7 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 		userErr   error
 		correct   bool
 	)
-	
+
 	if username == "" || password == "" {
 		return nil, false, errors.New("Invalid credentials provided")
 	}
