@@ -1,6 +1,8 @@
+import Cookies from 'universal-cookie';
 import encodeURL from './encodeURL';
 
 const api = process.env.INERTIA_API || '';
+const cookies = new Cookies();
 
 export default class InertiaAPI {
   static async logout() {
@@ -11,16 +13,8 @@ export default class InertiaAPI {
       },
     };
 
-    const resp = await InertiaAPI.post(endpoint, params);
-    const body = await resp.json();
-    switch (resp.status) {
-      case 200:
-        return body;
-      default:
-        throw new Error(
-          `logout failed with status ${resp.status}: ${JSON.stringify(body)}`
-        );
-    }
+    await InertiaAPI.post(endpoint, params);
+    cookies.remove('token');
   }
 
   static async login(username, password) {
@@ -36,13 +30,12 @@ export default class InertiaAPI {
       }),
     };
 
-    let data;
     const resp = await InertiaAPI.post(endpoint, params);
+    const data = await resp.text();
     switch (resp.status) {
       case 200:
-        return resp.json();
+        return data;
       default:
-        data = await resp.text();
         throw new Error(
           `login failed with status ${resp.status}: ${data}`
         );
@@ -75,11 +68,12 @@ export default class InertiaAPI {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: this.getToken(),
       },
     };
 
     let data;
-    const resp = await InertiaAPI.post(endpoint, params);
+    const resp = await InertiaAPI.get(endpoint, params);
     switch (resp.status) {
       case 200:
         return resp.json();
@@ -120,5 +114,9 @@ export default class InertiaAPI {
       credentials: 'include',
     };
     return fetch(new Request(api + endpoint, newParams));
+  }
+
+  static getToken() {
+    return `Bearer ${cookies.get('token')}`;
   }
 }

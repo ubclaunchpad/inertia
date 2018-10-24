@@ -1,4 +1,4 @@
-import { LOGOUT_ACTION } from './_constants';
+import { LOGOUT_ACTION } from '../_constants';
 
 export const logoutAction = payload => (dispatch) => {
   dispatch({

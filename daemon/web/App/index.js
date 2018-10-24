@@ -1,7 +1,7 @@
 import React from 'react';
 import { HashRouter, Redirect, Route } from 'react-router-dom';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import createHistory from 'history/createBrowserHistory';
 
 import Main from './Main';
 import Login from '../pages/Login';
@@ -43,74 +43,31 @@ PropsRoute.propTypes = {
   props: PropTypes.shape(),
 };
 
-export default class App extends React.Component {
-  static async isAuthenticated() {
-    // TODO: disable route guards
-    // const response = await InertiaAPI.validate();
-    // return (response.status === 200);
-    return true;
-  }
+const AppWrapper = ({ authenticated }) => (
+  <HashRouter>
+    <div style={styles.container}>
+      <Route
+        exact
+        path="/"
+        component={() => (authenticated
+          ? <Redirect to="/app" />
+          : <Redirect to="/login" />)} />
+      <PropsRoute
+        path="/login"
+        component={authenticated
+          ? () => <Redirect to="/app" />
+          : Login} />
+      <AuthRoute
+        path="/app"
+        component={Main}
+        authenticated={authenticated} />
+    </div>
+  </HashRouter>
+);
+AppWrapper.propTypes = { authenticated: PropTypes.bool };
 
-  constructor(props) {
-    super(props);
+const mapStateToProps = ({ Auth: { authenticated } }) => ({ authenticated });
 
-    this.state = {
-      loading: true,
-      authenticated: false,
-    };
+const App = connect(mapStateToProps)(AppWrapper);
 
-    this.isAuthenticated = App.isAuthenticated.bind(this);
-
-    this.isAuthenticated()
-      .then((authenticated) => {
-        this.setState({
-          loading: false,
-          authenticated,
-        });
-      });
-
-    const history = createHistory();
-    history.listen(() => {
-      this.setState({ loading: true });
-      this.isAuthenticated()
-        .then((authenticated) => {
-          this.setState({
-            loading: false,
-            authenticated,
-          });
-        });
-    });
-  }
-
-  render() {
-    const { loading, authenticated } = this.state;
-
-    if (loading) {
-      return (
-        <p align="center">
-          Loading...
-        </p>
-      );
-    }
-
-    return (
-      <HashRouter>
-        <div style={styles.container}>
-          <Route
-            exact
-            path="/"
-            component={() => <Redirect to="/login" />} />
-          <PropsRoute
-            path="/login"
-            component={Login}
-            props={this.props} />
-          <AuthRoute
-            path="/home"
-            authenticated={authenticated}
-            component={Main}
-            props={this.props} />
-        </div>
-      </HashRouter>
-    );
-  }
-}
+export default App;

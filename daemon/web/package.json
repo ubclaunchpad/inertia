@@ -38,10 +38,11 @@
     "redux-thunk": "2.3.0",
     "sass-loader": "7.1.0",
     "style-loader": "0.22.1",
+    "universal-cookie": "3.0.4",
+    "url-loader": "1.0.1",
     "webpack": "4.16.5",
     "webpack-cli": "3.1.0",
-    "webpack-dev-server": "3.1.5",
-    "url-loader": "1.0.1"
+    "webpack-dev-server": "3.1.5"
   },
   "devDependencies": {
     "eslint": "5.3.0",

@@ -9,6 +9,7 @@ export const TEST_MAIN_ACTION = 'TEST_MAIN_ACTION';
 // authentication
 export const LOGIN_ACTION = 'LOGIN_ACTION';
 export const LOGOUT_ACTION = 'LOGOUT_ACTION';
+export const VALIDATE_ACTION = 'VALIDATE_ACTION';
 
 // dashboard page
 export const GET_PROJECT_DETAILS_SUCCESS = 'GET_PROJECT_DETAILS_SUCCESS';

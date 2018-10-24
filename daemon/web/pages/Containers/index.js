@@ -46,9 +46,9 @@ ContainersWrapper.propTypes = {
   dateUpdated: PropTypes.string,
 };
 
-const mapStateToProps = () => { return {}; };
+const mapStateToProps = () => ({});
 
-const mapDispatchToProps = () => { return {}; };
+const mapDispatchToProps = () => ({});
 
 const Containers = connect(mapStateToProps, mapDispatchToProps)(ContainersWrapper);
 
