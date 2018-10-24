@@ -91,7 +91,7 @@ test-integration-fast:
 .PHONY: testenv
 testenv:
 	docker stop testvps || true && docker rm testvps || true
-	docker build -f ./test/vps/Dockerfile.$(VPS_OS) \
+	docker build -f ./test/vps/$(VPS_OS).dockerfile \
 		-t $(VPS_OS)vps \
 		--build-arg VERSION=$(VPS_VERSION) \
 		./test
