@@ -57,7 +57,7 @@ jobs:
     #   install: make testenv VPS_OS=amazon VPS_VERSION=2 SSH_PORT=69
 
     # Run linter and static analysis
-    - install: bash test/lint_deps.sh
+    - install: go get -u golang.org/x/lint/golint
       script: make lint
 
     ############################
