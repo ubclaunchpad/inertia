@@ -1,5 +1,3 @@
-Dockerfile* linguist-language=Dockerfile
-
 # Auto-detect text files.
 * text=auto
 
