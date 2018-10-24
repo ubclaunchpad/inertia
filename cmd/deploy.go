@@ -82,6 +82,7 @@ Run 'inertia [remote] init' to gather this information.`,
 		adduser := deepCopy(cmdDeploymentAddUser)
 		adduser.Flags().Bool("admin", false, "create a user with administrator permissions")
 		user.AddCommand(adduser)
+		user.AddCommand(deepCopy(cmdDeploymentLogin))
 		user.AddCommand(deepCopy(cmdDeploymentRemoveUser))
 		user.AddCommand(deepCopy(cmdDeploymentResetUsers))
 		user.AddCommand(deepCopy(cmdDeploymentListUsers))
