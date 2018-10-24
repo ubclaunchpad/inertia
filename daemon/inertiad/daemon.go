@@ -143,6 +143,8 @@ func run(host, port, version string) {
 		envHandler, http.MethodGet, http.MethodPost)
 	handler.AttachAdminRestrictedHandlerFunc("/prune",
 		pruneHandler, http.MethodGet)
+	handler.AttachAdminRestrictedHandlerFunc("/token",
+		tokenHandler, http.MethodGet)
 
 	// Root "ok" endpoint
 	handler.AttachPublicHandlerFunc("/", func(w http.ResponseWriter, r *http.Request) {

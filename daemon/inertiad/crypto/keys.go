@@ -18,7 +18,7 @@ var (
 // requests sent to the daemon. For now, we simply use the GitHub
 // deploy key. Retrieves from default DaemonGithubKeyLocation.
 func GetAPIPrivateKey(t *jwt.Token) (interface{}, error) {
-	return getAPIPrivateKeyFromPath(t, DaemonGithubKeyLocation)
+	return getAPIPrivateKeyFromPath(t, os.Getenv("INERTIA_GH_KEY_PATH"))
 }
 
 func getAPIPrivateKeyFromPath(t *jwt.Token, path string) (interface{}, error) {
