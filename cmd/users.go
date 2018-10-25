@@ -109,7 +109,7 @@ from the web app.`,
 }
 
 var cmdDeploymentLogin = &cobra.Command{
-	Use:   "login",
+	Use:   "login [user]",
 	Short: "Authenticate with the remote",
 	Long:  "Retreives an access token from the remote using your credentials.",
 	Args:  cobra.ExactArgs(1),

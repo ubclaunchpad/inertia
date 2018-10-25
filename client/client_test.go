@@ -552,3 +552,33 @@ func TestToken(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
+
+func TestLogIn(t *testing.T) {
+	username := "testguy"
+	password := "SomeKindo23asdfpassword"
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, http.MethodPost, req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/login", endpoint)
+
+		// Check auth
+		defer req.Body.Close()
+		body, err := ioutil.ReadAll(req.Body)
+		assert.Equal(t, nil, err)
+		var userReq common.UserRequest
+		assert.Equal(t, nil, json.Unmarshal(body, &userReq))
+		assert.Equal(t, userReq.Username, username)
+		assert.Equal(t, userReq.Password, password)
+	}))
+	defer testServer.Close()
+
+	d := getMockClient(testServer)
+	resp, err := d.LogIn(username, password)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
