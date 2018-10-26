@@ -108,6 +108,58 @@ from the web app.`,
 	},
 }
 
+var cmdDeploymentLogin = &cobra.Command{
+	Use:   "login [user]",
+	Short: "Authenticate with the remote",
+	Long:  "Retreives an access token from the remote using your credentials.",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		username := args[0]
+		fmt.Print("Password: ")
+		pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		fmt.Println()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resp, err := deployment.LogIn(username, string(pwBytes))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusAccepted {
+			fmt.Println("Invalid username or password")
+			return
+		}
+
+		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer resp.Body.Close()
+		token, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		config.Remotes[remoteName].Daemon.Token = string(token)
+		config.Remotes[remoteName].User = username
+		err = config.Write(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println("You have been logged in successfully.")
+	},
+}
+
 var cmdDeploymentResetUsers = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset user database on your remote",
