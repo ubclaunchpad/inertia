@@ -21,27 +21,41 @@ func TestGeneration(t *testing.T) {
 }
 
 func TestVerification(t *testing.T) {
-	// enroll new user
+
 	key, err := generateSecretKey("TestAccountName")
 	assert.Nil(t, err)
-
-	// get current time
 	currentTime := time.Now()
 
-	// generate current TOTP (valid)
-	code, err := totp.GenerateCode(key.Secret(), currentTime)
-	assert.Nil(t, err)
-	assert.True(t, validatePasscode(code, key.Secret()))
+	verificationTests := []struct {
+		name string
+		in   time.Time
+		out  bool
+	}{
+		{
+			"valid TOTP",
+			currentTime,
+			true,
+		},
+		{
+			"TOTP before current period window",
+			currentTime.Add(time.Duration(-(TotpPeriod * 2) * time.Second)),
+			false,
+		},
+		{
+			"TOTP after current period window",
+			currentTime.Add(time.Duration((TotpPeriod * 2) * time.Second)),
+			false,
+		},
+	}
 
-	// generate TOTP before current window (invalid)
-	badTime := currentTime.Add(time.Duration(-(TotpPeriod * 2) * time.Second))
-	code, err = totp.GenerateCode(key.Secret(), badTime)
-	assert.False(t, validatePasscode(code, key.Secret()))
+	for _, test := range verificationTests {
+		t.Run(test.name, func(t *testing.T) {
+			code, err := totp.GenerateCode(key.Secret(), test.in)
+			assert.Nil(t, err)
+			assert.Equal(t, validatePasscode(code, key.Secret()), test.out)
+		})
 
-	// generate TOTP after current window (invalid)
-	badTime = currentTime.Add(time.Duration((TotpPeriod * 2) * time.Second))
-	code, err = totp.GenerateCode(key.Secret(), badTime)
-	assert.False(t, validatePasscode(code, key.Secret()))
+	}
 }
 
 func TestBackupCodes(t *testing.T) {

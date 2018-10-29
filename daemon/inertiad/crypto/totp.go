@@ -8,24 +8,24 @@ import (
 )
 
 const (
-	TotpIssuerName = "Inertia"
-	TotpPeriod = 30
-	TotpSecretSize = 10
-	TotpDigits = 6
-	TotpAlgorithm = otp.AlgorithmSHA1
-	TotpNoBackupCodes = 10
+	TotpIssuerName       = "Inertia"
+	TotpPeriod           = 30
+	TotpSecretSize       = 10
+	TotpDigits           = 6
+	TotpAlgorithm        = otp.AlgorithmSHA1
+	TotpNoBackupCodes    = 10
 	TotpBackupCodeLength = 5
 )
 
 // Generates secret key object which can be turned into string or image
 func generateSecretKey(accountName string) (*otp.Key, error) {
-	key,err := totp.Generate(totp.GenerateOpts{
-		Issuer: TotpIssuerName,
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      TotpIssuerName,
 		AccountName: accountName,
-		Period: TotpPeriod,
-		SecretSize: TotpSecretSize,
-		Digits: TotpDigits,
-		Algorithm: TotpAlgorithm,
+		Period:      TotpPeriod,
+		SecretSize:  TotpSecretSize,
+		Digits:      TotpDigits,
+		Algorithm:   TotpAlgorithm,
 	})
 	if err != nil {
 		return nil, err
