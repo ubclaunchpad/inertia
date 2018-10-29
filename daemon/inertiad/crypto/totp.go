@@ -19,7 +19,7 @@ const (
 
 // Generates secret key object which can be turned into string or image
 func generateSecretKey(accountName string) (*otp.Key, error) {
-	key, err := totp.Generate(totp.GenerateOpts{
+	return totp.Generate(totp.GenerateOpts{
 		Issuer:      TotpIssuerName,
 		AccountName: accountName,
 		Period:      TotpPeriod,
@@ -27,10 +27,6 @@ func generateSecretKey(accountName string) (*otp.Key, error) {
 		Digits:      TotpDigits,
 		Algorithm:   TotpAlgorithm,
 	})
-	if err != nil {
-		return nil, err
-	}
-	return key, nil
 }
 
 // Validate one-time passcode against original secret key
