@@ -40,3 +40,6 @@ public/
 
 # Exceptions
 !inertia.go
+
+# JetBrains
+.idea
