@@ -1,10 +1,11 @@
 package crypto
 
 import (
-	"github.com/pquerna/otp/totp"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/pquerna/otp/totp"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGeneration(t *testing.T) {
@@ -38,12 +39,12 @@ func TestVerification(t *testing.T) {
 		},
 		{
 			"TOTP before current period window",
-			currentTime.Add(time.Duration(-(TotpPeriod * 2) * time.Second)),
+			currentTime.Add(time.Duration(-(totpPeriod * 2) * time.Second)),
 			false,
 		},
 		{
 			"TOTP after current period window",
-			currentTime.Add(time.Duration((TotpPeriod * 2) * time.Second)),
+			currentTime.Add(time.Duration((totpPeriod * 2) * time.Second)),
 			false,
 		},
 	}
@@ -60,7 +61,7 @@ func TestVerification(t *testing.T) {
 
 func TestBackupCodes(t *testing.T) {
 	codes := generateBackupCodes()
-	assert.Equal(t, len(codes), TotpNoBackupCodes)
+	assert.Equal(t, len(codes), totpNoBackupCodes)
 	for _, code := range codes {
 		assert.Equal(t, len(code), 11)
 	}
