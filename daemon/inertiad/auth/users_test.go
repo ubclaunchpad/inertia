@@ -138,5 +138,28 @@ func TestEnableTOTP(t *testing.T) {
 	assert.Nil(t, err)
 
 	manager.EnableTOTP("bobheadxi")
-	assert.True(t, manager.IsTOTPEnabled("bobheadxi"))
+	result, err := manager.IsTOTPEnabled("bobheadxi")
+	assert.Nil(t, err)
+	assert.True(t, result)
+}
+
+func TestDisableTOTP(t *testing.T) {
+	dir := "./test_users"
+	manager, err := getTestUserManager(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer manager.Close()
+
+	err = manager.AddUser("bobheadxi", "best_person_ever", true)
+	assert.Nil(t, err)
+
+	manager.EnableTOTP("bobheadxi")
+	result, err := manager.IsTOTPEnabled("bobheadxi")
+	assert.Nil(t, err)
+	assert.True(t, result)
+
+	manager.DisableTOTP("bobheadxi")
+	result, err = manager.IsTOTPEnabled("bobheadxi")
+	assert.Nil(t, err)
+	assert.False(t, result)
 }
