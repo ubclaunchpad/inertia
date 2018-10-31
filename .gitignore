@@ -38,8 +38,5 @@ bumper
 node_modules/
 public/
 
-# Exceptions
-!inertia.go
-
 # JetBrains
 .idea
