@@ -48,11 +48,12 @@ clean:
 
 # Run static analysis
 .PHONY: lint
+lint: SHELL:=/bin/bash
 lint:
 	go vet ./...
 	go test -run xxxx ./...
-	go fmt ./...
-	golint `go list ./... | grep -v /vendor/`
+	diff -u <(echo -n) <(gofmt -d -s `find . -type f -name '*.go' -not -path "./vendor/*"`)
+	diff -u <(echo -n) <(golint `go list ./... | grep -v /vendor/`)
 	(cd ./daemon/web; npm run lint)
 	(cd ./daemon/web; npm run sass-lint)
 
