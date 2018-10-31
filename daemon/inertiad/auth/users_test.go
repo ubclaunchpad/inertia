@@ -128,5 +128,15 @@ func TestTooManyLogins(t *testing.T) {
 }
 
 func TestEnableTOTP(t *testing.T) {
+	dir := "./test_users"
+	manager, err := getTestUserManager(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer manager.Close()
 
+	err = manager.AddUser("bobheadxi", "best_person_ever", true)
+	assert.Nil(t, err)
+
+	manager.EnableTOTP("bobheadxi")
+	assert.True(t, manager.IsTOTPEnabled("bobheadxi"))
 }
