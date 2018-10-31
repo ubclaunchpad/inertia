@@ -3,29 +3,30 @@ package crypto
 import (
 	"crypto/rand"
 	"encoding/hex"
+
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 )
 
 const (
-	TotpIssuerName       = "Inertia"
-	TotpPeriod           = 30
-	TotpSecretSize       = 10
-	TotpDigits           = 6
-	TotpAlgorithm        = otp.AlgorithmSHA1
-	TotpNoBackupCodes    = 10
-	TotpBackupCodeLength = 5
+	totpIssuerName       = "Inertia"
+	totpPeriod           = 30
+	totpSecretSize       = 10
+	totpDigits           = 6
+	totpAlgorithm        = otp.AlgorithmSHA1
+	totpNoBackupCodes    = 10
+	totpBackupCodeLength = 5
 )
 
 // Generates secret key object which can be turned into string or image
 func generateSecretKey(accountName string) (*otp.Key, error) {
 	return totp.Generate(totp.GenerateOpts{
-		Issuer:      TotpIssuerName,
+		Issuer:      totpIssuerName,
 		AccountName: accountName,
-		Period:      TotpPeriod,
-		SecretSize:  TotpSecretSize,
-		Digits:      TotpDigits,
-		Algorithm:   TotpAlgorithm,
+		Period:      totpPeriod,
+		SecretSize:  totpSecretSize,
+		Digits:      totpDigits,
+		Algorithm:   totpAlgorithm,
 	})
 }
 
@@ -39,10 +40,10 @@ func validatePasscode(passcode string, secret string) bool {
 // b2e03-ffbcf
 // cebe6-b1bdd
 // ...
-func generateBackupCodes() (backupCodes [TotpNoBackupCodes]string) {
-	for i := 0; i < TotpNoBackupCodes; i++ {
+func generateBackupCodes() (backupCodes [totpNoBackupCodes]string) {
+	for i := 0; i < totpNoBackupCodes; i++ {
 		// get random bytes
-		randomBytes := make([]byte, TotpBackupCodeLength)
+		randomBytes := make([]byte, totpBackupCodeLength)
 		rand.Read(randomBytes)
 
 		// convert to hex string
