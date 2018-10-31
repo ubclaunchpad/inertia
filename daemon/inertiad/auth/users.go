@@ -24,7 +24,11 @@ type userProps struct {
 	Admin           bool
 	LoginAttempts   int
 	totpKey         string
+<<<<<<< HEAD
 	TOTPBackupCodes [crypto.TotpNoBackupCodes]string
+=======
+	TOTPBackupCodes []string
+>>>>>>> Created TOTP enable function
 }
 
 // userManager administers sessions and user accounts
