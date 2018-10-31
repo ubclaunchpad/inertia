@@ -20,9 +20,11 @@ const (
 // userProps are properties associated with user, used
 // for database entries
 type userProps struct {
-	HashedPassword string
-	Admin          bool
-	LoginAttempts  int
+	HashedPassword  string
+	Admin           bool
+	LoginAttempts   int
+	totpKey         string
+	TOTPBackupCodes []string
 }
 
 // userManager administers sessions and user accounts
@@ -222,4 +224,51 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 		return nil
 	})
 	return admin, err
+}
+
+// isTOTPEnabled checks if a given user has TOTP enabled
+func (m *userManager) isTOTPEnabled(username string) (bool, error) {
+	TOTPenabled := false
+
+	err := m.db.View(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			err := json.Unmarshal(propsBytes, props)
+			if err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+			if props.totpKey != nil && props.TOTPBackupCodes != nil {
+				TOTPenabled = true
+			}
+		}
+		return nil
+	})
+	return TOTPenabled, err
+}
+
+// enableTOTP enables TOTP for a user
+func (m *userManager) enableTOTP(username string) error {
+
+}
+
+// disableTOTP disables TOTP for a user
+func (m *userManager) disableTOTP(username string) error {
+
+	err := m.db.View(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			err := json.Unmarshal(propsBytes, props)
+			if err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+			props.totpKey = nil
+			props.TOTPBackupCodes = nil
+		}
+		return nil
+	})
+	return err
 }
