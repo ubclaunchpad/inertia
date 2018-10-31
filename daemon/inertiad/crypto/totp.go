@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	totpIssuerName       = "Inertia"
-	totpPeriod           = 30
-	totpSecretSize       = 10
-	totpDigits           = 6
-	totpAlgorithm        = otp.AlgorithmSHA1
+	totpIssuerName = "Inertia"
+	totpPeriod     = 30
+	totpSecretSize = 10
+	totpDigits     = 6
+	totpAlgorithm  = otp.AlgorithmSHA1
 	// TotpNoBackupCodes is the number of backup codes per user
 	TotpNoBackupCodes    = 10
 	totpBackupCodeLength = 5
