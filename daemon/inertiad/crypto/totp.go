@@ -18,7 +18,7 @@ const (
 )
 
 // Generates secret key object which can be turned into string or image
-func generateSecretKey(accountName string) (*otp.Key, error) {
+func GenerateSecretKey(accountName string) (*otp.Key, error) {
 	return totp.Generate(totp.GenerateOpts{
 		Issuer:      TotpIssuerName,
 		AccountName: accountName,
@@ -30,7 +30,7 @@ func generateSecretKey(accountName string) (*otp.Key, error) {
 }
 
 // Validate one-time passcode against original secret key
-func validatePasscode(passcode string, secret string) bool {
+func ValidatePasscode(passcode string, secret string) bool {
 	return totp.Validate(passcode, secret)
 }
 
@@ -39,7 +39,7 @@ func validatePasscode(passcode string, secret string) bool {
 // b2e03-ffbcf
 // cebe6-b1bdd
 // ...
-func generateBackupCodes() (backupCodes [TotpNoBackupCodes]string) {
+func GenerateBackupCodes() (backupCodes [TotpNoBackupCodes]string) {
 	for i := 0; i < TotpNoBackupCodes; i++ {
 		// get random bytes
 		randomBytes := make([]byte, TotpBackupCodeLength)
