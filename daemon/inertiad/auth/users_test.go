@@ -126,3 +126,7 @@ func TestTooManyLogins(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, errUserNotFound, err)
 }
+
+func TestEnableTOTP(t *testing.T) {
+
+}
