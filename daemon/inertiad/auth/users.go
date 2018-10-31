@@ -20,9 +20,11 @@ const (
 // userProps are properties associated with user, used
 // for database entries
 type userProps struct {
-	HashedPassword string
-	Admin          bool
-	LoginAttempts  int
+	HashedPassword  string
+	Admin           bool
+	LoginAttempts   int
+	totpKey         string
+	TOTPBackupCodes []string
 }
 
 // userManager administers sessions and user accounts
