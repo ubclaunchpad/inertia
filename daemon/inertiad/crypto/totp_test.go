@@ -9,7 +9,7 @@ import (
 )
 
 func TestGeneration(t *testing.T) {
-	key, err := generateSecretKey("TestAccountName")
+	key, err := GenerateSecretKey("TestAccountName")
 	assert.Nil(t, err)
 
 	// string form of secret
@@ -23,7 +23,7 @@ func TestGeneration(t *testing.T) {
 
 func TestVerification(t *testing.T) {
 
-	key, err := generateSecretKey("TestAccountName")
+	key, err := GenerateSecretKey("TestAccountName")
 	assert.Nil(t, err)
 	currentTime := time.Now()
 
@@ -53,15 +53,15 @@ func TestVerification(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			code, err := totp.GenerateCode(key.Secret(), test.in)
 			assert.Nil(t, err)
-			assert.Equal(t, validatePasscode(code, key.Secret()), test.out)
+			assert.Equal(t, ValidatePasscode(code, key.Secret()), test.out)
 		})
 
 	}
 }
 
 func TestBackupCodes(t *testing.T) {
-	codes := generateBackupCodes()
-	assert.Equal(t, len(codes), totpNoBackupCodes)
+	codes := GenerateBackupCodes()
+	assert.Equal(t, len(codes), TotpNoBackupCodes)
 	for _, code := range codes {
 		assert.Equal(t, len(code), 11)
 	}
