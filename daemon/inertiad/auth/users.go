@@ -24,7 +24,7 @@ type userProps struct {
 	Admin           bool
 	LoginAttempts   int
 	totpKey         string
-	TOTPBackupCodes []string
+	TOTPBackupCodes [crypto.TotpNoBackupCodes]string
 }
 
 // userManager administers sessions and user accounts
@@ -237,9 +237,67 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 	return admin, err
 }
 
-// IsTOTPEnabled returns whether or not this user is using TOTP as a second
-// factor of authentication.
+// isTOTPEnabled checks if a given user has TOTP enabled
 func (m *userManager) IsTOTPEnabled(username string) (bool, error) {
-	// TODO
-	return true, nil
+	TOTPenabled := false
+
+	err := m.db.View(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			err := json.Unmarshal(propsBytes, props)
+			if err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+			if props.totpKey != "" && len(props.TOTPBackupCodes) == 0 {
+				TOTPenabled = true
+			}
+		}
+		return nil
+	})
+	return TOTPenabled, err
+}
+
+// enableTOTP enables TOTP for a user
+func (m *userManager) EnableTOTP(username string) error {
+	err := m.db.View(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			err := json.Unmarshal(propsBytes, props)
+			if err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+			var totpErr error
+			props.totpKey, totpErr = *crypto.GenerateSecretKey(username)
+			if totpErr != nil {
+				return errors.New("Error generating secret totp key: " + totpErr.Error())
+			}
+			props.TOTPBackupCodes = crypto.GenerateBackupCodes()
+		}
+		return nil
+	})
+	return err
+}
+
+// disableTOTP disables TOTP for a user
+func (m *userManager) DisableTOTP(username string) error {
+
+	err := m.db.View(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			err := json.Unmarshal(propsBytes, props)
+			if err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+			props.totpKey = ""
+			props.TOTPBackupCodes = []string{}
+		}
+		return nil
+	})
+	return err
 }
