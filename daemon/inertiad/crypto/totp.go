@@ -14,12 +14,13 @@ const (
 	totpSecretSize       = 10
 	totpDigits           = 6
 	totpAlgorithm        = otp.AlgorithmSHA1
-	totpNoBackupCodes    = 10
+	// TotpNoBackupCodes is the number of backup codes per user
+	TotpNoBackupCodes    = 10
 	totpBackupCodeLength = 5
 )
 
-// Generates secret key object which can be turned into string or image
-func generateSecretKey(accountName string) (*otp.Key, error) {
+// GenerateSecretKey creates a new key which can be turned into string or image
+func GenerateSecretKey(accountName string) (*otp.Key, error) {
 	return totp.Generate(totp.GenerateOpts{
 		Issuer:      totpIssuerName,
 		AccountName: accountName,
@@ -30,18 +31,20 @@ func generateSecretKey(accountName string) (*otp.Key, error) {
 	})
 }
 
-// Validate one-time passcode against original secret key
-func validatePasscode(passcode string, secret string) bool {
+// ValidatePasscode validates a one-time passcode against a secret key
+func ValidatePasscode(passcode string, secret string) bool {
 	return totp.Validate(passcode, secret)
 }
 
-// Generates backup code strings in Github format
+// GenerateBackupCodes generates an array of backup code strings in
+// Github format.
 //
+// Example:
 // b2e03-ffbcf
 // cebe6-b1bdd
 // ...
-func generateBackupCodes() (backupCodes [totpNoBackupCodes]string) {
-	for i := 0; i < totpNoBackupCodes; i++ {
+func GenerateBackupCodes() (backupCodes [TotpNoBackupCodes]string) {
+	for i := 0; i < TotpNoBackupCodes; i++ {
 		// get random bytes
 		randomBytes := make([]byte, totpBackupCodeLength)
 		rand.Read(randomBytes)
