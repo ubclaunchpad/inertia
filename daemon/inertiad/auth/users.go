@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/pquerna/otp"
+
 	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
@@ -23,7 +25,7 @@ type userProps struct {
 	HashedPassword  string
 	Admin           bool
 	LoginAttempts   int
-	totpKey         string
+	totpKey         *otp.Key
 	TOTPBackupCodes [crypto.TotpNoBackupCodes]string
 }
 
@@ -250,7 +252,8 @@ func (m *userManager) IsTOTPEnabled(username string) (bool, error) {
 			if err != nil {
 				return errors.New("Corrupt user properties: " + err.Error())
 			}
-			if props.totpKey != "" && len(props.TOTPBackupCodes) == 0 {
+			println(props.totpKey)
+			if props.totpKey != nil {
 				TOTPenabled = true
 			}
 		}
@@ -270,12 +273,20 @@ func (m *userManager) EnableTOTP(username string) error {
 			if err != nil {
 				return errors.New("Corrupt user properties: " + err.Error())
 			}
-			var totpErr error
-			props.totpKey, totpErr = *crypto.GenerateSecretKey(username)
+
+			totpKey, totpErr := crypto.GenerateSecretKey(username)
 			if totpErr != nil {
 				return errors.New("Error generating secret totp key: " + totpErr.Error())
 			}
 			props.TOTPBackupCodes = crypto.GenerateBackupCodes()
+			props.totpKey = totpKey
+			println(props.totpKey)
+
+			bytes, err := json.Marshal(props)
+			if err != nil {
+				return err
+			}
+			users.Put([]byte(username), bytes)
 		}
 		return nil
 	})
@@ -294,8 +305,14 @@ func (m *userManager) DisableTOTP(username string) error {
 			if err != nil {
 				return errors.New("Corrupt user properties: " + err.Error())
 			}
-			props.totpKey = ""
-			props.TOTPBackupCodes = []string{}
+			props.totpKey = nil
+			props.TOTPBackupCodes = [crypto.TotpNoBackupCodes]string{}
+
+			bytes, err := json.Marshal(props)
+			if err != nil {
+				return err
+			}
+			users.Put([]byte(username), bytes)
 		}
 		return nil
 	})
