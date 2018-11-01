@@ -167,7 +167,7 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			switch resp.StatusCode {
 			case http.StatusCreated:
 				fmt.Printf("(Status code %d) Project build started!\n", resp.StatusCode)
-			case http.StatusForbidden:
+			case http.StatusUnauthorized:
 				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 			case http.StatusPreconditionFailed:
 				fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
@@ -216,7 +216,7 @@ Requires project to be online - do this by running 'inertia [remote] up`,
 			fmt.Printf("(Status code %d) Project down\n", resp.StatusCode)
 		case http.StatusPreconditionFailed:
 			fmt.Printf("(Status code %d) No containers are currently active\n", resp.StatusCode)
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
@@ -251,7 +251,7 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 				log.Fatal(err)
 			}
 			println(formatStatus(status))
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
@@ -306,7 +306,7 @@ Use 'inertia [remote] status' to see which containers are active.`,
 			switch resp.StatusCode {
 			case http.StatusOK:
 				fmt.Printf("(Status code %d) Logs: \n%s\n", resp.StatusCode, body)
-			case http.StatusForbidden:
+			case http.StatusUnauthorized:
 				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 			case http.StatusPreconditionFailed:
 				fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
@@ -484,7 +484,7 @@ allowing you to assign a different Inertia project to this remote.`,
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
@@ -557,7 +557,7 @@ var cmdDeploymentToken = &cobra.Command{
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("New token: %s\n", string(body))
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, string(body))
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
