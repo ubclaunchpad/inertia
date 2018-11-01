@@ -61,7 +61,7 @@ Use the --admin flag to create an admin user.`,
 		switch resp.StatusCode {
 		case http.StatusCreated:
 			fmt.Printf("(Status code %d) User added!\n", resp.StatusCode)
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
@@ -99,7 +99,7 @@ from the web app.`,
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) User removed.\n", resp.StatusCode)
-		case http.StatusForbidden:
+		case hhttp.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
@@ -186,7 +186,7 @@ be able to log in and view or configure the deployment from the web app.`,
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) All users removed.\n", resp.StatusCode)
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
@@ -220,7 +220,7 @@ var cmdDeploymentListUsers = &cobra.Command{
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",

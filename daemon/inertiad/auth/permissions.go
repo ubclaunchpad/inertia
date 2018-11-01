@@ -295,7 +295,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if !correct {
-		http.Error(w, "Login failed", http.StatusForbidden)
+		http.Error(w, "Login failed", http.StatusUnauthorized)
 		return
 	}
 	_, token, err := h.sessions.BeginSession(userReq.Username, props.Admin)
