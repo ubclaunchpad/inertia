@@ -99,7 +99,7 @@ from the web app.`,
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) User removed.\n", resp.StatusCode)
-		case hhttp.StatusUnauthorized:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
