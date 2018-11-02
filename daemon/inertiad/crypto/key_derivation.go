@@ -2,7 +2,7 @@ package crypto
 
 import (
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha256"
 	"golang.org/x/crypto/pbkdf2"
 )
 
@@ -29,6 +29,6 @@ func DeriveKey(password string, salt []byte) []byte {
 		salt,
 		keyDerivationIterations,
 		KeyDerivationKeyLength,
-		sha1.New,
+		sha256.New,
 	)
 }

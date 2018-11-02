@@ -21,13 +21,11 @@ func getRandomNonce(size int) []byte {
 // Encrypt encrypts plaintext using given key in AES GCM mode
 func Encrypt(key, plaintext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
-
 	if err != nil {
 		return nil, err
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
-
 	if err != nil {
 		return nil, err
 	}
