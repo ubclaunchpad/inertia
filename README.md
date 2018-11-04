@@ -125,7 +125,7 @@ ssh-rsa <...>
 Once this is done, you can use Inertia to bring your project online on your remote VPS:
 
 ```bash
-$> inertia $VPS_NAME up --stream
+$> inertia $VPS_NAME up
 ```
 
 Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
