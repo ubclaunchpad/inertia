@@ -122,6 +122,9 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	fmt.Fprint(c.out, "\n"+`Note that you will have to disable SSH verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
 be able to verify.`+"\n")
+	fmt.Fprint(c.out, "\n"+`Note that you will also have to set the Content-Type for your webhook
+to application/json - GitHub defaults to application/x-www-form-urlencoded, which is not yet
+supported.`+"\n")
 
 	fmt.Fprint(c.out, "\n"+`Inertia daemon successfully deployed! Add your webhook url and deploy
 key to your repository to enable continuous deployment.`+"\n")
