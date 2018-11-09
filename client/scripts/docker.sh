@@ -4,7 +4,7 @@
 
 set -e
 
-DOCKER_SOURCE=get.docker.com
+DOCKER_SOURCE=https://get.docker.com
 DOCKER_DEST='/tmp/get-docker.sh'
 
 startDockerd() {
