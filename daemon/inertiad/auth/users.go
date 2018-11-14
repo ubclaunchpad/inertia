@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/pquerna/otp"
-
 	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
@@ -25,7 +23,7 @@ type userProps struct {
 	HashedPassword  string
 	Admin           bool
 	LoginAttempts   int
-	totpKey         *otp.Key
+	TotpKey         string
 	TOTPBackupCodes [crypto.TotpNoBackupCodes]string
 }
 
@@ -245,8 +243,7 @@ func (m *userManager) IsTOTPEnabled(username string) (bool, error) {
 			if err != nil {
 				return errors.New("Corrupt user properties: " + err.Error())
 			}
-			println(props.totpKey)
-			if props.totpKey != nil {
+			if props.TotpKey != "" {
 				TOTPenabled = true
 			}
 		}
@@ -257,7 +254,7 @@ func (m *userManager) IsTOTPEnabled(username string) (bool, error) {
 
 // enableTOTP enables TOTP for a user
 func (m *userManager) EnableTOTP(username string) error {
-	err := m.db.View(func(tx *bolt.Tx) error {
+	err := m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
 		propsBytes := users.Get([]byte(username))
 		if propsBytes != nil {
@@ -272,14 +269,16 @@ func (m *userManager) EnableTOTP(username string) error {
 				return errors.New("Error generating secret totp key: " + totpErr.Error())
 			}
 			props.TOTPBackupCodes = crypto.GenerateBackupCodes()
-			props.totpKey = totpKey
-			println(props.totpKey)
+			props.TotpKey = totpKey.Secret()
 
 			bytes, err := json.Marshal(props)
 			if err != nil {
 				return err
 			}
-			users.Put([]byte(username), bytes)
+			err = users.Put([]byte(username), bytes)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -289,7 +288,7 @@ func (m *userManager) EnableTOTP(username string) error {
 // disableTOTP disables TOTP for a user
 func (m *userManager) DisableTOTP(username string) error {
 
-	err := m.db.View(func(tx *bolt.Tx) error {
+	err := m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
 		propsBytes := users.Get([]byte(username))
 		if propsBytes != nil {
@@ -298,14 +297,17 @@ func (m *userManager) DisableTOTP(username string) error {
 			if err != nil {
 				return errors.New("Corrupt user properties: " + err.Error())
 			}
-			props.totpKey = nil
+			props.TotpKey = ""
 			props.TOTPBackupCodes = [crypto.TotpNoBackupCodes]string{}
 
 			bytes, err := json.Marshal(props)
 			if err != nil {
 				return err
 			}
-			users.Put([]byte(username), bytes)
+			err = users.Put([]byte(username), bytes)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
