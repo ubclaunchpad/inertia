@@ -144,13 +144,15 @@ func (m *userManager) HasUser(username string) error {
 }
 
 // IsCorrectCredentials checks if username and password has a match
-// in the database
-func (m *userManager) IsCorrectCredentials(username, password string) (*userProps, bool, error) {
+// in the database. If the user has TOTP enabled, the given TOTP is also
+// checked against the value in the DB.
+func (m *userManager) IsCorrectCredentials(username, password, totp string) (*userProps, correct bool, validTOTP bool, error) {
 	var (
 		userbytes = []byte(username)
 		userProps = &userProps{}
 		userErr   error
-		correct   bool
+		correct bool
+		validTOTP = false
 	)
 
 	if username == "" || password == "" {
@@ -175,7 +177,11 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 		}
 
 		correct = crypto.CorrectPassword(userProps.HashedPassword, password)
-		if !correct {
+		if correct && m.IsTOTPEnabled(username) {
+			// TODO: fetch "the key" for the user from the DB
+			validTOTP = crypto.ValidatePasscode(totp, "the key")
+		}
+		if !correct || !validTOTP {
 			// Track number of login attempts and don't add
 			// user back to the database if past limit
 			userProps.LoginAttempts++
@@ -188,7 +194,8 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 			}
 
 			// Rollback will occur if transaction returns and error, so store
-			// in variable. TODO: don't delete?
+			// in variable. TODO: Update this to throttle logins rather than
+			// delete users!
 			userErr = errors.New("Too many login attempts - user deleted")
 			return nil
 		}
@@ -203,9 +210,9 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 	})
 
 	if userErr != nil {
-		return userProps, correct, userErr
+		return userProps, correct, validTOTP, userErr
 	}
-	return userProps, correct, transactionErr
+	return userProps, correct, validTOTP, transactionErr
 }
 
 // IsAdmin checks if given user is has administrator priviledges
@@ -226,4 +233,11 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 		return nil
 	})
 	return admin, err
+}
+
+// IsTOTPEnabled returns whether or not this user is using TOTP as a second
+// factor of authentication.
+func (m *userManager) IsTOTPEnabled(username string) (bool, error) {
+	// TODO
+	return true, nil
 }

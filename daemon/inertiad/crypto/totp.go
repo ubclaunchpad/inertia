@@ -31,7 +31,7 @@ func GenerateSecretKey(accountName string) (*otp.Key, error) {
 	})
 }
 
-// ValidatePasscode validates a one-time passcode against a secret key
+// ValidatePasscode validates one-time passcode against original secret key
 func ValidatePasscode(passcode string, secret string) bool {
 	return totp.Validate(passcode, secret)
 }

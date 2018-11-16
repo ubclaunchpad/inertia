@@ -68,11 +68,17 @@ func NewPermissionsHandler(
 	handler.userPaths = []string{
 		"/user/validate",
 		"/user/list",
+		"/user/totp/enable",
+		"/user/totp/disable",
 	}
 	userHandler.HandleFunc("/validate",
 		util.WithMethods(handler.validateHandler, http.MethodGet))
 	userHandler.HandleFunc("/list",
 		util.WithMethods(handler.listUsersHandler, http.MethodGet))
+	userHandler.HandleFunc("/totp/enable",
+		util.WithMethods(handler.enableTOTPHandler, http.MethodPost))
+	userHandler.HandleFunc("/totp/disable",
+		util.WithMethods(handler.disableTOTPHandler, http.MethodPost))
 
 	// Admin-only paths
 	handler.adminPaths = []string{
@@ -241,6 +247,83 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 	fmt.Fprintf(w, "[SUCCESS %d] User %s removed\n", http.StatusOK, userReq.Username)
 }
 
+func (h *PermissionsHandler) enableTOTPHandler(w http.ReqponseWriter, r *http.Request) {
+	userReq, err := readCredentials(r)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	// Log in user if password is correct (we do this first because we don't
+	// want to reveal information about the user to the requester before they
+	// are authenticated)
+	_, correct, validTOTP, err := h.users.IsCorrectCredentials(
+		userReq.Username, userReq.Password, "")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else if !correct {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	// Make sure the user does not already have TOTP enabled
+	if h.users.IsTOTPEnabled(userReq.Username) {
+		http.Error(w, "TOTP already enabled", http.StatusConflict)
+		return
+	}
+
+	// Create TOTP key and backup codes for user
+	key, err := crypto.GenerateSecretKey(userReq.Username)
+	if err != nil {
+		http.Error(w, "Failed to create TOTP keys", http.StatusInternalServerError)
+		return
+	}
+	backups := crypto.GenerateBackupCodes()
+	body, err = json.Marshal(common.TOTPResponse{
+		Key:     key,
+		Backups: backups,
+	})
+	if err != nil {
+		http.Error(w, "Failed to send TOTP keys", http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: encrypt and save the key and backup codes
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(body)
+}
+
+func (h *PermissionsHandler) disableTOTPHandler(w http.ResponseWriter, r *http.Request) {
+	userReq, err := readCredentials(r)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	// Log in user if password is correct (we do this first because we don't
+	// want to reveal information about the user to the requester before they
+	// are authenticated)
+	_, correct, validTOTP, err := h.users.IsCorrectCredentials(
+		userReq.Username, userReq.Password, userReq.TOTP)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else if !correct || !validTOTP {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	// Make sure that TOTP is acutally enabled
+	if !h.users.IsTOTPEnabled(userReq.Username) {
+		http.Error(w, "TOTP not enabled", http.StatusConflict)
+		return
+	}
+
+	// TODO disable TOTP for user
+}
+
 func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete all users
 	err := h.users.Reset()
@@ -274,33 +357,35 @@ func (h *PermissionsHandler) listUsersHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
-	// Retrieve user details from request
-	body, err := ioutil.ReadAll(r.Body)
+	userReq, err := readCredentials(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusLengthRequired)
-		return
-	}
-	defer r.Body.Close()
-	var userReq common.UserRequest
-	err = json.Unmarshal(body, &userReq)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Login failed: Bad request", http.StatusBadRequest)
 		return
 	}
 
-	// Log in user if password is correct
-	props, correct, err := h.users.IsCorrectCredentials(userReq.Username, userReq.Password)
+	// Log user in if password (and TOTP, if enabled) are correct
+	props, correct, validTOTP, err := h.users.IsCorrectCredentials(
+		userReq.Username, userReq.Password, userReq.TOTP)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Bad request", http.StatusInternalServerError)
+		return
+	} else if !correct {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	} else if !validTOTP {
+		if userReq.TOTP == "" {
+			// Expected TOTP, but did not receive one
+			w.WriteHeader(http.StatusNoContent)
+		} else {
+			// Received a TOTP, but it was invalid
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		}
 		return
 	}
-	if !correct {
-		http.Error(w, "Login failed", http.StatusUnauthorized)
-		return
-	}
+
 	_, token, err := h.sessions.BeginSession(userReq.Username, props.Admin)
 	if err != nil {
-		http.Error(w, "Login failed: "+err.Error(), http.StatusForbidden)
+		http.Error(w, "Failed to create session", http.StatusInternalServerError)
 		return
 	}
 
@@ -322,4 +407,14 @@ func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Reques
 
 func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func readCredentials(r *http.Request) (common.UserRequest, error) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err, nil
+	}
+	defer r.Body.Close()
+	var userReq common.UserRequest
+	return json.Unmarshal(body, &userReq), body
 }
