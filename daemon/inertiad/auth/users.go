@@ -153,7 +153,7 @@ func (m *userManager) IsCorrectCredentials(username, password, totp string) (*us
 		userbytes = []byte(username)
 		userProps = &userProps{}
 		userErr   error
-		correct bool
+		correct   bool
 		validTOTP = false
 	)
 
@@ -185,7 +185,7 @@ func (m *userManager) IsCorrectCredentials(username, password, totp string) (*us
 			return err
 		}
 
-		if correct &&  totpEnabled {
+		if correct && totpEnabled {
 			// TODO: fetch "the key" for the user from the DB
 			validTOTP = crypto.ValidatePasscode(totp, "the key")
 		}
@@ -292,6 +292,8 @@ func (m *userManager) EnableTOTP(username string) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			return errors.New("Cannot enable totp, user does not exist")
 		}
 		return nil
 	})
@@ -321,6 +323,8 @@ func (m *userManager) DisableTOTP(username string) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			return errors.New("Cannot disable totp, user does not exist")
 		}
 		return nil
 	})
