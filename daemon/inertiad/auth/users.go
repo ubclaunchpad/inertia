@@ -20,9 +20,11 @@ const (
 // userProps are properties associated with user, used
 // for database entries
 type userProps struct {
-	HashedPassword string
-	Admin          bool
-	LoginAttempts  int
+	HashedPassword  string
+	Admin           bool
+	LoginAttempts   int
+	TotpKey         string
+	TOTPBackupCodes [crypto.TotpNoBackupCodes]string
 }
 
 // userManager administers sessions and user accounts
@@ -235,9 +237,86 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 	return admin, err
 }
 
-// IsTOTPEnabled returns whether or not this user is using TOTP as a second
-// factor of authentication.
+// IsTOTPEnabled checks if a given user has TOTP enabled
 func (m *userManager) IsTOTPEnabled(username string) (bool, error) {
-	// TODO
-	return true, nil
+	TOTPenabled := false
+
+	err := m.db.View(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			err := json.Unmarshal(propsBytes, props)
+			if err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+			if props.TotpKey != "" {
+				TOTPenabled = true
+			}
+		}
+		return nil
+	})
+	return TOTPenabled, err
+}
+
+// EnableTOTP enables TOTP for a user
+func (m *userManager) EnableTOTP(username string) error {
+	err := m.db.Update(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			err := json.Unmarshal(propsBytes, props)
+			if err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+
+			totpKey, totpErr := crypto.GenerateSecretKey(username)
+			if totpErr != nil {
+				return errors.New("Error generating secret totp key: " + totpErr.Error())
+			}
+			props.TOTPBackupCodes = crypto.GenerateBackupCodes()
+			props.TotpKey = totpKey.Secret()
+
+			bytes, err := json.Marshal(props)
+			if err != nil {
+				return err
+			}
+			err = users.Put([]byte(username), bytes)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
+}
+
+// DisableTOTP disables TOTP for a user
+func (m *userManager) DisableTOTP(username string) error {
+
+	err := m.db.Update(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			err := json.Unmarshal(propsBytes, props)
+			if err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+			props.TotpKey = ""
+			props.TOTPBackupCodes = [crypto.TotpNoBackupCodes]string{}
+
+			bytes, err := json.Marshal(props)
+			if err != nil {
+				return err
+			}
+			err = users.Put([]byte(username), bytes)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
 }
