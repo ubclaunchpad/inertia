@@ -24,7 +24,7 @@ type userProps struct {
 	Admin           bool
 	LoginAttempts   int
 	TotpKey         string
-	TOTPBackupCodes [crypto.TotpNoBackupCodes]string
+	TotpBackupCodes [crypto.TotpNoBackupCodes]string
 }
 
 // userManager administers sessions and user accounts
@@ -148,7 +148,7 @@ func (m *userManager) HasUser(username string) error {
 // IsCorrectCredentials checks if username and password has a match
 // in the database. If the user has TOTP enabled, the given TOTP is also
 // checked against the value in the DB.
-func (m *userManager) IsCorrectCredentials(username, password, totp string) (*userProps, correct bool, validTOTP bool, error) {
+func (m *userManager) IsCorrectCredentials(username, password, totp string) (*userProps, bool, bool, error) {
 	var (
 		userbytes = []byte(username)
 		userProps = &userProps{}
@@ -158,7 +158,7 @@ func (m *userManager) IsCorrectCredentials(username, password, totp string) (*us
 	)
 
 	if username == "" || password == "" {
-		return nil, false, errors.New("Invalid credentials provided")
+		return nil, false, false, errors.New("Invalid credentials provided")
 	}
 
 	transactionErr := m.db.Update(func(tx *bolt.Tx) error {
@@ -179,7 +179,13 @@ func (m *userManager) IsCorrectCredentials(username, password, totp string) (*us
 		}
 
 		correct = crypto.CorrectPassword(userProps.HashedPassword, password)
-		if correct && m.IsTOTPEnabled(username) {
+
+		totpEnabled, err := m.IsTOTPEnabled(username)
+		if err != nil {
+			return err
+		}
+
+		if correct &&  totpEnabled {
 			// TODO: fetch "the key" for the user from the DB
 			validTOTP = crypto.ValidatePasscode(totp, "the key")
 		}
@@ -275,7 +281,7 @@ func (m *userManager) EnableTOTP(username string) error {
 			if totpErr != nil {
 				return errors.New("Error generating secret totp key: " + totpErr.Error())
 			}
-			props.TOTPBackupCodes = crypto.GenerateBackupCodes()
+			props.TotpBackupCodes = crypto.GenerateBackupCodes()
 			props.TotpKey = totpKey.Secret()
 
 			bytes, err := json.Marshal(props)
@@ -305,7 +311,7 @@ func (m *userManager) DisableTOTP(username string) error {
 				return errors.New("Corrupt user properties: " + err.Error())
 			}
 			props.TotpKey = ""
-			props.TOTPBackupCodes = [crypto.TotpNoBackupCodes]string{}
+			props.TotpBackupCodes = [crypto.TotpNoBackupCodes]string{}
 
 			bytes, err := json.Marshal(props)
 			if err != nil {

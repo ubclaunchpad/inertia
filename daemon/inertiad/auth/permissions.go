@@ -247,7 +247,7 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 	fmt.Fprintf(w, "[SUCCESS %d] User %s removed\n", http.StatusOK, userReq.Username)
 }
 
-func (h *PermissionsHandler) enableTOTPHandler(w http.ReqponseWriter, r *http.Request) {
+func (h *PermissionsHandler) enableTOTPHandler(w http.ResponseWriter, r *http.Request) {
 	userReq, err := readCredentials(r)
 	if err != nil {
 		http.Error(w, "Bad request", http.StatusBadRequest)
@@ -257,19 +257,32 @@ func (h *PermissionsHandler) enableTOTPHandler(w http.ReqponseWriter, r *http.Re
 	// Log in user if password is correct (we do this first because we don't
 	// want to reveal information about the user to the requester before they
 	// are authenticated)
-	_, correct, validTOTP, err := h.users.IsCorrectCredentials(
+	_, correct, validTotp, err := h.users.IsCorrectCredentials(
 		userReq.Username, userReq.Password, "")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} else if !correct {
+	}
+
+	if !correct {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
+	if !validTotp {
+		http.Error(w, "Invalid Totp", http.StatusUnauthorized)
+		return
+	}
+
 	// Make sure the user does not already have TOTP enabled
-	if h.users.IsTOTPEnabled(userReq.Username) {
-		http.Error(w, "TOTP already enabled", http.StatusConflict)
+	totpEnabled, err := h.users.IsTOTPEnabled(userReq.Username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if totpEnabled {
+		http.Error(w, "Totp already enabled", http.StatusConflict)
 		return
 	}
 
@@ -279,10 +292,11 @@ func (h *PermissionsHandler) enableTOTPHandler(w http.ReqponseWriter, r *http.Re
 		http.Error(w, "Failed to create TOTP keys", http.StatusInternalServerError)
 		return
 	}
+
 	backups := crypto.GenerateBackupCodes()
-	body, err = json.Marshal(common.TOTPResponse{
-		Key:     key,
-		Backups: backups,
+	body, err := json.Marshal(common.TotpResponse{
+		TotpSecret:     key.Secret(),
+		BackupCodes: backups,
 	})
 	if err != nil {
 		http.Error(w, "Failed to send TOTP keys", http.StatusInternalServerError)
@@ -306,7 +320,7 @@ func (h *PermissionsHandler) disableTOTPHandler(w http.ResponseWriter, r *http.R
 	// want to reveal information about the user to the requester before they
 	// are authenticated)
 	_, correct, validTOTP, err := h.users.IsCorrectCredentials(
-		userReq.Username, userReq.Password, userReq.TOTP)
+		userReq.Username, userReq.Password, userReq.Totp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -315,8 +329,14 @@ func (h *PermissionsHandler) disableTOTPHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Make sure that TOTP is acutally enabled
-	if !h.users.IsTOTPEnabled(userReq.Username) {
+	// Make sure that TOTP is actually enabled
+	totpEnabled, err := h.users.IsTOTPEnabled(userReq.Username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if !totpEnabled {
 		http.Error(w, "TOTP not enabled", http.StatusConflict)
 		return
 	}
@@ -365,7 +385,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 
 	// Log user in if password (and TOTP, if enabled) are correct
 	props, correct, validTOTP, err := h.users.IsCorrectCredentials(
-		userReq.Username, userReq.Password, userReq.TOTP)
+		userReq.Username, userReq.Password, userReq.Totp)
 	if err != nil {
 		http.Error(w, "Bad request", http.StatusInternalServerError)
 		return
@@ -373,7 +393,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	} else if !validTOTP {
-		if userReq.TOTP == "" {
+		if userReq.Totp == "" {
 			// Expected TOTP, but did not receive one
 			w.WriteHeader(http.StatusNoContent)
 		} else {
@@ -412,9 +432,10 @@ func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Requ
 func readCredentials(r *http.Request) (common.UserRequest, error) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return err, nil
+		return common.UserRequest{}, err
 	}
 	defer r.Body.Close()
 	var userReq common.UserRequest
-	return json.Unmarshal(body, &userReq), body
+	json.Unmarshal(body, &userReq)
+	return userReq, nil
 }
