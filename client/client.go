@@ -364,6 +364,22 @@ func (c *Client) ListUsers() (*http.Response, error) {
 	return c.get("/user/list", nil)
 }
 
+// EnableTotp enables Totp for a given user
+func (c *Client) EnableTotp(username, password string) (*http.Response, error) {
+	return c.post("/user/totp/enable", &common.UserRequest{
+		Username: username,
+		Password: password,
+	})
+}
+
+// DisableTotp enables Totp for a given user
+func (c *Client) DisableTotp(username, password string) (*http.Response, error) {
+	return c.post("/user/totp/disable", &common.UserRequest{
+		Username: username,
+		Password: password,
+	})
+}
+
 // Sends a GET request. "queries" contains query string arguments.
 func (c *Client) get(endpoint string, queries map[string]string) (*http.Response, error) {
 	// Assemble request
