@@ -349,3 +349,49 @@ func TestUserControlHandlers(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
+
+func TestDisableTOTPEndpoint(t *testing.T) {
+	dir := "./test_disable_totp"
+	ts := httptest.NewServer(nil)
+	defer ts.Close()
+
+	// Set up permission handler
+	ph, err := getTestPermissionsHandler(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer ph.Close()
+	ts.Config.Handler = ph
+
+	// Test handler uses the getFakeAPIToken keylookup, which will match with
+	// the testToken
+	bearerTokenString := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
+
+	// Add a new user
+	body, err := json.Marshal(&common.UserRequest{
+		Username: "jimmyneutron",
+		Password: "asfasdlfjk",
+		Admin:    false,
+	})
+	assert.Nil(t, err)
+	// Enable Totp
+	payload := bytes.NewReader(body)
+	req, err := http.NewRequest("POST", ts.URL+"/user/totp/enable", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", bearerTokenString)
+	resp, err := http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Test disable Totp
+	payload = bytes.NewReader(body)
+	req, err = http.NewRequest("POST", ts.URL+"/user/totp/disable", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", bearerTokenString)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
