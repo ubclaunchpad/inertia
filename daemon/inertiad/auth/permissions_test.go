@@ -373,13 +373,23 @@ func TestDisableTOTPEndpoint(t *testing.T) {
 		Admin:    false,
 	})
 	assert.Nil(t, err)
-	// Enable Totp
 	payload := bytes.NewReader(body)
-	req, err := http.NewRequest("POST", ts.URL+"/user/totp/enable", payload)
+	req, err := http.NewRequest("POST", ts.URL+"/user/add", payload)
 	assert.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", bearerTokenString)
 	resp, err := http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	// Enable Totp
+	payload = bytes.NewReader(body)
+	req, err = http.NewRequest("POST", ts.URL+"/user/totp/enable", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", bearerTokenString)
+	resp, err = http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
