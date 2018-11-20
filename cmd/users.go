@@ -301,8 +301,15 @@ var cmdDeploymentDisableTotp = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		fmt.Print("Totp: ")
+		totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		fmt.Println()
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		// Endpoint handles user authentication before disabling Totp
-		resp, err := deployment.DisableTotp(username, string(pwBytes))
+		resp, err := deployment.DisableTotp(username, string(pwBytes), string(totpBytes))
 		if err != nil {
 			log.Fatal(err)
 		}

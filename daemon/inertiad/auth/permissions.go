@@ -295,7 +295,7 @@ func (h *PermissionsHandler) enableTOTPHandler(w http.ResponseWriter, r *http.Re
 
 	backups := crypto.GenerateBackupCodes()
 	body, err := json.Marshal(common.TotpResponse{
-		TotpSecret:     key.Secret(),
+		TotpSecret:  key.Secret(),
 		BackupCodes: backups,
 	})
 	if err != nil {
@@ -341,7 +341,14 @@ func (h *PermissionsHandler) disableTOTPHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// TODO disable TOTP for user
+	err = h.users.DisableTOTP(userReq.Username)
+	if err != nil {
+		http.Error(w, "Fail to disable TOTP: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return
 }
 
 func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Request) {
