@@ -158,7 +158,7 @@ func (m *userManager) IsCorrectCredentials(username, password, totp string) (*us
 	)
 
 	if username == "" || password == "" {
-		return nil, false, errors.New("Invalid credentials provided")
+		return nil, false, false, errors.New("Invalid credentials provided")
 	}
 
 	transactionErr := m.db.Update(func(tx *bolt.Tx) error {
@@ -260,12 +260,13 @@ func (m *userManager) IsTOTPEnabled(username string) (bool, error) {
 }
 
 // EnableTOTP enables TOTP for a user
-func (m *userManager) EnableTOTP(username string) error {
+func (m *userManager) EnableTOTP(username string) (error, *otp.key, [crypto.TotpNoBackupCodes]string) {
+	props := &userProps{}
+
 	err := m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
 		propsBytes := users.Get([]byte(username))
 		if propsBytes != nil {
-			props := &userProps{}
 			err := json.Unmarshal(propsBytes, props)
 			if err != nil {
 				return errors.New("Corrupt user properties: " + err.Error())
@@ -289,7 +290,7 @@ func (m *userManager) EnableTOTP(username string) error {
 		}
 		return nil
 	})
-	return err
+	return err, props.TotpKey, props.TOTPBackupCodes
 }
 
 // DisableTOTP disables TOTP for a user

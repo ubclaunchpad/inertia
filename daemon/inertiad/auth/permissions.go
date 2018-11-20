@@ -273,23 +273,16 @@ func (h *PermissionsHandler) enableTOTPHandler(w http.ReqponseWriter, r *http.Re
 		return
 	}
 
-	// Create TOTP key and backup codes for user
-	key, err := crypto.GenerateSecretKey(userReq.Username)
-	if err != nil {
-		http.Error(w, "Failed to create TOTP keys", http.StatusInternalServerError)
-		return
-	}
-	backups := crypto.GenerateBackupCodes()
-	body, err = json.Marshal(common.TOTPResponse{
-		Key:     key,
-		Backups: backups,
-	})
+	err, totpKey, backupCodes := h.users.EnableTOTP(userReq.Username)
 	if err != nil {
 		http.Error(w, "Failed to send TOTP keys", http.StatusInternalServerError)
 		return
 	}
 
-	// TODO: encrypt and save the key and backup codes
+	body, err := json.Marshal(&common.TOTPResponse{
+		Key:         totpKey,
+		BackupCodes: backupCodes,
+	})
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(body)
