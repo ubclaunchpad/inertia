@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"syscall"
+
+	"github.com/ubclaunchpad/inertia/common"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -226,5 +229,96 @@ var cmdDeploymentListUsers = &cobra.Command{
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
 				resp.StatusCode, body)
 		}
+	},
+}
+
+var cmdDeploymentEnableTotp = &cobra.Command{
+	Use:   "enable-totp [user]",
+	Short: "Enable Totp for a user",
+	Long:  "Enable Totp for a user on your remote",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		username := args[0]
+		fmt.Print("Password: ")
+		pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		fmt.Println()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Endpoint handles user authentication before enabling Totp
+		resp, err := deployment.EnableTotp(username, string(pwBytes))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			fmt.Println("Error Enabling Totp. Status Code: " + string(resp.StatusCode))
+			return
+		}
+
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var totpInfo common.TotpResponse
+		err = json.Unmarshal(body, &totpInfo)
+
+		if err != nil {
+			fmt.Println("Failed to Unmarshal Totp key")
+			return
+		}
+
+		fmt.Println("Totp successfully enabled. Your secret key is "+totpInfo.TotpSecret+" and your backup codes are %v", totpInfo.BackupCodes)
+	},
+}
+
+var cmdDeploymentDisableTotp = &cobra.Command{
+	Use:   "disable-totp [user]",
+	Short: "Disable Totp for a user",
+	Long:  "Disable Totp for a user on your remote",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		username := args[0]
+		fmt.Print("Password: ")
+		pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		fmt.Println()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Print("Totp: ")
+		totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		fmt.Println()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Endpoint handles user authentication before disabling Totp
+		resp, err := deployment.DisableTotp(username, string(pwBytes), string(totpBytes))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			fmt.Println("Error Disabling Totp. Status Code: " + string(resp.StatusCode))
+			return
+		}
+
+		fmt.Println("Totp successfully disabled.")
 	},
 }

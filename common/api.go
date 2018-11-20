@@ -1,7 +1,6 @@
 package common
 
 import (
-	"github.com/pquerna/otp"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
@@ -41,12 +40,12 @@ type UserRequest struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Admin    bool   `json:"admin"`
-	TOTP     int    `json:"totp"`
+	Totp     string `json:"totp"`
 }
 
-// TOTPResponse is used for sending users their TOTP keys and backup codes
-type TOTPResponse struct {
-	Key         *otp.Key `json:"key"`
+// TotpResponse is used for sending users their Totp secret and backup codes
+type TotpResponse struct {
+	TotpSecret  string `json:"key"`
 	BackupCodes [crypto.TotpNoBackupCodes]string
 }
 
