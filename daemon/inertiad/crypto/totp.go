@@ -9,13 +9,12 @@ import (
 )
 
 const (
-	totpIssuerName = "Inertia"
-	totpPeriod     = 30
-	totpSecretSize = 10
-	totpDigits     = 6
-	totpAlgorithm  = otp.AlgorithmSHA1
-	// TotpNoBackupCodes is the number of backup codes per user
-	TotpNoBackupCodes    = 10
+	totpIssuerName       = "Inertia"
+	totpPeriod           = 30
+	totpSecretSize       = 10
+	totpDigits           = 6
+	totpAlgorithm        = otp.AlgorithmSHA1
+	totpNoBackupCodes    = 10
 	totpBackupCodeLength = 5
 )
 
@@ -44,8 +43,8 @@ func ValidatePasscode(passcode string, secret string) bool {
 // cebe6-b1bdd
 // ...
 func GenerateBackupCodes() []string {
-	backupCodes := make([]string, TotpNoBackupCodes)
-	for i := 0; i < TotpNoBackupCodes; i++ {
+	backupCodes := make([]string, totpNoBackupCodes)
+	for i := 0; i < totpNoBackupCodes; i++ {
 		// get random bytes
 		randomBytes := make([]byte, totpBackupCodeLength)
 		rand.Read(randomBytes)
