@@ -10,6 +10,9 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
+
+	"github.com/pquerna/otp/totp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/common"
@@ -350,7 +353,7 @@ func TestUserControlHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
-func TestDisableTOTPEndpoint(t *testing.T) {
+func TestEnableDisableTotpEndpoints(t *testing.T) {
 	dir := "./test_disable_totp"
 	ts := httptest.NewServer(nil)
 	defer ts.Close()
@@ -386,6 +389,31 @@ func TestDisableTOTPEndpoint(t *testing.T) {
 	// Enable Totp
 	payload = bytes.NewReader(body)
 	req, err = http.NewRequest("POST", ts.URL+"/user/totp/enable", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", bearerTokenString)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Get Totp key from response
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	totpResp := &common.TotpResponse{}
+	err = json.Unmarshal(respBytes, totpResp)
+	assert.Nil(t, err)
+	totpKey, err := totp.GenerateCode(totpResp.TotpSecret, time.Now())
+	assert.Nil(t, err)
+
+	// Log in with Totp
+	body, err = json.Marshal(&common.UserRequest{
+		Username: "jimmyneutron",
+		Password: "asfasdlfjk",
+		Totp:     totpKey,
+	})
+	payload = bytes.NewReader(body)
+	req, err = http.NewRequest("POST", ts.URL+"/user/login", payload)
 	assert.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", bearerTokenString)
