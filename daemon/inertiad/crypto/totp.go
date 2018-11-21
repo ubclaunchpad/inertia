@@ -43,7 +43,8 @@ func ValidatePasscode(passcode string, secret string) bool {
 // b2e03-ffbcf
 // cebe6-b1bdd
 // ...
-func GenerateBackupCodes() (backupCodes [TotpNoBackupCodes]string) {
+func GenerateBackupCodes() []string {
+	backupCodes := make([]string, TotpNoBackupCodes)
 	for i := 0; i < TotpNoBackupCodes; i++ {
 		// get random bytes
 		randomBytes := make([]byte, totpBackupCodeLength)
