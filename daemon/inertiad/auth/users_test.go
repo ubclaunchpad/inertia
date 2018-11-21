@@ -26,11 +26,11 @@ func TestAddUserAndIsCorrectCredentials(t *testing.T) {
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
 
-	_, correct, _, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best", "")
+	_, correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
 	assert.Nil(t, err)
 	assert.False(t, correct)
 
-	_, correct, _, err = manager.IsCorrectCredentials("bobheadxi", "best_person_ever", "")
+	_, correct, err = manager.IsCorrectCredentials("bobheadxi", "best_person_ever")
 	assert.Nil(t, err)
 	assert.True(t, correct)
 }
@@ -112,12 +112,12 @@ func TestTooManyLogins(t *testing.T) {
 	assert.Nil(t, err)
 
 	for i := 0; i < loginAttemptsLimit; i++ {
-		_, correct, _, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best", "")
+		_, correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
 		assert.Nil(t, err)
 		assert.False(t, correct)
 	}
 
-	_, correct, _, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best", "")
+	_, correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
 	assert.False(t, correct)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "login attempts")
@@ -138,7 +138,7 @@ func TestEnableTOTP(t *testing.T) {
 	assert.Nil(t, err)
 
 	manager.EnableTOTP("bobheadxi")
-	result, err := manager.IsTOTPEnabled("bobheadxi")
+	result, err := manager.IsTotpEnabled("bobheadxi")
 	assert.Nil(t, err)
 	assert.True(t, result)
 }
@@ -154,12 +154,12 @@ func TestDisableTOTP(t *testing.T) {
 	assert.Nil(t, err)
 
 	manager.EnableTOTP("bobheadxi")
-	result, err := manager.IsTOTPEnabled("bobheadxi")
+	result, err := manager.IsTotpEnabled("bobheadxi")
 	assert.Nil(t, err)
 	assert.True(t, result)
 
 	manager.DisableTOTP("bobheadxi")
-	result, err = manager.IsTOTPEnabled("bobheadxi")
+	result, err = manager.IsTotpEnabled("bobheadxi")
 	assert.Nil(t, err)
 	assert.False(t, result)
 }

@@ -253,8 +253,8 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 	return admin, err
 }
 
-// IsTOTPEnabled checks if a given user has TOTP enabled
-func (m *userManager) IsTOTPEnabled(username string) (bool, error) {
+// IsTotpEnabled checks if a given user has TOTP enabled
+func (m *userManager) IsTotpEnabled(username string) (bool, error) {
 	TOTPenabled := false
 
 	err := m.db.View(func(tx *bolt.Tx) error {

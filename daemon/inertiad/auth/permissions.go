@@ -268,7 +268,7 @@ func (h *PermissionsHandler) enableTOTPHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	// Make sure the user does not already have TOTP enabled
-	totpEnabled, err := h.users.IsTOTPEnabled(userReq.Username)
+	totpEnabled, err := h.users.IsTotpEnabled(userReq.Username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -313,7 +313,7 @@ func (h *PermissionsHandler) disableTOTPHandler(w http.ResponseWriter, r *http.R
 	}
 
 	// Make sure that TOTP is actually enabled
-	totpEnabled, err := h.users.IsTOTPEnabled(userReq.Username)
+	totpEnabled, err := h.users.IsTotpEnabled(userReq.Username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -371,24 +371,31 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Log user in if password (and TOTP, if enabled) are correct
-	props, correct, validTOTP, err := h.users.IsCorrectCredentials(
-		userReq.Username, userReq.Password, userReq.Totp)
+	// Check the password is correct
+	props, correct, err := h.users.IsCorrectCredentials(
+		userReq.Username, userReq.Password)
 	if err != nil {
 		http.Error(w, "Bad request", http.StatusInternalServerError)
 		return
 	} else if !correct {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
-	} else if !validTOTP {
-		if userReq.Totp == "" {
-			// Expected TOTP, but did not receive one
-			w.WriteHeader(http.StatusNoContent)
-		} else {
-			// Received a TOTP, but it was invalid
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-		}
+	}
+
+	// Make sure TOTP is valid if the user has TOTP enabled
+	totpEnabled, err := h.users.IsTotpEnabled(userReq.Username)
+	if err != nil {
+		http.Error(w, "Unabled to verify credentials", http.StatusInternalServerError)
 		return
+	} else if totpEnabled {
+		validTotp, err := h.users.IsValidTotp(userReq.Username, userReq.Totp)
+		if err != nil {
+			http.Error(w, "Unable to verify credentials", http.StatusInternalServerError)
+			return
+		} else if !validTotp {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
 	}
 
 	_, token, err := h.sessions.BeginSession(userReq.Username, props.Admin)
