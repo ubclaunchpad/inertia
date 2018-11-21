@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	errSessionNotFound = errors.New("Session not found")
-	errUserNotFound    = errors.New("User not found")
+	errSessionNotFound    = errors.New("Session not found")
+	errUserNotFound       = errors.New("User not found")
 	errBackupCodeNotFound = errors.New("backup code not found")
 )
 
@@ -399,7 +399,7 @@ func (m *userManager) RemoveBackupCode(username, backupCode string) error {
 			// remove it
 			props.TotpBackupCodes = append(
 				props.TotpBackupCodes[:index],
-				props.TotpBackupCodes[index + 1:]...)
+				props.TotpBackupCodes[index+1:]...)
 
 			// store updated user
 			bytes, err := json.Marshal(props)
