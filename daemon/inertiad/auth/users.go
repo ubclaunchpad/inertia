@@ -3,14 +3,14 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-
 	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
 var (
-	errSessionNotFound = errors.New("Session not found")
-	errUserNotFound    = errors.New("User not found")
+	errSessionNotFound    = errors.New("Session not found")
+	errUserNotFound       = errors.New("User not found")
+	errBackupCodeNotFound = errors.New("backup code not found")
 )
 
 const (
@@ -24,7 +24,7 @@ type userProps struct {
 	Admin           bool
 	LoginAttempts   int
 	TotpSecret      string
-	TotpBackupCodes [crypto.TotpNoBackupCodes]string
+	TotpBackupCodes []string
 }
 
 // userManager administers sessions and user accounts
@@ -233,6 +233,35 @@ func (m *userManager) IsValidTotp(username string, totp string) (bool, error) {
 	return crypto.ValidatePasscode(totp, totpSecret), nil
 }
 
+// IsValidBackupCode returns true if the given backup code is valid for the
+// given user, and false otherwise.
+func (m *userManager) IsValidBackupCode(username, backupCode string) (bool, error) {
+	var backupCodes []string
+	err := m.db.View(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			if err := json.Unmarshal(propsBytes, props); err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+			backupCodes = props.TotpBackupCodes
+			return nil
+		}
+		return errors.New("no such user")
+	})
+	if err != nil {
+		return false, err
+	}
+	for _, correctBackupCode := range backupCodes {
+		if backupCode == correctBackupCode {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 // IsAdmin checks if given user is has administrator priviledges
 func (m *userManager) IsAdmin(username string) (bool, error) {
 	// Check if user is admin in database
@@ -276,7 +305,7 @@ func (m *userManager) IsTotpEnabled(username string) (bool, error) {
 }
 
 // EnableTOTP enables TOTP for a user
-func (m *userManager) EnableTOTP(username string) (string, [crypto.TotpNoBackupCodes]string, error) {
+func (m *userManager) EnableTOTP(username string) (string, []string, error) {
 	props := &userProps{}
 
 	err := m.db.Update(func(tx *bolt.Tx) error {
@@ -323,7 +352,7 @@ func (m *userManager) DisableTOTP(username string) error {
 				return errors.New("Corrupt user properties: " + err.Error())
 			}
 			props.TotpSecret = ""
-			props.TotpBackupCodes = [crypto.TotpNoBackupCodes]string{}
+			props.TotpBackupCodes = []string{}
 
 			bytes, err := json.Marshal(props)
 			if err != nil {
@@ -337,5 +366,49 @@ func (m *userManager) DisableTOTP(username string) error {
 			return errors.New("Cannot disable totp, user does not exist")
 		}
 		return nil
+	})
+}
+
+// RemoveBackupCode removes the given backup code from the user's list of
+// backup codes
+func (m *userManager) RemoveBackupCode(username, backupCode string) error {
+	return m.db.Update(func(tx *bolt.Tx) error {
+		users := tx.Bucket(m.usersBucket)
+		propsBytes := users.Get([]byte(username))
+		if propsBytes != nil {
+			props := &userProps{}
+			if err := json.Unmarshal(propsBytes, props); err != nil {
+				return errors.New("Corrupt user properties: " + err.Error())
+			}
+
+			// find the backup code
+			backupCodes := props.TotpBackupCodes
+			index := -1
+			for i, storedBackupCode := range backupCodes {
+				if storedBackupCode == backupCode {
+					index = i
+					break
+				}
+			}
+
+			// doesn't exist
+			if index == -1 {
+				return errBackupCodeNotFound
+			}
+
+			// remove it
+			props.TotpBackupCodes = append(
+				props.TotpBackupCodes[:index],
+				props.TotpBackupCodes[index+1:]...)
+
+			// store updated user
+			bytes, err := json.Marshal(props)
+			if err != nil {
+				return err
+			}
+
+			return users.Put([]byte(username), bytes)
+		}
+		return errUserNotFound
 	})
 }

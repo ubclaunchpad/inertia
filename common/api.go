@@ -1,9 +1,5 @@
 package common
 
-import (
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
-)
-
 const (
 	// MsgDaemonOK is the OK response upon successfully reaching daemon
 	MsgDaemonOK = "I'm a little Webhook, short and stout!"
@@ -46,7 +42,7 @@ type UserRequest struct {
 // TotpResponse is used for sending users their Totp secret and backup codes
 type TotpResponse struct {
 	TotpSecret  string `json:"key"`
-	BackupCodes [crypto.TotpNoBackupCodes]string
+	BackupCodes []string
 }
 
 // EnvRequest represents a request to manage environment variables
