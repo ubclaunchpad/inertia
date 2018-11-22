@@ -354,7 +354,7 @@ func TestUserControlHandlers(t *testing.T) {
 }
 
 func TestEnableDisableTotpEndpoints(t *testing.T) {
-	dir := "./test_disable_totp"
+	dir := "./test_enabledisable_totp"
 	ts := httptest.NewServer(nil)
 	defer ts.Close()
 
