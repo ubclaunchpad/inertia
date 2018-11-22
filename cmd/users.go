@@ -317,7 +317,7 @@ var cmdDeploymentDisableTotp = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		fmt.Print("Totp: ")
+		fmt.Print("TOTP: ")
 		totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
 		if err != nil {

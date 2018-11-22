@@ -312,6 +312,16 @@ func (h *PermissionsHandler) disableTOTPHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// Make sure a valid TOTP was provided
+	validTotp, err := h.users.IsValidTotp(userReq.Username, userReq.Totp)
+	if err != nil {
+		http.Error(w, "Unable to verify credentials", http.StatusInternalServerError)
+		return
+	} else if !validTotp {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
 	// Make sure that TOTP is actually enabled
 	totpEnabled, err := h.users.IsTotpEnabled(userReq.Username)
 	if err != nil {
@@ -397,8 +407,15 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 			http.Error(w, "Unable to verify credentials", http.StatusInternalServerError)
 			return
 		} else if !validTotp {
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-			return
+			// Check if the user entered a backup code
+			validBackup, err := h.users.IsValidBackupCode(userReq.Username, userReq.Totp)
+			if err != nil {
+				http.Error(w, "Unable to verify credentials", http.StatusInternalServerError)
+				return
+			} else if !validBackup {
+				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+				return
+			}
 		}
 	}
 
