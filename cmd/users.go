@@ -8,6 +8,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/qianlnk/qrcode"
 	"github.com/ubclaunchpad/inertia/common"
 
 	log "github.com/sirupsen/logrus"
@@ -290,6 +291,9 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 			fmt.Println("Failed to Unmarshal Totp key")
 			return
 		}
+
+		qr := qrcode.NewQRCode(totpInfo.TotpSecret, true)
+		qr.Output()
 
 		fmt.Printf("Totp successfully enabled. "+
 			"Your secret key is %s and your backup codes are %v\n",
