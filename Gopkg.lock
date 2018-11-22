@@ -158,12 +158,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/qianlnk/qrcode"
-  packages = ["."]
-  revision = "a03586d5950855654df346a9959cee6bb8bfe2ed"
-
-[[projects]]
-  branch = "master"
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
@@ -173,12 +167,6 @@
   packages = ["."]
   revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
   version = "v1.0.6"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/skip2/go-qrcode"
-  packages = [".","bitset","reedsolomon"]
-  revision = "cf5f9fa2f0d847edb8e038db7ed975e239095e1a"
 
 [[projects]]
   branch = "master"
@@ -254,6 +242,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8853a997b8d0f474c7e5d975c584615b45f97bfc5ba6285de08938846a46f1e2"
+  inputs-digest = "b627bd9d8f948ec07ff1277903b5cf3ccfb1e5ca3b1880ad8431d538be0a4206"
   solver-name = "gps-cdcl"
   solver-version = 1
