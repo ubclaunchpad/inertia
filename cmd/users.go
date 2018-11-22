@@ -131,13 +131,27 @@ var cmdDeploymentLogin = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		resp, err := deployment.LogIn(username, string(pwBytes))
+		resp, err := deployment.LogIn(username, string(pwBytes), "")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if resp.StatusCode != http.StatusAccepted {
-			fmt.Println("Invalid username or password")
+		if resp.StatusCode == http.StatusExpectationFailed {
+			// a TOTP is required
+			fmt.Print("TOTP: ")
+			totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+			fmt.Println()
+			if err != nil {
+				log.Fatal(err)
+			}
+			resp, err = deployment.LogIn(username, string(pwBytes), string(totpBytes))
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			fmt.Println("Invalid credentials")
 			return
 		}
 
@@ -259,7 +273,7 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			fmt.Println("Error Enabling Totp. Status Code: " + string(resp.StatusCode))
+			fmt.Printf("(Status code %d) Error Enabling Totp.\n", resp.StatusCode)
 			return
 		}
 
@@ -277,7 +291,9 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 			return
 		}
 
-		fmt.Println("Totp successfully enabled. Your secret key is "+totpInfo.TotpSecret+" and your backup codes are %v", totpInfo.BackupCodes)
+		fmt.Printf("Totp successfully enabled. "+
+			"Your secret key is %s and your backup codes are %v\n",
+			totpInfo.TotpSecret, totpInfo.BackupCodes)
 	},
 }
 

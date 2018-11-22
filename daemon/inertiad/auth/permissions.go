@@ -388,6 +388,10 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Unabled to verify credentials", http.StatusInternalServerError)
 		return
 	} else if totpEnabled {
+		if userReq.Totp == "" {
+			http.Error(w, "Expected TOTP", http.StatusExpectationFailed)
+			return
+		}
 		validTotp, err := h.users.IsValidTotp(userReq.Username, userReq.Totp)
 		if err != nil {
 			http.Error(w, "Unable to verify credentials", http.StatusInternalServerError)
