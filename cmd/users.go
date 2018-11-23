@@ -296,18 +296,18 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 		qrBuilder.Get(fmt.Sprintf("otpauth://totp/%s?secret=%s&issuer=Inertia",
 			username, totpInfo.TotpSecret)).Print()
 
-		fmt.Println("TOTP successfully enabled. Scan the QR code above to " +
-			"add your Inertia account to your authenticator app.")
+		fmt.Println("\nTOTP successfully enabled.")
+		fmt.Printf("Scan the QR code above to " +
+			"add your Inertia account to your authenticator app.\n\n")
 		fmt.Printf("Your secret key is: %s\n", totpInfo.TotpSecret)
-		fmt.Println("Your backup codes are:")
+		fmt.Printf("Your backup codes are:\n\n")
 
 		for _, backupCode := range totpInfo.BackupCodes {
 			fmt.Println(backupCode)
 		}
 
-		fmt.Println()
-		fmt.Println("IMPORTANT: Store our backup codes somewhere safe." +
-			"If you lose your authentication device you will need to use them " +
+		fmt.Println("\nIMPORTANT: Store your backup codes somewhere safe." +
+			" If you lose your authentication device you will need to use them " +
 			"to regain access to your account.")
 	},
 }
