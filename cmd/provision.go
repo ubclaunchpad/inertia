@@ -82,9 +82,9 @@ This ensures that your project ports are properly exposed and externally accessi
 				log.Fatal(err)
 			}
 		} else if profilePath != "" {
-			profileUser, _ := cmd.Flags().GetString("profile-user")
+			var profileUser, _ = cmd.Flags().GetString("profile-user")
 			prov, err = provision.NewEC2ProvisionerFromProfile(
-				user, profilePath, profileUser, os.Stdout)
+				user, profileUser, profilePath, os.Stdout)
 			if err != nil {
 				log.Fatal(err)
 			}
