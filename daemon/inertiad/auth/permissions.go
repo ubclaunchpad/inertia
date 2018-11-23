@@ -287,6 +287,10 @@ func (h *PermissionsHandler) enableTotpHandler(w http.ResponseWriter, r *http.Re
 		TotpSecret:  totpSecret,
 		BackupCodes: backupCodes,
 	})
+	if err != nil {
+		http.Error(w, "Failed to create TOTP keys", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(body)
