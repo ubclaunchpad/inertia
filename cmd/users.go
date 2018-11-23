@@ -287,13 +287,22 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 		err = json.Unmarshal(body, &totpInfo)
 
 		if err != nil {
-			fmt.Println("Failed to Unmarshal Totp key")
+			fmt.Println("Failed to Unmarshal TOTP key")
 			return
 		}
 
-		fmt.Printf("Totp successfully enabled. "+
-			"Your secret key is %s and your backup codes are %v\n",
-			totpInfo.TotpSecret, totpInfo.BackupCodes)
+		fmt.Println("TOTP successfully enabled.")
+		fmt.Printf("Your secret key is: %s\n", totpInfo.TotpSecret)
+		fmt.Println("Your backup codes are:")
+
+		for _, backupCode := range totpInfo.BackupCodes {
+			fmt.Println(backupCode)
+		}
+
+		fmt.Println()
+		fmt.Println("IMPORTANT: Store our backup codes somewhere safe."+
+			"If you lose your authentication device you will need to use them "+
+			"to regain access to your account.")
 	},
 }
 
