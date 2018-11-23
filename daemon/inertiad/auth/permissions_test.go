@@ -367,7 +367,7 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 
 	// Test handler uses the getFakeAPIToken keylookup, which will match with
 	// the testToken
-	bearerTokenString := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
+	authToken := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
 
 	// Add a new user
 	body, err := json.Marshal(&common.UserRequest{
@@ -380,7 +380,7 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	req, err := http.NewRequest("POST", ts.URL+"/user/add", payload)
 	assert.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", bearerTokenString)
+	req.Header.Set("Authorization", authToken)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
@@ -391,7 +391,7 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	req, err = http.NewRequest("POST", ts.URL+"/user/totp/enable", payload)
 	assert.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", bearerTokenString)
+	req.Header.Set("Authorization", authToken)
 	resp, err = http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
@@ -416,18 +416,21 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	req, err = http.NewRequest("POST", ts.URL+"/user/login", payload)
 	assert.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", bearerTokenString)
 	resp, err = http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	// Test disable Totp
-	payload = bytes.NewReader(body)
-	req, err = http.NewRequest("POST", ts.URL+"/user/totp/disable", payload)
+	// Get user JWT from response
+	userTokenBytes, err := ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	authToken = fmt.Sprintf("Bearer %s", string(userTokenBytes))
+
+	// Disable Totp
+	req, err = http.NewRequest("POST", ts.URL+"/user/totp/disable", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", bearerTokenString)
+	req.Header.Set("Authorization", authToken)
 	resp, err = http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()

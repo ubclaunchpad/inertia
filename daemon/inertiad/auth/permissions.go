@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,8 +14,12 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/util"
 )
 
+// ctxKey represents keys used in request contexts
+type ctxKey int
+
 const (
-	errMalformedHeaderMsg = "malformed authorization error"
+	errMalformedHeaderMsg        = "malformed authorization error"
+	ctxUsername           ctxKey = iota
 )
 
 // PermissionsHandler handles users, permissions, and sessions on top
@@ -160,8 +165,11 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Attach token to request context so handlers can use it
+	ctx := context.WithValue(r.Context(), ctxUsername, claims.User)
+
 	// Serve the requested endpoint to token holders
-	h.mux.ServeHTTP(w, r)
+	h.mux.ServeHTTP(w, r.WithContext(ctx))
 }
 
 // AttachPublicHandler attaches given path and handler and makes it publicly available
@@ -297,37 +305,9 @@ func (h *PermissionsHandler) enableTotpHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (h *PermissionsHandler) disableTotpHandler(w http.ResponseWriter, r *http.Request) {
-	userReq, err := readCredentials(r)
-	if err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
-	// Log in user if password is correct (we do this first because we don't
-	// want to reveal information about the user to the requester before they
-	// are authenticated)
-	_, correct, err := h.users.IsCorrectCredentials(
-		userReq.Username, userReq.Password)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	} else if !correct {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	// Make sure a valid TOTP was provided
-	validTotp, err := h.users.IsValidTotp(userReq.Username, userReq.Totp)
-	if err != nil {
-		http.Error(w, "Unable to verify credentials", http.StatusInternalServerError)
-		return
-	} else if !validTotp {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
+	username := r.Context().Value(ctxUsername).(string)
 	// Make sure that TOTP is actually enabled
-	totpEnabled, err := h.users.IsTotpEnabled(userReq.Username)
+	totpEnabled, err := h.users.IsTotpEnabled(username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -336,7 +316,7 @@ func (h *PermissionsHandler) disableTotpHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = h.users.DisableTotp(userReq.Username)
+	err = h.users.DisableTotp(username)
 	if err != nil {
 		http.Error(w, "Fail to disable TOTP: "+err.Error(), http.StatusInternalServerError)
 		return
