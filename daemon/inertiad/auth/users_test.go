@@ -127,7 +127,7 @@ func TestTooManyLogins(t *testing.T) {
 	assert.Equal(t, errUserNotFound, err)
 }
 
-func TestEnableTOTP(t *testing.T) {
+func TestEnableTotp(t *testing.T) {
 	dir := "./test_users"
 	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
@@ -137,13 +137,13 @@ func TestEnableTOTP(t *testing.T) {
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
 
-	manager.EnableTOTP("bobheadxi")
+	manager.EnableTotp("bobheadxi")
 	result, err := manager.IsTotpEnabled("bobheadxi")
 	assert.Nil(t, err)
 	assert.True(t, result)
 }
 
-func TestDisableTOTP(t *testing.T) {
+func TestDisableTotp(t *testing.T) {
 	dir := "./test_users"
 	manager, err := getTestUserManager(dir)
 	defer os.RemoveAll(dir)
@@ -153,12 +153,12 @@ func TestDisableTOTP(t *testing.T) {
 	err = manager.AddUser("bobheadxi", "best_person_ever", true)
 	assert.Nil(t, err)
 
-	manager.EnableTOTP("bobheadxi")
+	manager.EnableTotp("bobheadxi")
 	result, err := manager.IsTotpEnabled("bobheadxi")
 	assert.Nil(t, err)
 	assert.True(t, result)
 
-	manager.DisableTOTP("bobheadxi")
+	manager.DisableTotp("bobheadxi")
 	result, err = manager.IsTotpEnabled("bobheadxi")
 	assert.Nil(t, err)
 	assert.False(t, result)
@@ -175,7 +175,7 @@ func TestRemoveBackupCode(t *testing.T) {
 	assert.Nil(t, err)
 
 	// good code
-	_, backupCodes, err := manager.EnableTOTP("bobheadxi")
+	_, backupCodes, err := manager.EnableTotp("bobheadxi")
 	result, err := manager.IsValidBackupCode("bobheadxi", backupCodes[0])
 	assert.Nil(t, err)
 	assert.True(t, result)

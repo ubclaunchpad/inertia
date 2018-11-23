@@ -76,9 +76,9 @@ func NewPermissionsHandler(
 	userHandler.HandleFunc("/list",
 		util.WithMethods(handler.listUsersHandler, http.MethodGet))
 	userHandler.HandleFunc("/totp/enable",
-		util.WithMethods(handler.enableTOTPHandler, http.MethodPost))
+		util.WithMethods(handler.enableTotpHandler, http.MethodPost))
 	userHandler.HandleFunc("/totp/disable",
-		util.WithMethods(handler.disableTOTPHandler, http.MethodPost))
+		util.WithMethods(handler.disableTotpHandler, http.MethodPost))
 
 	// Admin-only paths
 	handler.adminPaths = []string{
@@ -247,7 +247,7 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 	fmt.Fprintf(w, "[SUCCESS %d] User %s removed\n", http.StatusOK, userReq.Username)
 }
 
-func (h *PermissionsHandler) enableTOTPHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PermissionsHandler) enableTotpHandler(w http.ResponseWriter, r *http.Request) {
 	userReq, err := readCredentials(r)
 	if err != nil {
 		http.Error(w, "Bad request", http.StatusBadRequest)
@@ -277,7 +277,7 @@ func (h *PermissionsHandler) enableTOTPHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	totpSecret, backupCodes, err := h.users.EnableTOTP(userReq.Username)
+	totpSecret, backupCodes, err := h.users.EnableTotp(userReq.Username)
 	if err != nil {
 		http.Error(w, "Failed to create TOTP keys", http.StatusInternalServerError)
 		return
@@ -292,7 +292,7 @@ func (h *PermissionsHandler) enableTOTPHandler(w http.ResponseWriter, r *http.Re
 	w.Write(body)
 }
 
-func (h *PermissionsHandler) disableTOTPHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PermissionsHandler) disableTotpHandler(w http.ResponseWriter, r *http.Request) {
 	userReq, err := readCredentials(r)
 	if err != nil {
 		http.Error(w, "Bad request", http.StatusBadRequest)
@@ -332,7 +332,7 @@ func (h *PermissionsHandler) disableTOTPHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = h.users.DisableTOTP(userReq.Username)
+	err = h.users.DisableTotp(userReq.Username)
 	if err != nil {
 		http.Error(w, "Fail to disable TOTP: "+err.Error(), http.StatusInternalServerError)
 		return

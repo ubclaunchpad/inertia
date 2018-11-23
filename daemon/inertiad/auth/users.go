@@ -284,7 +284,7 @@ func (m *userManager) IsAdmin(username string) (bool, error) {
 
 // IsTotpEnabled checks if a given user has TOTP enabled
 func (m *userManager) IsTotpEnabled(username string) (bool, error) {
-	TOTPenabled := false
+	totpEnabled := false
 
 	err := m.db.View(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
@@ -296,16 +296,16 @@ func (m *userManager) IsTotpEnabled(username string) (bool, error) {
 				return errors.New("Corrupt user properties: " + err.Error())
 			}
 			if props.TotpSecret != "" {
-				TOTPenabled = true
+				totpEnabled = true
 			}
 		}
 		return nil
 	})
-	return TOTPenabled, err
+	return totpEnabled, err
 }
 
-// EnableTOTP enables TOTP for a user
-func (m *userManager) EnableTOTP(username string) (string, []string, error) {
+// EnableTotp enables TOTP for a user
+func (m *userManager) EnableTotp(username string) (string, []string, error) {
 	props := &userProps{}
 
 	err := m.db.Update(func(tx *bolt.Tx) error {
@@ -340,8 +340,8 @@ func (m *userManager) EnableTOTP(username string) (string, []string, error) {
 	return props.TotpSecret, props.TotpBackupCodes, err
 }
 
-// DisableTOTP disables TOTP for a user
-func (m *userManager) DisableTOTP(username string) error {
+// DisableTotp disables TOTP for a user
+func (m *userManager) DisableTotp(username string) error {
 	return m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
 		propsBytes := users.Get([]byte(username))
