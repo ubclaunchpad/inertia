@@ -151,6 +151,7 @@ var cmdDeploymentLogin = &cobra.Command{
 			}
 		}
 
+		fmt.Printf("(Status code %d) ", resp.StatusCode)
 		if resp.StatusCode != http.StatusOK {
 			fmt.Println("Invalid credentials")
 			return
@@ -274,7 +275,7 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			fmt.Printf("(Status code %d) Error Enabling Totp.\n", resp.StatusCode)
+			fmt.Printf("(Status code %d) Error Enabling Totp.", resp.StatusCode)
 			return
 		}
 
@@ -287,25 +288,25 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 		var totpInfo common.TotpResponse
 		if err = json.Unmarshal(body, &totpInfo); err != nil {
 			log.Fatal(err)
-			return
 		}
 
-		qrBuilder := qr.New()
-		qrBuilder.Get(fmt.Sprintf("otpauth://totp/%s?secret=%s&issuer=Inertia",
+		// Display QR code so users can easily add their keys to their
+		// authenticator apps
+		qr.New().Get(fmt.Sprintf("otpauth://totp/%s?secret=%s&issuer=Inertia",
 			username, totpInfo.TotpSecret)).Print()
 
-		fmt.Println("\nTOTP successfully enabled.")
-		fmt.Printf("Scan the QR code above to " +
+		fmt.Printf("\n\n(Status code %d) TOTP successfully enabled.\n",
+			resp.StatusCode)
+		fmt.Print("Scan the QR code above to " +
 			"add your Inertia account to your authenticator app.\n\n")
 		fmt.Printf("Your secret key is: %s\n", totpInfo.TotpSecret)
-		fmt.Printf("Your backup codes are:\n\n")
+		fmt.Print("Your backup codes are:\n\n")
 
 		for _, backupCode := range totpInfo.BackupCodes {
 			fmt.Println(backupCode)
 		}
 
-		fmt.Println()
-		fmt.Println("IMPORTANT: Store our backup codes somewhere safe. " +
+		fmt.Println("\nIMPORTANT: Store our backup codes somewhere safe. " +
 			"If you lose your authentication device you will need to use them " +
 			"to regain access to your account.")
 	},
@@ -323,32 +324,20 @@ var cmdDeploymentDisableTotp = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		username := args[0]
-		fmt.Print("Password: ")
-		pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
-		fmt.Println()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Print("Authentication Code: ")
-		totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
-		fmt.Println()
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		// Endpoint handles user authentication before disabling Totp
-		resp, err := deployment.DisableTotp(username, string(pwBytes), string(totpBytes))
+		resp, err := deployment.DisableTotp()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if resp.StatusCode != http.StatusOK {
-			fmt.Printf("(Status code %d) Error Disabling Totp.\n", resp.StatusCode)
-			return
+		fmt.Printf("(Status code %d) ", resp.StatusCode)
+		if resp.StatusCode == http.StatusUnauthorized {
+			fmt.Println("Please try logging in again before " +
+				"disabling two-factor authentication.")
+		} else if resp.StatusCode != http.StatusOK {
+			fmt.Println("Error Disabling Totp.")
+		} else {
+			fmt.Println("Totp successfully disabled.")
 		}
-
-		fmt.Println("Totp successfully disabled.")
 	},
 }

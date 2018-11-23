@@ -316,8 +316,7 @@ func (h *PermissionsHandler) disableTotpHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = h.users.DisableTotp(username)
-	if err != nil {
+	if err = h.users.DisableTotp(username); err != nil {
 		http.Error(w, "Fail to disable TOTP: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -379,7 +378,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 	// Make sure TOTP is valid if the user has TOTP enabled
 	totpEnabled, err := h.users.IsTotpEnabled(userReq.Username)
 	if err != nil {
-		http.Error(w, "Unabled to verify credentials", http.StatusInternalServerError)
+		http.Error(w, "Unable to verify credentials", http.StatusInternalServerError)
 		return
 	} else if totpEnabled {
 		if userReq.Totp == "" {
@@ -430,12 +429,12 @@ func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func readCredentials(r *http.Request) (common.UserRequest, error) {
+	userReq := common.UserRequest{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return common.UserRequest{}, err
+		return userReq, err
 	}
 	defer r.Body.Close()
-	var userReq common.UserRequest
-	json.Unmarshal(body, &userReq)
-	return userReq, nil
+	err = json.Unmarshal(body, &userReq)
+	return userReq, err
 }

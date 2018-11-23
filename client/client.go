@@ -374,13 +374,9 @@ func (c *Client) EnableTotp(username, password string) (*http.Response, error) {
 	})
 }
 
-// DisableTotp enables Totp for a given user
-func (c *Client) DisableTotp(username, password, totp string) (*http.Response, error) {
-	return c.post("/user/totp/disable", &common.UserRequest{
-		Username: username,
-		Password: password,
-		Totp:     totp,
-	})
+// DisableTotp disables Totp for a given user
+func (c *Client) DisableTotp() (*http.Response, error) {
+	return c.post("/user/totp/disable", nil)
 }
 
 // Sends a GET request. "queries" contains query string arguments.
