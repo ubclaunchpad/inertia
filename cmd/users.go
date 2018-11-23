@@ -285,10 +285,8 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 		}
 
 		var totpInfo common.TotpResponse
-		err = json.Unmarshal(body, &totpInfo)
-
-		if err != nil {
-			fmt.Println("Failed to Unmarshal TOTP key")
+		if err = json.Unmarshal(body, &totpInfo); err != nil {
+			log.Fatal(err)
 			return
 		}
 
@@ -306,8 +304,9 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 			fmt.Println(backupCode)
 		}
 
-		fmt.Println("\nIMPORTANT: Store your backup codes somewhere safe." +
-			" If you lose your authentication device you will need to use them " +
+		fmt.Println()
+		fmt.Println("IMPORTANT: Store our backup codes somewhere safe. " +
+			"If you lose your authentication device you will need to use them " +
 			"to regain access to your account.")
 	},
 }
@@ -346,7 +345,7 @@ var cmdDeploymentDisableTotp = &cobra.Command{
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			fmt.Println("Error Disabling Totp. Status Code: " + string(resp.StatusCode))
+			fmt.Printf("(Status code %d) Error Disabling Totp.\n", resp.StatusCode)
 			return
 		}
 
