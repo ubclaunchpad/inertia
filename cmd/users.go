@@ -10,6 +10,7 @@ import (
 
 	"github.com/ubclaunchpad/inertia/common"
 
+	qr "github.com/Baozisoftware/qrcode-terminal-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/local"
@@ -291,7 +292,12 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 			return
 		}
 
-		fmt.Println("TOTP successfully enabled.")
+		qrBuilder := qr.New()
+		qrBuilder.Get(fmt.Sprintf("otpauth://totp/%s?secret=%s&issuer=Inertia",
+			username, totpInfo.TotpSecret)).Print()
+
+		fmt.Println("TOTP successfully enabled. Scan the QR code above to " +
+			"add your Inertia account to your authenticator app.")
 		fmt.Printf("Your secret key is: %s\n", totpInfo.TotpSecret)
 		fmt.Println("Your backup codes are:")
 
@@ -300,8 +306,8 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 		}
 
 		fmt.Println()
-		fmt.Println("IMPORTANT: Store our backup codes somewhere safe."+
-			"If you lose your authentication device you will need to use them "+
+		fmt.Println("IMPORTANT: Store our backup codes somewhere safe." +
+			"If you lose your authentication device you will need to use them " +
 			"to regain access to your account.")
 	},
 }
