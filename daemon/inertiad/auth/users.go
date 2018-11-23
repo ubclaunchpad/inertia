@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+
 	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
@@ -10,7 +11,7 @@ import (
 var (
 	errSessionNotFound    = errors.New("Session not found")
 	errUserNotFound       = errors.New("User not found")
-	errBackupCodeNotFound = errors.New("backup code not found")
+	errBackupCodeNotFound = errors.New("Backup code not found")
 )
 
 const (
@@ -248,7 +249,7 @@ func (m *userManager) IsValidBackupCode(username, backupCode string) (bool, erro
 			backupCodes = props.TotpBackupCodes
 			return nil
 		}
-		return errors.New("no such user")
+		return errors.New("No such user")
 	})
 	if err != nil {
 		return false, err
@@ -327,9 +328,7 @@ func (m *userManager) EnableTotp(username string) (string, []string, error) {
 			bytes, err := json.Marshal(props)
 			if err != nil {
 				return err
-			}
-			err = users.Put([]byte(username), bytes)
-			if err != nil {
+			} else if err = users.Put([]byte(username), bytes); err != nil {
 				return err
 			}
 		} else {
