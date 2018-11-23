@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	errSessionNotFound    = errors.New("Session not found")
-	errUserNotFound       = errors.New("User not found")
-	errBackupCodeNotFound = errors.New("Backup code not found")
+	errSessionNotFound    = errors.New("session not found")
+	errUserNotFound       = errors.New("user not found")
+	errBackupCodeNotFound = errors.New("backup code not found")
 )
 
 const (
