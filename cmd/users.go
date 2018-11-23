@@ -138,7 +138,7 @@ var cmdDeploymentLogin = &cobra.Command{
 
 		if resp.StatusCode == http.StatusExpectationFailed {
 			// a TOTP is required
-			fmt.Print("TOTP: ")
+			fmt.Print("Authentication Code: ")
 			totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 			fmt.Println()
 			if err != nil {
@@ -317,7 +317,7 @@ var cmdDeploymentDisableTotp = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		fmt.Print("TOTP: ")
+		fmt.Print("Authentication Code: ")
 		totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
 		if err != nil {
