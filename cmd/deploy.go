@@ -284,15 +284,18 @@ Use 'inertia [remote] status' to see which containers are active.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-		short, _ := cmd.Flags().GetBool("short")
-		entries, _ := cmd.Flags().GetInt("entries")
 
-		container := "/inertia-daemon"
+		var short, _ = cmd.Flags().GetBool("short")
+		var entries, _ = cmd.Flags().GetInt("entries")
+
+		// get daemon logs by default
+		var container = "/inertia-daemon"
 		if len(args) > 0 {
 			container = args[0]
 		}
 
 		if short {
+			// if short, just grab the last x log entries
 			resp, err := deployment.Logs(container, entries)
 			if err != nil {
 				log.Fatal(err)
@@ -315,6 +318,7 @@ Use 'inertia [remote] status' to see which containers are active.`,
 					resp.StatusCode, body)
 			}
 		} else {
+			// if not short, open a websocket to stream logs
 			socket, err := deployment.LogsWebSocket(container, entries)
 			if err != nil {
 				log.Fatal(err)
