@@ -74,6 +74,12 @@ This ensures that your project ports are properly exposed and externally accessi
 		var instanceType, _ = cmd.Flags().GetString("type")
 		var stringProjectPorts, _ = cmd.Flags().GetStringArray("ports")
 
+		if stringProjectPorts == nil || len(stringProjectPorts) == 0 {
+			fmt.Print("[WARNING] no project ports provided - this means that no ports" +
+				"will be exposed on your ec2 host. Use the '--ports' flag to set" +
+				"ports that you want to be accessible.")
+		}
+
 		// Create VPS instance
 		var prov *provision.EC2Provisioner
 		if fromEnv {
