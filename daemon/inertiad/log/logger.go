@@ -70,6 +70,8 @@ func (l *DaemonLogger) WriteErr(msg string, status int) {
 	fmt.Fprintf(l.Writer, "[ERROR %s] %s\n", strconv.Itoa(status), msg)
 	if l.socket == nil {
 		http.Error(l.httpWriter, msg, status)
+	} else {
+		l.Close(CloseOpts{msg, status})
 	}
 }
 
@@ -80,12 +82,24 @@ func (l *DaemonLogger) WriteSuccess(msg string, status int) {
 		l.httpWriter.Header().Set("Content-Type", "text/html")
 		l.httpWriter.WriteHeader(status)
 		fmt.Fprintln(l.httpWriter, msg)
+	} else {
+		l.Close(CloseOpts{msg, status})
 	}
 }
 
+// CloseOpts defines options for closing the logger
+type CloseOpts struct {
+	Message    string
+	StatusCode int
+}
+
 // Close shuts down the logger
-func (l *DaemonLogger) Close() {
+func (l *DaemonLogger) Close(opts ...CloseOpts) error {
 	if l.socket != nil && !l.httpStream {
-		l.socket.Close()
+		if opts != nil && len(opts) > 0 {
+			return l.socket.CloseHandler()(opts[0].StatusCode, opts[0].Message)
+		}
+		return l.socket.CloseHandler()(http.StatusOK, "connection closed")
 	}
+	return nil
 }

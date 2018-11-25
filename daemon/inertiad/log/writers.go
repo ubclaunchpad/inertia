@@ -10,7 +10,7 @@ import (
 // SocketWriter is an interface for writing to websocket connections
 type SocketWriter interface {
 	WriteMessage(messageType int, bytes []byte) error
-	Close() error
+	CloseHandler() func(code int, text string) error
 }
 
 // WebSocketWriter wraps a SocketWriter in an io.Writer
@@ -25,7 +25,7 @@ func (w *WebSocketWriter) Write(p []byte) (int, error) {
 
 // Close closes the socket writer's websocket.
 func (w *WebSocketWriter) Close() error {
-	return w.socketWriter.Close()
+	return w.socketWriter.CloseHandler()(http.StatusOK, "connection closed")
 }
 
 // NewWebSocketTextWriter returns an io.Writer version of SocketWriter

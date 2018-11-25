@@ -13,7 +13,9 @@ type mockSocketWriter struct {
 	bytes.Buffer
 }
 
-func (m *mockSocketWriter) Close() error { return nil }
+func (m *mockSocketWriter) CloseHandler() func(code int, text string) error {
+	return func(code int, text string) error { return nil }
+}
 func (m *mockSocketWriter) WriteMessage(t int, bytes []byte) error {
 	_, err := m.Buffer.Write(bytes)
 	return err
