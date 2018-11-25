@@ -236,18 +236,20 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 		if err != nil {
 			log.Fatal(err)
 		}
-		host := "http://" + deployment.RemoteVPS.GetIPAndPort()
+
 		resp, err := deployment.Status()
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer resp.Body.Close()
 
 		switch resp.StatusCode {
 		case http.StatusOK:
-			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode, deployment.Name, host)
-			status := &common.DeploymentStatus{}
-			err := json.NewDecoder(resp.Body).Decode(status)
-			if err != nil {
+			var host = "https://" + deployment.RemoteVPS.GetIPAndPort()
+			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n",
+				resp.StatusCode, deployment.Name, host)
+			var status = &common.DeploymentStatus{}
+			if err := json.NewDecoder(resp.Body).Decode(status); err != nil {
 				log.Fatal(err)
 			}
 			println(formatStatus(status))
@@ -256,14 +258,12 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer resp.Body.Close()
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		default:
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer resp.Body.Close()
 			fmt.Printf("(Status code %d) %s\n",
 				resp.StatusCode, body)
 		}
