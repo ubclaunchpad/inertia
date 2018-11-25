@@ -291,14 +291,6 @@
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
 
 [[projects]]
-  digest = "1:b2339e83ce9b5c4f79405f949429a7f68a9a904fed903c672aac1e7ceb7f5f02"
-  name = "github.com/sirupsen/logrus"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
-  version = "v1.0.6"
-
-[[projects]]
   branch = "master"
   digest = "1:f369af8d393c73a0fb56422539085416efda5cd472b450dd415b2546575fb751"
   name = "github.com/spf13/cobra"
@@ -344,7 +336,7 @@
   revision = "ba9c9e33906f58169366275e3450db66139a31a9"
 
 [[projects]]
-  digest = "1:4d6ab27b650d3b8f320cf321e40c5db4f3526c291763b4c9d281ca4a4b7a9825"
+  digest = "1:ad84fbd6c2c3fccc79d891a57a4ad4e89b2d6e3e7a98c00b8e0d89113c1d4f75"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
@@ -362,6 +354,7 @@
     "openpgp/errors",
     "openpgp/packet",
     "openpgp/s2k",
+    "pbkdf2",
     "poly1305",
     "salsa20/salsa",
     "ssh",
@@ -502,11 +495,11 @@
     "github.com/gorilla/websocket",
     "github.com/pquerna/otp",
     "github.com/pquerna/otp/totp",
-    "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/stretchr/testify/assert",
     "golang.org/x/crypto/bcrypt",
     "golang.org/x/crypto/nacl/box",
+    "golang.org/x/crypto/pbkdf2",
     "golang.org/x/crypto/ssh",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/webdav",
