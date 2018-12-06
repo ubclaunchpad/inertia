@@ -181,7 +181,7 @@ func TestRemoveBackupCode(t *testing.T) {
 	assert.True(t, result)
 
 	// bad code
-	result, err = manager.IsValidBackupCode("bobheadxi", "abcde-fghij");
+	result, err = manager.IsValidBackupCode("bobheadxi", "abcde-fghij")
 	assert.Nil(t, err)
 	assert.False(t, result)
 
