@@ -248,11 +248,13 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 	})
 }
 
-// LogIn gets an access token for the user with the given credentials
-func (c *Client) LogIn(user string, password string) (*http.Response, error) {
+// LogIn gets an access token for the user with the given credentials. Use ""
+// for totp if none is required.
+func (c *Client) LogIn(user, password, totp string) (*http.Response, error) {
 	return c.post("/user/login", &common.UserRequest{
 		Username: user,
 		Password: password,
+		Totp:     totp,
 	})
 }
 
@@ -362,6 +364,19 @@ func (c *Client) ResetUsers() (*http.Response, error) {
 // ListUsers lists all users on the remote.
 func (c *Client) ListUsers() (*http.Response, error) {
 	return c.get("/user/list", nil)
+}
+
+// EnableTotp enables Totp for a given user
+func (c *Client) EnableTotp(username, password string) (*http.Response, error) {
+	return c.post("/user/totp/enable", &common.UserRequest{
+		Username: username,
+		Password: password,
+	})
+}
+
+// DisableTotp disables Totp for a given user
+func (c *Client) DisableTotp() (*http.Response, error) {
+	return c.post("/user/totp/disable", nil)
 }
 
 // Sends a GET request. "queries" contains query string arguments.

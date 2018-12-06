@@ -82,10 +82,16 @@ Run 'inertia [remote] init' to gather this information.`,
 		adduser := deepCopy(cmdDeploymentAddUser)
 		adduser.Flags().Bool("admin", false, "create a user with administrator permissions")
 		user.AddCommand(adduser)
-		user.AddCommand(deepCopy(cmdDeploymentLogin))
+
+		login := deepCopy(cmdDeploymentLogin)
+		login.Flags().String("totp", "", "auth code or backup code for 2FA")
+		user.AddCommand(login)
+
 		user.AddCommand(deepCopy(cmdDeploymentRemoveUser))
 		user.AddCommand(deepCopy(cmdDeploymentResetUsers))
 		user.AddCommand(deepCopy(cmdDeploymentListUsers))
+		user.AddCommand(deepCopy(cmdDeploymentEnableTotp))
+		user.AddCommand(deepCopy(cmdDeploymentDisableTotp))
 		cmd.AddCommand(user)
 
 		cmd.AddCommand(deepCopy(cmdDeploymentSSH))
