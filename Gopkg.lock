@@ -181,12 +181,6 @@
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
 
 [[projects]]
-  name = "github.com/sirupsen/logrus"
-  packages = ["."]
-  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
-  version = "v1.0.6"
-
-[[projects]]
   branch = "master"
   name = "github.com/skip2/go-qrcode"
   packages = [".","bitset","reedsolomon"]
@@ -266,6 +260,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "169b43d9f1658625e773243c3e611eaefe626c02724e49335a8d9f60d9109668"
+  inputs-digest = "c4517ea7a7f7b8633f63e2782c95d2bb1166709c43b8a5efb87b9a45bf594c6a"
   solver-name = "gps-cdcl"
   solver-version = 1

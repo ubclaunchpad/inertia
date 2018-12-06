@@ -107,7 +107,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 
 	fmt.Fprint(c.out, "\nInertia has been set up and daemon is running on remote!")
 	fmt.Fprint(c.out, "\nYou may have to wait briefly for Inertia to set up some dependencies.")
-	fmt.Fprintf(c.out, "\nUse 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", c.Name)
+	fmt.Fprintf(c.out, "\nUse 'inertia %s logs' to check on the daemon's setup progress.\n\n", c.Name)
 
 	fmt.Fprint(c.out, "=============================\n\n")
 

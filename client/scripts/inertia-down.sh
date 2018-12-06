@@ -5,4 +5,4 @@
 set -e
 
 # Remove Inertia from VPS
-rm -rf ~/inertia/
+sudo rm -rf ~/inertia/

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"syscall"
@@ -11,7 +12,6 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 
 	qr "github.com/Baozisoftware/qrcode-terminal-go"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/local"
 	"golang.org/x/crypto/ssh/terminal"
@@ -97,7 +97,7 @@ from the web app.`,
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		switch resp.StatusCode {
@@ -199,7 +199,7 @@ be able to log in and view or configure the deployment from the web app.`,
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.WithError(err)
+			log.Fatal(err)
 		}
 
 		switch resp.StatusCode {
@@ -233,9 +233,9 @@ var cmdDeploymentListUsers = &cobra.Command{
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.WithError(err)
-		}
+			log.Fatal(err)
 
+		}
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)

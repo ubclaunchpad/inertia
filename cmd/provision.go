@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
@@ -61,58 +61,63 @@ This ensures that your project ports are properly exposed and externally accessi
 		if err != nil {
 			log.Fatal(err)
 		}
-		_, found := config.GetRemote(args[0])
-		if found {
+		if _, found := config.GetRemote(args[0]); found {
 			log.Fatal("remote with name already exists")
 		}
 
 		// Load flags for credentials
-		fromEnv, _ := cmd.Flags().GetBool("from-env")
-		profilePath, _ := cmd.Flags().GetString("profile-path")
+		var fromEnv, _ = cmd.Flags().GetBool("from-env")
+		var profilePath, _ = cmd.Flags().GetString("profile-path")
 
 		// Load flags for setup configuration
-		user, _ := cmd.Flags().GetString("user")
-		instanceType, _ := cmd.Flags().GetString("type")
-		stringProjectPorts, _ := cmd.Flags().GetStringArray("ports")
+		var user, _ = cmd.Flags().GetString("user")
+		var instanceType, _ = cmd.Flags().GetString("type")
+		var stringProjectPorts, _ = cmd.Flags().GetStringArray("ports")
+
+		if stringProjectPorts == nil || len(stringProjectPorts) == 0 {
+			fmt.Print("[WARNING] no project ports provided - this means that no ports" +
+				"will be exposed on your ec2 host. Use the '--ports' flag to set" +
+				"ports that you want to be accessible.")
+		}
 
 		// Create VPS instance
 		var prov *provision.EC2Provisioner
 		if fromEnv {
-			prov, err = provision.NewEC2ProvisionerFromEnv(os.Stdout)
+			prov, err = provision.NewEC2ProvisionerFromEnv(user, os.Stdout)
 			if err != nil {
 				log.Fatal(err)
 			}
 		} else if profilePath != "" {
-			profileUser, _ := cmd.Flags().GetString("profile-user")
-			prov, err = provision.NewEC2ProvisionerFromProfile(profilePath, profileUser, os.Stdout)
+			var profileUser, _ = cmd.Flags().GetString("profile-user")
+			prov, err = provision.NewEC2ProvisionerFromProfile(
+				user, profileUser, profilePath, os.Stdout)
 			if err != nil {
 				log.Fatal(err)
 			}
 		} else {
-			id, key, err := enterEC2CredentialsWalkthrough(os.Stdin)
+			keyID, key, err := enterEC2CredentialsWalkthrough(os.Stdin)
 			if err != nil {
 				log.Fatal(err)
 			}
-			prov, err = provision.NewEC2Provisioner(id, key, os.Stdout)
+			prov, err = provision.NewEC2Provisioner(user, keyID, key, os.Stdout)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
 		// Report connected user
-		println("Successfully authenticated with user " + prov.GetUser())
+		fmt.Printf("Executing commands as user '%s'\n", prov.GetUser())
 
 		// Prompt for region
 		println("See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions for a list of available regions.")
 		print("Please enter a region: ")
 		var region string
-		_, err = fmt.Fscanln(os.Stdin, &region)
-		if err != nil {
+		if _, err = fmt.Fscanln(os.Stdin, &region); err != nil {
 			log.Fatal(err)
 		}
 
 		// List image options and prompt for input
-		println("Loading images...")
+		fmt.Printf("Loading images for region '%s'...\n", region)
 		images, err := prov.ListImageOptions(region)
 		if err != nil {
 			log.Fatal(err)
@@ -124,7 +129,7 @@ This ensures that your project ports are properly exposed and externally accessi
 
 		// Gather input
 		fmt.Printf("Creating %s instance in %s from image %s...\n", instanceType, region, image)
-		ports := []int64{}
+		var ports = []int64{}
 		for _, portString := range stringProjectPorts {
 			p, err := common.ParseInt64(portString)
 			if err == nil {
@@ -133,10 +138,10 @@ This ensures that your project ports are properly exposed and externally accessi
 				fmt.Printf("invalid port %s", portString)
 			}
 		}
-		port, _ := cmd.Flags().GetString("daemon-port")
-		portDaemon, _ := common.ParseInt64(port)
 
 		// Create remote instance
+		var port, _ = cmd.Flags().GetString("daemon-port")
+		var portDaemon, _ = common.ParseInt64(port)
 		remote, err := prov.CreateInstance(provision.EC2CreateInstanceOptions{
 			Name:        args[0],
 			ProjectName: config.Project,
@@ -146,8 +151,6 @@ This ensures that your project ports are properly exposed and externally accessi
 			ImageID:      image,
 			InstanceType: instanceType,
 			Region:       region,
-
-			User: user,
 		})
 		if err != nil {
 			log.Fatal(err)
@@ -169,8 +172,7 @@ This ensures that your project ports are properly exposed and externally accessi
 
 		// Bootstrap remote
 		fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.RemoteVPS.IP)
-		err = inertia.BootstrapRemote(config.Project)
-		if err != nil {
+		if err = inertia.BootstrapRemote(config.Project); err != nil {
 			log.Fatal(err)
 		}
 
