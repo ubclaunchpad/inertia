@@ -132,7 +132,12 @@ var cmdDeploymentLogin = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		resp, err := deployment.LogIn(username, string(pwBytes), "")
+		totp, err := cmd.Flags().GetString("totp")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resp, err := deployment.LogIn(username, string(pwBytes), totp)
 		if err != nil {
 			log.Fatal(err)
 		}
