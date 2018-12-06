@@ -61,7 +61,7 @@ func TestVerification(t *testing.T) {
 
 func TestBackupCodes(t *testing.T) {
 	codes := GenerateBackupCodes()
-	assert.Equal(t, len(codes), TotpNoBackupCodes)
+	assert.Equal(t, len(codes), totpNoBackupCodes)
 	for _, code := range codes {
 		assert.Equal(t, len(code), 11)
 	}

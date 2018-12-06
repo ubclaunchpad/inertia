@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
@@ -73,6 +73,12 @@ This ensures that your project ports are properly exposed and externally accessi
 		var user, _ = cmd.Flags().GetString("user")
 		var instanceType, _ = cmd.Flags().GetString("type")
 		var stringProjectPorts, _ = cmd.Flags().GetStringArray("ports")
+
+		if stringProjectPorts == nil || len(stringProjectPorts) == 0 {
+			fmt.Print("[WARNING] no project ports provided - this means that no ports" +
+				"will be exposed on your ec2 host. Use the '--ports' flag to set" +
+				"ports that you want to be accessible.")
+		}
 
 		// Create VPS instance
 		var prov *provision.EC2Provisioner

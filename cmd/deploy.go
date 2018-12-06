@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -13,7 +14,6 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/client"
 )
@@ -82,10 +82,16 @@ Run 'inertia [remote] init' to gather this information.`,
 		adduser := deepCopy(cmdDeploymentAddUser)
 		adduser.Flags().Bool("admin", false, "create a user with administrator permissions")
 		user.AddCommand(adduser)
-		user.AddCommand(deepCopy(cmdDeploymentLogin))
+
+		login := deepCopy(cmdDeploymentLogin)
+		login.Flags().String("totp", "", "auth code or backup code for 2FA")
+		user.AddCommand(login)
+
 		user.AddCommand(deepCopy(cmdDeploymentRemoveUser))
 		user.AddCommand(deepCopy(cmdDeploymentResetUsers))
 		user.AddCommand(deepCopy(cmdDeploymentListUsers))
+		user.AddCommand(deepCopy(cmdDeploymentEnableTotp))
+		user.AddCommand(deepCopy(cmdDeploymentDisableTotp))
 		cmd.AddCommand(user)
 
 		cmd.AddCommand(deepCopy(cmdDeploymentSSH))
@@ -236,18 +242,20 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 		if err != nil {
 			log.Fatal(err)
 		}
-		host := "http://" + deployment.RemoteVPS.GetIPAndPort()
+
 		resp, err := deployment.Status()
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer resp.Body.Close()
 
 		switch resp.StatusCode {
 		case http.StatusOK:
-			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode, deployment.Name, host)
-			status := &common.DeploymentStatus{}
-			err := json.NewDecoder(resp.Body).Decode(status)
-			if err != nil {
+			var host = "https://" + deployment.RemoteVPS.GetIPAndPort()
+			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n",
+				resp.StatusCode, deployment.Name, host)
+			var status = &common.DeploymentStatus{}
+			if err := json.NewDecoder(resp.Body).Decode(status); err != nil {
 				log.Fatal(err)
 			}
 			println(formatStatus(status))
@@ -256,14 +264,12 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer resp.Body.Close()
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		default:
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer resp.Body.Close()
 			fmt.Printf("(Status code %d) %s\n",
 				resp.StatusCode, body)
 		}
