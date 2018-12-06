@@ -165,7 +165,7 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Attach token to request context so handlers can use it
+	// Attach username to request context so handlers can use it
 	ctx := context.WithValue(r.Context(), ctxUsername, claims.User)
 
 	// Serve the requested endpoint to token holders
