@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	gcrypto "crypto/rand"
+
 	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
@@ -21,11 +23,7 @@ type DeploymentDataManager struct {
 
 	// @TODO: should these keys be here?
 	// Keys for encrypting data
-	encryptPublicKey  *[32]byte
-	encryptPrivateKey *[32]byte
-	// Keys for decrypting data
-	decryptPublicKey  *[32]byte
-	decryptPrivateKey *[32]byte
+	symmetricKey []byte
 }
 
 func newDataManager(dbPath string) (*DeploymentDataManager, error) {
@@ -41,12 +39,12 @@ func newDataManager(dbPath string) (*DeploymentDataManager, error) {
 		return nil, err
 	}
 
-	encryptPublicKey, encryptPrivateKey, decryptPublicKey, decryptPrivateKey, err := crypto.GenerateKeys()
-
+	// encryptPublicKey, encryptPrivateKey, decryptPublicKey, decryptPrivateKey, err := crypto.GenerateKeys()
+	key := make([]byte, 32)
+	_, err = gcrypto.Read(key)
 	return &DeploymentDataManager{
 		db,
-		encryptPublicKey, encryptPrivateKey,
-		decryptPublicKey, decryptPrivateKey,
+		key,
 	}, nil
 }
 
@@ -60,8 +58,7 @@ func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 
 	valueBytes := []byte(value)
 	if encrypt {
-		encrypted, err := crypto.Seal(valueBytes,
-			c.encryptPrivateKey, c.decryptPublicKey)
+		encrypted, err := crypto.Encrypt(c.symmetricKey, valueBytes)
 		if err != nil {
 			return err
 		}
@@ -108,8 +105,7 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 			} else if !decrypt {
 				envs = append(envs, nameString+"=[ENCRYPTED]")
 			} else {
-				decrypted, err := crypto.UndoSeal(variable.Value,
-					c.encryptPublicKey, c.decryptPrivateKey)
+				decrypted, err := crypto.Decrypt(variable.Value, c.symmetricKey)
 				if err != nil {
 					// If decrypt fails, key is no longer valid - remove var
 					c.RemoveEnvVariable(nameString)
