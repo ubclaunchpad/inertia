@@ -36,6 +36,13 @@ type UserRequest struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Admin    bool   `json:"admin"`
+	Totp     string `json:"totp"`
+}
+
+// TotpResponse is used for sending users their Totp secret and backup codes
+type TotpResponse struct {
+	TotpSecret  string `json:"key"`
+	BackupCodes []string
 }
 
 // EnvRequest represents a request to manage environment variables

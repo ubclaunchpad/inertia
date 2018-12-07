@@ -35,23 +35,23 @@ type EC2Provisioner struct {
 
 // NewEC2Provisioner creates a client to interact with Amazon EC2 using the
 // given credentials
-func NewEC2Provisioner(id, key string, out ...io.Writer) (*EC2Provisioner, error) {
+func NewEC2Provisioner(user, keyID, key string, out ...io.Writer) (*EC2Provisioner, error) {
 	prov := &EC2Provisioner{}
-	return prov, prov.init(credentials.NewStaticCredentials(id, key, ""), out)
+	return prov, prov.init(user, credentials.NewStaticCredentials(keyID, key, ""), out)
 }
 
 // NewEC2ProvisionerFromEnv creates a client to interact with Amazon EC2 using
 // credentials from environment
-func NewEC2ProvisionerFromEnv(out ...io.Writer) (*EC2Provisioner, error) {
+func NewEC2ProvisionerFromEnv(user string, out ...io.Writer) (*EC2Provisioner, error) {
 	prov := &EC2Provisioner{}
-	return prov, prov.init(credentials.NewEnvCredentials(), out)
+	return prov, prov.init(user, credentials.NewEnvCredentials(), out)
 }
 
 // NewEC2ProvisionerFromProfile creates a client to interact with Amazon EC2 using
 // credentials for user (optional) from given profile file
-func NewEC2ProvisionerFromProfile(path, user string, out ...io.Writer) (*EC2Provisioner, error) {
+func NewEC2ProvisionerFromProfile(user, profile, path string, out ...io.Writer) (*EC2Provisioner, error) {
 	prov := &EC2Provisioner{}
-	return prov, prov.init(credentials.NewSharedCredentials(path, user), out)
+	return prov, prov.init(user, credentials.NewSharedCredentials(path, profile), out)
 }
 
 // GetUser returns the user attached to given credentials
@@ -112,8 +112,6 @@ type EC2CreateInstanceOptions struct {
 	ImageID      string
 	InstanceType string
 	Region       string
-
-	User string
 }
 
 // CreateInstance creates an EC2 instance with given properties
@@ -121,13 +119,8 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	// Set requested region
 	p.client.Config.WithRegion(opts.Region)
 
-	// Set user if given
-	if opts.User != "" {
-		p.user = opts.User
-	}
-
 	// Generate authentication
-	keyName := fmt.Sprintf("%s_%s_inertia_key_%d", opts.Name, p.user, time.Now().UnixNano())
+	var keyName = fmt.Sprintf("%s_%s_inertia_key_%d", opts.Name, p.user, time.Now().UnixNano())
 	fmt.Printf("Generating key pair %s...\n", keyName)
 	keyResp, err := p.client.CreateKeyPair(&ec2.CreateKeyPairInput{
 		KeyName: aws.String(keyName),
@@ -139,8 +132,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	// Save key
 	keyPath := filepath.Join(os.Getenv("HOME"), ".ssh", *keyResp.KeyName)
 	fmt.Printf("Saving key to %s...\n", keyPath)
-	err = local.SaveKey(*keyResp.KeyMaterial, keyPath)
-	if err != nil {
+	if err = local.SaveKey(*keyResp.KeyMaterial, keyPath); err != nil {
 		return nil, err
 	}
 
@@ -158,8 +150,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	}
 
 	// Set rules for ports
-	err = p.exposePorts(*group.GroupId, opts.DaemonPort, opts.Ports)
-	if err != nil {
+	if err = p.exposePorts(*group.GroupId, opts.DaemonPort, opts.Ports); err != nil {
 		return nil, err
 	}
 
@@ -236,7 +227,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	}
 
 	// Set tags
-	_, err = p.client.CreateTags(&ec2.CreateTagsInput{
+	if _, err = p.client.CreateTags(&ec2.CreateTagsInput{
 		Resources: []*string{instance.InstanceId},
 		Tags: []*ec2.Tag{
 			{
@@ -248,8 +239,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 				Value: aws.String("Inertia Continuous Deployment"),
 			},
 		},
-	})
-	if err != nil {
+	}); err != nil {
 		fmt.Fprintln(p.out, "Failed to set tags: "+err.Error())
 	}
 
@@ -258,8 +248,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	for {
 		time.Sleep(3 * time.Second)
 		fmt.Fprintln(p.out, "Checking ports...")
-		conn, err := net.Dial("tcp", *instance.PublicDnsName+":22")
-		if err == nil {
+		if conn, err := net.Dial("tcp", *instance.PublicDnsName+":22"); err == nil {
 			fmt.Fprintln(p.out, "Connection established!")
 			conn.Close()
 			break
@@ -272,6 +261,8 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		fmt.Fprintln(p.out, err.Error())
 		fmt.Fprintln(p.out, "Using default secret 'inertia'")
 		webhookSecret = "interia"
+	} else {
+		fmt.Fprintf(p.out, "Generated webhook secret: '%s'\n", webhookSecret)
 	}
 
 	// Return remote configuration
@@ -325,14 +316,13 @@ func (p *EC2Provisioner) exposePorts(securityGroupID string, daemonPort int64, p
 	return err
 }
 
-func (p *EC2Provisioner) init(creds *credentials.Credentials, out []io.Writer) error {
+func (p *EC2Provisioner) init(user string, creds *credentials.Credentials, out []io.Writer) error {
 	if len(out) > 0 {
 		p.out = out[0]
 	} else {
 		p.out = common.DevNull{}
 	}
-	// Set default user
-	p.user = "ec2-user"
+	p.user = user
 
 	// Set up configuration
 	p.session = session.Must(session.NewSessionWithOptions(session.Options{

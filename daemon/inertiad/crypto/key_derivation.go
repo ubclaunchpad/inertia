@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/rand"
 	"crypto/sha256"
+
 	"golang.org/x/crypto/pbkdf2"
 )
 
@@ -22,7 +23,7 @@ func GenerateSalt() []byte {
 }
 
 // DeriveKey derives an AES encryption key based on salt + user's
-// password using PBKDF2 with HMAC-SHA1
+// password using PBKDF2 with HMAC-SHA256
 func DeriveKey(password string, salt []byte) []byte {
 	return pbkdf2.Key(
 		[]byte(password),
