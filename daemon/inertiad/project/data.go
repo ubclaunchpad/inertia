@@ -1,10 +1,10 @@
 package project
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
-
-	gcrypto "crypto/rand"
+	"fmt"
 
 	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
@@ -39,9 +39,10 @@ func newDataManager(dbPath string) (*DeploymentDataManager, error) {
 		return nil, err
 	}
 
-	// encryptPublicKey, encryptPrivateKey, decryptPublicKey, decryptPrivateKey, err := crypto.GenerateKeys()
 	key := make([]byte, 32)
-	_, err = gcrypto.Read(key)
+	if _, err = rand.Read(key); err != nil {
+		return nil, fmt.Errorf("Failed to generate key: %s", key)
+	}
 	return &DeploymentDataManager{
 		db,
 		key,
