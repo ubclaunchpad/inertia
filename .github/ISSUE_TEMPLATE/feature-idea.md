@@ -1,6 +1,9 @@
 ---
 name: Feature idea
 about: Suggest an idea for Inertia!
+title: ''
+labels: ''
+assignees: ''
 
 ---
 
