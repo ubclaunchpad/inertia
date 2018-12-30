@@ -34,7 +34,8 @@ jobs:
     - &test
       stage: tests and static analysis
       name: "Core Tests"
-      install: true
+      install:
+        - bash test/docker_deps.sh
       script:
         - go test -race -tags no_bootstrap -coverprofile=coverage.txt ./...
       after_success:

@@ -1,5 +1,3 @@
-// +build !no_bootstrap
-
 package client
 
 import (
