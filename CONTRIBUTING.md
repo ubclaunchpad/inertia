@@ -227,6 +227,7 @@ $> inertia remote add local
 # - PEM file: $INERTIA_PATH/test/keys/id_rsa
 # - Address:  127.0.0.1 
 # - User:     root
+$> inertia remote set local ssh-port 69 # defaults to 69
 $> inertia local init
 $> inertia local status
 ```

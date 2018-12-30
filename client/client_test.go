@@ -523,8 +523,7 @@ func TestLogIn(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := newMockClient(testServer)
-	resp, err := d.LogIn(username, password)
+	resp, err := d.LogIn(username, password, "")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

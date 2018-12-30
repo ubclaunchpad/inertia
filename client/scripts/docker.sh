@@ -30,9 +30,9 @@ fetchfile() {
     #   $1 source URL
     #   $2 destination file.
     if hash curl 2>/dev/null; then
-        sudo curl -fsSL $1 -o "$2"
+        sudo curl -fsSL "$1" -o "$2"
     elif hash wget 2>/dev/null; then
-        sudo wget -O "$2" $1
+        sudo wget -O "$2" "$1"
     else
         return 1
     fi;
