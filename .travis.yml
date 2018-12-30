@@ -29,6 +29,13 @@ jobs:
         - make web-deps           # cache node_modules
 
     ############################
+    #          Linters         #
+    ############################
+    - stage: lint
+      install: go get -u golang.org/x/lint/golint
+      script: make lint
+
+    ############################
     #     Tests and Linting    #
     ############################
     - &test
@@ -66,11 +73,6 @@ jobs:
     - <<: *bootstraptest
       name: "Bootstrap Test (ubuntu:18.04)"
       install: make testenv VPS_OS=ubuntu VPS_VERSION=18.04 SSH_PORT=69
-
-    # Run linter and static analysis
-    - name: "Linters and static analysis"
-      install: go get -u golang.org/x/lint/golint
-      script: make lint
 
     ############################
     #    Build tag "latest"    #
