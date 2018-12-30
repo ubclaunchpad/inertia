@@ -85,25 +85,8 @@ class MainWrapper extends React.Component {
 
   render() {
     const { match: { url } } = this.props;
-    /*
-      this.props = {
-        match: {
-          url: "value"
-        },
-        julia： "value",
-        inertia: {
-          my: {
-            lunch: "chicken"
-          }
-        }
-      }
-      const { julia = "optional" } = this.props;
-      console.log(julia);
-      const { inertia, inertia: { my } } = this.props;
-      console.log(my);
-    */
     const { status } = this.state;
-    console.log(status);
+    console.debug(status);
     return (
       <div style={styles.container}>
         <NavBar url={url} />
