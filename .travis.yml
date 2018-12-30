@@ -37,6 +37,7 @@ jobs:
       install:
         - bash test/docker_deps.sh
       script:
+        - docker run --name testcontainer -d nginx
         - go test -race -tags no_bootstrap -coverprofile=coverage.txt ./...
       after_success:
         - bash <(curl -s https://codecov.io/bash)
