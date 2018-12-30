@@ -46,7 +46,9 @@ jobs:
       <<: *test
       name: "Bootstrap Test (debian:9.3)"
       install: make testenv VPS_OS=debian VPS_VERSION=9.3 SSH_PORT=69
-      script: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
+      script:
+        - make testdaemon-scp
+        - go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
       after_success:
         - bash <(curl -s https://codecov.io/bash)
     - <<: *bootstraptest
