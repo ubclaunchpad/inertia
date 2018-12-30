@@ -1,7 +1,6 @@
 package client
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -176,32 +175,6 @@ func TestBootstrap(t *testing.T) {
 	assert.Equal(t, string(keyScript), session.Calls[1])
 	assert.Equal(t, daemonScript, session.Calls[2])
 	assert.Equal(t, tokenScript, session.Calls[3])
-}
-
-func TestBootstrapIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
-	cli := getIntegrationClient(nil)
-	err := cli.BootstrapRemote("")
-	assert.Nil(t, err)
-
-	// Daemon setup takes a bit of time - do a crude wait
-	time.Sleep(3 * time.Second)
-
-	// Check if daemon is online following bootstrap
-	host := "https://" + cli.GetIPAndPort()
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-	resp, err := client.Get(host)
-	assert.Nil(t, err)
-	assert.Equal(t, resp.StatusCode, http.StatusOK)
-	defer resp.Body.Close()
-	_, err = ioutil.ReadAll(resp.Body)
-	assert.Nil(t, err)
 }
 
 func TestUp(t *testing.T) {
