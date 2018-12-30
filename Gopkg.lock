@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:8933be0290a1cffcec12475df8a8a79324c2ae28ab18f5fc855e3e248b1e2df9"
+  name = "github.com/Baozisoftware/qrcode-terminal-go"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "c0650d8dff0f053901ff16185217b950d5e7743c"
+
+[[projects]]
   digest = "1:167b6f65a6656de568092189ae791253939f076df60231fdd64588ac703892a1"
   name = "github.com/BurntSushi/toml"
   packages = ["."]
@@ -220,6 +228,22 @@
   version = "0.3"
 
 [[projects]]
+  digest = "1:08c231ec84231a7e23d67e4b58f975e1423695a32467a362ee55a803f9de8061"
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
+  version = "v0.0.9"
+
+[[projects]]
+  digest = "1:bffa444ca07c69c599ae5876bc18b25bfd5fa85b297ca10a25594d284a7e9c5d"
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c"
+  version = "v0.0.4"
+
+[[projects]]
   branch = "master"
   digest = "1:b62c4f18ad6eb454ac5253e7791ded3d7867330015ca4b37b6336e57f514585e"
   name = "github.com/mitchellh/go-homedir"
@@ -291,12 +315,16 @@
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
 
 [[projects]]
-  digest = "1:b2339e83ce9b5c4f79405f949429a7f68a9a904fed903c672aac1e7ceb7f5f02"
-  name = "github.com/sirupsen/logrus"
-  packages = ["."]
+  branch = "master"
+  digest = "1:6d5f91e94b84274a726f31e8d98f1f789e9afae639bd7555d3ca610c966823c4"
+  name = "github.com/skip2/go-qrcode"
+  packages = [
+    ".",
+    "bitset",
+    "reedsolomon",
+  ]
   pruneopts = "NUT"
-  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
-  version = "v1.0.6"
+  revision = "cf5f9fa2f0d847edb8e038db7ed975e239095e1a"
 
 [[projects]]
   branch = "master"
@@ -344,7 +372,7 @@
   revision = "ba9c9e33906f58169366275e3450db66139a31a9"
 
 [[projects]]
-  digest = "1:4d6ab27b650d3b8f320cf321e40c5db4f3526c291763b4c9d281ca4a4b7a9825"
+  digest = "1:be451642010a8e0991d915add4af1aa47ca46259087ea3dd9c8e42c2bb4fb678"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
@@ -354,16 +382,14 @@
     "ed25519",
     "ed25519/internal/edwards25519",
     "internal/chacha20",
-    "nacl/box",
-    "nacl/secretbox",
     "openpgp",
     "openpgp/armor",
     "openpgp/elgamal",
     "openpgp/errors",
     "openpgp/packet",
     "openpgp/s2k",
+    "pbkdf2",
     "poly1305",
-    "salsa20/salsa",
     "ssh",
     "ssh/agent",
     "ssh/knownhosts",
@@ -487,6 +513,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Baozisoftware/qrcode-terminal-go",
     "github.com/BurntSushi/toml",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/credentials",
@@ -502,11 +529,10 @@
     "github.com/gorilla/websocket",
     "github.com/pquerna/otp",
     "github.com/pquerna/otp/totp",
-    "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/stretchr/testify/assert",
     "golang.org/x/crypto/bcrypt",
-    "golang.org/x/crypto/nacl/box",
+    "golang.org/x/crypto/pbkdf2",
     "golang.org/x/crypto/ssh",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/webdav",

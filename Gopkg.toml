@@ -16,10 +16,6 @@
   version = "4.2.0"
 
 [[constraint]]
-  name = "github.com/sirupsen/logrus"
-  version = "1.0.6"
-
-[[constraint]]
   name = "github.com/dgrijalva/jwt-go"
   version = "3.2.0"
 

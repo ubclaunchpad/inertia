@@ -69,7 +69,6 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 			HTTPWriter: w,
 		})
 	}
-	defer logger.Close()
 
 	cli, err := containers.NewDockerClient()
 	if err != nil {
@@ -94,12 +93,13 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	defer logs.Close()
 
 	if stream {
-		stop := make(chan struct{})
+		var stop = make(chan struct{})
 		socket, err := logger.GetSocketWriter()
 		if err != nil {
 			logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		}
 		log.FlushRoutine(socket, logs, stop)
+		defer logger.Close()
 		defer close(stop)
 	} else {
 		buf := new(bytes.Buffer)

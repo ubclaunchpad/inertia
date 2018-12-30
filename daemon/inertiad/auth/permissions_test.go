@@ -10,6 +10,9 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
+
+	"github.com/pquerna/otp/totp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/common"
@@ -344,6 +347,90 @@ func TestUserControlHandlers(t *testing.T) {
 	req, err = http.NewRequest("POST", ts.URL+"/user/reset", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", bearerTokenString)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestEnableDisableTotpEndpoints(t *testing.T) {
+	dir := "./test_enabledisable_totp"
+	ts := httptest.NewServer(nil)
+	defer ts.Close()
+
+	// Set up permission handler
+	ph, err := getTestPermissionsHandler(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer ph.Close()
+	ts.Config.Handler = ph
+
+	// Test handler uses the getFakeAPIToken keylookup, which will match with
+	// the testToken
+	authToken := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
+
+	// Add a new user
+	body, err := json.Marshal(&common.UserRequest{
+		Username: "jimmyneutron",
+		Password: "asfasdlfjk",
+		Admin:    false,
+	})
+	assert.Nil(t, err)
+	payload := bytes.NewReader(body)
+	req, err := http.NewRequest("POST", ts.URL+"/user/add", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", authToken)
+	resp, err := http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	// Enable Totp
+	payload = bytes.NewReader(body)
+	req, err = http.NewRequest("POST", ts.URL+"/user/totp/enable", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", authToken)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Get Totp key from response
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	totpResp := &common.TotpResponse{}
+	err = json.Unmarshal(respBytes, totpResp)
+	assert.Nil(t, err)
+	totpKey, err := totp.GenerateCode(totpResp.TotpSecret, time.Now())
+	assert.Nil(t, err)
+
+	// Log in with Totp
+	body, err = json.Marshal(&common.UserRequest{
+		Username: "jimmyneutron",
+		Password: "asfasdlfjk",
+		Totp:     totpKey,
+	})
+	payload = bytes.NewReader(body)
+	req, err = http.NewRequest("POST", ts.URL+"/user/login", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Get user JWT from response
+	userTokenBytes, err := ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	authToken = fmt.Sprintf("Bearer %s", string(userTokenBytes))
+
+	// Disable Totp
+	req, err = http.NewRequest("POST", ts.URL+"/user/totp/disable", nil)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", authToken)
 	resp, err = http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()

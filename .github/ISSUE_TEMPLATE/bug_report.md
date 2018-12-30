@@ -1,6 +1,9 @@
 ---
 name: Bug report
 about: Create a report to help us improve!
+title: ''
+labels: 'type: bug :bug:'
+assignees: ''
 
 ---
 
@@ -14,12 +17,6 @@ Steps to reproduce the behavior:
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
-
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
 **Environment (please complete the following information):**
  - Client OS [where you are using the Inertia CLI from]
  - VPS OS [the platform you are deploying to]
@@ -27,4 +24,4 @@ If applicable, add screenshots to help explain your problem.
  - Version [e.g. v0.4.0]
 
 **Additional context**
-Add any other context about the problem here.
+Add any other context about the problem here, such as screenshots.
