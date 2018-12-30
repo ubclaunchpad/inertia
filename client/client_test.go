@@ -21,7 +21,7 @@ var (
 	fakeAuth = "ubclaunchpad"
 )
 
-func getMockClient(ts *httptest.Server) *Client {
+func newMockClient(ts *httptest.Server) *Client {
 	var (
 		url  string
 		port string
@@ -50,33 +50,6 @@ func getMockClient(ts *httptest.Server) *Client {
 		RemoteVPS: mockRemote,
 		out:       os.Stdout,
 		project:   "test_project",
-	}
-}
-
-func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
-	remote := &cfg.RemoteVPS{
-		IP:      "127.0.0.1",
-		PEM:     "../test/keys/id_rsa",
-		User:    "root",
-		SSHPort: "69",
-		Daemon: &cfg.DaemonConfig{
-			Port: "4303",
-		},
-	}
-	if mockRunner != nil {
-		mockRunner.r = remote
-		return &Client{
-			version:   "test",
-			RemoteVPS: remote,
-			out:       os.Stdout,
-			sshRunner: mockRunner,
-		}
-	}
-	return &Client{
-		version:   "test",
-		RemoteVPS: remote,
-		out:       os.Stdout,
-		sshRunner: NewSSHRunner(remote),
 	}
 }
 
@@ -111,7 +84,7 @@ func TestGetNewClient(t *testing.T) {
 
 func TestInstallDocker(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := getIntegrationClient(session)
+	client := newIntegrationClient(session)
 	script, err := ioutil.ReadFile("scripts/docker.sh")
 	assert.Nil(t, err)
 
@@ -123,7 +96,7 @@ func TestInstallDocker(t *testing.T) {
 
 func TestDaemonUp(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := getIntegrationClient(session)
+	client := newIntegrationClient(session)
 	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
 	assert.Nil(t, err)
 	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
@@ -137,7 +110,7 @@ func TestDaemonUp(t *testing.T) {
 
 func TestKeyGen(t *testing.T) {
 	session := &mockSSHRunner{}
-	remote := getIntegrationClient(session)
+	remote := newIntegrationClient(session)
 	script, err := ioutil.ReadFile("scripts/token.sh")
 	assert.Nil(t, err)
 	tokenScript := fmt.Sprintf(string(script), "test")
@@ -150,7 +123,7 @@ func TestKeyGen(t *testing.T) {
 
 func TestBootstrap(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := getIntegrationClient(session)
+	client := newIntegrationClient(session)
 	assert.False(t, client.verifySSL)
 
 	dockerScript, err := ioutil.ReadFile("scripts/docker.sh")
@@ -205,7 +178,7 @@ func TestUp(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	assert.False(t, d.verifySSL)
 	resp, err := d.Up("myremote.git", "docker-compose", false)
 	assert.Nil(t, err)
@@ -228,7 +201,7 @@ func TestPrune(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Prune()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -250,7 +223,7 @@ func TestDown(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Down()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -272,14 +245,14 @@ func TestStatus(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Status()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func TestStatusFail(t *testing.T) {
-	d := getMockClient(nil)
+	d := newMockClient(nil)
 	_, err := d.Status()
 	assert.Contains(t, err.Error(), "appears offline")
 }
@@ -300,7 +273,7 @@ func TestReset(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Reset()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -328,7 +301,7 @@ func TestLogs(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Logs("docker-compose", 10)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -362,7 +335,7 @@ func TestLogsWebsocket(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.LogsWebSocket("docker-compose", 10)
 	assert.Nil(t, err)
 
@@ -388,7 +361,7 @@ func TestUpdateEnv(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.UpdateEnv("", "", false, false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -410,7 +383,7 @@ func TestListEnv(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.ListEnv()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -432,7 +405,7 @@ func TestAddUser(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.AddUser("", "", false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -454,7 +427,7 @@ func TestRemoveUser(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.RemoveUser("")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -476,7 +449,7 @@ func TestResetUser(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.ResetUsers()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -498,7 +471,7 @@ func TestListUsers(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.ListUsers()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -520,7 +493,7 @@ func TestToken(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Token()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -550,7 +523,7 @@ func TestLogIn(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.LogIn(username, password)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
