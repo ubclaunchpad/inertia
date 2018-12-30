@@ -32,7 +32,8 @@ const Footer = ({ version }) => {
         target="_blank">
         <span className={`${socialFooterIcon.name} pad-right-xs hover-color-lightred`} />
       </a>
-    </span>));
+    </span>
+  ));
   return (
     <footer className="footer flex flow-row ai-center jc-between fill-width" style={{ backgroundColor }}>
       <span className="pad-left-xs">
