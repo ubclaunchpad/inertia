@@ -11,7 +11,7 @@ startDockerd() {
     # Start dockerd if it is not online
     if ! sudo docker stats --no-stream ; then
         # fallback to systemctl, otherwise just run dockerd in background
-        sudo service docker start || sudo systemctl start docker || nohup dockerd &
+        sudo service docker start &>/dev/null || sudo systemctl start docker &>/dev/null || nohup dockerd &>/dev/null &
         # Poll until dockerd is running
         while ! sudo docker stats --no-stream ; do
             echo "Waiting for dockerd to launch..."
