@@ -14,7 +14,7 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg"
 )
 
-func newIntegrationClient(mockRunner *mockSSHRunner) *Client {
+func newIntegrationClient() *Client {
 	remote := &cfg.RemoteVPS{
 		IP:      "127.0.0.1",
 		PEM:     "../test/keys/id_rsa",
@@ -23,15 +23,6 @@ func newIntegrationClient(mockRunner *mockSSHRunner) *Client {
 		Daemon: &cfg.DaemonConfig{
 			Port: "4303",
 		},
-	}
-	if mockRunner != nil {
-		mockRunner.r = remote
-		return &Client{
-			version:   "test",
-			RemoteVPS: remote,
-			out:       os.Stdout,
-			sshRunner: mockRunner,
-		}
 	}
 	return &Client{
 		version:   "test",
@@ -46,7 +37,7 @@ func TestBootstrap_Integration(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	cli := newIntegrationClient(nil)
+	cli := newIntegrationClient()
 	err := cli.BootstrapRemote("")
 	assert.Nil(t, err)
 

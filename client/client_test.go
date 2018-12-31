@@ -53,6 +53,25 @@ func newMockClient(ts *httptest.Server) *Client {
 	}
 }
 
+func newMockSSHClient(mockRunner *mockSSHRunner) *Client {
+	remote := &cfg.RemoteVPS{
+		IP:      "127.0.0.1",
+		PEM:     "../test/keys/id_rsa",
+		User:    "root",
+		SSHPort: "69",
+		Daemon: &cfg.DaemonConfig{
+			Port: "4303",
+		},
+	}
+	mockRunner.r = remote
+	return &Client{
+		version:   "test",
+		RemoteVPS: remote,
+		out:       os.Stdout,
+		sshRunner: mockRunner,
+	}
+}
+
 func TestGetNewClient(t *testing.T) {
 	config := &cfg.Config{
 		Version: "test",
@@ -84,7 +103,7 @@ func TestGetNewClient(t *testing.T) {
 
 func TestInstallDocker(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := newIntegrationClient(session)
+	client := newMockSSHClient(session)
 	script, err := ioutil.ReadFile("scripts/docker.sh")
 	assert.Nil(t, err)
 
@@ -96,7 +115,7 @@ func TestInstallDocker(t *testing.T) {
 
 func TestDaemonUp(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := newIntegrationClient(session)
+	client := newMockSSHClient(session)
 	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
 	assert.Nil(t, err)
 	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
@@ -110,7 +129,7 @@ func TestDaemonUp(t *testing.T) {
 
 func TestKeyGen(t *testing.T) {
 	session := &mockSSHRunner{}
-	remote := newIntegrationClient(session)
+	remote := newMockSSHClient(session)
 	script, err := ioutil.ReadFile("scripts/token.sh")
 	assert.Nil(t, err)
 	tokenScript := fmt.Sprintf(string(script), "test")
@@ -123,7 +142,7 @@ func TestKeyGen(t *testing.T) {
 
 func TestBootstrap(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := newIntegrationClient(session)
+	client := newMockSSHClient(session)
 	assert.False(t, client.verifySSL)
 
 	dockerScript, err := ioutil.ReadFile("scripts/docker.sh")
