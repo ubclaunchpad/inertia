@@ -48,6 +48,7 @@ func (runner *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Bu
 	if err != nil {
 		return nil, nil, err
 	}
+	defer session.Close()
 
 	// Capture result.
 	var stdout, stderr bytes.Buffer
@@ -66,6 +67,7 @@ func (runner *SSHRunner) RunStream(cmd string, interactive bool) error {
 	if err != nil {
 		return err
 	}
+	defer session.Close()
 
 	// Pipe input and outputs.
 	session.Stdout = os.Stdout
@@ -84,6 +86,7 @@ func (runner *SSHRunner) RunSession() error {
 	if err != nil {
 		return err
 	}
+	defer session.Close()
 
 	// Set IO
 	session.Stdout = os.Stdout
@@ -131,6 +134,7 @@ func (runner *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions
 	if err != nil {
 		return err
 	}
+	defer session.Close()
 
 	// Send file contents
 	go func() {
