@@ -9,19 +9,26 @@ DOCKER_DEST='/tmp/get-docker.sh'
 
 startDockerd() {
     # Start dockerd if it is not online
-    if ! sudo docker stats --no-stream ; then
-        # fallback to systemctl, otherwise just run dockerd in background
-        sudo service docker start >/dev/null 2>&1 || sudo systemctl start docker >/dev/null 2>&1 || nohup dockerd >/dev/null 2>&1 &
+    if ! sudo docker stats --no-stream >/dev/null 2>&1 ; then
+        # Fall back to systemctl if service doesn't work, otherwise just run
+        # dockerd in background
+        echo "dockerd offline - starting dockerd..."
+        sudo service docker start >/dev/null 2>&1 \
+            || sudo systemctl start docker >/dev/null 2>&1 \
+            || nohup sudo dockerd >/dev/null 2>&1 &
+        echo "dockerd started"
         # Poll until dockerd is running
-        while ! sudo docker stats --no-stream ; do
-            echo "Waiting for dockerd to launch..."
+        while ! sudo docker stats --no-stream >/dev/null 2>&1 ; do
+            echo "Waiting for dockerd to come online..."
             sleep 1
         done
     fi
+    echo "dockerd is online"
 }
 
 # Skip installation if Docker is already installed.
-if hash docker 2>/dev/null; then
+if hash docker >/dev/null 2>&1; then
+    echo "Docker installation detected - skipping install"
     startDockerd
     exit 0
 fi;
@@ -39,8 +46,11 @@ fetchfile() {
     fi;
 }
 
+echo "Installing docker..."
+
 # Amazon ECS instances require custom install
-if grep -q Amazon /etc/system-release; then
+if grep -q Amazon /etc/system-release >/dev/null 2>&1; then
+    echo "AmazonOS detected"
     sudo yum install -y docker
 else
     # Try to download using curl or wget,
@@ -55,3 +65,7 @@ else
 fi
 
 startDockerd
+
+echo "Docker installation complete"
+
+exit 0

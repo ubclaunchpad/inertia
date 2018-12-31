@@ -20,7 +20,7 @@ clean: testenv-clean
 
 # Install all dependencies
 .PHONY: deps
-deps: prod-deps dev-deps
+deps: prod-deps dev-deps docker-deps
 
 # Sets up production dependencies
 .PHONY: prod-deps
@@ -33,6 +33,9 @@ prod-deps:
 dev-deps:
 	go get -u github.com/UnnoTed/fileb0x
 	go get -u golang.org/x/lint/golint
+
+.PHONY: docker-deps
+docker-deps:
 	bash test/docker_deps.sh
 
 # Install Inertia with release version
@@ -93,7 +96,7 @@ testenv-clean:
 
 # Create test VPS
 .PHONY: testenv
-testenv: dev-deps testenv-clean
+testenv: docker-deps testenv-clean
 	# run nginx container for testing
 	docker run --name testcontainer -d nginx
 

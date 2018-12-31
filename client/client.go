@@ -184,10 +184,8 @@ func (c *Client) installDocker(session SSHSession) error {
 
 	// Install docker.
 	cmdStr := string(installDockerSh)
-	out, stderr, err := session.Run(cmdStr)
-	println(out.String())
-	if err != nil {
-		return fmt.Errorf("docker installation: %s: %s", err.Error(), stderr.String())
+	if err = session.RunStream(cmdStr, false); err != nil {
+		return fmt.Errorf("docker installation: %s", err.Error())
 	}
 
 	return nil
