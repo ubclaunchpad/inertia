@@ -5,24 +5,24 @@
 set -e
 
 DOCKER_SOURCE=https://get.docker.com
-DOCKER_DEST='/tmp/get-docker.sh'
+DOCKER_DEST="/tmp/get-docker.sh"
 
 startDockerd() {
     # Start dockerd if it is not online
     if ! sudo docker stats --no-stream >/dev/null 2>&1 ; then
-        # Fall back to systemctl if service doesn't work, otherwise just run
+        # Fall back to systemctl if service doesn"t work, otherwise just run
         # dockerd in background
-        echo "dockerd offline - starting dockerd..."
+        echo "dockerd is offline - starting dockerd..."
         sudo service docker start >/dev/null 2>&1 \
             || sudo systemctl start docker >/dev/null 2>&1 \
-            || nohup sudo dockerd >/dev/null 2>&1 &
+            || sudo nohup dockerd >/dev/null 2>&1 &
         echo "dockerd started"
         # Poll until dockerd is running
         while ! sudo docker stats --no-stream >/dev/null 2>&1 ; do
             echo "Waiting for dockerd to come online..."
             sleep 1
         done
-    fi
+    fi;
     echo "dockerd is online"
 }
 
@@ -37,6 +37,7 @@ fetchfile() {
     # Args:
     #   $1 source URL
     #   $2 destination file.
+    echo "Saving $1 to $2"
     if hash curl 2>/dev/null; then
         sudo curl -fsSL "$1" -o "$2"
     elif hash wget 2>/dev/null; then
@@ -61,8 +62,8 @@ else
         apt-get update && apt-get -y install curl
         fetchfile $DOCKER_SOURCE $DOCKER_DEST
         sh $DOCKER_DEST
-    fi
-fi
+    fi;
+fi;
 
 startDockerd
 
