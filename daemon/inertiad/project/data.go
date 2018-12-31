@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
@@ -21,7 +21,6 @@ type DeploymentDataManager struct {
 	// key/value database where each "bucket" is a collection
 	db *bolt.DB
 
-	// @TODO: should these keys be here?
 	// Keys for encrypting data
 	symmetricKey []byte
 }
@@ -67,7 +66,7 @@ func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
-		users := tx.Bucket(envVariableBucket)
+		vars := tx.Bucket(envVariableBucket)
 		bytes, err := json.Marshal(envVariable{
 			Value:     valueBytes,
 			Encrypted: encrypt,
@@ -75,7 +74,7 @@ func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 		if err != nil {
 			return err
 		}
-		return users.Put([]byte(name), bytes)
+		return vars.Put([]byte(name), bytes)
 	})
 }
 
