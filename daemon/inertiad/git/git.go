@@ -63,8 +63,8 @@ func clone(remoteURL string, opts RepoOptions, out io.Writer) (*gogit.Repository
 	if err = SimplifyGitErr(err); err != nil {
 		return nil, err
 	}
-	// Use this to confirm if pull has completed.
 
+	// Use this to confirm if pull has completed.
 	if _, err = repo.Head(); err != nil {
 		return nil, err
 	}
@@ -81,10 +81,12 @@ func UpdateRepository(repo *gogit.Repository, opts RepoOptions, out io.Writer) e
 
 	fmt.Fprintln(out, "Fetching repository...")
 	err = repo.Fetch(&gogit.FetchOptions{
-		Auth:     opts.Auth,
-		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
-		Progress: out,
-		Force:    true,
+		RemoteName: "origin",
+		Auth:       opts.Auth,
+		RefSpecs:   []config.RefSpec{"refs/*:refs/*"},
+		Tags:       gogit.AllTags,
+		Progress:   out,
+		Force:      true,
 	})
 	if err = SimplifyGitErr(err); err != nil {
 		return err
@@ -94,6 +96,7 @@ func UpdateRepository(repo *gogit.Repository, opts RepoOptions, out io.Writer) e
 	fmt.Fprintf(out, "Checking out %s...\n", ref)
 	err = tree.Checkout(&gogit.CheckoutOptions{
 		Branch: ref,
+		Force:  true,
 	})
 	if err = SimplifyGitErr(err); err != nil {
 		return err
@@ -106,6 +109,8 @@ func UpdateRepository(repo *gogit.Repository, opts RepoOptions, out io.Writer) e
 		Auth:          opts.Auth,
 		Progress:      out,
 		Force:         true,
+
+		RecurseSubmodules: gogit.DefaultSubmoduleRecursionDepth,
 	})
 	return SimplifyGitErr(err)
 }
