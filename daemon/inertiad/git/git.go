@@ -52,19 +52,28 @@ func InitializeRepository(remoteURL string, opts RepoOptions, w io.Writer) (*gog
 // clone wraps gogit.PlainClone() and returns a more helpful error message
 // if the given error is an authentication-related error.
 func clone(remoteURL string, opts RepoOptions, out io.Writer) (*gogit.Repository, error) {
-	fmt.Fprintf(out, "Cloning branch %s from %s...\n", opts.Branch, remoteURL)
-	ref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", opts.Branch))
-	repo, err := gogit.PlainClone(opts.Directory, false, &gogit.CloneOptions{
-		URL:           remoteURL,
-		Auth:          opts.Auth,
-		Progress:      out,
-		ReferenceName: ref,
-	})
-	if err = SimplifyGitErr(err); err != nil {
+	// Preserve existing files by creating a repository, setting a remote, then
+	// updating the directory
+	repo, err := gogit.PlainInit(opts.Directory, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init bare repository: %s", err.Error())
+	}
+
+	fmt.Fprintf(out, "Setting up repository from %s...\n", remoteURL)
+	if _, err = repo.CreateRemote(&config.RemoteConfig{
+		Name:  "origin",
+		URLs:  []string{remoteURL},
+		Fetch: []config.RefSpec{"refs/*:refs/*"},
+	}); err != nil {
+		return nil, fmt.Errorf("failed to set remote: %s", err.Error())
+	}
+
+	// Fetch repository contents
+	if err = UpdateRepository(repo, opts, out); err != nil {
 		return nil, err
 	}
 
-	// Use this to confirm if pull has completed.
+	// Confirm if pull has completed.
 	if _, err = repo.Head(); err != nil {
 		return nil, err
 	}
@@ -93,7 +102,7 @@ func UpdateRepository(repo *gogit.Repository, opts RepoOptions, out io.Writer) e
 	}
 
 	var ref = plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", opts.Branch))
-	fmt.Fprintf(out, "Checking out %s...\n", ref)
+	fmt.Fprintf(out, "Checking out '%s'...\n", ref)
 	err = tree.Checkout(&gogit.CheckoutOptions{
 		Branch: ref,
 		Force:  true,
