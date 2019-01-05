@@ -15,7 +15,6 @@ import (
 
 // upHandler tries to bring the deployment online
 func upHandler(w http.ResponseWriter, r *http.Request) {
-	// Get github URL from up request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusLengthRequired)
@@ -28,8 +27,17 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	gitOpts := upReq.GitOptions
+	var gitOpts = upReq.GitOptions
+
+	// apply configuration updates
 	webhookSecret = upReq.WebHookSecret
+	deployment.SetConfig(project.DeploymentConfig{
+		ProjectName:   upReq.Project,
+		BuildType:     upReq.BuildType,
+		BuildFilePath: upReq.BuildFilePath,
+		RemoteURL:     gitOpts.RemoteURL,
+		Branch:        gitOpts.Branch,
+	})
 
 	// Configure logger
 	logger := log.NewLogger(log.LoggerOptions{
@@ -47,7 +55,7 @@ func upHandler(w http.ResponseWriter, r *http.Request) {
 	defer cli.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
-	skipUpdate := false
+	var skipUpdate = false
 	if status, _ := deployment.GetStatus(cli); status.CommitHash == "" {
 		logger.Println("No deployment detected")
 		err = deployment.Initialize(
