@@ -100,7 +100,6 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 		return errors.New("remote URL is required for first setup")
 	}
 
-	common.RemoveContents(d.directory)
 	d.SetConfig(cfg)
 
 	// Retrieve authentication
@@ -114,9 +113,11 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 	}
 
 	// Initialize repository
-	d.repo, err = git.InitializeRepository(
-		d.directory, cfg.RemoteURL, cfg.Branch, d.auth, out,
-	)
+	d.repo, err = git.InitializeRepository(cfg.RemoteURL, git.RepoOptions{
+		Directory: d.directory,
+		Branch:    cfg.Branch,
+		Auth:      d.auth,
+	}, out)
 	return err
 }
 
@@ -151,7 +152,11 @@ func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
 
 	// Update repository
 	if !opts.SkipUpdate {
-		if err := git.UpdateRepository(d.directory, d.repo, d.branch, d.auth, out); err != nil {
+		if err := git.UpdateRepository(d.repo, git.RepoOptions{
+			Directory: d.directory,
+			Branch:    d.branch,
+			Auth:      d.auth,
+		}, out); err != nil {
 			return func() error { return nil }, err
 		}
 	}
