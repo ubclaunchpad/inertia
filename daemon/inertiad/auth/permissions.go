@@ -216,7 +216,11 @@ func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Reque
 	// Add user (as admin if specified)
 	err = h.users.AddUser(userReq.Username, userReq.Password, userReq.Admin)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if crypto.IsCredentialFormatError(err) {
+			http.Error(w, fmt.Sprintf("Invalid credentials: %s", err.Error()), http.StatusBadRequest)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 

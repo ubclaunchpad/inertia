@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"errors"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -11,6 +12,14 @@ var (
 	errInvalidUsername      = errors.New("Username must be at least 3 characters and only letters, numbers, underscores, and dashes are allowed")
 	errInvalidPassword      = errors.New("Password must be at least 5 characters and only letters, numbers, underscores, and dashes are allowed")
 )
+
+// IsCredentialFormatError returns true if the given error is one related to
+// username/password format
+func IsCredentialFormatError(err error) bool {
+	return strings.Contains(err.Error(), errSameUsernamePassword.Error()) ||
+		strings.Contains(err.Error(), errInvalidUsername.Error()) ||
+		strings.Contains(err.Error(), errInvalidPassword.Error())
+}
 
 // HashPassword generates a bcrypt-encrypted hash from given password
 func HashPassword(password string) (string, error) {
