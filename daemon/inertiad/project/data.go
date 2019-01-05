@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
@@ -21,7 +21,6 @@ type DeploymentDataManager struct {
 	// key/value database where each "bucket" is a collection
 	db *bolt.DB
 
-	// @TODO: should these keys be here?
 	// Keys for encrypting data
 	symmetricKey []byte
 }
@@ -67,7 +66,7 @@ func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
-		users := tx.Bucket(envVariableBucket)
+		vars := tx.Bucket(envVariableBucket)
 		bytes, err := json.Marshal(envVariable{
 			Value:     valueBytes,
 			Encrypted: encrypt,
@@ -75,48 +74,54 @@ func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 		if err != nil {
 			return err
 		}
-		return users.Put([]byte(name), bytes)
+		return vars.Put([]byte(name), bytes)
 	})
 }
 
-// RemoveEnvVariable removes a previously set env variable
-func (c *DeploymentDataManager) RemoveEnvVariable(name string) error {
+// RemoveEnvVariables removes previously set env variables
+func (c *DeploymentDataManager) RemoveEnvVariables(names ...string) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		vars := tx.Bucket(envVariableBucket)
-		return vars.Delete([]byte(name))
+		var vars = tx.Bucket(envVariableBucket)
+		for _, n := range names {
+			if err := vars.Delete([]byte(n)); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 
 // GetEnvVariables retrieves all stored environment variables
 func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) {
-	envs := []string{}
-
-	err := c.db.View(func(tx *bolt.Tx) error {
-		variables := tx.Bucket(envVariableBucket)
+	var envs = []string{}
+	var faulty = []string{}
+	var err = c.db.View(func(tx *bolt.Tx) error {
+		var variables = tx.Bucket(envVariableBucket)
 		return variables.ForEach(func(name, variableBytes []byte) error {
-			variable := &envVariable{}
-			err := json.Unmarshal(variableBytes, variable)
-			if err != nil {
+			var variable = &envVariable{}
+			if err := json.Unmarshal(variableBytes, variable); err != nil {
 				return err
 			}
 
-			nameString := string(name)
+			var nameString = string(name)
 			if !variable.Encrypted {
 				envs = append(envs, nameString+"="+string(variable.Value))
 			} else if !decrypt {
 				envs = append(envs, nameString+"=[ENCRYPTED]")
 			} else {
-				decrypted, err := crypto.Decrypt(variable.Value, c.symmetricKey)
+				decrypted, err := crypto.Decrypt(c.symmetricKey, variable.Value)
 				if err != nil {
 					// If decrypt fails, key is no longer valid - remove var
-					c.RemoveEnvVariable(nameString)
+					faulty = append(faulty, nameString)
 				}
 				envs = append(envs, nameString+"="+string(decrypted))
 			}
-
 			return nil
 		})
 	})
+
+	c.RemoveEnvVariables(faulty...)
+
 	return envs, err
 }
 

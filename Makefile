@@ -12,9 +12,15 @@ all: prod-deps cli
 ls:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
+.PHONY: clean
+clean: testenv-clean
+	go clean -testcache
+	rm -f ./inertia
+	find . -type f -name inertia.\* -exec rm {} \;
+
 # Install all dependencies
 .PHONY: deps
-deps: prod-deps dev-deps
+deps: prod-deps dev-deps docker-deps
 
 # Sets up production dependencies
 .PHONY: prod-deps
@@ -27,6 +33,9 @@ prod-deps:
 dev-deps:
 	go get -u github.com/UnnoTed/fileb0x
 	go get -u golang.org/x/lint/golint
+
+.PHONY: docker-deps
+docker-deps:
 	bash test/docker_deps.sh
 
 # Install Inertia with release version
@@ -38,13 +47,6 @@ cli:
 .PHONY: cli-tagged
 cli-tagged:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
-
-# Remove Inertia binaries
-.PHONY: clean
-clean:
-	go clean -testcache
-	rm -f ./inertia
-	find . -type f -name inertia.\* -exec rm {} \;
 
 # Run static analysis
 .PHONY: lint
@@ -88,10 +90,17 @@ test-integration-fast:
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X $(CLI_VERSION_VAR)=test" --cover
 
+.PHONY: testenv-clean
+testenv-clean:
+	docker stop testvps testcontainer || true && docker rm testvps testcontainer || true
+
 # Create test VPS
 .PHONY: testenv
-testenv:
-	docker stop testvps || true && docker rm testvps || true
+testenv: docker-deps testenv-clean
+	# run nginx container for testing
+	docker run --name testcontainer -d nginx
+
+	# start vps container
 	docker build -f ./test/vps/$(VPS_OS).dockerfile \
 		-t $(VPS_OS)vps \
 		--build-arg VERSION=$(VPS_VERSION) \
