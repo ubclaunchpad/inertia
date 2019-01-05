@@ -15,7 +15,7 @@ startDockerd() {
         echo "dockerd is offline - starting dockerd..."
         sudo service docker start >/dev/null 2>&1 \
             || sudo systemctl start docker >/dev/null 2>&1 \
-            || sudo nohup dockerd >/dev/null 2>&1 &
+            || ( sudo nohup dockerd >/dev/null 2>&1 & )
         echo "dockerd started"
         # Poll until dockerd is running
         while ! sudo docker stats --no-stream >/dev/null 2>&1 ; do
