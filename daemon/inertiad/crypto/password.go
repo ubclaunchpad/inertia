@@ -38,6 +38,7 @@ func CorrectPassword(hash string, password string) bool {
 // ValidateCredentialValues takes a username and password and verifies
 // if they are of sufficient length and if they only contain legal characters
 func ValidateCredentialValues(username, password string) error {
+	println(username, password)
 	if username == password {
 		return errSameUsernamePassword
 	}

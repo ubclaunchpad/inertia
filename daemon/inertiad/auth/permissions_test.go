@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/pquerna/otp/totp"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
@@ -435,4 +434,51 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	assert.Nil(t, err)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestPermissionsHandler_addUserHandler(t *testing.T) {
+	type args struct {
+		method string
+		target string
+		body   interface{}
+	}
+	type want struct {
+		status int
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{"missing body", args{"POST", "/", nil}, want{http.StatusBadRequest}},
+		{"bad credentials", args{"POST", "/", common.UserRequest{
+			Username: "bobheadxi", Password: "bobheadxi",
+		}}, want{http.StatusBadRequest}},
+		{"ok credentials", args{"POST", "/", common.UserRequest{
+			Username: "bobheadxi", Password: "bobdeadxi",
+		}}, want{http.StatusCreated}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up permission handler
+			var dir = "./test_addUserHandler"
+			ph, err := getTestPermissionsHandler(dir)
+			defer os.RemoveAll(dir)
+			assert.Nil(t, err)
+			defer ph.Close()
+
+			// test handler
+			var (
+				b, _ = json.Marshal(tt.args.body)
+				req  = httptest.NewRequest(tt.args.method, tt.args.target, bytes.NewReader(b))
+				rec  = httptest.NewRecorder()
+			)
+			ph.addUserHandler(rec, req)
+
+			// assert
+			if rec.Code != tt.want.status {
+				t.Errorf("expected status '%d', got '%d'", tt.want.status, rec.Code)
+			}
+		})
+	}
 }
