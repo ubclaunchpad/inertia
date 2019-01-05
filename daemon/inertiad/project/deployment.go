@@ -100,7 +100,6 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 		return errors.New("remote URL is required for first setup")
 	}
 
-	common.RemoveContents(d.directory)
 	d.SetConfig(cfg)
 
 	// Retrieve authentication
