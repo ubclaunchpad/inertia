@@ -17,8 +17,11 @@ func TestCloneIntegration(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	dir := "./test_clone/"
-	repo, err := clone(dir, inertiaDeployTest, "dev", nil, os.Stdout)
+	var dir = "./test_clone/"
+	repo, err := clone(inertiaDeployTest, RepoOptions{
+		Directory: dir,
+		Branch:    "dev",
+	}, os.Stdout)
 	defer os.RemoveAll(dir)
 	assert.Nil(t, err)
 
@@ -40,8 +43,8 @@ func TestUpdateRepositoryIntegration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Try switching branches
-	err = UpdateRepository(dir, repo, "master", nil, os.Stdout)
+	err = UpdateRepository(repo, RepoOptions{Branch: "master"}, os.Stdout)
 	assert.Nil(t, err)
-	err = UpdateRepository(dir, repo, "dev", nil, os.Stdout)
+	err = UpdateRepository(repo, RepoOptions{Branch: "dev"}, os.Stdout)
 	assert.Nil(t, err)
 }
