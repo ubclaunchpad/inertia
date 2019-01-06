@@ -146,65 +146,66 @@ func (m *userManager) HasUser(username string) error {
 	return nil
 }
 
-// IsCorrectCredentials checks if username and password has a match
-// in the database
+// IsCorrectCredentials checks if username and password has a match in the database
 func (m *userManager) IsCorrectCredentials(username, password string) (*userProps, bool, error) {
-	var (
-		userbytes = []byte(username)
-		userProps = &userProps{}
-		userErr   error
-		correct   bool
-	)
-
 	if username == "" || password == "" {
 		return nil, false, errors.New("Invalid credentials provided")
 	}
 
+	var (
+		key     = []byte(username)
+		props   = &userProps{}
+		userErr error
+		correct bool
+	)
+
 	transactionErr := m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
-		propsBytes := users.Get(userbytes)
-		if propsBytes == nil {
+		if propsBytes := users.Get(key); propsBytes == nil {
 			return errUserNotFound
-		}
-		err := json.Unmarshal(propsBytes, userProps)
-		if err != nil {
+		} else if err := json.Unmarshal(propsBytes, props); err != nil {
 			return errors.New("Corrupt user properties: " + err.Error())
 		}
 
-		correct = crypto.CorrectPassword(userProps.HashedPassword, password)
+		// The 'correct' here is returned by the funtion
+		correct = crypto.CorrectPassword(props.HashedPassword, password)
 		if !correct {
-			// Track number of login attempts and don't add
-			// user back to the database if past limit
-			userProps.LoginAttempts++
-			if userProps.LoginAttempts <= loginAttemptsLimit {
-				bytes, err := json.Marshal(userProps)
+			// Track number of login attempts
+			props.LoginAttempts++
+
+			// If user hasn't reached limit, update with new attempt count
+			if props.LoginAttempts <= loginAttemptsLimit {
+				bytes, err := json.Marshal(props)
 				if err != nil {
 					return err
 				}
-				return users.Put(userbytes, bytes)
+				return users.Put(key, bytes)
 			}
 
-			// Rollback will occur if transaction returns and error, so store
-			// in variable. TODO: don't delete?
+			// Otherwise, delete user
+			users.Delete(key)
+
+			// Rollback will occur if transaction returns an error, so store in
+			// variable instead. TODO: don't delete?
 			userErr = errors.New("Too many login attempts - user deleted")
 			return nil
 		}
 
 		// Reset attempts to 0 if login successful
-		userProps.LoginAttempts = 0
-		bytes, err := json.Marshal(userProps)
+		props.LoginAttempts = 0
+		bytes, err := json.Marshal(props)
 		if err != nil {
 			return err
 		}
 
 		// Put overwrites existing entry to update it
-		return users.Put(userbytes, bytes)
+		return users.Put(key, bytes)
 	})
 
 	if userErr != nil {
-		return userProps, correct, userErr
+		return props, correct, userErr
 	}
-	return userProps, correct, transactionErr
+	return props, correct, transactionErr
 }
 
 // IsValidTotp returns true if the given TOTP is valid for the given user, and
