@@ -23,7 +23,7 @@ func (runner *mockSSHRunner) RunStream(cmd string, interactive bool) error {
 	return nil
 }
 
-func (runner *mockSSHRunner) RunSession() error {
+func (runner *mockSSHRunner) RunSession(commands ...string) error {
 	return nil
 }
 

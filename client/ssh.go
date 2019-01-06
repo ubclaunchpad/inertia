@@ -1,12 +1,12 @@
 package client
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/ubclaunchpad/inertia/cfg"
@@ -17,7 +17,7 @@ import (
 type SSHSession interface {
 	Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error)
 	RunStream(cmd string, interactive bool) error
-	RunSession() error
+	RunSession(commands ...string) error
 	CopyFile(f io.Reader, remotePath string, permissions string) error
 }
 
@@ -85,41 +85,20 @@ func (r *SSHRunner) RunStream(cmd string, interactive bool) error {
 }
 
 // RunSession sets up a SSH shell to the remote
-func (r *SSHRunner) RunSession() error {
-	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-
-	// Set IO
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
-	in, _ := session.StdinPipe()
-
-	// Set up terminal modes
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,     // disable echoing
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
-	}
-
-	// Request pseudo terminal
-	if err := session.RequestPty("xterm", 80, 40, modes); err != nil {
-		return err
-	}
-
-	// Start remote shell
-	if err := session.Shell(); err != nil {
-		return err
-	}
-
-	// Accepting commands
-	for {
-		reader := bufio.NewReader(os.Stdin)
-		str, _ := reader.ReadString('\n')
-		fmt.Fprint(in, str)
-	}
+func (r *SSHRunner) RunSession(commands ...string) error {
+	var (
+		target = fmt.Sprintf("%s@%s", r.user, r.ip)
+		args   = append([]string{
+			"-p", r.sshPort,
+			"-i", r.pemPath,
+			target},
+			commands...)
+		cmd = exec.Command("ssh", args...)
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 // CopyFile copies given reader to remote
