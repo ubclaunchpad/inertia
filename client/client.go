@@ -119,7 +119,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	fmt.Fprintf(c.out, "\n>> GitHub WebHook URL (add to https://www.github.com/%s/settings/hooks/new):\n", repoName)
 	fmt.Fprintf(c.out, "Address:  https://%s:%s/webhook\n", c.IP, c.Daemon.Port)
 	fmt.Fprintf(c.out, "Secret:   %s\n", c.Daemon.WebHookSecret)
-	fmt.Fprint(c.out, "\n"+`Note that you will have to disable SSH verification in your webhook
+	fmt.Fprint(c.out, "\n"+`Note that you will have to disable SSL verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
 be able to verify.`+"\n")
 	fmt.Fprint(c.out, "\n"+`Note that you will also have to set the Content-Type for your webhook
