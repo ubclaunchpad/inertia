@@ -28,13 +28,13 @@ type Client struct {
 
 	out io.Writer
 
-	sshRunner SSHSession
+	SSH       SSHSession
 	verifySSL bool
 }
 
 // NewClient sets up a client to communicate to the daemon at
 // the given named remote.
-func NewClient(remoteName string, config *cfg.Config, out ...io.Writer) (*Client, bool) {
+func NewClient(remoteName, keyPassphrase string, config *cfg.Config, out ...io.Writer) (*Client, bool) {
 	remote, found := config.GetRemote(remoteName)
 	if !found {
 		return nil, false
@@ -48,12 +48,13 @@ func NewClient(remoteName string, config *cfg.Config, out ...io.Writer) (*Client
 	}
 
 	return &Client{
-		RemoteVPS:     remote,
+		RemoteVPS: remote,
+		SSH:       NewSSHRunner(remote, keyPassphrase),
+
 		version:       config.Version,
 		project:       config.Project,
 		buildType:     config.BuildType,
 		buildFilePath: config.BuildFilePath,
-		sshRunner:     NewSSHRunner(remote),
 
 		out: writer,
 	}, true
@@ -73,7 +74,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	fmt.Fprintf(c.out, "Setting up remote %s at %s\n", c.Name, c.IP)
 
 	fmt.Fprint(c.out, ">> Step 1/4: Installing docker...\n")
-	err := c.installDocker(c.sshRunner)
+	err := c.installDocker(c.SSH)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	if err != nil {
 		return err
 	}
-	pub, err := c.keyGen(c.sshRunner)
+	pub, err := c.keyGen(c.SSH)
 	if err != nil {
 		return err
 	}
@@ -99,7 +100,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	}
 
 	fmt.Fprint(c.out, ">> Step 4/4: Fetching daemon API token...\n")
-	token, err := c.getDaemonAPIToken(c.sshRunner, c.version)
+	token, err := c.getDaemonAPIToken(c.SSH, c.version)
 	if err != nil {
 		return err
 	}
@@ -142,7 +143,7 @@ func (c *Client) DaemonUp(daemonVersion, host, daemonPort string) error {
 
 	// Run inertia daemon.
 	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion, daemonPort, host)
-	return c.sshRunner.RunStream(daemonCmdStr, false)
+	return c.SSH.RunStream(daemonCmdStr, false)
 }
 
 // DaemonDown brings the daemon down on the remote instance
@@ -152,7 +153,7 @@ func (c *Client) DaemonDown() error {
 		return err
 	}
 
-	_, stderr, err := c.sshRunner.Run(string(scriptBytes))
+	_, stderr, err := c.SSH.Run(string(scriptBytes))
 	if err != nil {
 		return fmt.Errorf("daemon shutdown failed: %s: %s", err.Error(), stderr.String())
 	}
@@ -167,7 +168,7 @@ func (c *Client) InertiaDown() error {
 		return err
 	}
 
-	_, stderr, err := c.sshRunner.Run(string(scriptBytes))
+	_, stderr, err := c.SSH.Run(string(scriptBytes))
 	if err != nil {
 		return fmt.Errorf("Inertia down failed: %s: %s", err.Error(), stderr.String())
 	}

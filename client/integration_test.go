@@ -28,7 +28,7 @@ func newIntegrationClient() *Client {
 		version:   "test",
 		RemoteVPS: remote,
 		out:       os.Stdout,
-		sshRunner: NewSSHRunner(remote),
+		SSH:       NewSSHRunner(remote, ""),
 	}
 }
 

@@ -15,7 +15,6 @@ import (
 	"github.com/ubclaunchpad/inertia/local"
 
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/client"
 )
 
 // parseConfigArg is a dirty dirty hack to allow access to the --config argument
@@ -61,6 +60,8 @@ Requires:
 2. a deploy key to be registered within your remote repository for the daemon to use.
 
 Continuous deployment requires the daemon's webhook address to be registered in your remote repository.
+
+If the SSH key for your remote requires a passphrase, it can be provided via 'PEM_PASSPHRASE'.
 
 Run 'inertia [remote] init' to gather this information.`,
 		}
@@ -378,8 +379,7 @@ var cmdDeploymentSSH = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		session := client.NewSSHRunner(deployment.RemoteVPS)
-		if err = session.RunSession(); err != nil {
+		if err = deployment.SSH.RunSession(); err != nil {
 			log.Fatal(err.Error())
 		}
 	},
@@ -427,8 +427,7 @@ var cmdDeploymentSendFile = &cobra.Command{
 		remotePath := path.Join(projectPath, dest)
 
 		// Initiate copy
-		session := client.NewSSHRunner(deployment.RemoteVPS)
-		err = session.CopyFile(f, remotePath, permissions)
+		err = deployment.SSH.CopyFile(f, remotePath, permissions)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
