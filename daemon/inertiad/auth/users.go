@@ -15,7 +15,7 @@ var (
 )
 
 const (
-	loginAttemptsLimit = 5
+	loginAttemptsLimit = 10
 )
 
 // userProps are properties associated with user, used
