@@ -165,7 +165,7 @@ This ensures that your project ports are properly exposed and externally accessi
 		config.Write(path)
 
 		// Create inertia client
-		inertia, found := client.NewClient(args[0], config, os.Stdout)
+		inertia, found := client.NewClient(args[0], os.Getenv(local.EnvSSHPassphrase), config, os.Stdout)
 		if !found {
 			log.Fatal("vps setup did not complete properly")
 		}

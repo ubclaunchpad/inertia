@@ -94,7 +94,7 @@ func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, fun
 		return nil, nil, err
 	}
 
-	client, found := client.NewClient(name, config, os.Stdout)
+	client, found := client.NewClient(name, os.Getenv(EnvSSHPassphrase), config, os.Stdout)
 	if !found {
 		return nil, nil, errors.New("Remote not found")
 	}

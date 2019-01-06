@@ -68,7 +68,7 @@ func newMockSSHClient(mockRunner *mockSSHRunner) *Client {
 		version:   "test",
 		RemoteVPS: remote,
 		out:       os.Stdout,
-		sshRunner: mockRunner,
+		SSH:       mockRunner,
 	}
 }
 
@@ -90,10 +90,10 @@ func TestGetNewClient(t *testing.T) {
 	}
 	config.AddRemote(testRemote)
 
-	_, found := NewClient("tst", config)
+	_, found := NewClient("tst", "", config)
 	assert.False(t, found)
 
-	cli, found := NewClient("test", config)
+	cli, found := NewClient("test", "", config)
 	assert.True(t, found)
 	assert.Equal(t, "/some/pem/file", cli.RemoteVPS.PEM)
 	assert.Equal(t, "test", cli.version)
