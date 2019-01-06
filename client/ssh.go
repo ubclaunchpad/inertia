@@ -23,28 +23,32 @@ type SSHSession interface {
 
 // SSHRunner runs commands over SSH and captures results.
 type SSHRunner struct {
-	pem     string
 	user    string
 	ip      string
 	sshPort string
+
+	pemPath       string
+	pemPassphrase string
 }
 
 // NewSSHRunner returns a new SSHRunner
-func NewSSHRunner(r *cfg.RemoteVPS) *SSHRunner {
+func NewSSHRunner(r *cfg.RemoteVPS, keyPassphrase string) *SSHRunner {
 	if r != nil {
 		return &SSHRunner{
-			pem:     r.PEM,
 			user:    r.User,
 			ip:      r.IP,
 			sshPort: r.SSHPort,
+
+			pemPath:       r.PEM,
+			pemPassphrase: keyPassphrase,
 		}
 	}
 	return &SSHRunner{}
 }
 
 // Run runs a command remotely.
-func (runner *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Buffer, err error) {
-	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
+func (r *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Buffer, err error) {
+	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -62,8 +66,8 @@ func (runner *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Bu
 
 // RunStream remotely executes given command, streaming its output
 // and opening up an optionally interactive session
-func (runner *SSHRunner) RunStream(cmd string, interactive bool) error {
-	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
+func (r *SSHRunner) RunStream(cmd string, interactive bool) error {
+	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
 	if err != nil {
 		return err
 	}
@@ -81,12 +85,12 @@ func (runner *SSHRunner) RunStream(cmd string, interactive bool) error {
 }
 
 // RunSession sets up a SSH shell to the remote
-func (runner *SSHRunner) RunSession(commands ...string) error {
+func (r *SSHRunner) RunSession(commands ...string) error {
 	var (
-		target = fmt.Sprintf("%s@%s", runner.user, runner.ip)
+		target = fmt.Sprintf("%s@%s", r.user, r.ip)
 		args   = append([]string{
-			"-p", runner.sshPort,
-			"-i", runner.pem,
+			"-p", r.sshPort,
+			"-i", r.pemPath,
 			target},
 			commands...)
 		cmd = exec.Command("ssh", args...)
@@ -98,7 +102,7 @@ func (runner *SSHRunner) RunSession(commands ...string) error {
 }
 
 // CopyFile copies given reader to remote
-func (runner *SSHRunner) CopyFile(file io.Reader, remotePath, permissions string) error {
+func (r *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions string) error {
 	// Open and read file
 	contents, err := ioutil.ReadAll(file)
 	if err != nil {
@@ -109,7 +113,7 @@ func (runner *SSHRunner) CopyFile(file io.Reader, remotePath, permissions string
 	// Set up
 	filename := filepath.Base(remotePath)
 	directory := filepath.Dir(remotePath)
-	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
+	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
 	if err != nil {
 		return err
 	}
@@ -128,13 +132,13 @@ func (runner *SSHRunner) CopyFile(file io.Reader, remotePath, permissions string
 }
 
 // Stubbed out for testing.
-func getSSHSession(PEM, IP, sshPort, user string) (*ssh.Session, error) {
+func getSSHSession(PEM, IP, sshPort, user, passphrase string) (*ssh.Session, error) {
 	privateKey, err := ioutil.ReadFile(PEM)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg, err := getSSHConfig(privateKey, user)
+	cfg, err := getSSHConfig(privateKey, user, passphrase)
 	if err != nil {
 		return nil, err
 	}
@@ -149,10 +153,17 @@ func getSSHSession(PEM, IP, sshPort, user string) (*ssh.Session, error) {
 }
 
 // getSSHConfig returns SSH configuration for the remote.
-func getSSHConfig(privateKey []byte, user string) (*ssh.ClientConfig, error) {
-	key, err := ssh.ParsePrivateKey(privateKey)
-	if err != nil {
-		return nil, err
+func getSSHConfig(privateKey []byte, user, passphrase string) (*ssh.ClientConfig, error) {
+	var key ssh.Signer
+	var err error
+	if passphrase == "" {
+		if key, err = ssh.ParsePrivateKey(privateKey); err != nil {
+			return nil, fmt.Errorf("failed to parse key without passphrase: %s", err.Error())
+		}
+	} else {
+		if key, err = ssh.ParsePrivateKeyWithPassphrase(privateKey, []byte(passphrase)); err != nil {
+			return nil, fmt.Errorf("failed to parse key with passphrase: %s", err.Error())
+		}
 	}
 
 	// Authentication
