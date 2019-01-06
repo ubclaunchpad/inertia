@@ -171,12 +171,6 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 			return errors.New("Corrupt user properties: " + err.Error())
 		}
 
-		// Delete user since LoginAttempts must be updated
-		err = users.Delete(userbytes)
-		if err != nil {
-			return err
-		}
-
 		correct = crypto.CorrectPassword(userProps.HashedPassword, password)
 		if !correct {
 			// Track number of login attempts and don't add
@@ -202,6 +196,8 @@ func (m *userManager) IsCorrectCredentials(username, password string) (*userProp
 		if err != nil {
 			return err
 		}
+
+		// Put overwrites existing entry to update it
 		return users.Put(userbytes, bytes)
 	})
 
