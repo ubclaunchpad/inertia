@@ -94,7 +94,9 @@ Run 'inertia [remote] init' to gather this information.`,
 		user.AddCommand(deepCopy(cmdDeploymentDisableTotp))
 		cmd.AddCommand(user)
 
-		cmd.AddCommand(deepCopy(cmdDeploymentSSH))
+		ssh := deepCopy(cmdDeploymentSSH)
+		ssh.Flags().String("cmd", "", "command to execute over SSH - leave blank for terminal")
+		cmd.AddCommand(ssh)
 
 		send := deepCopy(cmdDeploymentSendFile)
 		send.Flags().StringP("dest", "d", "", "path relative from project root to send file to")
@@ -378,8 +380,10 @@ var cmdDeploymentSSH = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		command, _ := cmd.Flags().GetString("cmd")
+		commands := strings.Split(command, " ")
 		session := client.NewSSHRunner(deployment.RemoteVPS)
-		if err = session.RunSession(); err != nil {
+		if err = session.RunSession(commands...); err != nil {
 			log.Fatal(err.Error())
 		}
 	},
