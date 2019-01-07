@@ -505,7 +505,7 @@ allowing you to assign a different Inertia project to this remote.`,
 }
 
 var cmdDeploymentRemove = &cobra.Command{
-	Use:   "remove",
+	Use:   "uninstall",
 	Short: "Shut down Inertia and remove Inertia assets from remote host",
 	Long: `Shuts down and removes the Inertia daemon, and removes the Inertia
 directory (~/inertia) from your remote host.`,
