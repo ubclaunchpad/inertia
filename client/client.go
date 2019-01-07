@@ -161,8 +161,8 @@ func (c *Client) DaemonDown() error {
 	return nil
 }
 
-// InertiaDown removes the inertia/ directory on the remote instance
-func (c *Client) InertiaDown() error {
+// UninstallInertia removes the inertia/ directory on the remote instance
+func (c *Client) UninstallInertia() error {
 	scriptBytes, err := internal.ReadFile("client/scripts/inertia-down.sh")
 	if err != nil {
 		return err

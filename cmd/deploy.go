@@ -91,8 +91,10 @@ Run 'inertia [remote] init' to gather this information.`,
 		user.AddCommand(deepCopy(cmdDeploymentRemoveUser))
 		user.AddCommand(deepCopy(cmdDeploymentResetUsers))
 		user.AddCommand(deepCopy(cmdDeploymentListUsers))
-		user.AddCommand(deepCopy(cmdDeploymentEnableTotp))
-		user.AddCommand(deepCopy(cmdDeploymentDisableTotp))
+		totp := deepCopy(cmdDeploymentTotp)
+		totp.AddCommand(deepCopy(cmdDeploymentTotpEnable))
+		totp.AddCommand(deepCopy(cmdDeploymentTotpDisable))
+		user.AddCommand(totp)
 		cmd.AddCommand(user)
 
 		ssh := deepCopy(cmdDeploymentSSH)
@@ -505,13 +507,13 @@ allowing you to assign a different Inertia project to this remote.`,
 }
 
 var cmdDeploymentRemove = &cobra.Command{
-	Use:   "remove",
+	Use:   "uninstall",
 	Short: "Shut down Inertia and remove Inertia assets from remote host",
 	Long: `Shuts down and removes the Inertia daemon, and removes the Inertia
 directory (~/inertia) from your remote host.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		println("WARNING: This will remove Inertia from the remote")
-		println("as well as take the daemon and is irreversible. Continue? (y/n)")
+		println("WARNING: This will stop down your project and remove the Inertia daemon.")
+		println("This is irreversible. Continue? (y/n)")
 		var response string
 		_, err := fmt.Scanln(&response)
 		if err != nil || response != "y" {
@@ -524,22 +526,19 @@ directory (~/inertia) from your remote host.`,
 		if err != nil {
 			log.Fatal(err)
 		}
+		println("Stopping project...")
+		if _, err = deployment.Down(); err != nil {
+			log.Fatal(err)
+		}
 		println("Stopping daemon...")
-		err = deployment.DaemonDown()
-		if err != nil {
+		if err = deployment.DaemonDown(); err != nil {
 			log.Fatal(err)
 		}
 		println("Removing Inertia directories...")
-		err = deployment.InertiaDown()
-		if err != nil {
+		if err = deployment.UninstallInertia(); err != nil {
 			log.Fatal(err)
 		}
-		println("Shutting down project...")
-		_, err = deployment.Down()
-		if err != nil {
-			log.Fatal(err)
-		}
-		println("Inertia and related daemon removed.")
+		println("Uninstallation completed.")
 	},
 }
 
