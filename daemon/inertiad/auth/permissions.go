@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/util"
@@ -370,10 +370,13 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 	// Check the password is correct
 	props, correct, err := h.users.IsCorrectCredentials(
 		userReq.Username, userReq.Password)
-	if err != nil {
-		http.Error(w, "Bad request", http.StatusInternalServerError)
+	if err == errMissingCredentials {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if !correct {
+	} else if err != nil && err != errUserNotFound {
+		http.Error(w, "Login failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	} else if !correct || err == errUserNotFound {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
