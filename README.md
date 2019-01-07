@@ -125,7 +125,7 @@ ssh-rsa <...>
 Once this is done, you can use Inertia to bring your project online on your remote VPS:
 
 ```bash
-$> inertia $VPS_NAME up --stream
+$> inertia $VPS_NAME up
 ```
 
 Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
@@ -183,8 +183,8 @@ The primary design goals of Inertia are to:
 ### How It Works
 
 There is a detailed [Medium post](https://medium.com/ubc-launch-pad-software-engineering-blog/building-continuous-deployment-87a2bd8eedbe) that goes over the project, its motivations, the design choices we made, and Inertia's implementation. The team has also made a few presentations about Inertia that go over its design in some more detail:
-- [UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
-- [Vancouver DevOpsDays 2018](https://docs.google.com/presentation/d/e/2PACX-1vRJXUnRmxpegHNVTgn_Kd8VFyeuiIwzDQl9c0oQqi1QSnIjFUIIjawsvLdu2RfHAXv_5T8kvSgSWGuq/pub?start=false&loop=false&delayms=15000) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
+- [UBC Launch Pad internal demo](https://slides.ubclaunchpad.com/projects/inertia/demo-1.pdf)
+- [Vancouver DevOpsDays 2018](https://slides.ubclaunchpad.com/projects/inertia/devopsdays.pdf) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
 
 In summary, Inertia consists of two major components: a deployment daemon and a command line interface.
 

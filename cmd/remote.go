@@ -3,9 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/local"
 )
@@ -33,10 +33,10 @@ Inertia remotes.
 Requires Inertia to be set up via 'inertia init'.
 
 For example:
-    inertia init
-    inertia remote add gcloud
-    inertia gcloud init        # set up Inertia
-	inertia gcloud status      # check on status of Inertia daemon
+  inertia init
+  inertia remote add gcloud
+  inertia gcloud init        # set up Inertia
+  inertia gcloud status      # check on status of Inertia daemon
 `,
 }
 

@@ -12,9 +12,15 @@ all: prod-deps cli
 ls:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
+.PHONY: clean
+clean: testenv-clean
+	go clean -testcache
+	rm -f ./inertia
+	find . -type f -name inertia.\* -exec rm {} \;
+
 # Install all dependencies
 .PHONY: deps
-deps: prod-deps dev-deps
+deps: prod-deps dev-deps docker-deps
 
 # Sets up production dependencies
 .PHONY: prod-deps
@@ -26,8 +32,11 @@ prod-deps:
 .PHONY: dev-deps
 dev-deps:
 	go get -u github.com/UnnoTed/fileb0x
+	go get -u golang.org/x/lint/golint
+
+.PHONY: docker-deps
+docker-deps:
 	bash test/docker_deps.sh
-	bash test/lint_deps.sh
 
 # Install Inertia with release version
 .PHONY: cli
@@ -39,17 +48,14 @@ cli:
 cli-tagged:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
 
-# Remove Inertia binaries
-.PHONY: clean
-clean:
-	go clean -testcache
-	rm -f ./inertia
-	find . -type f -name inertia.\* -exec rm {} \;
-
 # Run static analysis
 .PHONY: lint
+lint: SHELL:=/bin/bash
 lint:
-	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=120s ./...'
+	go vet ./...
+	go test -run xxxx ./...
+	diff -u <(echo -n) <(gofmt -d -s `find . -type f -name '*.go' -not -path "./vendor/*"`)
+	diff -u <(echo -n) <(golint `go list ./... | grep -v /vendor/`)
 	(cd ./daemon/web; npm run lint)
 	(cd ./daemon/web; npm run sass-lint)
 
@@ -84,11 +90,18 @@ test-integration-fast:
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X $(CLI_VERSION_VAR)=test" --cover
 
+.PHONY: testenv-clean
+testenv-clean:
+	docker stop testvps testcontainer || true && docker rm testvps testcontainer || true
+
 # Create test VPS
 .PHONY: testenv
-testenv:
-	docker stop testvps || true && docker rm testvps || true
-	docker build -f ./test/vps/Dockerfile.$(VPS_OS) \
+testenv: docker-deps testenv-clean
+	# run nginx container for testing
+	docker run --name testcontainer -d nginx
+
+	# start vps container
+	docker build -f ./test/vps/$(VPS_OS).dockerfile \
 		-t $(VPS_OS)vps \
 		--build-arg VERSION=$(VPS_VERSION) \
 		./test

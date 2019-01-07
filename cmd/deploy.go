@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -13,9 +14,7 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/client"
 )
 
 // parseConfigArg is a dirty dirty hack to allow access to the --config argument
@@ -62,6 +61,8 @@ Requires:
 
 Continuous deployment requires the daemon's webhook address to be registered in your remote repository.
 
+If the SSH key for your remote requires a passphrase, it can be provided via 'PEM_PASSPHRASE'.
+
 Run 'inertia [remote] init' to gather this information.`,
 		}
 
@@ -82,12 +83,21 @@ Run 'inertia [remote] init' to gather this information.`,
 		adduser := deepCopy(cmdDeploymentAddUser)
 		adduser.Flags().Bool("admin", false, "create a user with administrator permissions")
 		user.AddCommand(adduser)
+
+		login := deepCopy(cmdDeploymentLogin)
+		login.Flags().String("totp", "", "auth code or backup code for 2FA")
+		user.AddCommand(login)
+
 		user.AddCommand(deepCopy(cmdDeploymentRemoveUser))
 		user.AddCommand(deepCopy(cmdDeploymentResetUsers))
 		user.AddCommand(deepCopy(cmdDeploymentListUsers))
+		user.AddCommand(deepCopy(cmdDeploymentEnableTotp))
+		user.AddCommand(deepCopy(cmdDeploymentDisableTotp))
 		cmd.AddCommand(user)
 
-		cmd.AddCommand(deepCopy(cmdDeploymentSSH))
+		ssh := deepCopy(cmdDeploymentSSH)
+		ssh.Flags().String("cmd", "/bin/sh", "command to execute over SSH")
+		cmd.AddCommand(ssh)
 
 		send := deepCopy(cmdDeploymentSendFile)
 		send.Flags().StringP("dest", "d", "", "path relative from project root to send file to")
@@ -104,6 +114,7 @@ Run 'inertia [remote] init' to gather this information.`,
 
 		cmd.AddCommand(deepCopy(cmdDeploymentInit))
 		cmd.AddCommand(deepCopy(cmdDeploymentReset))
+		cmd.AddCommand(deepCopy(cmdDeploymentToken))
 
 		remove := deepCopy(cmdDeploymentRemove)
 		cmd.AddCommand(remove)
@@ -165,7 +176,7 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			switch resp.StatusCode {
 			case http.StatusCreated:
 				fmt.Printf("(Status code %d) Project build started!\n", resp.StatusCode)
-			case http.StatusForbidden:
+			case http.StatusUnauthorized:
 				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 			case http.StatusPreconditionFailed:
 				fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
@@ -214,7 +225,7 @@ Requires project to be online - do this by running 'inertia [remote] up`,
 			fmt.Printf("(Status code %d) Project down\n", resp.StatusCode)
 		case http.StatusPreconditionFailed:
 			fmt.Printf("(Status code %d) No containers are currently active\n", resp.StatusCode)
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
@@ -234,34 +245,34 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 		if err != nil {
 			log.Fatal(err)
 		}
-		host := "http://" + deployment.RemoteVPS.GetIPAndPort()
+
 		resp, err := deployment.Status()
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer resp.Body.Close()
 
 		switch resp.StatusCode {
 		case http.StatusOK:
-			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n", resp.StatusCode, deployment.Name, host)
-			status := &common.DeploymentStatus{}
-			err := json.NewDecoder(resp.Body).Decode(status)
-			if err != nil {
+			var host = "https://" + deployment.RemoteVPS.GetIPAndPort()
+			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n",
+				resp.StatusCode, deployment.Name, host)
+			var status = &common.DeploymentStatus{}
+			if err := json.NewDecoder(resp.Body).Decode(status); err != nil {
 				log.Fatal(err)
 			}
 			println(formatStatus(status))
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer resp.Body.Close()
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		default:
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer resp.Body.Close()
 			fmt.Printf("(Status code %d) %s\n",
 				resp.StatusCode, body)
 		}
@@ -282,15 +293,18 @@ Use 'inertia [remote] status' to see which containers are active.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-		short, _ := cmd.Flags().GetBool("short")
-		entries, _ := cmd.Flags().GetInt("entries")
 
-		container := "/inertia-daemon"
+		var short, _ = cmd.Flags().GetBool("short")
+		var entries, _ = cmd.Flags().GetInt("entries")
+
+		// get daemon logs by default
+		var container = "/inertia-daemon"
 		if len(args) > 0 {
 			container = args[0]
 		}
 
 		if short {
+			// if short, just grab the last x log entries
 			resp, err := deployment.Logs(container, entries)
 			if err != nil {
 				log.Fatal(err)
@@ -304,7 +318,7 @@ Use 'inertia [remote] status' to see which containers are active.`,
 			switch resp.StatusCode {
 			case http.StatusOK:
 				fmt.Printf("(Status code %d) Logs: \n%s\n", resp.StatusCode, body)
-			case http.StatusForbidden:
+			case http.StatusUnauthorized:
 				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
 			case http.StatusPreconditionFailed:
 				fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
@@ -313,6 +327,7 @@ Use 'inertia [remote] status' to see which containers are active.`,
 					resp.StatusCode, body)
 			}
 		} else {
+			// if not short, open a websocket to stream logs
 			socket, err := deployment.LogsWebSocket(container, entries)
 			if err != nil {
 				log.Fatal(err)
@@ -366,8 +381,7 @@ var cmdDeploymentSSH = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		session := client.NewSSHRunner(deployment.RemoteVPS)
-		if err = session.RunSession(); err != nil {
+		if err = deployment.SSH.RunSession(args...); err != nil {
 			log.Fatal(err.Error())
 		}
 	},
@@ -415,8 +429,7 @@ var cmdDeploymentSendFile = &cobra.Command{
 		remotePath := path.Join(projectPath, dest)
 
 		// Initiate copy
-		session := client.NewSSHRunner(deployment.RemoteVPS)
-		err = session.CopyFile(f, remotePath, permissions)
+		err = deployment.SSH.CopyFile(f, remotePath, permissions)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -482,7 +495,7 @@ allowing you to assign a different Inertia project to this remote.`,
 		switch resp.StatusCode {
 		case http.StatusOK:
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-		case http.StatusForbidden:
+		case http.StatusUnauthorized:
 			fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
@@ -527,5 +540,39 @@ directory (~/inertia) from your remote host.`,
 			log.Fatal(err)
 		}
 		println("Inertia and related daemon removed.")
+	},
+}
+
+var cmdDeploymentToken = &cobra.Command{
+	Use:   "token",
+	Short: "Generate tokens associated with permission levels for admin to share.",
+	Long:  `Generate tokens associated with permission levels for team leads to share`,
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resp, err := deployment.Token()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			fmt.Printf("New token: %s\n", string(body))
+		case http.StatusUnauthorized:
+			fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, string(body))
+		default:
+			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
+				resp.StatusCode, body)
+		}
 	},
 }

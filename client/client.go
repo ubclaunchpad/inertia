@@ -28,13 +28,13 @@ type Client struct {
 
 	out io.Writer
 
-	sshRunner SSHSession
+	SSH       SSHSession
 	verifySSL bool
 }
 
 // NewClient sets up a client to communicate to the daemon at
 // the given named remote.
-func NewClient(remoteName string, config *cfg.Config, out ...io.Writer) (*Client, bool) {
+func NewClient(remoteName, keyPassphrase string, config *cfg.Config, out ...io.Writer) (*Client, bool) {
 	remote, found := config.GetRemote(remoteName)
 	if !found {
 		return nil, false
@@ -48,12 +48,13 @@ func NewClient(remoteName string, config *cfg.Config, out ...io.Writer) (*Client
 	}
 
 	return &Client{
-		RemoteVPS:     remote,
+		RemoteVPS: remote,
+		SSH:       NewSSHRunner(remote, keyPassphrase),
+
 		version:       config.Version,
 		project:       config.Project,
 		buildType:     config.BuildType,
 		buildFilePath: config.BuildFilePath,
-		sshRunner:     NewSSHRunner(remote),
 
 		out: writer,
 	}, true
@@ -73,7 +74,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	fmt.Fprintf(c.out, "Setting up remote %s at %s\n", c.Name, c.IP)
 
 	fmt.Fprint(c.out, ">> Step 1/4: Installing docker...\n")
-	err := c.installDocker(c.sshRunner)
+	err := c.installDocker(c.SSH)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	if err != nil {
 		return err
 	}
-	pub, err := c.keyGen(c.sshRunner)
+	pub, err := c.keyGen(c.SSH)
 	if err != nil {
 		return err
 	}
@@ -99,7 +100,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	}
 
 	fmt.Fprint(c.out, ">> Step 4/4: Fetching daemon API token...\n")
-	token, err := c.getDaemonAPIToken(c.sshRunner, c.version)
+	token, err := c.getDaemonAPIToken(c.SSH, c.version)
 	if err != nil {
 		return err
 	}
@@ -107,7 +108,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 
 	fmt.Fprint(c.out, "\nInertia has been set up and daemon is running on remote!")
 	fmt.Fprint(c.out, "\nYou may have to wait briefly for Inertia to set up some dependencies.")
-	fmt.Fprintf(c.out, "\nUse 'inertia %s logs --stream' to check on the daemon's setup progress.\n\n", c.Name)
+	fmt.Fprintf(c.out, "\nUse 'inertia %s logs' to check on the daemon's setup progress.\n\n", c.Name)
 
 	fmt.Fprint(c.out, "=============================\n\n")
 
@@ -119,9 +120,12 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	fmt.Fprintf(c.out, "\n>> GitHub WebHook URL (add to https://www.github.com/%s/settings/hooks/new):\n", repoName)
 	fmt.Fprintf(c.out, "Address:  https://%s:%s/webhook\n", c.IP, c.Daemon.Port)
 	fmt.Fprintf(c.out, "Secret:   %s\n", c.Daemon.WebHookSecret)
-	fmt.Fprint(c.out, "\n"+`Note that you will have to disable SSH verification in your webhook
+	fmt.Fprint(c.out, "\n"+`Note that you will have to disable SSL verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
 be able to verify.`+"\n")
+	fmt.Fprint(c.out, "\n"+`Note that you will also have to set the Content-Type for your webhook
+to application/json - GitHub defaults to application/x-www-form-urlencoded, which is not yet
+supported.`+"\n")
 
 	fmt.Fprint(c.out, "\n"+`Inertia daemon successfully deployed! Add your webhook url and deploy
 key to your repository to enable continuous deployment.`+"\n")
@@ -139,7 +143,7 @@ func (c *Client) DaemonUp(daemonVersion, host, daemonPort string) error {
 
 	// Run inertia daemon.
 	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion, daemonPort, host)
-	return c.sshRunner.RunStream(daemonCmdStr, false)
+	return c.SSH.RunStream(daemonCmdStr, false)
 }
 
 // DaemonDown brings the daemon down on the remote instance
@@ -149,7 +153,7 @@ func (c *Client) DaemonDown() error {
 		return err
 	}
 
-	_, stderr, err := c.sshRunner.Run(string(scriptBytes))
+	_, stderr, err := c.SSH.Run(string(scriptBytes))
 	if err != nil {
 		return fmt.Errorf("daemon shutdown failed: %s: %s", err.Error(), stderr.String())
 	}
@@ -164,7 +168,7 @@ func (c *Client) InertiaDown() error {
 		return err
 	}
 
-	_, stderr, err := c.sshRunner.Run(string(scriptBytes))
+	_, stderr, err := c.SSH.Run(string(scriptBytes))
 	if err != nil {
 		return fmt.Errorf("Inertia down failed: %s: %s", err.Error(), stderr.String())
 	}
@@ -181,9 +185,8 @@ func (c *Client) installDocker(session SSHSession) error {
 
 	// Install docker.
 	cmdStr := string(installDockerSh)
-	_, stderr, err := session.Run(cmdStr)
-	if err != nil {
-		return fmt.Errorf("docker installation: %s: %s", err.Error(), stderr.String())
+	if err = session.RunStream(cmdStr, false); err != nil {
+		return fmt.Errorf("docker installation: %s", err.Error())
 	}
 
 	return nil
@@ -243,6 +246,21 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 			Branch:    c.Branch,
 		},
 	})
+}
+
+// LogIn gets an access token for the user with the given credentials. Use ""
+// for totp if none is required.
+func (c *Client) LogIn(user, password, totp string) (*http.Response, error) {
+	return c.post("/user/login", &common.UserRequest{
+		Username: user,
+		Password: password,
+		Totp:     totp,
+	})
+}
+
+// Token generates token on this remote.
+func (c *Client) Token() (*http.Response, error) {
+	return c.get("/token", nil)
 }
 
 // Prune clears Docker ReadFiles on this remote.
@@ -346,6 +364,19 @@ func (c *Client) ResetUsers() (*http.Response, error) {
 // ListUsers lists all users on the remote.
 func (c *Client) ListUsers() (*http.Response, error) {
 	return c.get("/user/list", nil)
+}
+
+// EnableTotp enables Totp for a given user
+func (c *Client) EnableTotp(username, password string) (*http.Response, error) {
+	return c.post("/user/totp/enable", &common.UserRequest{
+		Username: username,
+		Password: password,
+	})
+}
+
+// DisableTotp disables Totp for a given user
+func (c *Client) DisableTotp() (*http.Response, error) {
+	return c.post("/user/totp/disable", nil)
 }
 
 // Sends a GET request. "queries" contains query string arguments.

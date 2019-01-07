@@ -20,9 +20,9 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 		decrypt bool
 		wantErr bool
 	}{
+		{"invalid env", args{"", "", true}, true, true},
 		{"no encrypt", args{"myvar1", "mysekret", false}, true, false},
 		{"encrypt", args{"myvar2", "myothersekret", true}, true, false},
-		{"invalid env", args{"", "", true}, true, true},
 		{"no decrypt", args{"myvar", "asdfasdf", true}, true, false},
 	}
 	for _, tt := range tests {
@@ -54,7 +54,7 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 			}
 
 			// Remove
-			err = c.RemoveEnvVariable(tt.args.name)
+			err = c.RemoveEnvVariables(tt.args.name)
 			assert.Nil(t, err)
 			vars, err = c.GetEnvVariables(false)
 			assert.Nil(t, err)

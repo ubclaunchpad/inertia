@@ -1,12 +1,12 @@
 package client
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/ubclaunchpad/inertia/cfg"
@@ -17,37 +17,42 @@ import (
 type SSHSession interface {
 	Run(cmd string) (*bytes.Buffer, *bytes.Buffer, error)
 	RunStream(cmd string, interactive bool) error
-	RunSession() error
+	RunSession(commands ...string) error
 	CopyFile(f io.Reader, remotePath string, permissions string) error
 }
 
 // SSHRunner runs commands over SSH and captures results.
 type SSHRunner struct {
-	pem     string
 	user    string
 	ip      string
 	sshPort string
+
+	pemPath       string
+	pemPassphrase string
 }
 
 // NewSSHRunner returns a new SSHRunner
-func NewSSHRunner(r *cfg.RemoteVPS) *SSHRunner {
+func NewSSHRunner(r *cfg.RemoteVPS, keyPassphrase string) *SSHRunner {
 	if r != nil {
 		return &SSHRunner{
-			pem:     r.PEM,
 			user:    r.User,
 			ip:      r.IP,
 			sshPort: r.SSHPort,
+
+			pemPath:       r.PEM,
+			pemPassphrase: keyPassphrase,
 		}
 	}
 	return &SSHRunner{}
 }
 
 // Run runs a command remotely.
-func (runner *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Buffer, err error) {
-	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
+func (r *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Buffer, err error) {
+	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
 	if err != nil {
 		return nil, nil, err
 	}
+	defer session.Close()
 
 	// Capture result.
 	var stdout, stderr bytes.Buffer
@@ -61,11 +66,12 @@ func (runner *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Bu
 
 // RunStream remotely executes given command, streaming its output
 // and opening up an optionally interactive session
-func (runner *SSHRunner) RunStream(cmd string, interactive bool) error {
-	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
+func (r *SSHRunner) RunStream(cmd string, interactive bool) error {
+	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
 	if err != nil {
 		return err
 	}
+	defer session.Close()
 
 	// Pipe input and outputs.
 	session.Stdout = os.Stdout
@@ -79,44 +85,24 @@ func (runner *SSHRunner) RunStream(cmd string, interactive bool) error {
 }
 
 // RunSession sets up a SSH shell to the remote
-func (runner *SSHRunner) RunSession() error {
-	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
-	if err != nil {
-		return err
-	}
-
-	// Set IO
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
-	in, _ := session.StdinPipe()
-
-	// Set up terminal modes
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,     // disable echoing
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
-	}
-
-	// Request pseudo terminal
-	if err := session.RequestPty("xterm", 80, 40, modes); err != nil {
-		return err
-	}
-
-	// Start remote shell
-	if err := session.Shell(); err != nil {
-		return err
-	}
-
-	// Accepting commands
-	for {
-		reader := bufio.NewReader(os.Stdin)
-		str, _ := reader.ReadString('\n')
-		fmt.Fprint(in, str)
-	}
+func (r *SSHRunner) RunSession(commands ...string) error {
+	var (
+		target = fmt.Sprintf("%s@%s", r.user, r.ip)
+		args   = append([]string{
+			"-p", r.sshPort,
+			"-i", r.pemPath,
+			target},
+			commands...)
+		cmd = exec.Command("ssh", args...)
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 // CopyFile copies given reader to remote
-func (runner *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions string) error {
+func (r *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions string) error {
 	// Open and read file
 	contents, err := ioutil.ReadAll(file)
 	if err != nil {
@@ -127,10 +113,11 @@ func (runner *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions
 	// Set up
 	filename := filepath.Base(remotePath)
 	directory := filepath.Dir(remotePath)
-	session, err := getSSHSession(runner.pem, runner.ip, runner.sshPort, runner.user)
+	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
 	if err != nil {
 		return err
 	}
+	defer session.Close()
 
 	// Send file contents
 	go func() {
@@ -145,13 +132,13 @@ func (runner *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions
 }
 
 // Stubbed out for testing.
-func getSSHSession(PEM, IP, sshPort, user string) (*ssh.Session, error) {
+func getSSHSession(PEM, IP, sshPort, user, passphrase string) (*ssh.Session, error) {
 	privateKey, err := ioutil.ReadFile(PEM)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg, err := getSSHConfig(privateKey, user)
+	cfg, err := getSSHConfig(privateKey, user, passphrase)
 	if err != nil {
 		return nil, err
 	}
@@ -166,10 +153,17 @@ func getSSHSession(PEM, IP, sshPort, user string) (*ssh.Session, error) {
 }
 
 // getSSHConfig returns SSH configuration for the remote.
-func getSSHConfig(privateKey []byte, user string) (*ssh.ClientConfig, error) {
-	key, err := ssh.ParsePrivateKey(privateKey)
-	if err != nil {
-		return nil, err
+func getSSHConfig(privateKey []byte, user, passphrase string) (*ssh.ClientConfig, error) {
+	var key ssh.Signer
+	var err error
+	if passphrase == "" {
+		if key, err = ssh.ParsePrivateKey(privateKey); err != nil {
+			return nil, fmt.Errorf("failed to parse key without passphrase: %s", err.Error())
+		}
+	} else {
+		if key, err = ssh.ParsePrivateKeyWithPassphrase(privateKey, []byte(passphrase)); err != nil {
+			return nil, fmt.Errorf("failed to parse key with passphrase: %s", err.Error())
+		}
 	}
 
 	// Authentication

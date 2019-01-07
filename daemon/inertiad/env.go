@@ -50,7 +50,7 @@ func envPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Add, update, or remove values from storage
 	if envReq.Remove {
-		err = manager.RemoveEnvVariable(envReq.Name)
+		err = manager.RemoveEnvVariables(envReq.Name)
 	} else {
 		err = manager.AddEnvVariable(
 			envReq.Name, envReq.Value, envReq.Encrypt,

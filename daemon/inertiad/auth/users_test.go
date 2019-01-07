@@ -126,3 +126,75 @@ func TestTooManyLogins(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, errUserNotFound, err)
 }
+
+func TestEnableTotp(t *testing.T) {
+	dir := "./test_users"
+	manager, err := getTestUserManager(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer manager.Close()
+
+	err = manager.AddUser("bobheadxi", "best_person_ever", true)
+	assert.Nil(t, err)
+
+	manager.EnableTotp("bobheadxi")
+	result, err := manager.IsTotpEnabled("bobheadxi")
+	assert.Nil(t, err)
+	assert.True(t, result)
+}
+
+func TestDisableTotp(t *testing.T) {
+	dir := "./test_users"
+	manager, err := getTestUserManager(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer manager.Close()
+
+	err = manager.AddUser("bobheadxi", "best_person_ever", true)
+	assert.Nil(t, err)
+
+	manager.EnableTotp("bobheadxi")
+	result, err := manager.IsTotpEnabled("bobheadxi")
+	assert.Nil(t, err)
+	assert.True(t, result)
+
+	manager.DisableTotp("bobheadxi")
+	result, err = manager.IsTotpEnabled("bobheadxi")
+	assert.Nil(t, err)
+	assert.False(t, result)
+}
+
+func TestRemoveBackupCode(t *testing.T) {
+	dir := "./test_users"
+	manager, err := getTestUserManager(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer manager.Close()
+
+	err = manager.AddUser("bobheadxi", "best_person_ever", true)
+	assert.Nil(t, err)
+
+	// good code
+	_, backupCodes, err := manager.EnableTotp("bobheadxi")
+	result, err := manager.IsValidBackupCode("bobheadxi", backupCodes[0])
+	assert.Nil(t, err)
+	assert.True(t, result)
+
+	// bad code
+	result, err = manager.IsValidBackupCode("bobheadxi", "abcde-fghij")
+	assert.Nil(t, err)
+	assert.False(t, result)
+
+	// consume the good code
+	err = manager.RemoveBackupCode("bobheadxi", backupCodes[0])
+	assert.Nil(t, err)
+
+	// good code should now fail
+	result, err = manager.IsValidBackupCode("bobheadxi", backupCodes[0])
+	assert.Nil(t, err)
+	assert.False(t, result)
+
+	// removing already removed should fail
+	err = manager.RemoveBackupCode("bobheadxi", backupCodes[0])
+	assert.NotNil(t, err)
+}

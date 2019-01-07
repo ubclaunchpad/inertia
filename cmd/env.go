@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/local"
 )

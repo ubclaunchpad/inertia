@@ -1,6 +1,6 @@
 language: go
 go:
-  - "1.10"
+  - "1.11"
 services:
   - docker
 
@@ -29,36 +29,50 @@ jobs:
         - make web-deps           # cache node_modules
 
     ############################
+    #          Linters         #
+    ############################
+    - stage: lint
+      install: go get -u golang.org/x/lint/golint
+      script: make lint
+
+    ############################
     #     Tests and Linting    #
     ############################
     - &test
       stage: tests and static analysis
+      name: "Core Tests"
       install:
-        - make testenv VPS_OS=ubuntu VPS_VERSION=16.04 SSH_PORT=69
         - bash test/docker_deps.sh
-      before_script:
-        - make testdaemon-scp SSH_PORT=69
       script:
-        - go test -race -coverprofile=coverage.txt ./...
+        - docker run --name testcontainer -d nginx
+        - go test -race -tags no_bootstrap -coverprofile=coverage.txt ./...
       after_success:
         - bash <(curl -s https://codecov.io/bash)
 
     # Make sure bootstrap works on various other VPS platforms
     - &bootstraptest 
       <<: *test
+      name: "Bootstrap Test (debian:9.3)"
       install: make testenv VPS_OS=debian VPS_VERSION=9.3 SSH_PORT=69
-      script: go test ./... -v -run 'TestBootstrapIntegration' -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
-      after_success: true
+      script:
+        - make testdaemon-scp
+        - go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
+      after_success:
+        - bash <(curl -s https://codecov.io/bash)
     - <<: *bootstraptest
+      name: "Bootstrap Test (centos:7)"
       install: make testenv VPS_OS=centos VPS_VERSION=7 SSH_PORT=69
     - <<: *bootstraptest
+      name: "Bootstrap Test (amazonos:1)"
       install: make testenv VPS_OS=amazon VPS_VERSION=1 SSH_PORT=69
     # - <<: *bootstraptest
     #   install: make testenv VPS_OS=amazon VPS_VERSION=2 SSH_PORT=69
-
-    # Run linter and static analysis
-    - install: bash test/lint_deps.sh
-      script: make lint
+    - <<: *bootstraptest
+      name: "Bootstrap Test (ubuntu:16.04)"
+      install: make testenv VPS_OS=ubuntu VPS_VERSION=16.04 SSH_PORT=69
+    - <<: *bootstraptest
+      name: "Bootstrap Test (ubuntu:18.04)"
+      install: make testenv VPS_OS=ubuntu VPS_VERSION=18.04 SSH_PORT=69
 
     ############################
     #    Build tag "latest"    #
@@ -87,7 +101,6 @@ jobs:
           secure: eHe5lL6mVp6XQM5sdUQHWcugROAjZC5Gf81flIjM/4K1ceUQfblIQ3/suXOHBXl+jGro0DTlI/a8S9zKb3NDdlTiXjABQD8KkWNMfEqajUInRwSFE7vSvydzJDuwO00KZOuFKdp2hZwpO2jbODZvHEnYONTClle5pV6bzhp4JaY1P0CjAl6/E67WVjpNQmHNIlzcZ7PRLe7KcjEl5N7DIg/B4R19EiBTjaPsCh8xP/T68cqVVa+4cwUAxN6Xd0ca81T9dkhppRL9tiJRn6iP/x64paIeWV0pF80V2PKTwbI9Ox0mcd7TWkHFD4taV+UwQUeOeN3OR7NHfzyPtWUcCVOp3wxFKvWySPYNeh8x8OrFh7HzIMl+20SQ/rdEsJJ6cfMx+qp+RBJmSj+Btm/ZxfEZgjRTg2jiCeUNnNpBL+46U49TVPTuw7+K97x/cGRF9k0JAfkq75tQTPCoQwmkCqTeJ6KGwFwlDx5+OUCJz3WS0XfQ6k88eYQygmBBdWqoHXUS75vOa96GVN1JSp8tBpSp0lUp+U2QQJkIy9VN9NpMlsbn3r5Ssk/AtEhal1fpT5tncPvzphwSKDH3WtCJ+FJjMajBIlZA2yop1VdsVJzKFBo2DH+yn8qd1tIsp5C+HDPvulCYMFCg7zJk0ksXZVERTGnrnRBSENW+Ut1avJ0=
         file_glob: true
         file: inertia.v*
-        go: "1.10"
         on:
           repo: ubclaunchpad/inertia
           branch: master
