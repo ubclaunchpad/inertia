@@ -122,7 +122,7 @@ Run 'inertia [remote] init' to gather this information.`,
 		cmd.AddCommand(remove)
 
 		upgrade := deepCopy(cmdDeploymentUpgrade)
-		upgrade.Flags().String("version", "v", "version of Inertia daemon to spin up")
+		upgrade.Flags().String("version", "", "version of Inertia daemon to spin up")
 		cmd.AddCommand(upgrade)
 
 		// Attach a "short" option on all commands
