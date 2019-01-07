@@ -510,8 +510,8 @@ var cmdDeploymentRemove = &cobra.Command{
 	Long: `Shuts down and removes the Inertia daemon, and removes the Inertia
 directory (~/inertia) from your remote host.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		println("WARNING: This will remove Inertia from the remote")
-		println("as well as take the daemon and is irreversible. Continue? (y/n)")
+		println("WARNING: This will stop down your project and remove the Inertia daemon.")
+		println("This is irreversible. Continue? (y/n)")
 		var response string
 		_, err := fmt.Scanln(&response)
 		if err != nil || response != "y" {
@@ -524,6 +524,8 @@ directory (~/inertia) from your remote host.`,
 		if err != nil {
 			log.Fatal(err)
 		}
+		println("Stopping project...")
+		deployment.Down()
 		println("Stopping daemon...")
 		err = deployment.DaemonDown()
 		if err != nil {
