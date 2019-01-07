@@ -121,6 +121,10 @@ Run 'inertia [remote] init' to gather this information.`,
 		remove := deepCopy(cmdDeploymentRemove)
 		cmd.AddCommand(remove)
 
+		upgrade := deepCopy(cmdDeploymentUpgrade)
+		upgrade.Flags().String("version", "v", "version of Inertia daemon to spin up")
+		cmd.AddCommand(upgrade)
+
 		// Attach a "short" option on all commands
 		cmd.PersistentFlags().BoolP(
 			"short", "s", false,
@@ -572,6 +576,34 @@ var cmdDeploymentToken = &cobra.Command{
 		default:
 			fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
 				resp.StatusCode, body)
+		}
+	},
+}
+
+var cmdDeploymentUpgrade = &cobra.Command{
+	Use:   "upgrade",
+	Short: "Upgrade Inertia daemon to match the CLI.",
+	Long:  `Restarts the Inertia daemon to upgrade it to the same version as your CLI`,
+	Run: func(cmd *cobra.Command, args []string) {
+		remoteName := strings.Split(cmd.Parent().Use, " ")[0]
+		deployment, _, err := local.GetClient(remoteName, configFilePath, cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		println("Shutting down daemon...")
+		if err := deployment.DaemonDown(); err != nil {
+			log.Fatal(err)
+		}
+
+		var version = Version
+		if v, _ := cmd.Flags().GetString("version"); v != "" {
+			version = v
+		}
+
+		fmt.Printf("Starting up the Inertia daemon (version %s)", version)
+		if err := deployment.DaemonUp(version); err != nil {
+			log.Fatal(err)
 		}
 	},
 }
