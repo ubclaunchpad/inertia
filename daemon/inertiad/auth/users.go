@@ -12,6 +12,7 @@ var (
 	errSessionNotFound    = errors.New("session not found")
 	errUserNotFound       = errors.New("user not found")
 	errBackupCodeNotFound = errors.New("backup code not found")
+	errMissingCredentials = errors.New("no credentials provided")
 )
 
 const (
@@ -149,7 +150,7 @@ func (m *userManager) HasUser(username string) error {
 // IsCorrectCredentials checks if username and password has a match in the database
 func (m *userManager) IsCorrectCredentials(username, password string) (*userProps, bool, error) {
 	if username == "" || password == "" {
-		return nil, false, errors.New("Invalid credentials provided")
+		return nil, false, errMissingCredentials
 	}
 
 	var (
