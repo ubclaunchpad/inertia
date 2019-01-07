@@ -536,7 +536,7 @@ directory (~/inertia) from your remote host.`,
 		if err = deployment.UninstallInertia(); err != nil {
 			log.Fatal(err)
 		}
-		println("Inertia and related daemon removed.")
+		println("Uninstallation completed.")
 	},
 }
 
