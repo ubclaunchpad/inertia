@@ -525,20 +525,15 @@ directory (~/inertia) from your remote host.`,
 			log.Fatal(err)
 		}
 		println("Stopping project...")
-		deployment.Down()
+		if _, err = deployment.Down(); err != nil {
+			log.Fatal(err)
+		}
 		println("Stopping daemon...")
-		err = deployment.DaemonDown()
-		if err != nil {
+		if err = deployment.DaemonDown(); err != nil {
 			log.Fatal(err)
 		}
 		println("Removing Inertia directories...")
-		err = deployment.InertiaDown()
-		if err != nil {
-			log.Fatal(err)
-		}
-		println("Shutting down project...")
-		_, err = deployment.Down()
-		if err != nil {
+		if err = deployment.UninstallInertia(); err != nil {
 			log.Fatal(err)
 		}
 		println("Inertia and related daemon removed.")
