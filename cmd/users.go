@@ -253,10 +253,16 @@ var cmdDeploymentListUsers = &cobra.Command{
 	},
 }
 
-var cmdDeploymentEnableTotp = &cobra.Command{
-	Use:   "enable-totp [user]",
-	Short: "Enable Totp for a user",
-	Long:  "Enable Totp for a user on your remote",
+var cmdDeploymentTotp = &cobra.Command{
+	Use:   "totp",
+	Short: "Manage TOTP settings for a user",
+	Long:  "Manage TOTP settings for a registered user on your Inertia daemon",
+}
+
+var cmdDeploymentTotpEnable = &cobra.Command{
+	Use:   "enable [user]",
+	Short: "Enable TOTP for a user",
+	Long:  "Enable TOTP for a user on your remote",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
@@ -317,10 +323,10 @@ var cmdDeploymentEnableTotp = &cobra.Command{
 	},
 }
 
-var cmdDeploymentDisableTotp = &cobra.Command{
-	Use:   "disable-totp [user]",
-	Short: "Disable Totp for a user",
-	Long:  "Disable Totp for a user on your remote",
+var cmdDeploymentTotpDisable = &cobra.Command{
+	Use:   "disable [user]",
+	Short: "Disable TOTP for a user",
+	Long:  "Disable TOTP for a user on your remote",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		remoteName := strings.Split(cmd.Parent().Parent().Use, " ")[0]
