@@ -1,4 +1,4 @@
-package main
+package daemon
 
 import (
 	"net/http"
@@ -8,16 +8,13 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
-// downHandler tries to take the deployment offline
-func downHandler(w http.ResponseWriter, r *http.Request) {
-	cli, err := containers.NewDockerClient()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusPreconditionFailed)
-		return
-	}
-	defer cli.Close()
+const (
+	msgNoDeployment = "No deployment is currently active on this remote - try running 'inertia [remote] up'"
+)
 
-	if status, _ := deployment.GetStatus(cli); len(status.Containers) == 0 {
+// downHandler tries to take the deployment offline
+func (s *Server) downHandler(w http.ResponseWriter, r *http.Request) {
+	if status, _ := s.deployment.GetStatus(s.docker); len(status.Containers) == 0 {
 		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
@@ -28,8 +25,7 @@ func downHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	defer logger.Close()
 
-	err = deployment.Down(cli, logger)
-	if err == containers.ErrNoContainers {
+	if err := s.deployment.Down(s.docker, logger); err == containers.ErrNoContainers {
 		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
 		return
 	} else if err != nil {

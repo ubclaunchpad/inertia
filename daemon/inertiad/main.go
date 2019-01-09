@@ -3,9 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/daemon"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 // Version is the current build of Inertia
@@ -14,8 +20,8 @@ var Version string
 // runCmd starts the daemon
 var runCmd = &cobra.Command{
 	Version: getVersion(),
-	Use:     "run [host] [key path] [ssl directory] [userdb dir]",
-	Short:   "Run the daemon",
+	Use:     "run [host]",
+	Short:   "Initialize deployment and run the daemon",
 	Long: `Runs the daemon on a port, default 4303. Requires
 host address as an argument.
 
@@ -23,11 +29,28 @@ Example:
     inertia daemon run 0.0.0.0 -p 8081`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		port, err := cmd.Flags().GetString("port")
+		var conf = cfg.New()
+
+		// Set up deployment
+		var projectDatabasePath = path.Join(conf.DataDirectory, "project.db")
+		deployment, err := project.NewDeployment(
+			conf.ProjectDirectory, projectDatabasePath,
+			build.NewBuilder(*conf, containers.StopActiveContainers))
 		if err != nil {
-			println(err)
+			println(err.Error())
+			return
 		}
-		run(args[0], port, Version)
+
+		// Initialize daemon
+		server, err := daemon.New(Version, *conf, deployment)
+		if err != nil {
+			println(err.Error())
+			return
+		}
+		defer server.Close()
+
+		var port, _ = cmd.Flags().GetString("port")
+		println(server.Run(args[0], port))
 	},
 }
 

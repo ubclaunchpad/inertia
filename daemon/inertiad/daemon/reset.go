@@ -1,16 +1,15 @@
-package main
+package daemon
 
 import (
 	"net/http"
 	"os"
 
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
 // resetHandler shuts down and wipes the project directory
-func resetHandler(w http.ResponseWriter, r *http.Request) {
-	if deployment == nil {
+func (s *Server) resetHandler(w http.ResponseWriter, r *http.Request) {
+	if s.deployment == nil {
 		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
@@ -21,16 +20,8 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	defer logger.Close()
 
-	cli, err := containers.NewDockerClient()
-	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-
 	// Goodbye deployment
-	err = deployment.Destroy(cli, logger)
-	if err != nil {
+	if err := s.deployment.Destroy(s.docker, logger); err != nil {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -21,16 +21,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
-// Builder builds projects and returns a callback that can be used to deploy the project.
-// No relation to Bob the Builder, though a Bob did write this.
-type Builder interface {
-	Build(string, build.Config, *docker.Client, io.Writer) (func() error, error)
-	GetBuildStageName() string
-	StopContainers(*docker.Client, io.Writer) error
-	Prune(*docker.Client, io.Writer) error
-	PruneAll(*docker.Client, io.Writer) error
-}
-
 // Deployer manages the deployed user project
 type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) (func() error, error)
@@ -59,7 +49,7 @@ type Deployment struct {
 	buildType     string
 	buildFilePath string
 
-	builder Builder
+	builder build.ContainerBuilder
 
 	repo *gogit.Repository
 	auth ssh.AuthMethod
@@ -79,7 +69,7 @@ type DeploymentConfig struct {
 }
 
 // NewDeployment creates a new deployment
-func NewDeployment(projectDirectory, databasePath string, builder Builder) (*Deployment, error) {
+func NewDeployment(projectDirectory, databasePath string, builder build.ContainerBuilder) (*Deployment, error) {
 	// Set up deployment database
 	manager, err := newDataManager(databasePath)
 	if err != nil {
@@ -144,8 +134,11 @@ type DeployOptions struct {
 }
 
 // Deploy will update, build, and deploy the project
-func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
-	opts DeployOptions) (func() error, error) {
+func (d *Deployment) Deploy(
+	cli *docker.Client,
+	out io.Writer,
+	opts DeployOptions,
+) (func() error, error) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	fmt.Println(out, "Preparing to deploy project")

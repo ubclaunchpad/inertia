@@ -1,4 +1,4 @@
-package main
+package daemon
 
 import (
 	"net/http"
@@ -8,14 +8,17 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project/mocks"
 )
 
 func TestDownHandlerNoDeployment(t *testing.T) {
-	deployment = &FakeDeployment{
-		GetStatusFunc: func(*docker.Client) (common.DeploymentStatus, error) {
-			return common.DeploymentStatus{
-				Containers: []string{},
-			}, nil
+	var s = &Server{
+		deployment: &mocks.FakeDeployer{
+			GetStatusStub: func(*docker.Client) (common.DeploymentStatus, error) {
+				return common.DeploymentStatus{
+					Containers: []string{},
+				}, nil
+			},
 		},
 	}
 
@@ -25,7 +28,7 @@ func TestDownHandlerNoDeployment(t *testing.T) {
 
 	// Record responses
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(downHandler)
+	handler := http.HandlerFunc(s.downHandler)
 
 	handler.ServeHTTP(recorder, req)
 	assert.Equal(t, recorder.Code, http.StatusPreconditionFailed)
