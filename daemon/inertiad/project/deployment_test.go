@@ -1,30 +1,14 @@
 package project
 
 import (
-	"io"
 	"os"
 	"testing"
 
-	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/mocks"
 	gogit "gopkg.in/src-d/go-git.v4"
 )
-
-type MockBuilder struct {
-	builder func() error
-	stopper func() error
-}
-
-func (m *MockBuilder) Build(string, build.Config, *docker.Client, io.Writer) (func() error, error) {
-	return m.builder, nil
-}
-
-func (m *MockBuilder) GetBuildStageName() string                      { return "build" }
-func (m *MockBuilder) StopContainers(*docker.Client, io.Writer) error { return nil }
-func (m *MockBuilder) Prune(*docker.Client, io.Writer) error          { return m.stopper() }
-func (m *MockBuilder) PruneAll(*docker.Client, io.Writer) error       { return m.stopper() }
 
 func TestSetConfig(t *testing.T) {
 	deployment := &Deployment{}
@@ -47,7 +31,7 @@ func TestDeployMock(t *testing.T) {
 	d := Deployment{
 		directory: "./test/",
 		buildType: "test",
-		builder: &MockBuilder{
+		builder: &mocks.FakeBuilder{
 			builder: func() error {
 				buildCalled = true
 				return nil

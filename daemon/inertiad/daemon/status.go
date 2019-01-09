@@ -1,4 +1,4 @@
-package main
+package daemon
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 
 // statusHandler returns a formatted string about the status of the
 // deployment and lists currently active project containers
-func statusHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	cli, err := containers.NewDockerClient()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -18,10 +18,10 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	status, err := deployment.GetStatus(cli)
+	status, err := s.deployment.GetStatus(cli)
 	if status.CommitHash == "" {
 		status := &common.DeploymentStatus{
-			InertiaVersion: Version,
+			InertiaVersion: s.version,
 			Containers:     make([]string, 0),
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -34,7 +34,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status.InertiaVersion = Version
+	status.InertiaVersion = s.version
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

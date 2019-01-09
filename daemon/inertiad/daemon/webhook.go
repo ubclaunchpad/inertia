@@ -1,4 +1,4 @@
-package main
+package daemon
 
 import (
 	"fmt"
@@ -8,17 +8,14 @@ import (
 	"os"
 
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/webhook"
 )
 
-var webhookSecret = ""
-
 // webhookHandler receives and parses Git-based webhooks
 // Supported vendors: Github, Gitlab, Bitbucket
 // Supported events: push
-func webhookHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	// read
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -32,10 +29,10 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	host, event := webhook.Type(r.Header)
 
 	// ensure validity
-	if webhookSecret == "" {
+	if s.state.WebhookSecret == "" {
 		println("warning: no webhook secret is set up yet! set one in inertia.toml and run inertia [remote] up")
 	}
-	if err := webhook.Verify(host, webhookSecret, r.Header, body); err != nil {
+	if err := webhook.Verify(host, s.state.WebhookSecret, r.Header, body); err != nil {
 		msg := "unable to verify payload: " + err.Error()
 		http.Error(w, msg, http.StatusBadRequest)
 		println(msg)
@@ -55,7 +52,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	switch event := payload.GetEventType(); event {
 	case webhook.PushEvent:
 		fmt.Fprint(w, common.MsgDaemonOK)
-		processPushEvent(payload, os.Stdout)
+		processPushEvent(s, payload, os.Stdout)
 	// case webhook.PullEvent:
 	//	fmt.Fprint(w, common.MsgDaemonOK)
 	// 	processPullRequestEvent(payload)
@@ -77,49 +74,41 @@ func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // processPushEvent prints information about the given PushEvent.
-func processPushEvent(p webhook.Payload, out io.Writer) {
+func processPushEvent(s *Server, p webhook.Payload, out io.Writer) {
 	fmt.Fprintf(out, "Received %s push event: %s (%s)\n",
 		p.GetSource(), p.GetRepoName(), p.GetRef())
 
-	cli, err := containers.NewDockerClient()
-	if err != nil {
-		fmt.Fprintln(out, err.Error())
-		return
-	}
-	defer cli.Close()
-
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
-	if status, _ := deployment.GetStatus(cli); status.CommitHash == "" {
+	if status, _ := s.deployment.GetStatus(s.docker); status.CommitHash == "" {
 		fmt.Fprintln(out, msgNoDeployment)
 		return
 	}
 
 	// Check for matching remotes
-	err = deployment.CompareRemotes(p.GetSSHURL())
-	if err != nil {
+	if err := s.deployment.CompareRemotes(p.GetSSHURL()); err != nil {
 		fmt.Fprintln(out, err.Error())
 		return
 	}
 
 	// Check for matching branch
-	branch := common.GetBranchFromRef(p.GetRef())
-	if deployment.GetBranch() != branch {
+	var branch = common.GetBranchFromRef(p.GetRef())
+	if s.deployment.GetBranch() != branch {
 		fmt.Fprintf(out, "Ignoring event: event branch %s does not match deployed branch %s\n",
-			branch, deployment.GetBranch())
+			branch, s.deployment.GetBranch())
 		return
 	}
 
 	// If branches match, deploy
 	fmt.Fprintf(out, "Accepting event: event branch %s matches deployed branch %s\n",
-		branch, deployment.GetBranch())
-	deploy, err := deployment.Deploy(cli, os.Stdout, project.DeployOptions{})
+		branch, s.deployment.GetBranch())
+	deploy, err := s.deployment.Deploy(s.docker, os.Stdout, project.DeployOptions{})
 	if err != nil {
 		fmt.Fprintln(out, "Build failed: "+err.Error())
+		return
 	}
 
-	err = deploy()
-	if err != nil {
+	if err = deploy(); err != nil {
 		fmt.Fprintln(out, "Deploy failed: "+err.Error())
 	}
 }

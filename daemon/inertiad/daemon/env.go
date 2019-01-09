@@ -1,4 +1,4 @@
-package main
+package daemon
 
 import (
 	"encoding/json"
@@ -11,15 +11,15 @@ import (
 )
 
 // envHandler manages requests to manage environment variables
-func envHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) envHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		envPostHandler(w, r)
+		envPostHandler(s, w, r)
 	} else if r.Method == "GET" {
-		envGetHandler(w, r)
+		envGetHandler(s, w, r)
 	}
 }
 
-func envPostHandler(w http.ResponseWriter, r *http.Request) {
+func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Set up logger
 	logger := log.NewLogger(log.LoggerOptions{
 		Stdout:     os.Stdout,
@@ -42,7 +42,7 @@ func envPostHandler(w http.ResponseWriter, r *http.Request) {
 		logger.WriteErr("no variable name provided", http.StatusBadRequest)
 	}
 
-	manager, found := deployment.GetDataManager()
+	manager, found := s.deployment.GetDataManager()
 	if !found {
 		logger.WriteErr("no environment manager found", http.StatusPreconditionFailed)
 		return
@@ -64,14 +64,14 @@ func envPostHandler(w http.ResponseWriter, r *http.Request) {
 	logger.WriteSuccess("environment variable saved - this will be applied the next time your container is started", http.StatusAccepted)
 }
 
-func envGetHandler(w http.ResponseWriter, r *http.Request) {
+func envGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Set up logger
 	logger := log.NewLogger(log.LoggerOptions{
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 	})
 
-	manager, found := deployment.GetDataManager()
+	manager, found := s.deployment.GetDataManager()
 	if !found {
 		logger.WriteErr("no environment manager found", http.StatusPreconditionFailed)
 		return

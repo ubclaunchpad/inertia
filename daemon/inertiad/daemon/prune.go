@@ -1,4 +1,4 @@
-package main
+package daemon
 
 import (
 	"net/http"
@@ -9,8 +9,8 @@ import (
 )
 
 // pruneHandler cleans up Docker assets
-func pruneHandler(w http.ResponseWriter, r *http.Request) {
-	if deployment == nil {
+func (s *Server) pruneHandler(w http.ResponseWriter, r *http.Request) {
+	if s.deployment == nil {
 		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
 		return
 	}
@@ -28,10 +28,10 @@ func pruneHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	err = deployment.Prune(cli, logger)
-	if err != nil {
+	if err = s.deployment.Prune(cli, logger); err != nil {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	logger.WriteSuccess("Docker assets have been pruned.", http.StatusOK)
 }

@@ -18,6 +18,16 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
+// ContainerBuilder builds projects and returns a callback that can be used to deploy the project.
+// No relation to Bob the Builder, though a Bob did write this.
+type ContainerBuilder interface {
+	Build(string, Config, *docker.Client, io.Writer) (func() error, error)
+	GetBuildStageName() string
+	StopContainers(*docker.Client, io.Writer) error
+	Prune(*docker.Client, io.Writer) error
+	PruneAll(*docker.Client, io.Writer) error
+}
+
 // ProjectBuilder builds projects and returns a callback that can be used to deploy the project.
 // No relation to Bob the Builder, though a Bob did write this.
 type ProjectBuilder func(Config, *docker.Client, io.Writer) (func() error, error)

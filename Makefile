@@ -151,6 +151,14 @@ daemon:
 scripts:
 	fileb0x b0x.yml
 
+# Rewrites generated code
+.PHONY: gen
+gen: scripts
+	counterfeiter -o ./daemon/inertiad/mocks/deployer.go \
+		./daemon/inertiad/project/deployment.go Deployer
+	counterfeiter -o ./daemon/inertiad/mocks/builder.go \
+		./daemon/inertiad/build/builder.go ContainerBuilder
+
 # Install Inertia Web dependencies. Use PACKAGE to install something.
 .PHONY: web-deps
 web-deps:
