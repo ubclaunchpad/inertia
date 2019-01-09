@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const config = {
   mode: 'development',
-  entry: ['babel-polyfill', './index.js'],
+  entry: ['./index.js'],
   output: {
     path: `${__dirname}/public/`,
     filename: 'bundle.js',
@@ -27,7 +27,8 @@ const config = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['es2015', 'stage-3', 'react'],
+              presets: ['@babel/preset-env', '@babel/react'],
+              plugins: ['@babel/plugin-proposal-object-rest-spread'],
             },
           },
         ],

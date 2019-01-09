@@ -5,7 +5,7 @@ const mainConfig = require('./webpack.config');
 
 const config = {
   mode: 'production',
-  entry: ['babel-polyfill', './index.js'],
+  entry: mainConfig.entry,
   output: {
     path: `${__dirname}/public/`,
     filename: 'bundle.js',
