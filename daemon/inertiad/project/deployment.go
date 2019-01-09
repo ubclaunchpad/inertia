@@ -69,9 +69,15 @@ type DeploymentConfig struct {
 }
 
 // NewDeployment creates a new deployment
-func NewDeployment(projectDirectory, databasePath string, builder build.ContainerBuilder) (*Deployment, error) {
+func NewDeployment(
+	projectDirectory string,
+	databasePath string,
+	databaseKeyPath string,
+	builder build.ContainerBuilder,
+) (*Deployment, error) {
+
 	// Set up deployment database
-	manager, err := newDataManager(databasePath)
+	manager, err := NewDataManager(databasePath, databaseKeyPath)
 	if err != nil {
 		return nil, err
 	}
