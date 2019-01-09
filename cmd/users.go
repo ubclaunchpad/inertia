@@ -9,10 +9,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/ubclaunchpad/inertia/common"
-
 	qr "github.com/Baozisoftware/qrcode-terminal-go"
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/local"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -296,7 +295,7 @@ var cmdDeploymentTotpEnable = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		var totpInfo common.TotpResponse
+		var totpInfo api.TotpResponse
 		if err = json.Unmarshal(body, &totpInfo); err != nil {
 			log.Fatal(err)
 		}

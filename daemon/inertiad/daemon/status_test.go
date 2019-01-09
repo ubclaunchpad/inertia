@@ -8,15 +8,15 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project/mocks"
 )
 
 func TestStatusHandlerBuildInProgress(t *testing.T) {
 	var s = &Server{
 		deployment: &mocks.FakeDeployer{
-			GetStatusStub: func(*docker.Client) (common.DeploymentStatus, error) {
-				return common.DeploymentStatus{
+			GetStatusStub: func(*docker.Client) (api.DeploymentStatus, error) {
+				return api.DeploymentStatus{
 					Branch:               "wow",
 					CommitHash:           "abcde",
 					CommitMessage:        "",
@@ -42,8 +42,8 @@ func TestStatusHandlerBuildInProgress(t *testing.T) {
 func TestStatusHandlerNoContainers(t *testing.T) {
 	var s = &Server{
 		deployment: &mocks.FakeDeployer{
-			GetStatusStub: func(*docker.Client) (common.DeploymentStatus, error) {
-				return common.DeploymentStatus{
+			GetStatusStub: func(*docker.Client) (api.DeploymentStatus, error) {
+				return api.DeploymentStatus{
 					Branch:               "wow",
 					CommitHash:           "abcde",
 					CommitMessage:        "",
@@ -69,8 +69,8 @@ func TestStatusHandlerNoContainers(t *testing.T) {
 func TestStatusHandlerActiveContainers(t *testing.T) {
 	var s = &Server{
 		deployment: &mocks.FakeDeployer{
-			GetStatusStub: func(*docker.Client) (common.DeploymentStatus, error) {
-				return common.DeploymentStatus{
+			GetStatusStub: func(*docker.Client) (api.DeploymentStatus, error) {
+				return api.DeploymentStatus{
 					Branch:               "wow",
 					CommitHash:           "abcde",
 					CommitMessage:        "",
@@ -98,8 +98,8 @@ func TestStatusHandlerActiveContainers(t *testing.T) {
 func TestStatusHandlerStatusError(t *testing.T) {
 	var s = &Server{
 		deployment: &mocks.FakeDeployer{
-			GetStatusStub: func(*docker.Client) (common.DeploymentStatus, error) {
-				return common.DeploymentStatus{CommitHash: "1234"}, errors.New("uh oh")
+			GetStatusStub: func(*docker.Client) (api.DeploymentStatus, error) {
+				return api.DeploymentStatus{CommitHash: "1234"}, errors.New("uh oh")
 			},
 		},
 	}

@@ -7,15 +7,15 @@ import (
 
 	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project/mocks"
 )
 
 func TestDownHandlerNoDeployment(t *testing.T) {
 	var s = &Server{
 		deployment: &mocks.FakeDeployer{
-			GetStatusStub: func(*docker.Client) (common.DeploymentStatus, error) {
-				return common.DeploymentStatus{
+			GetStatusStub: func(*docker.Client) (api.DeploymentStatus, error) {
+				return api.DeploymentStatus{
 					Containers: []string{},
 				}, nil
 			},

@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/websocket"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
 	internal "github.com/ubclaunchpad/inertia/client/internal"
 	"github.com/ubclaunchpad/inertia/common"
@@ -233,13 +234,13 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 		buildType = c.buildType
 	}
 
-	return c.post("/up", &common.UpRequest{
+	return c.post("/up", &api.UpRequest{
 		Stream:        stream,
 		Project:       c.project,
 		BuildType:     buildType,
 		WebHookSecret: c.RemoteVPS.Daemon.WebHookSecret,
 		BuildFilePath: c.buildFilePath,
-		GitOptions: common.GitOptions{
+		GitOptions: api.GitOptions{
 			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
 			Branch:    c.Branch,
 		},
@@ -249,7 +250,7 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 // LogIn gets an access token for the user with the given credentials. Use ""
 // for totp if none is required.
 func (c *Client) LogIn(user, password, totp string) (*http.Response, error) {
-	return c.post("/user/login", &common.UserRequest{
+	return c.post("/user/login", &api.UserRequest{
 		Username: user,
 		Password: password,
 		Totp:     totp,
@@ -290,9 +291,9 @@ func (c *Client) Reset() (*http.Response, error) {
 
 // Logs get logs of given container
 func (c *Client) Logs(container string, entries int) (*http.Response, error) {
-	reqContent := map[string]string{common.Container: container}
+	reqContent := map[string]string{api.Container: container}
 	if entries > 0 {
-		reqContent[common.Entries] = strconv.Itoa(entries)
+		reqContent[api.Entries] = strconv.Itoa(entries)
 	}
 
 	return c.get("/logs", reqContent)
@@ -308,11 +309,11 @@ func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, err
 	// Set up request
 	url := &url.URL{Scheme: "wss", Host: host.Host, Path: "/logs"}
 	params := map[string]string{
-		common.Container: container,
-		common.Stream:    "true",
+		api.Container: container,
+		api.Stream:    "true",
 	}
 	if entries > 0 {
-		params[common.Entries] = strconv.Itoa(entries)
+		params[api.Entries] = strconv.Itoa(entries)
 	}
 	encodeQuery(url, params)
 
@@ -330,7 +331,7 @@ func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, err
 
 // UpdateEnv updates environment variable
 func (c *Client) UpdateEnv(name, value string, encrypt, remove bool) (*http.Response, error) {
-	return c.post("/env", common.EnvRequest{
+	return c.post("/env", api.EnvRequest{
 		Name: name, Value: value, Encrypt: encrypt, Remove: remove,
 	})
 }
@@ -342,7 +343,7 @@ func (c *Client) ListEnv() (*http.Response, error) {
 
 // AddUser adds an authorized user for access to Inertia Web
 func (c *Client) AddUser(username, password string, admin bool) (*http.Response, error) {
-	return c.post("/user/add", &common.UserRequest{
+	return c.post("/user/add", &api.UserRequest{
 		Username: username,
 		Password: password,
 		Admin:    admin,
@@ -351,7 +352,7 @@ func (c *Client) AddUser(username, password string, admin bool) (*http.Response,
 
 // RemoveUser prevents a user from accessing Inertia Web
 func (c *Client) RemoveUser(username string) (*http.Response, error) {
-	return c.post("/user/remove", &common.UserRequest{Username: username})
+	return c.post("/user/remove", &api.UserRequest{Username: username})
 }
 
 // ResetUsers resets all users on the remote.
@@ -366,7 +367,7 @@ func (c *Client) ListUsers() (*http.Response, error) {
 
 // EnableTotp enables Totp for a given user
 func (c *Client) EnableTotp(username, password string) (*http.Response, error) {
-	return c.post("/user/totp/enable", &common.UserRequest{
+	return c.post("/user/totp/enable", &api.UserRequest{
 		Username: username,
 		Password: password,
 	})

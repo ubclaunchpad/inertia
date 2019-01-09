@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 	msgNoDeployment       = "No deployment found - try running 'inertia [remote] up'"
 )
 
-func formatStatus(s *common.DeploymentStatus) string {
+func formatStatus(s *api.DeploymentStatus) string {
 	inertiaStatus := "inertia daemon " + s.InertiaVersion + "\n"
 	branchStatus := " - Branch:     " + s.Branch + "\n"
 	commitStatus := " - Commit:     " + s.CommitHash + "\n"

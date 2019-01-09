@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
@@ -28,7 +29,7 @@ type Deployer interface {
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
 	Prune(*docker.Client, io.Writer) error
-	GetStatus(*docker.Client) (common.DeploymentStatus, error)
+	GetStatus(*docker.Client) (api.DeploymentStatus, error)
 
 	SetConfig(DeploymentConfig)
 	GetBranch() string
@@ -230,7 +231,7 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 }
 
 // GetStatus returns the status of the deployment
-func (d *Deployment) GetStatus(cli *docker.Client) (common.DeploymentStatus, error) {
+func (d *Deployment) GetStatus(cli *docker.Client) (api.DeploymentStatus, error) {
 	var (
 		activeContainers     = make([]string, 0)
 		buildContainerActive = false
@@ -242,23 +243,23 @@ func (d *Deployment) GetStatus(cli *docker.Client) (common.DeploymentStatus, err
 
 	// No repository set up
 	if d.repo == nil {
-		return common.DeploymentStatus{Containers: activeContainers}, nil
+		return api.DeploymentStatus{Containers: activeContainers}, nil
 	}
 
 	// Get repository status
 	head, err := d.repo.Head()
 	if err != nil {
-		return common.DeploymentStatus{Containers: activeContainers}, err
+		return api.DeploymentStatus{Containers: activeContainers}, err
 	}
 	commit, err := d.repo.CommitObject(head.Hash())
 	if err != nil {
-		return common.DeploymentStatus{Containers: activeContainers}, err
+		return api.DeploymentStatus{Containers: activeContainers}, err
 	}
 
 	// Get containers, filtering out non-project containers
 	c, err := containers.GetActiveContainers(cli)
 	if err != nil && err != containers.ErrNoContainers {
-		return common.DeploymentStatus{Containers: activeContainers}, err
+		return api.DeploymentStatus{Containers: activeContainers}, err
 	}
 	for _, container := range c {
 		if !ignore[container.Names[0]] {
@@ -270,7 +271,7 @@ func (d *Deployment) GetStatus(cli *docker.Client) (common.DeploymentStatus, err
 		}
 	}
 
-	return common.DeploymentStatus{
+	return api.DeploymentStatus{
 		Branch:               strings.TrimSpace(head.Name().Short()),
 		CommitHash:           strings.TrimSpace(head.Hash().String()),
 		CommitMessage:        strings.TrimSpace(commit.Message),
