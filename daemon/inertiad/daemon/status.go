@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 )
 
@@ -20,7 +20,7 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 
 	status, err := s.deployment.GetStatus(cli)
 	if status.CommitHash == "" {
-		status := &common.DeploymentStatus{
+		status := &api.DeploymentStatus{
 			InertiaVersion: s.version,
 			Containers:     make([]string, 0),
 		}
