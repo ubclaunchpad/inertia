@@ -33,10 +33,11 @@ Example:
 
 		// Set up deployment
 		var projectDatabasePath = path.Join(conf.DataDirectory, "project.db")
+		var projectDatabaseKeypath = path.Join(conf.SecretsDirectory, "db.key")
 		deployment, err := project.NewDeployment(
 			conf.ProjectDirectory,
 			projectDatabasePath,
-			"/.inertia/db.key",
+			projectDatabaseKeypath,
 			build.NewBuilder(*conf, containers.StopActiveContainers))
 		if err != nil {
 			println(err.Error())
