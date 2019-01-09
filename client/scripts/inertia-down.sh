@@ -6,3 +6,4 @@ set -e
 
 # Remove Inertia from VPS
 sudo rm -rf ~/inertia/
+sudo rm -rf ~/.inertia/
