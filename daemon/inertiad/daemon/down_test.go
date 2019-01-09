@@ -8,7 +8,7 @@ import (
 	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/common"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/mocks"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project/mocks"
 )
 
 func TestDownHandlerNoDeployment(t *testing.T) {

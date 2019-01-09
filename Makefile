@@ -154,9 +154,9 @@ scripts:
 # Rewrites generated code
 .PHONY: gen
 gen: scripts
-	counterfeiter -o ./daemon/inertiad/mocks/deployer.go \
+	counterfeiter -o ./daemon/inertiad/project/mocks/deployer.go \
 		./daemon/inertiad/project/deployment.go Deployer
-	counterfeiter -o ./daemon/inertiad/mocks/builder.go \
+	counterfeiter -o ./daemon/inertiad/build/mocks/builder.go \
 		./daemon/inertiad/build/builder.go ContainerBuilder
 
 # Install Inertia Web dependencies. Use PACKAGE to install something.

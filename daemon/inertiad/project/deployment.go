@@ -134,8 +134,11 @@ type DeployOptions struct {
 }
 
 // Deploy will update, build, and deploy the project
-func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
-	opts DeployOptions) (func() error, error) {
+func (d *Deployment) Deploy(
+	cli *docker.Client,
+	out io.Writer,
+	opts DeployOptions,
+) (func() error, error) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	fmt.Println(out, "Preparing to deploy project")

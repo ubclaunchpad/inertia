@@ -1,14 +1,26 @@
 package project
 
 import (
+	"io"
 	"os"
 	"testing"
 
+	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build/mocks"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/mocks"
 	gogit "gopkg.in/src-d/go-git.v4"
 )
+
+func newDefaultFakeBuilder(builder func() error, stopper func() error) *mocks.FakeContainerBuilder {
+	var fakeBuilder = &mocks.FakeContainerBuilder{
+		PruneStub:    func(*docker.Client, io.Writer) error { return stopper() },
+		PruneAllStub: func(*docker.Client, io.Writer) error { return stopper() },
+	}
+	fakeBuilder.GetBuildStageNameReturns("build")
+	fakeBuilder.BuildReturns(builder, nil)
+	return fakeBuilder
+}
 
 func TestSetConfig(t *testing.T) {
 	deployment := &Deployment{}
@@ -26,21 +38,24 @@ func TestSetConfig(t *testing.T) {
 }
 
 func TestDeployMock(t *testing.T) {
-	buildCalled := false
-	stopCalled := false
-	d := Deployment{
+	var (
+		buildCalled = false
+		stopCalled  = false
+	)
+	var fakeBuilder = newDefaultFakeBuilder(
+		func() error {
+			buildCalled = true
+			return nil
+		},
+		func() error {
+			stopCalled = true
+			return nil
+		},
+	)
+	var d = Deployment{
 		directory: "./test/",
 		buildType: "test",
-		builder: &mocks.FakeBuilder{
-			builder: func() error {
-				buildCalled = true
-				return nil
-			},
-			stopper: func() error {
-				stopCalled = true
-				return nil
-			},
-		},
+		builder:   fakeBuilder,
 	}
 
 	cli, err := containers.NewDockerClient()
@@ -60,16 +75,15 @@ func TestDownIntegration(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	called := false
-	d := Deployment{
+	var called = false
+	var fakeBuilder = newDefaultFakeBuilder(nil, func() error {
+		called = true
+		return nil
+	})
+	var d = Deployment{
 		directory: "./test/",
 		buildType: "test",
-		builder: &MockBuilder{
-			stopper: func() error {
-				called = true
-				return nil
-			},
-		},
+		builder:   fakeBuilder,
 	}
 
 	cli, err := containers.NewDockerClient()
@@ -97,10 +111,11 @@ func TestGetStatusIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	defer cli.Close()
 
-	deployment := &Deployment{
+	var fakeBuilder = newDefaultFakeBuilder(nil, nil)
+	var deployment = &Deployment{
 		repo:      repo,
 		buildType: "test",
-		builder:   &MockBuilder{},
+		builder:   fakeBuilder,
 	}
 	status, err := deployment.GetStatus(cli)
 	assert.Nil(t, err)
