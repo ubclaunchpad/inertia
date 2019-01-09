@@ -8,7 +8,7 @@ ID_DESTINATION=$HOME/.ssh/id_rsa_inertia_deploy
 PUB_ID_DESTINATION=$HOME/.ssh/id_rsa_inertia_deploy.pub
 
 # Install openssh if ssh-keygen is not available
-if hash ssh-keygen 2>/dev/null; then
+if ! hash ssh-keygen 2>/dev/null ; then
     sudo apt-get install openssh-client || sudo apt install openssh-client
 fi;
 
