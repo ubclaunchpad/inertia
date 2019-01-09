@@ -13,8 +13,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 var (
@@ -183,7 +183,7 @@ func TestUp(t *testing.T) {
 		body, err := ioutil.ReadAll(req.Body)
 		assert.Nil(t, err)
 		defer req.Body.Close()
-		var upReq common.UpRequest
+		var upReq api.UpRequest
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
@@ -315,8 +315,8 @@ func TestLogs(t *testing.T) {
 		// Check body
 		defer req.Body.Close()
 		q := req.URL.Query()
-		assert.Equal(t, "docker-compose", q.Get(common.Container))
-		assert.Equal(t, "10", q.Get(common.Entries))
+		assert.Equal(t, "docker-compose", q.Get(api.Container))
+		assert.Equal(t, "10", q.Get(api.Entries))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -341,9 +341,9 @@ func TestLogsWebsocket(t *testing.T) {
 		// Check body
 		defer req.Body.Close()
 		q := req.URL.Query()
-		assert.Equal(t, "docker-compose", q.Get(common.Container))
-		assert.Equal(t, "true", q.Get(common.Stream))
-		assert.Equal(t, "10", q.Get(common.Entries))
+		assert.Equal(t, "docker-compose", q.Get(api.Container))
+		assert.Equal(t, "true", q.Get(api.Stream))
+		assert.Equal(t, "10", q.Get(api.Entries))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -538,7 +538,7 @@ func TestLogIn(t *testing.T) {
 		defer req.Body.Close()
 		body, err := ioutil.ReadAll(req.Body)
 		assert.Equal(t, nil, err)
-		var userReq common.UserRequest
+		var userReq api.UserRequest
 		assert.Equal(t, nil, json.Unmarshal(body, &userReq))
 		assert.Equal(t, userReq.Username, username)
 		assert.Equal(t, userReq.Password, password)

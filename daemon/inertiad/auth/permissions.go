@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/util"
 )
@@ -206,7 +206,7 @@ func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	defer r.Body.Close()
-	var userReq common.UserRequest
+	var userReq api.UserRequest
 	err = json.Unmarshal(body, &userReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -236,7 +236,7 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	defer r.Body.Close()
-	var userReq common.UserRequest
+	var userReq api.UserRequest
 	err = json.Unmarshal(body, &userReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -294,7 +294,7 @@ func (h *PermissionsHandler) enableTotpHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	body, err := json.Marshal(&common.TotpResponse{
+	body, err := json.Marshal(&api.TotpResponse{
 		TotpSecret:  totpSecret,
 		BackupCodes: backupCodes,
 	})
@@ -434,8 +434,8 @@ func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusOK)
 }
 
-func readCredentials(r *http.Request) (common.UserRequest, error) {
-	userReq := common.UserRequest{}
+func readCredentials(r *http.Request) (api.UserRequest, error) {
+	userReq := api.UserRequest{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return userReq, err

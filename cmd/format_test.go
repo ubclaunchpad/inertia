@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 func TestFormatStatus(t *testing.T) {
-	output := formatStatus(&common.DeploymentStatus{
+	output := formatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "call",
 		CommitHash:           "me",
@@ -22,7 +22,7 @@ func TestFormatStatus(t *testing.T) {
 }
 
 func TestFormatStatusBuildActive(t *testing.T) {
-	output := formatStatus(&common.DeploymentStatus{
+	output := formatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "call",
 		CommitHash:           "me",
@@ -35,7 +35,7 @@ func TestFormatStatusBuildActive(t *testing.T) {
 }
 
 func TestFormatStatusNoDeployment(t *testing.T) {
-	output := formatStatus(&common.DeploymentStatus{
+	output := formatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "",
 		CommitHash:           "",

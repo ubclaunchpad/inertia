@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/webhook"
@@ -51,7 +52,7 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	// process event
 	switch event := payload.GetEventType(); event {
 	case webhook.PushEvent:
-		fmt.Fprint(w, common.MsgDaemonOK)
+		fmt.Fprint(w, api.MsgDaemonOK)
 		processPushEvent(s, payload, os.Stdout)
 	// case webhook.PullEvent:
 	//	fmt.Fprint(w, common.MsgDaemonOK)

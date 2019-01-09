@@ -11,6 +11,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 
@@ -263,7 +264,7 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 			var host = "https://" + deployment.RemoteVPS.GetIPAndPort()
 			fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n",
 				resp.StatusCode, deployment.Name, host)
-			var status = &common.DeploymentStatus{}
+			var status = &api.DeploymentStatus{}
 			if err := json.NewDecoder(resp.Body).Decode(status); err != nil {
 				log.Fatal(err)
 			}

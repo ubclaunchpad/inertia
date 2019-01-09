@@ -14,7 +14,7 @@ import (
 
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
@@ -105,7 +105,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Login in as user
-	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	user := &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
@@ -168,7 +168,7 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Login in as user
-	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	user := &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
@@ -214,7 +214,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Login in as user
-	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	user := &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
@@ -260,7 +260,7 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Login in as user
-	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	user := &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
@@ -303,7 +303,7 @@ func TestUserControlHandlers(t *testing.T) {
 	bearerTokenString := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
 
 	// Add a new user
-	body, err := json.Marshal(&common.UserRequest{
+	body, err := json.Marshal(&api.UserRequest{
 		Username: "jimmyneutron",
 		Password: "asfasdlfjk",
 		Admin:    false,
@@ -320,7 +320,7 @@ func TestUserControlHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	// Remove a user
-	body, err = json.Marshal(&common.UserRequest{
+	body, err = json.Marshal(&api.UserRequest{
 		Username: "jimmyneutron",
 	})
 	assert.Nil(t, err)
@@ -369,7 +369,7 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	authToken := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
 
 	// Add a new user
-	body, err := json.Marshal(&common.UserRequest{
+	body, err := json.Marshal(&api.UserRequest{
 		Username: "jimmyneutron",
 		Password: "asfasdlfjk",
 		Admin:    false,
@@ -399,14 +399,14 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	// Get Totp key from response
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	assert.Nil(t, err)
-	totpResp := &common.TotpResponse{}
+	totpResp := &api.TotpResponse{}
 	err = json.Unmarshal(respBytes, totpResp)
 	assert.Nil(t, err)
 	totpKey, err := totp.GenerateCode(totpResp.TotpSecret, time.Now())
 	assert.Nil(t, err)
 
 	// Log in with Totp
-	body, err = json.Marshal(&common.UserRequest{
+	body, err = json.Marshal(&api.UserRequest{
 		Username: "jimmyneutron",
 		Password: "asfasdlfjk",
 		Totp:     totpKey,
@@ -451,10 +451,10 @@ func TestPermissionsHandler_addUserHandler(t *testing.T) {
 		want want
 	}{
 		{"missing body", args{"POST", "/", nil}, want{http.StatusBadRequest}},
-		{"bad credentials", args{"POST", "/", common.UserRequest{
+		{"bad credentials", args{"POST", "/", api.UserRequest{
 			Username: "bobheadxi", Password: "bobheadxi",
 		}}, want{http.StatusBadRequest}},
-		{"ok credentials", args{"POST", "/", common.UserRequest{
+		{"ok credentials", args{"POST", "/", api.UserRequest{
 			Username: "bobheadxi", Password: "bobdeadxi",
 		}}, want{http.StatusCreated}},
 	}
@@ -485,7 +485,7 @@ func TestPermissionsHandler_addUserHandler(t *testing.T) {
 
 func TestPermissionsHandler_loginHandler(t *testing.T) {
 	type fields struct {
-		user common.UserRequest
+		user api.UserRequest
 	}
 	type args struct {
 		method string
@@ -502,12 +502,12 @@ func TestPermissionsHandler_loginHandler(t *testing.T) {
 		want   want
 	}{
 		{"missing body", fields{}, args{"POST", "/", nil}, want{http.StatusBadRequest}},
-		{"invalid user", fields{}, args{"POST", "/", common.UserRequest{
+		{"invalid user", fields{}, args{"POST", "/", api.UserRequest{
 			Username: "bobhead", Password: "lunchpad",
 		}}, want{http.StatusUnauthorized}},
-		{"valid user, wrong creds", fields{common.UserRequest{
+		{"valid user, wrong creds", fields{api.UserRequest{
 			Username: "bobhead", Password: "breakfastpad",
-		}}, args{"POST", "/", common.UserRequest{
+		}}, args{"POST", "/", api.UserRequest{
 			Username: "bobhead", Password: "lunchpad",
 		}}, want{http.StatusUnauthorized}},
 	}
