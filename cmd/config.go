@@ -17,6 +17,8 @@ func init() {
 	Root.AddCommand(cmdInit)
 	Root.AddCommand(cmdReset)
 	Root.AddCommand(cmdSetConfigProperty)
+	cmdConfigUpgrade.Flags().String("version", "", "version to set in configuration")
+	Root.AddCommand(cmdConfigUpgrade)
 
 	cmdInit.Flags().String("version", Root.Version, "specify Inertia daemon version to use")
 }
@@ -117,6 +119,30 @@ var cmdSetConfigProperty = &cobra.Command{
 			println("Configuration setting '" + args[0] + "' has been updated..")
 		} else {
 			println("Configuration setting '" + args[0] + "' not found.")
+		}
+	},
+}
+
+var cmdConfigUpgrade = &cobra.Command{
+	Use:   "upgrade",
+	Short: "Upgrade your Inertia configuration version to match the CLI",
+	Long:  `Upgrade your Inertia configuration version to match the CLI and saves it to inertia.toml`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure project initialized.
+		config, path, err := local.GetProjectConfigFromDisk(configFilePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var version = Version
+		if v, _ := cmd.Flags().GetString("version"); v != "" {
+			version = v
+		}
+
+		fmt.Printf("Setting Inertia config to version '%s'", version)
+		config.Version = version
+		if err = config.Write(path); err != nil {
+			log.Fatal(err)
 		}
 	},
 }

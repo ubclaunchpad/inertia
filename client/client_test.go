@@ -116,12 +116,15 @@ func TestInstallDocker(t *testing.T) {
 func TestDaemonUp(t *testing.T) {
 	session := &mockSSHRunner{}
 	client := newMockSSHClient(session)
+	client.version = "latest"
+	client.IP = "0.0.0.0"
+	client.Daemon.Port = "4303"
 	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
 	assert.Nil(t, err)
 	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
 
 	// Make sure the right command is run.
-	err = client.DaemonUp("latest", "0.0.0.0", "4303")
+	err = client.DaemonUp("latest")
 	assert.Nil(t, err)
 	println(actualCommand)
 	assert.Equal(t, actualCommand, session.Calls[0])

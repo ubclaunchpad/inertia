@@ -1,4 +1,4 @@
-package main
+package daemon
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 )
 
 const (
@@ -57,9 +58,11 @@ func Test_webhookHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			webhookSecret = tt.args.secret
+			var s = &Server{
+				state: cfg.Config{WebhookSecret: tt.args.secret},
+			}
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(webhookHandler)
+			handler := http.HandlerFunc(s.webhookHandler)
 
 			handler.ServeHTTP(recorder, getTestWebhookEvent(tt.args.headers))
 			assert.Equal(t, recorder.Code, tt.wantCode)

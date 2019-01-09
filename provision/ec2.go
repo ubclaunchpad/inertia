@@ -62,13 +62,34 @@ func (p *EC2Provisioner) ListImageOptions(region string) ([]string, error) {
 	// Set requested region
 	p.client.Config.WithRegion(region)
 
-	// Query for images from the Amazon
+	// Query for easily supported images
 	output, err := p.client.DescribeImages(&ec2.DescribeImagesInput{
 		Owners: []*string{aws.String("amazon")},
 		Filters: []*ec2.Filter{
 			{
+				// Only display Amazon for ease of use
 				Name:   aws.String("name"),
 				Values: []*string{aws.String("amzn*")},
+			},
+			{
+				// Docker needs machine to run properly
+				Name:   aws.String("image-type"),
+				Values: []*string{aws.String("machine")},
+			},
+			{
+				// No funny business
+				Name:   aws.String("architecture"),
+				Values: []*string{aws.String("x86_64")},
+			},
+			{
+				// Most standard instances only support EBS
+				Name:   aws.String("root-device-type"),
+				Values: []*string{aws.String("ebs")},
+			},
+			{
+				// Paravirtual images don't work - see #500
+				Name:   aws.String("virtualization-type"),
+				Values: []*string{aws.String("hvm")},
 			},
 		},
 	})
@@ -89,6 +110,7 @@ func (p *EC2Provisioner) ListImageOptions(region string) ([]string, error) {
 		return iCreated.After(*jCreated)
 	})
 
+	// Format image names for printing
 	images := []string{}
 	for _, image := range output.Images {
 		if len(images) == 10 {

@@ -94,7 +94,7 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	if err != nil {
 		return err
 	}
-	err = c.DaemonUp(c.version, c.IP, c.Daemon.Port)
+	err = c.DaemonUp(c.version)
 	if err != nil {
 		return err
 	}
@@ -135,14 +135,12 @@ key to your repository to enable continuous deployment.`+"\n")
 }
 
 // DaemonUp brings the daemon up on the remote instance.
-func (c *Client) DaemonUp(daemonVersion, host, daemonPort string) error {
+func (c *Client) DaemonUp(version string) error {
 	scriptBytes, err := internal.ReadFile("client/scripts/daemon-up.sh")
 	if err != nil {
 		return err
 	}
-
-	// Run inertia daemon.
-	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion, daemonPort, host)
+	daemonCmdStr := fmt.Sprintf(string(scriptBytes), version, c.Daemon.Port, c.IP)
 	return c.SSH.RunStream(daemonCmdStr, false)
 }
 
@@ -161,8 +159,8 @@ func (c *Client) DaemonDown() error {
 	return nil
 }
 
-// InertiaDown removes the inertia/ directory on the remote instance
-func (c *Client) InertiaDown() error {
+// UninstallInertia removes the inertia/ directory on the remote instance
+func (c *Client) UninstallInertia() error {
 	scriptBytes, err := internal.ReadFile("client/scripts/inertia-down.sh")
 	if err != nil {
 		return err

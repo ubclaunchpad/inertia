@@ -504,3 +504,62 @@ func TestPermissionsHandler_addUserHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestPermissionsHandler_loginHandler(t *testing.T) {
+	type fields struct {
+		user common.UserRequest
+	}
+	type args struct {
+		method string
+		target string
+		body   interface{}
+	}
+	type want struct {
+		status int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{"missing body", fields{}, args{"POST", "/", nil}, want{http.StatusBadRequest}},
+		{"invalid user", fields{}, args{"POST", "/", common.UserRequest{
+			Username: "bobhead", Password: "lunchpad",
+		}}, want{http.StatusUnauthorized}},
+		{"valid user, wrong creds", fields{common.UserRequest{
+			Username: "bobhead", Password: "breakfastpad",
+		}}, args{"POST", "/", common.UserRequest{
+			Username: "bobhead", Password: "lunchpad",
+		}}, want{http.StatusUnauthorized}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up permission handler
+			var dir = "./test_loginHandler"
+			ph, err := getTestPermissionsHandler(dir)
+			defer os.RemoveAll(dir)
+			assert.Nil(t, err)
+			defer ph.Close()
+
+			// test situation
+			var testUser = tt.fields.user
+			ph.users.AddUser(testUser.Username, testUser.Password, testUser.Admin)
+			// todo: test totp situations?
+
+			// test handler
+			var (
+				b, _ = json.Marshal(tt.args.body)
+				req  = httptest.NewRequest(tt.args.method, tt.args.target, bytes.NewReader(b))
+				rec  = httptest.NewRecorder()
+			)
+			ph.loginHandler(rec, req)
+
+			// assert
+			if rec.Code != tt.want.status {
+				t.Logf("Received response: '%s'", rec.Body.String())
+				t.Errorf("expected status '%d', got '%d'", tt.want.status, rec.Code)
+			}
+		})
+	}
+}

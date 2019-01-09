@@ -1,4 +1,4 @@
-package main
+package daemon
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 )
 
 // logHandler handles requests for container logs
-func logHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		stream bool
 		err    error
@@ -53,7 +53,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	// standard logger
 	var logger *log.DaemonLogger
 	if stream {
-		socket, err := socketUpgrader.Upgrade(w, r, nil)
+		socket, err := s.websocket.Upgrade(w, r, nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -70,14 +70,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	cli, err := containers.NewDockerClient()
-	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-
-	logs, err := containers.ContainerLogs(cli, containers.LogOptions{
+	logs, err := containers.ContainerLogs(s.docker, containers.LogOptions{
 		Container: container,
 		Stream:    stream,
 		Entries:   entries,

@@ -11,6 +11,8 @@ type Config struct {
 
 	// Build tools
 	DockerComposeVersion string // "docker/compose:1.21.0"
+
+	WebhookSecret string
 }
 
 // New creates a new daemon configuration from environment values
