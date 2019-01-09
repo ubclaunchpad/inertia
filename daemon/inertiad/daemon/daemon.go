@@ -16,6 +16,7 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
+// Server is the core component of Inertiad, and hosts its API and deployment manager
 type Server struct {
 	version string
 
@@ -26,6 +27,7 @@ type Server struct {
 	websocket *websocket.Upgrader
 }
 
+// New instantiates a new Inertiad server
 func New(version string, state cfg.Config, deployment project.Deployer) (*Server, error) {
 	// Establish connection with dockerd
 	cli, err := containers.NewDockerClient()
@@ -49,6 +51,7 @@ func New(version string, state cfg.Config, deployment project.Deployer) (*Server
 	}, nil
 }
 
+// Run starts the server
 func (s *Server) Run(host, port string) error {
 	var (
 		err  error
@@ -142,6 +145,7 @@ func (s *Server) Run(host, port string) error {
 		handler)
 }
 
+// Close releases server assets
 func (s *Server) Close() {
 	s.deployment.Down(s.docker, os.Stdout)
 	s.docker.Close()
