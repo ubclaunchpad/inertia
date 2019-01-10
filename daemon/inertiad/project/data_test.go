@@ -33,7 +33,7 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 			defer os.RemoveAll(dir)
 
 			// Instantiate
-			c, err := newDataManager(path.Join(dir, "deployment.db"))
+			c, err := NewDataManager(path.Join(dir, "deployment.db"), path.Join(dir, "key"))
 			assert.Nil(t, err)
 
 			// Add
@@ -46,7 +46,9 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 			if tt.wantErr {
 				assert.Zero(t, len(vars))
 			} else {
-				if tt.decrypt {
+				if len(vars) == 0 {
+					assert.Fail(t, "Expected vars, found none")
+				} else if tt.decrypt {
 					assert.Equal(t, tt.args.name+"="+tt.args.value, vars[0])
 				} else {
 					assert.Equal(t, tt.args.name+"=[ENCRYPTED]", vars[0])
@@ -70,7 +72,7 @@ func TestDataManager_destroy(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	// Instantiate
-	c, err := newDataManager(path.Join(dir, "deployment.db"))
+	c, err := NewDataManager(path.Join(dir, "deployment.db"), path.Join(dir, "key"))
 	assert.Nil(t, err)
 
 	// Reset

@@ -6,9 +6,9 @@
 set -e
 
 # User arguments.
-DAEMON_RELEASE=%[1]s
-DAEMON_PORT=%[2]s
-HOST_ADDRESS=%[3]s
+DAEMON_RELEASE="%[1]s"
+DAEMON_PORT="%[2]s"
+HOST_ADDRESS="%[3]s"
 
 # Inertia image details.
 DAEMON_NAME=inertia-daemon
@@ -19,27 +19,29 @@ IMAGE=ubclaunchpad/inertia:$DAEMON_RELEASE
 CONTAINER_PORT=4303
 
 # User project
-mkdir -p $HOME/inertia
-mkdir -p $HOME/inertia/project
+mkdir -p "$HOME"/inertia/project
 
 # Inertia data
-mkdir -p $HOME/inertia/data
+mkdir -p "$HOME"/inertia/data
 
 # Configuration
-mkdir -p $HOME/inertia/config
-mkdir -p $HOME/inertia/config/ssl
+mkdir -p "$HOME"/inertia/config
+
+# Inertia secrets
+mkdir -p "$HOME"/.inertia
+mkdir -p "$HOME"/.inertia/ssl
 
 # Check if already running and take down existing daemon.
-ALREADY_RUNNING=`sudo docker ps -q --filter "name=$DAEMON_NAME"`
+ALREADY_RUNNING=$(sudo docker ps -q --filter "name=$DAEMON_NAME")
 if [ ! -z "$ALREADY_RUNNING" ]; then
     echo "Putting existing Inertia daemon to sleep"
-    sudo docker rm -f $ALREADY_RUNNING > /dev/null 2>&1
+    sudo docker rm -f "$ALREADY_RUNNING" > /dev/null 2>&1
 fi;
 
 if [ "$DAEMON_RELEASE" != "test" ]; then
     # Download requested daemon image.
     echo "Downloading $IMAGE"
-    sudo docker pull $IMAGE > /dev/null 2>&1
+    sudo docker pull "$IMAGE" > /dev/null 2>&1
 else
     # Load test build that should have been scp'd into
     # the VPS at /daemon-image.
