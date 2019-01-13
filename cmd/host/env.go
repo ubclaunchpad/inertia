@@ -42,6 +42,7 @@ as follows:
 }
 
 func (root *EnvCmd) attachSetCmd() {
+	const flagEncrypt = "encrypt"
 	var set = &cobra.Command{
 		Use:   "set [name] [value]",
 		Short: "Set an environment variable on your remote",
@@ -49,7 +50,7 @@ func (root *EnvCmd) attachSetCmd() {
 variables are applied to all deployed containers.`,
 		Args: cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			var encrypt, _ = cmd.Flags().GetBool("encrypt")
+			var encrypt, _ = cmd.Flags().GetBool(flagEncrypt)
 			resp, err := root.host.client.UpdateEnv(args[0], args[1], encrypt, false)
 			if err != nil {
 				printutil.Fatal(err)
@@ -62,7 +63,7 @@ variables are applied to all deployed containers.`,
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 		},
 	}
-	set.Flags().BoolP("encrypt", "e", false, "encrypt variable when stored")
+	set.Flags().BoolP(flagEncrypt, "e", false, "encrypt variable when stored")
 	root.AddCommand(set)
 }
 

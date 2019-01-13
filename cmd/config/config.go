@@ -88,6 +88,7 @@ func (root *ConfigCmd) attachSetCmd() {
 }
 
 func (root *ConfigCmd) attachUpgradeCmd() {
+	const flagVersion = "version"
 	var upgrade = &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade your Inertia configuration version to match the CLI",
@@ -100,7 +101,7 @@ func (root *ConfigCmd) attachUpgradeCmd() {
 			}
 
 			var version = root.Version
-			if v, _ := cmd.Flags().GetString("version"); v != "" {
+			if v, _ := cmd.Flags().GetString(flagVersion); v != "" {
 				version = v
 			}
 
@@ -111,6 +112,6 @@ func (root *ConfigCmd) attachUpgradeCmd() {
 			}
 		},
 	}
-	upgrade.Flags().String("version", root.Version, "specify Inertia daemon version to set")
+	upgrade.Flags().String(flagVersion, root.Version, "specify Inertia daemon version to set")
 	root.AddCommand(upgrade)
 }
