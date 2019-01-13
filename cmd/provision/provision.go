@@ -29,12 +29,15 @@ func AttachProvisionCmd(inertia *inertiacmd.Cmd) {
 		Use:   "provision",
 		Short: "Provision a new remote host to deploy your project on",
 		Long:  `Provisions a new remote host set up for continuous deployment with Inertia.`,
-		PreRun: func(*cobra.Command, []string) {
+		PersistentPreRun: func(*cobra.Command, []string) {
 			// Ensure project initialized, load config
 			var err error
 			prov.config, prov.cfgPath, err = local.GetProjectConfigFromDisk(inertia.ConfigPath)
 			if err != nil {
-				printutil.Fatal(err)
+				printutil.Fatalf("failed to read config at '%s': %s", prov.cfgPath, err.Error())
+			}
+			if prov.config == nil {
+				printutil.Fatalf("failed to read config at '%s'", prov.cfgPath)
 			}
 		},
 	}
