@@ -1,4 +1,4 @@
-package cmd
+package util
 
 import (
 	"testing"
@@ -20,15 +20,15 @@ func TestSetProperty(t *testing.T) {
 		PEM:    "/some/pem/file",
 		Daemon: testDaemonConfig,
 	}
-	a := setProperty("name", "newTestName", testRemote)
+	a := SetProperty("name", "newTestName", testRemote)
 	assert.True(t, a)
 	assert.Equal(t, "newTestName", testRemote.Name)
 
-	b := setProperty("wrongtag", "otherTestName", testRemote)
+	b := SetProperty("wrongtag", "otherTestName", testRemote)
 	assert.False(t, b)
 	assert.Equal(t, "newTestName", testRemote.Name)
 
-	c := setProperty("port", "8000", testDaemonConfig)
+	c := SetProperty("port", "8000", testDaemonConfig)
 	assert.True(t, c)
 	assert.Equal(t, "8000", testDaemonConfig.Port)
 }

@@ -1,27 +1,38 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"log"
+	"os"
 
-var (
-	// configFilePath is the relative path to Inertia's configuration file
-	configFilePath = "inertia.toml"
+	"github.com/spf13/cobra"
+	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
+	hostcmd "github.com/ubclaunchpad/inertia/cmd/host"
+	provisioncmd "github.com/ubclaunchpad/inertia/cmd/provision"
+	remotecmd "github.com/ubclaunchpad/inertia/cmd/remote"
 
-	// Version is the current build of Inertia
-	Version string
+	"github.com/ubclaunchpad/inertia/cmd/inpututil"
+
+	"github.com/ubclaunchpad/inertia/cmd/util"
+	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/local"
 )
 
-func getVersion() string {
-	if Version == "" {
-		Version = "latest"
+func getVersion(version string) string {
+	if version == "" {
+		version = "latest"
 	}
-	return Version
+	return version
 }
 
-// Root is the base inertia command
-var Root = &cobra.Command{
-	Use:   "inertia",
-	Short: "Inertia is a continuous-deployment scaffold",
-	Long: `Inertia provides a continuous deployment scaffold for applications.
+// NewInertiaCmd is a new Inertia command
+func NewInertiaCmd(version string) *inertiacmd.Cmd {
+	// instantiate top-level command
+	var root = &inertiacmd.Cmd{
+		Command: &cobra.Command{
+			Use:   "inertia",
+			Short: "Inertia is a continuous-deployment scaffold",
+			Long: `Inertia provides a continuous deployment scaffold for applications.
 
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continuously update the production server
@@ -32,5 +43,159 @@ Once you have set up a remote with 'inertia remote add [remote]', use
 
 Repository:    https://github.com/ubclaunchpad/inertia/
 Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
-	Version: getVersion(),
+			Version: getVersion(version),
+		},
+	}
+
+	// persistent flags across all children
+	root.PersistentFlags().StringVar(&root.ConfigPath, "config", "inertia.toml", "specify relative path to Inertia configuration")
+
+	// add children
+	newInitCmd(root)
+	newResetCmd(root)
+	newSetCmd(root)
+	newUpgradeCmd(root)
+	remotecmd.AttachRemoteCmd(root)
+	provisioncmd.AttachProvisionCmd(root)
+	hostcmd.AttachHostCmds(root)
+
+	return root
+}
+
+func newInitCmd(inertia *inertiacmd.Cmd) {
+	var init = &cobra.Command{
+		Use:   "init",
+		Short: "Initialize an Inertia project in this repository",
+		Long: `Initializes an Inertia project in this GitHub repository.
+		There must be a local git repository in order for initialization
+		to succeed.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			version := cmd.Parent().Version
+			givenVersion, err := cmd.Flags().GetString("version")
+			if err != nil {
+				log.Fatal(err)
+			}
+			if givenVersion != version {
+				version = givenVersion
+			}
+
+			// Determine best build type for project
+			var buildType string
+			var buildFilePath string
+			cwd, err := os.Getwd()
+			if err != nil {
+				log.Fatal(err)
+			}
+			// docker-compose projects will usually have Dockerfiles,
+			// so check for that first, then check for Dockerfile
+			if common.CheckForDockerCompose(cwd) {
+				println("docker-compose project detected")
+				buildType = "docker-compose"
+				buildFilePath = "docker-compose.yml"
+			} else if common.CheckForDockerfile(cwd) {
+				println("Dockerfile project detected")
+				buildType = "dockerfile"
+				buildFilePath = "Dockerfile"
+			} else {
+				println("No build file detected")
+				buildType, buildFilePath, err = inpututil.AddProjectWalkthrough(os.Stdin)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			// Hello world config file!
+			err = local.InitializeInertiaProject(inertia.ConfigPath, inertia.Version, buildType, buildFilePath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			println("An inertia.toml configuration file has been created to store")
+			println("Inertia configuration. It is recommended that you DO NOT commit")
+			println("this file in source control since it will be used to store")
+			println("sensitive information.")
+			println("\nYou can now use 'inertia remote add' to connect your remote")
+			println("VPS instance.")
+		},
+	}
+	init.Flags().String("version", inertia.Version, "specify Inertia daemon version to use")
+	inertia.AddCommand(init)
+}
+
+func newResetCmd(inertia *inertiacmd.Cmd) {
+	var reset = &cobra.Command{
+		Use:   "reset",
+		Short: "Remove inertia configuration from this repository",
+		Long:  `Removes Inertia configuration files pertaining to this project.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			println("WARNING: This will remove your current Inertia configuration")
+			println("and is irreversible. Continue? (y/n)")
+			var response string
+			_, err := fmt.Scanln(&response)
+			if err != nil {
+				log.Fatal("invalid response - aborting")
+			}
+			if response != "y" {
+				log.Fatal("aborting")
+			}
+			path, err := common.GetFullPath(inertia.ConfigPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			os.Remove(path)
+			println("Inertia configuration removed.")
+		},
+	}
+	inertia.AddCommand(reset)
+}
+
+func newSetCmd(inertia *inertiacmd.Cmd) {
+	var set = &cobra.Command{
+		Use:   "set [property] [value]",
+		Short: "Update a property of your Inertia project configuration",
+		Long:  `Updates a property of your Inertia project configuration and save it to inertia.toml.`,
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			// Ensure project initialized.
+			config, path, err := local.GetProjectConfigFromDisk(inertia.ConfigPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			success := util.SetProperty(args[0], args[1], config)
+			if success {
+				config.Write(path)
+				println("Configuration setting '" + args[0] + "' has been updated..")
+			} else {
+				println("Configuration setting '" + args[0] + "' not found.")
+			}
+		},
+	}
+	inertia.AddCommand(set)
+}
+
+func newUpgradeCmd(inertia *inertiacmd.Cmd) {
+	var upgrade = &cobra.Command{
+		Use:   "upgrade",
+		Short: "Upgrade your Inertia configuration version to match the CLI",
+		Long:  `Upgrade your Inertia configuration version to match the CLI and saves it to inertia.toml`,
+		Run: func(cmd *cobra.Command, args []string) {
+			// Ensure project initialized.
+			config, path, err := local.GetProjectConfigFromDisk(inertia.ConfigPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			var version = inertia.Version
+			if v, _ := cmd.Flags().GetString("version"); v != "" {
+				version = v
+			}
+
+			fmt.Printf("Setting Inertia config to version '%s'", version)
+			config.Version = version
+			if err = config.Write(path); err != nil {
+				log.Fatal(err)
+			}
+		},
+	}
+	upgrade.Flags().String("version", inertia.Version, "specify Inertia daemon version to set")
+	inertia.AddCommand(upgrade)
 }

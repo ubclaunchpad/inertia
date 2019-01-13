@@ -1,4 +1,4 @@
-package cmd
+package inpututil
 
 import (
 	"errors"
@@ -20,9 +20,9 @@ var (
 	errInvalidBuildFilePath = errors.New("invalid buildfile path")
 )
 
-// addRemoteWalkthough is the command line walkthrough that asks
+// AddRemoteWalkthrough is the command line walkthrough that asks
 // users for RemoteVPS details. It is up to the caller to save config.
-func addRemoteWalkthrough(
+func AddRemoteWalkthrough(
 	in io.Reader, config *cfg.Config,
 	name, port, sshPort, currBranch string,
 ) error {
@@ -92,9 +92,11 @@ func addRemoteWalkthrough(
 	return nil
 }
 
-// addProjectWalkthrough is the command line walkthrough that asks for details
+// AddProjectWalkthrough is the command line walkthrough that asks for details
 // about the project the user intends to deploy
-func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string, inputErr error) {
+func AddProjectWalkthrough(in io.Reader) (
+	buildType string, buildFilePath string, inputErr error,
+) {
 	println("Please enter the build type of your project - this could be one of:")
 	println("  - docker-compose")
 	println("  - dockerfile")
@@ -115,7 +117,7 @@ func addProjectWalkthrough(in io.Reader) (buildType string, buildFilePath string
 	return
 }
 
-func enterEC2CredentialsWalkthrough(in io.Reader) (id, key string, err error) {
+func EnterEC2CredentialsWalkthrough(in io.Reader) (id, key string, err error) {
 	print(`To get your credentials:
 	1. Open the IAM console (https://console.aws.amazon.com/iam/home?#home).
 	2. In the navigation pane of the console, choose Users. You may have to create a user.
@@ -145,7 +147,7 @@ func enterEC2CredentialsWalkthrough(in io.Reader) (id, key string, err error) {
 	return
 }
 
-func chooseFromListWalkthrough(in io.Reader, optionName string, options []string) (string, error) {
+func ChooseFromListWalkthrough(in io.Reader, optionName string, options []string) (string, error) {
 	fmt.Printf("Available %ss:\n", optionName)
 	for _, o := range options {
 		println("  > " + o)

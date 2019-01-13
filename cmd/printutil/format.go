@@ -1,4 +1,4 @@
-package cmd
+package printutil
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ const (
 	msgNoDeployment       = "No deployment found - try running 'inertia [remote] up'"
 )
 
-func formatStatus(s *api.DeploymentStatus) string {
+func FormatStatus(s *api.DeploymentStatus) string {
 	inertiaStatus := "inertia daemon " + s.InertiaVersion + "\n"
 	branchStatus := " - Branch:     " + s.Branch + "\n"
 	commitStatus := " - Commit:     " + s.CommitHash + "\n"
@@ -46,7 +46,7 @@ func formatStatus(s *api.DeploymentStatus) string {
 	return statusString
 }
 
-func formatRemoteDetails(remote *cfg.RemoteVPS) string {
+func FormatRemoteDetails(remote *cfg.RemoteVPS) string {
 	remoteString := fmt.Sprintf("Remote %s: \n", remote.Name)
 	remoteString += fmt.Sprintf(" - Deployed Branch:   %s\n", remote.Branch)
 	remoteString += fmt.Sprintf(" - IP Address:        %s\n", remote.IP)

@@ -1,4 +1,4 @@
-package cmd
+package printutil
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestFormatStatus(t *testing.T) {
-	output := formatStatus(&api.DeploymentStatus{
+	output := FormatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "call",
 		CommitHash:           "me",
@@ -22,7 +22,7 @@ func TestFormatStatus(t *testing.T) {
 }
 
 func TestFormatStatusBuildActive(t *testing.T) {
-	output := formatStatus(&api.DeploymentStatus{
+	output := FormatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "call",
 		CommitHash:           "me",
@@ -35,7 +35,7 @@ func TestFormatStatusBuildActive(t *testing.T) {
 }
 
 func TestFormatStatusNoDeployment(t *testing.T) {
-	output := formatStatus(&api.DeploymentStatus{
+	output := FormatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "",
 		CommitHash:           "",
@@ -54,7 +54,7 @@ func TestFormatRemoteDetails(t *testing.T) {
 		User:   "tree",
 		PEM:    "/wow/amaze",
 	}
-	output := formatRemoteDetails(client)
+	output := FormatRemoteDetails(client)
 	assert.Contains(t, output, "bob")
 	assert.Contains(t, output, "great")
 	assert.Contains(t, output, "tree")
