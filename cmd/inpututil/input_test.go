@@ -1,4 +1,4 @@
-package cmd
+package inpututil
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
+	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	r, found := config.GetRemote("inertia-rocks")
 	assert.True(t, found)
 	assert.Equal(t, "pemfile", r.PEM)
@@ -45,14 +45,14 @@ func TestRemoteAddWalkthroughFailure(t *testing.T) {
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
+	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	assert.Equal(t, errInvalidUser, err)
 
 	in.WriteAt([]byte("pemfile\nuser\n\n"), 0)
 	_, err = in.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
 
-	err = addRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
+	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	assert.Equal(t, errInvalidAddress, err)
 }
 
@@ -79,7 +79,7 @@ func Test_addProjectWalkthrough(t *testing.T) {
 			_, err = in.Seek(0, io.SeekStart)
 			assert.Nil(t, err)
 
-			gotBuildType, gotBuildFilePath, err := addProjectWalkthrough(in)
+			gotBuildType, gotBuildFilePath, err := AddProjectWalkthrough(in)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("addProjectWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -119,7 +119,7 @@ func Test_enterEC2CredentialsWalkthrough(t *testing.T) {
 			_, err = in.Seek(0, io.SeekStart)
 			assert.Nil(t, err)
 
-			gotID, gotKey, err := enterEC2CredentialsWalkthrough(in)
+			gotID, gotKey, err := EnterEC2CredentialsWalkthrough(in)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("enterEC2CredentialsWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -161,7 +161,7 @@ func Test_chooseFromListWalkthrough(t *testing.T) {
 		assert.Nil(t, err)
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := chooseFromListWalkthrough(in, tt.args.optionName, tt.args.options)
+			got, err := ChooseFromListWalkthrough(in, tt.args.optionName, tt.args.options)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("chooseFromListWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
 				return

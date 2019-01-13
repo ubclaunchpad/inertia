@@ -6,11 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-
 	"github.com/BurntSushi/toml"
 	"github.com/ubclaunchpad/inertia/cfg"
-	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -85,31 +82,6 @@ func GetProjectConfigFromDisk(relPath string) (*cfg.Config, string, error) {
 	}
 
 	return &cfg, configFilePath, err
-}
-
-// GetClient returns a local deployment setup
-func GetClient(name, relPath string, cmd ...*cobra.Command) (*client.Client, func() error, error) {
-	config, path, err := GetProjectConfigFromDisk(relPath)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	client, found := client.NewClient(name, os.Getenv(EnvSSHPassphrase), config, os.Stdout)
-	if !found {
-		return nil, nil, errors.New("Remote not found")
-	}
-
-	if len(cmd) == 1 && cmd[0] != nil {
-		verify, err := cmd[0].Flags().GetBool("verify-ssl")
-		if err != nil {
-			return nil, nil, err
-		}
-		client.SetSSLVerification(verify)
-	}
-
-	return client, func() error {
-		return config.Write(path)
-	}, nil
 }
 
 // SaveKey writes a key to given path
