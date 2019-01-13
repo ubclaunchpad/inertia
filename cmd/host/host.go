@@ -74,7 +74,7 @@ Continuous deployment requires the daemon's webhook address to be registered in 
 If the SSH key for your remote requires a passphrase, it can be provided via 'PEM_PASSPHRASE'.
 
 Run 'inertia [remote] init' to gather this information.`,
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if host.client == nil || host.config == nil {
 				printutil.Fatalf("failed to read configuration at '%s'", host.cfgPath)
 			}

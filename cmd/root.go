@@ -28,11 +28,12 @@ func getVersion(version string) string {
 // NewInertiaCmd is a new Inertia command
 func NewInertiaCmd(version string) *inertiacmd.Cmd {
 	// instantiate top-level command
-	var root = &inertiacmd.Cmd{
-		Command: &cobra.Command{
-			Use:   "inertia",
-			Short: "Inertia is a continuous-deployment scaffold",
-			Long: `Inertia provides a continuous deployment scaffold for applications.
+	var root = &inertiacmd.Cmd{}
+	root.Command = &cobra.Command{
+		Use:     "inertia",
+		Version: getVersion(version),
+		Short:   "Inertia is a continuous-deployment scaffold",
+		Long: `Inertia provides a continuous deployment scaffold for applications.
 
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continuously update the production server
@@ -43,12 +44,19 @@ Once you have set up a remote with 'inertia remote add [remote]', use
 
 Repository:    https://github.com/ubclaunchpad/inertia/
 Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
-			Version: getVersion(version),
-		},
 	}
 
 	// persistent flags across all children
 	root.PersistentFlags().StringVar(&root.ConfigPath, "config", "inertia.toml", "specify relative path to Inertia configuration")
+	// hack in flag parsing - this must be done because we need to initialize the
+	// host commands properly when Cobra first constructs the command tree, which
+	// occurs before the built-in flag parser
+	for i, arg := range os.Args {
+		if arg == "--config" {
+			root.ConfigPath = os.Args[i+1]
+			break
+		}
+	}
 
 	// add children
 	newInitCmd(root)
