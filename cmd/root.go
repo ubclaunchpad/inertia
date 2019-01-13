@@ -59,8 +59,8 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 		}
 	}
 
-	// add children
-	newInitCmd(root)
+	// attach children to root 'inertia' command
+	attachInitCmd(root)
 	configcmd.AttachConfigCmd(root)
 	remotecmd.AttachRemoteCmd(root)
 	provisioncmd.AttachProvisionCmd(root)
@@ -69,7 +69,7 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 	return root
 }
 
-func newInitCmd(inertia *inertiacmd.Cmd) {
+func attachInitCmd(inertia *inertiacmd.Cmd) {
 	var init = &cobra.Command{
 		Use:   "init",
 		Short: "Initialize an Inertia project in this repository",

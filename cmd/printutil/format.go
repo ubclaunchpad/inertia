@@ -13,16 +13,19 @@ const (
 	msgNoDeployment       = "No deployment found - try running 'inertia [remote] up'"
 )
 
+// FormatStatus prints the given deployment status
 func FormatStatus(s *api.DeploymentStatus) string {
-	inertiaStatus := "inertia daemon " + s.InertiaVersion + "\n"
-	branchStatus := " - Branch:     " + s.Branch + "\n"
-	commitStatus := " - Commit:     " + s.CommitHash + "\n"
-	commitMessage := " - Message:    " + s.CommitMessage + "\n"
-	buildTypeStatus := " - Build Type: " + s.BuildType + "\n"
-	statusString := inertiaStatus + branchStatus + commitStatus + commitMessage + buildTypeStatus
+	var (
+		inertiaStatus   = "inertia daemon " + s.InertiaVersion + "\n"
+		branchStatus    = " - Branch:     " + s.Branch + "\n"
+		commitStatus    = " - Commit:     " + s.CommitHash + "\n"
+		commitMessage   = " - Message:    " + s.CommitMessage + "\n"
+		buildTypeStatus = " - Build Type: " + s.BuildType + "\n"
+	)
 
 	// If no branch/commit, then it's likely the deployment has not
 	// been instantiated on the remote yet
+	var statusString = inertiaStatus + branchStatus + commitStatus + commitMessage + buildTypeStatus
 	if s.Branch == "" && s.CommitHash == "" && s.CommitMessage == "" {
 		return statusString + msgNoDeployment
 	}
@@ -46,6 +49,7 @@ func FormatStatus(s *api.DeploymentStatus) string {
 	return statusString
 }
 
+// FormatRemoteDetails prints the given remote configuration
 func FormatRemoteDetails(remote *cfg.RemoteVPS) string {
 	remoteString := fmt.Sprintf("Remote %s: \n", remote.Name)
 	remoteString += fmt.Sprintf(" - Deployed Branch:   %s\n", remote.Branch)

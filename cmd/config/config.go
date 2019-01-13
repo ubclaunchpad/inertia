@@ -12,11 +12,13 @@ import (
 	"github.com/ubclaunchpad/inertia/local"
 )
 
+// ConfigCmd is the parent class for the 'config' subcommands
 type ConfigCmd struct {
 	*cobra.Command
 	cfgPath string
 }
 
+// AttachConfigCmd attaches the 'config' subcommands to the given parent
 func AttachConfigCmd(inertia *inertiacmd.Cmd) {
 	var config = ConfigCmd{
 		Command: &cobra.Command{

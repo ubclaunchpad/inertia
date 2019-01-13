@@ -15,12 +15,14 @@ import (
 	"github.com/ubclaunchpad/inertia/local"
 )
 
+// RemoteCmd is the parent class for the 'inertia remote' subcommands
 type RemoteCmd struct {
 	*cobra.Command
 	config  *cfg.Config
 	cfgPath string
 }
 
+// AttachRemoteCmd attaches 'remote' subcommands to the given parent command
 func AttachRemoteCmd(inertia *inertiacmd.Cmd) {
 	var remote = RemoteCmd{}
 	remote.Command = &cobra.Command{

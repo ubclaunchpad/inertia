@@ -15,12 +15,14 @@ import (
 	"github.com/ubclaunchpad/inertia/provision"
 )
 
+// ProvisionCmd is the parent class for the 'inertia provision' subcommands
 type ProvisionCmd struct {
 	*cobra.Command
 	config  *cfg.Config
 	cfgPath string
 }
 
+// AttachProvisionCmd attaches the 'provision' subcommands to the given parent
 func AttachProvisionCmd(inertia *inertiacmd.Cmd) {
 	var prov = &ProvisionCmd{}
 	prov.Command = &cobra.Command{

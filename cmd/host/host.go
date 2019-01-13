@@ -26,6 +26,8 @@ const (
 	EnvSSHPassphrase = "PEM_PASSPHRASE"
 )
 
+// AttachHostCmds reads configuration to attach a child command for each
+// configured remote in the configuration
 func AttachHostCmds(inertia *inertiacmd.Cmd) {
 	config, path, err := local.GetProjectConfigFromDisk(inertia.ConfigPath)
 	if err != nil {
@@ -40,6 +42,7 @@ func AttachHostCmds(inertia *inertiacmd.Cmd) {
 	}
 }
 
+// HostCmd is the parent class for a subcommand for a configured remote host
 type HostCmd struct {
 	*cobra.Command
 	remote  string
@@ -48,6 +51,8 @@ type HostCmd struct {
 	client  *client.Client
 }
 
+// attachHostCmd attaches a subcommand for a configured remote host to the
+// given parent
 func attachHostCmd(inertia *inertiacmd.Cmd, remote string, config *cfg.Config, cfgPath string) {
 	cli, found := client.NewClient(remote, os.Getenv(EnvSSHPassphrase), config, os.Stdout)
 	if !found {

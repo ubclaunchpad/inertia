@@ -117,6 +117,8 @@ func AddProjectWalkthrough(in io.Reader) (
 	return
 }
 
+// EnterEC2CredentialsWalkthrough prints promts to stdout and reads input from
+// given reader
 func EnterEC2CredentialsWalkthrough(in io.Reader) (id, key string, err error) {
 	print(`To get your credentials:
 	1. Open the IAM console (https://console.aws.amazon.com/iam/home?#home).
@@ -147,6 +149,8 @@ func EnterEC2CredentialsWalkthrough(in io.Reader) (id, key string, err error) {
 	return
 }
 
+// ChooseFromListWalkthrough prints given options and reads in a choice from
+// the given reader
 func ChooseFromListWalkthrough(in io.Reader, optionName string, options []string) (string, error) {
 	fmt.Printf("Available %ss:\n", optionName)
 	for _, o := range options {

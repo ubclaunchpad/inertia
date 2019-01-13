@@ -8,11 +8,13 @@ import (
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
 )
 
+// EnvCmd is the parent class for the 'env' subcommands
 type EnvCmd struct {
 	*cobra.Command
 	host *HostCmd
 }
 
+// AttachEnvCmd attaches the 'env' subcommands to the given host
 func AttachEnvCmd(host *HostCmd) {
 	var env = &EnvCmd{
 		Command: &cobra.Command{

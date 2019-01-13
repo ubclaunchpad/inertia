@@ -15,11 +15,13 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+// UserCmd is the parent class for the 'user' subcommands
 type UserCmd struct {
 	*cobra.Command
 	host *HostCmd
 }
 
+// AttachUserCmd attaches the 'user' subcommands to the given parent
 func AttachUserCmd(host *HostCmd) {
 	var user = &UserCmd{
 		Command: &cobra.Command{
@@ -243,11 +245,13 @@ func (root *UserCmd) attachListCmd() {
 	root.AddCommand(list)
 }
 
+// UserTotpCmd is the parent class for the 'user totp' subcommands
 type UserTotpCmd struct {
 	*cobra.Command
 	host *HostCmd
 }
 
+// AttachTotpCmd attaches the 'totp' subcommands to given parent
 func AttachTotpCmd(root *UserCmd) {
 	var totp = &UserTotpCmd{
 		Command: &cobra.Command{
