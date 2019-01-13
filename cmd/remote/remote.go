@@ -68,8 +68,8 @@ func (root *RemoteCmd) attachAddCmd() {
 		Use:   "add [remote]",
 		Short: "Add a reference to a remote VPS instance",
 		Long: `Adds a reference to a remote VPS instance. Requires information about the VPS
-	including IP address, user and a PEM file. The provided name will be used in other
-	Inertia commands.`,
+including IP address, user and a PEM file. The provided name will be used in other
+Inertia commands.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if _, found := root.config.GetRemote(args[0]); found {

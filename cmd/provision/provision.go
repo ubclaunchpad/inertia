@@ -56,15 +56,15 @@ func (root *ProvisionCmd) attachEcsCmd() {
 		Use:   "ec2 [name]",
 		Short: "[BETA] Provision a new Amazon EC2 instance",
 		Long: `[BETA] Provisions a new Amazon EC2 instance and sets it up for continuous deployment
-	with Inertia. 
-	
-	Make sure you run this command with the '-p' flag to indicate what ports
-	your project uses - for example:
-	
-		inertia provision ec2 my_ec2_instance -p 8000
-	
-	This ensures that your project ports are properly exposed and externally accessible.
-	`,
+with Inertia. 
+
+Make sure you run this command with the '-p' flag to indicate what ports
+your project uses - for example:
+
+	inertia provision ec2 my_ec2_instance -p 8000
+
+This ensures that your project ports are properly exposed and externally accessible.
+`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var config = root.config

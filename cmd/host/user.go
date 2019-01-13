@@ -44,13 +44,13 @@ func AttachUserCmd(host *HostCmd) {
 func (root *UserCmd) attachAddCmd() {
 	var add = &cobra.Command{
 		Use:   "add [user]",
-		Short: "Create a user with access to Inertia Web",
-		Long: `Creates a user with access to the Inertia Web application.
-	
-	This user will be able to log in and view or configure the
-	deployment from the web app.
-	
-	Use the --admin flag to create an admin user.`,
+		Short: "Create a user with access to this remote's Inertia daemon",
+		Long: `Creates a user with access to this remote's Inertia daemon.
+
+This user will be able to log in and view or configure the deployment
+from the Inertia CLI (using 'inertia [remote] user login').
+
+Use the --admin flag to create an admin user.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Print("Enter a password for user: ")
@@ -92,9 +92,9 @@ func (root *UserCmd) attachRemoveCmd() {
 		Use:   "rm [user]",
 		Short: "Remove a user",
 		Long: `Removes the given user from Inertia's user database.
-	
-	This user will no longer be able to log in and view or configure the deployment
-	from the web app.`,
+
+This user will no longer be able to log in and view or configure the deployment
+remotely.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.RemoveUser(args[0])
@@ -185,8 +185,9 @@ func (root *UserCmd) attachResetCmd() {
 	var reset = &cobra.Command{
 		Use:   "reset",
 		Short: "Reset user database on your remote",
-		Long: `Removes all users credentials on your remote. All users will no longer
-	be able to log in and view or configure the deployment from the web app.`,
+		Long: `Removes all users credentials on your remote. All configured user
+will no longer be able to log in and view or configure the deployment
+remotely.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.ResetUsers()
 			if err != nil {

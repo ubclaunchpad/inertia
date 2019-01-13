@@ -172,7 +172,7 @@ func (root *HostCmd) attachDownCmd() {
 		Short: "Bring project offline on remote",
 		Long: `Stops your project on your remote. This will kill all active project containers on your remote.
 	
-	Requires project to be online - do this by running 'inertia [remote] up`,
+Requires project to be online - do this by running 'inertia [remote] up`,
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.client.Down()
 			if err != nil {
@@ -206,7 +206,8 @@ func (root *HostCmd) attachStatusCmd() {
 		Use:   "status",
 		Short: "Print the status of the deployment on this remote",
 		Long: `Prints the status of the deployment on this remote.
-	Requires the Inertia daemon to be active on your remote - do this by running 'inertia [remote] up'`,
+
+Requires the Inertia daemon to be active on your remote - do this by running 'inertia [remote] up'`,
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.client.Status()
 			if err != nil {
@@ -249,9 +250,9 @@ func (root *HostCmd) attachLogsCmd() {
 		Short: "Access logs of containers on your remote host",
 		Long: `Accesses logs of containers on your remote host.
 	
-	By default, this command retrieves Inertia daemon logs, but you can provide an
-	argument that specifies the name of the container you wish to retrieve logs for.
-	Use 'inertia [remote] status' to see which containers are active.`,
+By default, this command retrieves Inertia daemon logs, but you can provide an
+argument that specifies the name of the container you wish to retrieve logs for.
+Use 'inertia [remote] status' to see which containers are active.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var short, _ = cmd.Flags().GetBool("short")
 			var entries, _ = cmd.Flags().GetInt("entries")
@@ -391,14 +392,15 @@ func (root *HostCmd) attachInitCmd() {
 		Use:   "init",
 		Short: "Initialize remote host for deployment",
 		Long: `Initializes this remote host for deployment.
-	This command sets up your remote host and brings an Inertia daemon online on your remote.
-	
-	Upon successful setup, you will be provided with:
-	 - a deploy key
-	 - a webhook URL
-	
-	The deploy key is required for the daemon to access your repository, and the
-	webhook URL enables continuous deployment as your repository is updated.`,
+
+This command sets up your remote host and brings an Inertia daemon online on your remote.
+
+Upon successful setup, you will be provided with:
+	- a deploy key
+	- a webhook URL
+
+The deploy key is required for the daemon to access your repository, and the
+webhook URL enables continuous deployment as your repository is updated.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			url, err := local.GetRepoRemote("origin")
 			if err != nil {
@@ -419,8 +421,9 @@ func (root *HostCmd) newResetCmd() {
 		Use:   "reset",
 		Short: "Reset the project on your remote",
 		Long: `Resets the project on your remote.
-	On this remote, this kills all active containers and clears the project directory,
-	allowing you to assign a different Inertia project to this remote.`,
+
+On this remote, this kills all active containers and clears the project directory,
+allowing you to assign a different Inertia project to this remote.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.client.Reset()
 			if err != nil {
@@ -451,7 +454,7 @@ func (root *HostCmd) attachUninstallCmd() {
 		Use:   "uninstall",
 		Short: "Shut down Inertia and remove Inertia assets from remote host",
 		Long: `Shuts down and removes the Inertia daemon, and removes the Inertia
-	directory (~/inertia) from your remote host.`,
+directory (~/inertia) from your remote host.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			println("WARNING: This will stop down your project and remove the Inertia daemon.")
 			println("This is irreversible. Continue? (y/n)")
