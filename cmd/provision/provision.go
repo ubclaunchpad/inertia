@@ -2,7 +2,6 @@ package provisioncmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -10,6 +9,7 @@ import (
 	"github.com/ubclaunchpad/inertia/client"
 	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
 	"github.com/ubclaunchpad/inertia/cmd/inpututil"
+	"github.com/ubclaunchpad/inertia/cmd/printutil"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 	"github.com/ubclaunchpad/inertia/provision"
@@ -32,7 +32,7 @@ func AttachProvisionCmd(inertia *inertiacmd.Cmd) {
 			var err error
 			prov.config, prov.cfgPath, err = local.GetProjectConfigFromDisk(inertia.ConfigPath)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 		},
 	}
@@ -64,7 +64,7 @@ func (root *ProvisionCmd) attachEcsCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			var config = root.config
 			if _, found := config.GetRemote(args[0]); found {
-				log.Fatal("remote with name already exists")
+				printutil.Fatal("remote with name already exists")
 			}
 
 			// Load flags for credentials
@@ -88,7 +88,7 @@ func (root *ProvisionCmd) attachEcsCmd() {
 			if fromEnv {
 				prov, err = provision.NewEC2ProvisionerFromEnv(user, os.Stdout)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 			} else if withProfile {
 				var profileUser, _ = cmd.Flags().GetString("profile.user")
@@ -96,16 +96,16 @@ func (root *ProvisionCmd) attachEcsCmd() {
 				prov, err = provision.NewEC2ProvisionerFromProfile(
 					user, profileUser, profilePath, os.Stdout)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 			} else {
 				keyID, key, err := inpututil.EnterEC2CredentialsWalkthrough(os.Stdin)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				prov, err = provision.NewEC2Provisioner(user, keyID, key, os.Stdout)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 			}
 
@@ -117,18 +117,18 @@ func (root *ProvisionCmd) attachEcsCmd() {
 			print("Please enter a region: ")
 			var region string
 			if _, err = fmt.Fscanln(os.Stdin, &region); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			// List image options and prompt for input
 			fmt.Printf("Loading images for region '%s'...\n", region)
 			images, err := prov.ListImageOptions(region)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			image, err := inpututil.ChooseFromListWalkthrough(os.Stdin, "image", images)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			// Gather input
@@ -157,13 +157,13 @@ func (root *ProvisionCmd) attachEcsCmd() {
 				Region:       region,
 			})
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			// Save new remote to configuration
 			remote.Branch, err = local.GetRepoCurrentBranch()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			config.AddRemote(remote)
 			config.Write(root.cfgPath)
@@ -171,13 +171,13 @@ func (root *ProvisionCmd) attachEcsCmd() {
 			// Create inertia client
 			inertia, found := client.NewClient(args[0], os.Getenv(local.EnvSSHPassphrase), config, os.Stdout)
 			if !found {
-				log.Fatal("vps setup did not complete properly")
+				printutil.Fatal("vps setup did not complete properly")
 			}
 
 			// Bootstrap remote
 			fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.RemoteVPS.IP)
 			if err = inertia.BootstrapRemote(config.Project); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			// Save updated config

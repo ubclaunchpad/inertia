@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
 	hostcmd "github.com/ubclaunchpad/inertia/cmd/host"
+	"github.com/ubclaunchpad/inertia/cmd/printutil"
 	provisioncmd "github.com/ubclaunchpad/inertia/cmd/provision"
 	remotecmd "github.com/ubclaunchpad/inertia/cmd/remote"
 
@@ -73,7 +73,7 @@ func newInitCmd(inertia *inertiacmd.Cmd) {
 			version := cmd.Parent().Version
 			givenVersion, err := cmd.Flags().GetString("version")
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			if givenVersion != version {
 				version = givenVersion
@@ -84,7 +84,7 @@ func newInitCmd(inertia *inertiacmd.Cmd) {
 			var buildFilePath string
 			cwd, err := os.Getwd()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			// docker-compose projects will usually have Dockerfiles,
 			// so check for that first, then check for Dockerfile
@@ -100,14 +100,14 @@ func newInitCmd(inertia *inertiacmd.Cmd) {
 				println("No build file detected")
 				buildType, buildFilePath, err = inpututil.AddProjectWalkthrough(os.Stdin)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 			}
 
 			// Hello world config file!
 			err = local.InitializeInertiaProject(inertia.ConfigPath, inertia.Version, buildType, buildFilePath)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			println("An inertia.toml configuration file has been created to store")
 			println("Inertia configuration. It is recommended that you DO NOT commit")
@@ -132,14 +132,14 @@ func newResetCmd(inertia *inertiacmd.Cmd) {
 			var response string
 			_, err := fmt.Scanln(&response)
 			if err != nil {
-				log.Fatal("invalid response - aborting")
+				printutil.Fatal("invalid response - aborting")
 			}
 			if response != "y" {
-				log.Fatal("aborting")
+				printutil.Fatal("aborting")
 			}
 			path, err := common.GetFullPath(inertia.ConfigPath)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			os.Remove(path)
 			println("Inertia configuration removed.")
@@ -158,7 +158,7 @@ func newSetCmd(inertia *inertiacmd.Cmd) {
 			// Ensure project initialized.
 			config, path, err := local.GetProjectConfigFromDisk(inertia.ConfigPath)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			success := util.SetProperty(args[0], args[1], config)
 			if success {
@@ -181,7 +181,7 @@ func newUpgradeCmd(inertia *inertiacmd.Cmd) {
 			// Ensure project initialized.
 			config, path, err := local.GetProjectConfigFromDisk(inertia.ConfigPath)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			var version = inertia.Version
@@ -192,7 +192,7 @@ func newUpgradeCmd(inertia *inertiacmd.Cmd) {
 			fmt.Printf("Setting Inertia config to version '%s'", version)
 			config.Version = version
 			if err = config.Write(path); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 		},
 	}

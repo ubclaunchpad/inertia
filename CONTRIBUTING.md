@@ -127,7 +127,7 @@ Then use your asset!
 ```go
 shellScriptData, err := ReadFile("client/scripts/myshellscript.sh")
 if err != nil {
-  log.Fatal("No asset with that name")
+  return errors.New("No asset with that name")
 }
 
 // Optionally run shell script over SSH.

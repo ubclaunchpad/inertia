@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"syscall"
@@ -12,6 +11,7 @@ import (
 	qr "github.com/Baozisoftware/qrcode-terminal-go"
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/api"
+	"github.com/ubclaunchpad/inertia/cmd/printutil"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -57,7 +57,7 @@ func (root *UserCmd) attachAddCmd() {
 			fmt.Print("Enter a password for user: ")
 			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
-				log.Fatal("Invalid password")
+				printutil.Fatal("Invalid password")
 			}
 			var password = strings.TrimSpace(string(bytePassword))
 			fmt.Print("\n")
@@ -65,12 +65,12 @@ func (root *UserCmd) attachAddCmd() {
 			var admin, _ = cmd.Flags().GetBool("admin")
 			resp, err := root.host.client.AddUser(args[0], password, admin)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			switch resp.StatusCode {
@@ -100,12 +100,12 @@ func (root *UserCmd) attachRemoveCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.RemoveUser(args[0])
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			switch resp.StatusCode {
 			case http.StatusOK:
@@ -133,13 +133,13 @@ func (root *UserCmd) attachLoginCmd() {
 			pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 			fmt.Println()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			var totp, _ = cmd.Flags().GetString("totp")
 			resp, err := root.host.client.LogIn(username, string(pwBytes), totp)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			if resp.StatusCode == http.StatusExpectationFailed {
@@ -148,11 +148,11 @@ func (root *UserCmd) attachLoginCmd() {
 				totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 				fmt.Println()
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				resp, err = root.host.client.LogIn(username, string(pwBytes), string(totpBytes))
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 			}
 
@@ -164,7 +164,7 @@ func (root *UserCmd) attachLoginCmd() {
 			defer resp.Body.Close()
 			token, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			var config = root.host.config
@@ -172,7 +172,7 @@ func (root *UserCmd) attachLoginCmd() {
 			config.Remotes[remote].Daemon.Token = string(token)
 			config.Remotes[remote].User = username
 			if err = config.Write(root.host.cfgPath); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			fmt.Println("You have been logged in successfully.")
@@ -191,13 +191,13 @@ func (root *UserCmd) attachResetCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.ResetUsers()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			switch resp.StatusCode {
@@ -222,12 +222,12 @@ func (root *UserCmd) attachListCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.ListUsers()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			switch resp.StatusCode {
 			case http.StatusOK:
@@ -278,13 +278,13 @@ func (root *UserTotpCmd) attachEnableCmd() {
 			pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 			fmt.Println()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			// Endpoint handles user authentication before enabling Totp
 			resp, err := root.host.client.EnableTotp(username, string(pwBytes))
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			if resp.StatusCode != http.StatusOK {
 				fmt.Printf("(Status code %d) Error Enabling Totp.", resp.StatusCode)
@@ -293,12 +293,12 @@ func (root *UserTotpCmd) attachEnableCmd() {
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			var totpInfo api.TotpResponse
 			if err = json.Unmarshal(body, &totpInfo); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			// Display QR code so users can easily add their keys to their
@@ -335,7 +335,7 @@ func (root *UserTotpCmd) attachDisableCmd() {
 			// Endpoint handles user authentication before disabling Totp
 			resp, err := root.host.client.DisableTotp()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			fmt.Printf("(Status code %d) ", resp.StatusCode)

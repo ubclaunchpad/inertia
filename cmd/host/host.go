@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -52,7 +51,7 @@ type HostCmd struct {
 func attachHostCmd(inertia *inertiacmd.Cmd, remote string, config *cfg.Config, cfgPath string) {
 	cli, found := client.NewClient(remote, os.Getenv(EnvSSHPassphrase), config, os.Stdout)
 	if !found {
-		log.Fatal("Remote not found")
+		printutil.Fatal("Remote not found")
 	}
 	var host = &HostCmd{
 		remote:  remote,
@@ -77,7 +76,7 @@ If the SSH key for your remote requires a passphrase, it can be provided via 'PE
 Run 'inertia [remote] init' to gather this information.`,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if host.client == nil || host.config == nil {
-				log.Fatalf("failed to read configuration at '%s'", host.cfgPath)
+				printutil.Fatalf("failed to read configuration at '%s'", host.cfgPath)
 			}
 			var verify, _ = cmd.Flags().GetBool("verify-ssl")
 			host.client.SetSSLVerification(verify)
@@ -121,19 +120,19 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			// TODO: support other remotes
 			url, err := local.GetRepoRemote("origin")
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			resp, err := root.client.Up(url, buildType, !short)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 
 			if short {
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				switch resp.StatusCode {
 				case http.StatusCreated:
@@ -172,13 +171,13 @@ func (root *HostCmd) attachDownCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.client.Down()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			switch resp.StatusCode {
@@ -206,7 +205,7 @@ func (root *HostCmd) attachStatusCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.client.Status()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 
@@ -217,19 +216,19 @@ func (root *HostCmd) attachStatusCmd() {
 					resp.StatusCode, root.client.Name, host)
 				var status = &api.DeploymentStatus{}
 				if err := json.NewDecoder(resp.Body).Decode(status); err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				println(printutil.FormatStatus(status))
 			case http.StatusUnauthorized:
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
 			default:
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				fmt.Printf("(Status code %d) %s\n",
 					resp.StatusCode, body)
@@ -262,13 +261,13 @@ func (root *HostCmd) attachLogsCmd() {
 				// if short, just grab the last x log entries
 				resp, err := root.client.Logs(container, entries)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				defer resp.Body.Close()
 
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				switch resp.StatusCode {
 				case http.StatusOK:
@@ -285,14 +284,14 @@ func (root *HostCmd) attachLogsCmd() {
 				// if not short, open a websocket to stream logs
 				socket, err := root.client.LogsWebSocket(container, entries)
 				if err != nil {
-					log.Fatal(err)
+					printutil.Fatal(err)
 				}
 				defer socket.Close()
 
 				for {
 					_, line, err := socket.ReadMessage()
 					if err != nil {
-						log.Fatal(err)
+						printutil.Fatal(err)
 					}
 					fmt.Print(string(line))
 				}
@@ -311,12 +310,12 @@ func (root *HostCmd) attachPruneCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.client.Prune()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 		},
@@ -331,7 +330,7 @@ func (root *HostCmd) attachSSHCmd() {
 		Long:  `Starts an interact SSH session with your remote.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := root.client.SSH.RunSession(args...); err != nil {
-				log.Fatal(err.Error())
+				printutil.Fatal(err.Error())
 			}
 		},
 	}
@@ -352,11 +351,11 @@ func (root *HostCmd) attachSendFileCmd() {
 			// Open file with given name
 			cwd, err := os.Getwd()
 			if err != nil {
-				log.Fatal(err.Error())
+				printutil.Fatal(err.Error())
 			}
 			f, err := os.Open(path.Join(cwd, args[0]))
 			if err != nil {
-				log.Fatal(err.Error())
+				printutil.Fatal(err.Error())
 			}
 
 			// Get flag for destination
@@ -371,7 +370,7 @@ func (root *HostCmd) attachSendFileCmd() {
 
 			// Initiate copy
 			if err = root.client.SSH.CopyFile(f, remotePath, permissions); err != nil {
-				log.Fatal(err.Error())
+				printutil.Fatal(err.Error())
 			}
 
 			fmt.Println("File", args[0], "has been copied to", remotePath, "on remote", root.remote)
@@ -398,11 +397,11 @@ func (root *HostCmd) attachInitCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			url, err := local.GetRepoRemote("origin")
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			var repoName = common.ExtractRepository(common.GetSSHRemoteURL(url))
 			if err = root.client.BootstrapRemote(repoName); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			root.config.Write(root.cfgPath)
 		},
@@ -420,12 +419,12 @@ func (root *HostCmd) newResetCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.client.Reset()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			switch resp.StatusCode {
@@ -454,21 +453,21 @@ func (root *HostCmd) attachUninstallCmd() {
 			var response string
 			_, err := fmt.Scanln(&response)
 			if err != nil || response != "y" {
-				log.Fatal("aborting")
+				printutil.Fatal("aborting")
 			}
 
 			// Daemon down
 			println("Stopping project...")
 			if _, err = root.client.Down(); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			println("Stopping daemon...")
 			if err = root.client.DaemonDown(); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			println("Removing Inertia directories...")
 			if err = root.client.UninstallInertia(); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			println("Uninstallation completed.")
 		},
@@ -484,13 +483,13 @@ func (root *HostCmd) attachTokenCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.client.Token()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			switch resp.StatusCode {
@@ -515,7 +514,7 @@ func (root *HostCmd) attachUpgradeCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			println("Shutting down daemon...")
 			if err := root.client.DaemonDown(); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			var version = root.config.Version
@@ -525,7 +524,7 @@ func (root *HostCmd) attachUpgradeCmd() {
 
 			fmt.Printf("Starting up the Inertia daemon (version %s)", version)
 			if err := root.client.DaemonUp(version); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 		},
 	}

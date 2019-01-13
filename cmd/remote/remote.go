@@ -3,7 +3,6 @@ package remotecmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/ubclaunchpad/inertia/cmd/inpututil"
@@ -44,7 +43,7 @@ inertia gcloud status      # check on status of Inertia daemon
 			var err error
 			remote.config, remote.cfgPath, err = local.GetProjectConfigFromDisk(inertia.ConfigPath)
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 		},
 	}
@@ -70,24 +69,24 @@ func (root *RemoteCmd) attachAddCmd() {
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if _, found := root.config.GetRemote(args[0]); found {
-				log.Fatal(errors.New("Remote " + args[0] + " already exists."))
+				printutil.Fatal(errors.New("Remote " + args[0] + " already exists."))
 			}
 
 			var port, _ = cmd.Flags().GetString("port")
 			var sshPort, _ = cmd.Flags().GetString("ssh.port")
 			branch, err := local.GetRepoCurrentBranch()
 			if err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			// Start prompts and save configuration
 			if err = inpututil.AddRemoteWalkthrough(
 				os.Stdin, root.config, args[0], port, sshPort, branch,
 			); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 			if err = root.config.Write(root.cfgPath); err != nil {
-				log.Fatal(err)
+				printutil.Fatal(err)
 			}
 
 			fmt.Println("\nRemote '" + args[0] + "' has been added!")
@@ -131,11 +130,11 @@ func (root *RemoteCmd) attachRemoveCmd() {
 			if found {
 				root.config.RemoveRemote(args[0])
 				if err := root.config.Write(root.cfgPath); err != nil {
-					log.Fatal("Failed to remove remote: " + err.Error())
+					printutil.Fatal("Failed to remove remote: " + err.Error())
 				}
 				fmt.Println("Remote " + args[0] + " removed.")
 			} else {
-				log.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
+				printutil.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
 			}
 		},
 	}
