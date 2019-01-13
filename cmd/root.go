@@ -26,6 +26,8 @@ func getVersion(version string) string {
 
 // NewInertiaCmd is a new Inertia command
 func NewInertiaCmd(version string) *inertiacmd.Cmd {
+	cobra.EnableCommandSorting = false
+
 	// instantiate top-level command
 	var root = &inertiacmd.Cmd{}
 	root.Command = &cobra.Command{

@@ -49,10 +49,10 @@ inertia gcloud status      # check on status of Inertia daemon
 
 	// add children
 	remote.attachAddCmd()
+	remote.attachShowCmd()
+	remote.attachSetCmd()
 	remote.attachListCmd()
 	remote.attachRemoveCmd()
-	remote.attachSetCmd()
-	remote.attachShowCmd()
 
 	// add to parent
 	inertia.AddCommand(remote.Command)

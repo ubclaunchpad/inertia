@@ -93,13 +93,13 @@ Run 'inertia [remote] init' to gather this information.`,
 	host.attachDownCmd()
 	host.attachStatusCmd()
 	host.attachLogsCmd()
+	AttachUserCmd(host)
+	AttachEnvCmd(host)
 	host.attachSendFileCmd()
 	host.attachSSHCmd()
 	host.attachTokenCmd()
 	host.attachUpgradeCmd()
 	host.attachUninstallCmd()
-	AttachEnvCmd(host)
-	AttachUserCmd(host)
 
 	// attach to parent
 	inertia.AddCommand(host.Command)
