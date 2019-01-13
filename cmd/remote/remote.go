@@ -39,12 +39,15 @@ inertia remote add gcloud
 inertia gcloud init        # set up Inertia
 inertia gcloud status      # check on status of Inertia daemon
 `,
-		PreRun: func(*cobra.Command, []string) {
+		PersistentPreRun: func(*cobra.Command, []string) {
 			// Ensure project initialized, load config
 			var err error
 			remote.config, remote.cfgPath, err = local.GetProjectConfigFromDisk(inertia.ConfigPath)
 			if err != nil {
-				printutil.Fatal(err)
+				printutil.Fatalf("failed to read config at '%s': %s", remote.cfgPath, err.Error())
+			}
+			if remote.config == nil {
+				printutil.Fatalf("failed to read config at '%s'", remote.cfgPath)
 			}
 		},
 	}
@@ -107,11 +110,11 @@ func (root *RemoteCmd) attachListCmd() {
 		Long:  `Lists all currently configured remotes.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var verbose, _ = cmd.Flags().GetBool("verbose")
-			for _, remote := range root.config.Remotes {
-				if verbose {
+			for name, remote := range root.config.Remotes {
+				if remote != nil && verbose {
 					fmt.Println(printutil.FormatRemoteDetails(remote))
 				} else {
-					fmt.Println(remote.Name)
+					fmt.Println(name)
 				}
 			}
 		},

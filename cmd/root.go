@@ -41,7 +41,8 @@ activating a daemon which will continuously update the production server
 with new releases as they become available in the project's repository.
 
 Once you have set up a remote with 'inertia remote add [remote]', use 
-'inertia [remote] --help' to see what you can do with your remote.
+'inertia [remote] --help' to see what you can do with your remote. To list
+available remotes, use 'inertia remote ls'.
 
 Repository:    https://github.com/ubclaunchpad/inertia/
 Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
