@@ -64,6 +64,10 @@ inertia gcloud status      # check on status of Inertia daemon
 }
 
 func (root *RemoteCmd) attachAddCmd() {
+	const (
+		flagPort    = "port"
+		flagSSHPort = "ssh.port"
+	)
 	var addRemote = &cobra.Command{
 		Use:   "add [remote]",
 		Short: "Add a reference to a remote VPS instance",
@@ -76,8 +80,8 @@ Inertia commands.`,
 				printutil.Fatal(errors.New("Remote " + args[0] + " already exists."))
 			}
 
-			var port, _ = cmd.Flags().GetString("port")
-			var sshPort, _ = cmd.Flags().GetString("ssh.port")
+			var port, _ = cmd.Flags().GetString(flagPort)
+			var sshPort, _ = cmd.Flags().GetString(flagSSHPort)
 			branch, err := local.GetRepoCurrentBranch()
 			if err != nil {
 				printutil.Fatal(err)
@@ -98,18 +102,19 @@ Inertia commands.`,
 			fmt.Println("for continuous deployment.")
 		},
 	}
-	addRemote.Flags().StringP("port", "p", "4303", "remote daemon port")
-	addRemote.Flags().StringP("ssh.port", "s", "22", "remote SSH port")
+	addRemote.Flags().StringP(flagPort, "p", "4303", "remote daemon port")
+	addRemote.Flags().StringP(flagSSHPort, "s", "22", "remote SSH port")
 	root.AddCommand(addRemote)
 }
 
 func (root *RemoteCmd) attachListCmd() {
+	const flagVerbose = "verbose"
 	var list = &cobra.Command{
 		Use:   "ls",
 		Short: "List currently configured remotes",
 		Long:  `Lists all currently configured remotes.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			var verbose, _ = cmd.Flags().GetBool("verbose")
+			var verbose, _ = cmd.Flags().GetBool(flagVerbose)
 			for name, remote := range root.config.Remotes {
 				if remote != nil && verbose {
 					fmt.Println(printutil.FormatRemoteDetails(remote))
@@ -119,7 +124,7 @@ func (root *RemoteCmd) attachListCmd() {
 			}
 		},
 	}
-	list.Flags().BoolP("verbose", "v", false, "enable verbose output")
+	list.Flags().BoolP(flagVerbose, "v", false, "enable verbose output")
 	root.AddCommand(list)
 }
 

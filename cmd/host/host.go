@@ -51,6 +51,11 @@ type HostCmd struct {
 	client  *client.Client
 }
 
+const (
+	flagShort     = "short"
+	flagVerifySSL = "verify-ssl"
+)
+
 // attachHostCmd attaches a subcommand for a configured remote host to the
 // given parent
 func attachHostCmd(inertia *inertiacmd.Cmd, remote string, config *cfg.Config, cfgPath string) {
@@ -83,13 +88,13 @@ Run 'inertia [remote] init' to gather this information.`,
 			if host.client == nil || host.config == nil {
 				printutil.Fatalf("failed to read configuration at '%s'", host.cfgPath)
 			}
-			var verify, _ = cmd.Flags().GetBool("verify-ssl")
+			var verify, _ = cmd.Flags().GetBool(flagVerifySSL)
 			host.client.SetSSLVerification(verify)
 		},
 	}
-	host.PersistentFlags().BoolP("short", "s", false,
+	host.PersistentFlags().BoolP(flagShort, "s", false,
 		"don't stream output from command")
-	host.PersistentFlags().Bool("verify-ssl", false,
+	host.PersistentFlags().Bool(flagVerifySSL, false,
 		"verify SSL communications - requires a signed SSL certificate")
 
 	// attach children
@@ -111,6 +116,7 @@ Run 'inertia [remote] init' to gather this information.`,
 }
 
 func (root *HostCmd) attachUpCmd() {
+	const flagBuildType = "type"
 	var up = &cobra.Command{
 		Use:   "up",
 		Short: "Bring project online on remote",
@@ -119,8 +125,8 @@ func (root *HostCmd) attachUpCmd() {
 This requires an Inertia daemon to be active on your remote - do this by running 'inertia [remote] init'`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Get flags
-			var short, _ = cmd.Flags().GetBool("short")
-			var buildType, _ = cmd.Flags().GetString("type")
+			var short, _ = cmd.Flags().GetBool(flagShort)
+			var buildType, _ = cmd.Flags().GetString(flagBuildType)
 
 			// TODO: support other remotes
 			url, err := local.GetRepoRemote("origin")
@@ -162,7 +168,7 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			}
 		},
 	}
-	up.Flags().String("type", "", "specify a build method for your project")
+	up.Flags().String(flagBuildType, "", "override configured build method for your project")
 	root.AddCommand(up)
 }
 
@@ -245,6 +251,7 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 }
 
 func (root *HostCmd) attachLogsCmd() {
+	const flagEntries = "entries"
 	var log = &cobra.Command{
 		Use:   "logs [container]",
 		Short: "Access logs of containers on your remote host",
@@ -254,8 +261,8 @@ By default, this command retrieves Inertia daemon logs, but you can provide an
 argument that specifies the name of the container you wish to retrieve logs for.
 Use 'inertia [remote] status' to see which containers are active.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			var short, _ = cmd.Flags().GetBool("short")
-			var entries, _ = cmd.Flags().GetInt("entries")
+			var short, _ = cmd.Flags().GetBool(flagShort)
+			var entries, _ = cmd.Flags().GetInt(flagEntries)
 
 			// get daemon logs by default
 			var container = "/inertia-daemon"
@@ -304,7 +311,7 @@ Use 'inertia [remote] status' to see which containers are active.`,
 			}
 		},
 	}
-	log.Flags().Int("entries", 0, "Number of log entries to fetch")
+	log.Flags().Int(flagEntries, 0, "Number of log entries to fetch")
 	root.AddCommand(log)
 }
 
@@ -344,6 +351,10 @@ func (root *HostCmd) attachSSHCmd() {
 }
 
 func (root *HostCmd) attachSendFileCmd() {
+	const (
+		flagDest = "dest"
+		flagPerm = "perm"
+	)
 	var sendFile = &cobra.Command{
 		Use:   "send [filepath]",
 		Short: "Send a file to your Inertia deployment",
@@ -352,7 +363,7 @@ func (root *HostCmd) attachSendFileCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// Get permissions to copy file with
-			var permissions, _ = cmd.Flags().GetString("permissions")
+			var permissions, _ = cmd.Flags().GetString(flagPerm)
 
 			// Open file with given name
 			cwd, err := os.Getwd()
@@ -365,7 +376,7 @@ func (root *HostCmd) attachSendFileCmd() {
 			}
 
 			// Get flag for destination
-			dest, err := cmd.Flags().GetString("dest")
+			var dest, _ = cmd.Flags().GetString(flagDest)
 			if dest == "" {
 				dest = args[0]
 			}
@@ -382,8 +393,8 @@ func (root *HostCmd) attachSendFileCmd() {
 			fmt.Println("File", args[0], "has been copied to", remotePath, "on remote", root.remote)
 		},
 	}
-	sendFile.Flags().StringP("dest", "d", "", "path relative from project root to send file to")
-	sendFile.Flags().StringP("permissions", "p", "0655", "permissions settings to create file with")
+	sendFile.Flags().StringP(flagDest, "d", "", "path relative from project root to send file to")
+	sendFile.Flags().StringP(flagPerm, "p", "0655", "permissions settings to create file with")
 	root.AddCommand(sendFile)
 }
 
@@ -515,6 +526,7 @@ func (root *HostCmd) attachTokenCmd() {
 }
 
 func (root *HostCmd) attachUpgradeCmd() {
+	const flagVersion = "version"
 	var upgrade = &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade Inertia daemon to match the CLI.",
@@ -526,7 +538,7 @@ func (root *HostCmd) attachUpgradeCmd() {
 			}
 
 			var version = root.config.Version
-			if v, _ := cmd.Flags().GetString("version"); v != "" {
+			if v, _ := cmd.Flags().GetString(flagVersion); v != "" {
 				version = v
 			}
 
@@ -536,6 +548,6 @@ func (root *HostCmd) attachUpgradeCmd() {
 			}
 		},
 	}
-	upgrade.Flags().String("version", root.config.Version, "version of Inertia daemon to spin up")
+	upgrade.Flags().String(flagVersion, root.config.Version, "version of Inertia daemon to spin up")
 	root.AddCommand(upgrade)
 }
