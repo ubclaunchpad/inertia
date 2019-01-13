@@ -5,15 +5,15 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/ubclaunchpad/inertia/cfg"
 	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
 	hostcmd "github.com/ubclaunchpad/inertia/cmd/host"
+	"github.com/ubclaunchpad/inertia/cmd/inpututil"
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
 	provisioncmd "github.com/ubclaunchpad/inertia/cmd/provision"
 	remotecmd "github.com/ubclaunchpad/inertia/cmd/remote"
 
-	"github.com/ubclaunchpad/inertia/cmd/inpututil"
-
-	"github.com/ubclaunchpad/inertia/cmd/util"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
@@ -160,7 +160,7 @@ func newSetCmd(inertia *inertiacmd.Cmd) {
 			if err != nil {
 				printutil.Fatal(err)
 			}
-			success := util.SetProperty(args[0], args[1], config)
+			success := cfg.SetProperty(args[0], args[1], config)
 			if success {
 				config.Write(path)
 				println("Configuration setting '" + args[0] + "' has been updated..")

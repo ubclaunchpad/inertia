@@ -7,7 +7,6 @@ import (
 
 	"github.com/ubclaunchpad/inertia/cmd/inpututil"
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
-	"github.com/ubclaunchpad/inertia/cmd/util"
 
 	"github.com/ubclaunchpad/inertia/cfg"
 	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
@@ -168,7 +167,7 @@ func (root *RemoteCmd) attachSetCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			remote, found := root.config.GetRemote(args[0])
 			if found {
-				var success = util.SetProperty(args[1], args[2], remote)
+				var success = cfg.SetProperty(args[1], args[2], remote)
 				if success {
 					root.config.Write(root.cfgPath)
 					println("Remote '" + args[0] + "' has been updated.")
