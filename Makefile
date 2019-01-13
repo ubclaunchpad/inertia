@@ -5,7 +5,7 @@ VPS_OS = ubuntu
 RELEASE = test
 CLI_VERSION_VAR = main.Version
 
-all: prod-deps build
+all: prod-deps cli
 
 # List all commands
 .PHONY: ls
@@ -38,18 +38,18 @@ dev-deps:
 docker-deps:
 	bash test/docker_deps.sh
 
-.PHONY: build
-build:
+.PHONY: cli
+cli:
 	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)"
 
 # Install Inertia with release version
-.PHONY: cli
-cli:
+.PHONY: install
+install:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)"
 
 # Install Inertia with git tag as release version
-.PHONY: cli-tagged
-cli-tagged:
+.PHONY: install-tagged
+install-tagged:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
 
 # Run static analysis

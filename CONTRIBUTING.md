@@ -92,7 +92,7 @@ Make sure all of the above are installed (and that the Docker daemon is online) 
 
 ```bash
 $> make deps          # installs dependencies
-$> make cli           # installs Inertia build tagged as "test" to gopath
+$> make install       # installs Inertia build tagged as "test" to gopath
 $> inertia --version  # check what version you have installed
 ```
 
