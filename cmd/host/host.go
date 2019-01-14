@@ -107,6 +107,7 @@ Run 'inertia [remote] init' to gather this information.`,
 	AttachEnvCmd(host)
 	host.attachSendFileCmd()
 	host.attachSSHCmd()
+	host.attachPruneCmd()
 	host.attachTokenCmd()
 	host.attachUpgradeCmd()
 	host.attachUninstallCmd()

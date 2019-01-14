@@ -128,7 +128,7 @@ func (s *Server) Run(host, port string) error {
 	handler.AttachAdminRestrictedHandlerFunc("/env",
 		s.envHandler, http.MethodGet, http.MethodPost)
 	handler.AttachAdminRestrictedHandlerFunc("/prune",
-		s.pruneHandler, http.MethodGet)
+		s.pruneHandler, http.MethodPost)
 	handler.AttachAdminRestrictedHandlerFunc("/token",
 		tokenHandler, http.MethodGet)
 
