@@ -25,7 +25,7 @@ func TestNewBuilder(t *testing.T) {
 }
 
 const (
-	DockerComposeVersion = "docker/compose:1.22.0"
+	DockerComposeVersion = "docker/compose:1.23.2"
 )
 
 // killTestContainers is a helper for tests - it implements project.ContainerStopper
