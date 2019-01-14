@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 // DaemonLogger is a multilogger used by the daemon to pipe
@@ -97,9 +99,11 @@ type CloseOpts struct {
 func (l *DaemonLogger) Close(opts ...CloseOpts) error {
 	if l.socket != nil && !l.httpStream {
 		if opts != nil && len(opts) > 0 {
-			return l.socket.CloseHandler()(opts[0].StatusCode, opts[0].Message)
+			return l.socket.CloseHandler()(
+				websocket.CloseGoingAway,
+				fmt.Sprintf("status %d: %s", opts[0].StatusCode, opts[0].Message))
 		}
-		return l.socket.CloseHandler()(http.StatusOK, "connection closed")
+		return l.socket.CloseHandler()(websocket.CloseGoingAway, "connection closed")
 	}
 	return nil
 }
