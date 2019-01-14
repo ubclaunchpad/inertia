@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -108,6 +109,9 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+
+	// Remove existing git repo if there is one
+	os.RemoveAll(filepath.Join(d.directory, ".git"))
 
 	// Initialize repository
 	d.repo, err = git.InitializeRepository(cfg.RemoteURL, git.RepoOptions{
