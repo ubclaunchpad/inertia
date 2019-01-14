@@ -201,7 +201,6 @@ func (c *Client) keyGen(session SSHSession) (*bytes.Buffer, error) {
 
 	// Create deploy key.
 	result, stderr, err := session.Run(string(scriptBytes))
-
 	if err != nil {
 		return nil, fmt.Errorf("key generation failed: %s: %s", err.Error(), stderr.String())
 	}

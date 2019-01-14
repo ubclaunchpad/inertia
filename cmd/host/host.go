@@ -542,7 +542,7 @@ func (root *HostCmd) attachUpgradeCmd() {
 				version = v
 			}
 
-			fmt.Printf("Starting up the Inertia daemon (version %s)", version)
+			fmt.Printf("Starting up the Inertia daemon (version %s)\n", version)
 			if err := root.client.DaemonUp(version); err != nil {
 				printutil.Fatal(err)
 			}

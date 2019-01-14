@@ -55,8 +55,6 @@ func NewDataManager(dbPath string, keyPath string) (*DeploymentDataManager, erro
 		return nil, fmt.Errorf("failed to instantiate database: %s", err.Error())
 	}
 
-	println("key", string(key))
-
 	return &DeploymentDataManager{
 		db,
 		key,
