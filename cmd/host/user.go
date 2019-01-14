@@ -42,6 +42,7 @@ func AttachUserCmd(host *HostCmd) {
 }
 
 func (root *UserCmd) attachAddCmd() {
+	const flagAdmin = "admin"
 	var add = &cobra.Command{
 		Use:   "add [user]",
 		Short: "Create a user with access to this remote's Inertia daemon",
@@ -61,7 +62,7 @@ Use the --admin flag to create an admin user.`,
 			var password = strings.TrimSpace(string(bytePassword))
 			fmt.Print("\n")
 
-			var admin, _ = cmd.Flags().GetBool("admin")
+			var admin, _ = cmd.Flags().GetBool(flagAdmin)
 			resp, err := root.host.client.AddUser(args[0], password, admin)
 			if err != nil {
 				printutil.Fatal(err)
@@ -83,7 +84,7 @@ Use the --admin flag to create an admin user.`,
 			}
 		},
 	}
-	add.Flags().Bool("admin", false, "create a user with administrator permissions")
+	add.Flags().Bool(flagAdmin, false, "create a user with administrator permissions")
 	root.AddCommand(add)
 }
 

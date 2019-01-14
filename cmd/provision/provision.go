@@ -22,6 +22,11 @@ type ProvisionCmd struct {
 	cfgPath string
 }
 
+const (
+	flagDaemonPort = "daemon.port"
+	flagPorts      = "ports"
+)
+
 // AttachProvisionCmd attaches the 'provision' subcommands to the given parent
 func AttachProvisionCmd(inertia *inertiacmd.Cmd) {
 	var prov = &ProvisionCmd{}
@@ -41,8 +46,8 @@ func AttachProvisionCmd(inertia *inertiacmd.Cmd) {
 			}
 		},
 	}
-	prov.PersistentFlags().StringP("daemon.port", "d", "4303", "daemon port")
-	prov.PersistentFlags().StringArrayP("ports", "p", []string{}, "ports your project uses")
+	prov.PersistentFlags().StringP(flagDaemonPort, "d", "4303", "daemon port")
+	prov.PersistentFlags().StringArrayP(flagPorts, "p", []string{}, "ports your project uses")
 
 	// add children
 	prov.attachEcsCmd()
@@ -52,6 +57,14 @@ func AttachProvisionCmd(inertia *inertiacmd.Cmd) {
 }
 
 func (root *ProvisionCmd) attachEcsCmd() {
+	const (
+		flagType        = "type"
+		flagUser        = "user"
+		flagFromEnv     = "from-env"
+		flagFromProfile = "from-profile"
+		flagProfilePath = "profile.path"
+		flagProfileUser = "profile.user"
+	)
 	var provEC2 = &cobra.Command{
 		Use:   "ec2 [name]",
 		Short: "[BETA] Provision a new Amazon EC2 instance",
@@ -73,14 +86,13 @@ This ensures that your project ports are properly exposed and externally accessi
 			}
 
 			// Load flags for credentials
-			var fromEnv, _ = cmd.Flags().GetBool("from-env")
-			var withProfile, _ = cmd.Flags().GetBool("from-profile")
+			var fromEnv, _ = cmd.Flags().GetBool(flagFromEnv)
+			var withProfile, _ = cmd.Flags().GetBool(flagFromProfile)
 
 			// Load flags for setup configuration
-			var user, _ = cmd.Flags().GetString("user")
-			var instanceType, _ = cmd.Flags().GetString("type")
-			var stringProjectPorts, _ = cmd.Flags().GetStringArray("ports")
-
+			var user, _ = cmd.Flags().GetString(flagUser)
+			var instanceType, _ = cmd.Flags().GetString(flagType)
+			var stringProjectPorts, _ = cmd.Flags().GetStringArray(flagPorts)
 			if stringProjectPorts == nil || len(stringProjectPorts) == 0 {
 				fmt.Print("[WARNING] no project ports provided - this means that no ports" +
 					"will be exposed on your ec2 host. Use the '--ports' flag to set" +
@@ -96,8 +108,8 @@ This ensures that your project ports are properly exposed and externally accessi
 					printutil.Fatal(err)
 				}
 			} else if withProfile {
-				var profileUser, _ = cmd.Flags().GetString("profile.user")
-				var profilePath, _ = cmd.Flags().GetString("profile.path")
+				var profileUser, _ = cmd.Flags().GetString(flagProfileUser)
+				var profilePath, _ = cmd.Flags().GetString(flagProfilePath)
 				prov, err = provision.NewEC2ProvisionerFromProfile(
 					user, profileUser, profilePath, os.Stdout)
 				if err != nil {
@@ -149,7 +161,7 @@ This ensures that your project ports are properly exposed and externally accessi
 			}
 
 			// Create remote instance
-			var port, _ = cmd.Flags().GetString("daemon.port")
+			var port, _ = cmd.Flags().GetString(flagDaemonPort)
 			var portDaemon, _ = common.ParseInt64(port)
 			remote, err := prov.CreateInstance(provision.EC2CreateInstanceOptions{
 				Name:        args[0],
@@ -189,17 +201,18 @@ This ensures that your project ports are properly exposed and externally accessi
 			config.Write(root.cfgPath)
 		},
 	}
-	provEC2.Flags().StringP("type", "t",
+	provEC2.Flags().StringP(flagType, "t",
 		"t2.micro", "ec2 instance type to instantiate")
-	provEC2.Flags().StringP("user", "u",
+	provEC2.Flags().StringP(flagUser, "u",
 		"ec2-user", "ec2 instance user to execute commands as")
-	provEC2.Flags().Bool("from-profile", false,
-		"load ec2 credentials from profile")
-	provEC2.Flags().String("profile.path", "~/.aws/config",
-		"path to aws profile configuration file")
-	provEC2.Flags().String("profile.user", "default",
-		"user profile for aws credentials file")
-	provEC2.Flags().Bool("from-env", false,
+	provEC2.Flags().Bool(flagFromEnv, false,
 		"load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set")
+	provEC2.Flags().Bool(flagFromProfile, false,
+		"load ec2 credentials from profile")
+	provEC2.Flags().String(flagProfilePath, "~/.aws/config",
+		"path to aws profile configuration file")
+	provEC2.Flags().String(flagProfileUser, "default",
+		"user profile for aws credentials file")
+
 	root.AddCommand(provEC2)
 }

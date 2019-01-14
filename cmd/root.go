@@ -71,6 +71,7 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 }
 
 func attachInitCmd(inertia *inertiacmd.Cmd) {
+	const flagVersion = "version"
 	var init = &cobra.Command{
 		Use:   "init",
 		Short: "Initialize an Inertia project in this repository",
@@ -79,7 +80,7 @@ func attachInitCmd(inertia *inertiacmd.Cmd) {
 		to succeed.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			version := cmd.Parent().Version
-			givenVersion, err := cmd.Flags().GetString("version")
+			givenVersion, err := cmd.Flags().GetString(flagVersion)
 			if err != nil {
 				printutil.Fatal(err)
 			}
@@ -125,6 +126,6 @@ func attachInitCmd(inertia *inertiacmd.Cmd) {
 			println("VPS instance.")
 		},
 	}
-	init.Flags().String("version", inertia.Version, "specify Inertia daemon version to use")
+	init.Flags().String(flagVersion, inertia.Version, "specify Inertia daemon version to use")
 	inertia.AddCommand(init)
 }
