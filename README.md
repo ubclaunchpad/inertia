@@ -28,13 +28,13 @@
   </a>
 
   <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general">
-    <img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg"
+    <img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed"
       alt="inertiad image">
   </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases/latest">
     <img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg"
-       alt="Latest release" />
+      alt="Latest release" />
   </a>
 </p>
 
