@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/.static/inertia-with-name.png" width="30%" alt="Inertia"/>
+  <img src="/.static/inertia-with-name.png" width="25%" alt="Inertia"/>
 </p>
 
 <p align="center">
