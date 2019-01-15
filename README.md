@@ -53,14 +53,15 @@ Inertia is a simple cross-platform command line application that enables quick a
 
 |   | Main Features  |
 ----|-----------------
-🚀  | Simple setup from your computer without ever having to manually SSH into your remote
-🍰  | Use any Linux-based remote virtual private server platform you want
-📦  | Easily provision VPS instances for your project with supported providers such as Amazon EC2
-⚒  | Deploy any Dockerfile or docker-compose project
-🚄  | Webhook integration for GitHub, GitLab, and Bitbucket allow your project to be automatically updated, rebuilt, and deployed as soon as you `git push`
-🛂  | Start up, shut down, and monitor your deployment with ease from the command line
-🏷  | Configure deployment to your liking with branch settings, build configuration, and more
-🔑  | Secured with tokens and HTTPS across the board
+🚀  | Simple to use: set up a deployment from your computer without ever having to manually SSH into your remote
+🍰  | Cloud-agnostic: use any Linux-based remote virtual private server provider you want
+📦  | Quick setup: easily provision VPS instances for your project with supported providers such as Amazon EC2
+⚒  | Versatile project support: deploy any Dockerfile or docker-compose project
+🚄  | Continuous deployment: Webhook integrations for GitHub, GitLab, and Bitbucket means your project can be automatically updated, rebuilt, and deployed as soon as you `git push`
+🛂  | In-depth controls: start up, shut down, and monitor your deployment with ease from the command line or using Inertia's REST API
+🏷  | Flexible configuration: branch deployment, environment variables, easy file transfer for configuration files, and more
+👥  | Built for teams: provide shared access to an Inertia deployment by adding users
+🔑  | Secure: secured with access tokens and HTTPS across the board, as well as features like 2FA for user logins
 
 <br>
 
