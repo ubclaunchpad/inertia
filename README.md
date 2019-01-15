@@ -38,7 +38,8 @@
 <p align="center">
   <a href="#package-getting-started"><strong>Getting Started</strong></a> · 
   <a href="#bulb-motivation-and-design"><strong>Motivation & Design</strong></a> · 
-  <a href="#books-contributing"><strong>Contributing</strong></a>
+  <a href="#books-contributing"><strong>Contributing</strong></a> · 
+  <a href="https://github.com/ubclaunchpad/inertia/wiki"><strong>Wiki</strong></a>
 </p>
 
 <br>
