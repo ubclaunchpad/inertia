@@ -24,7 +24,12 @@
 
   <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
     <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg"
-       alt="GoDocs available" />
+      alt="GoDocs available" />
+  </a>
+
+  <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general">
+    <img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg"
+      alt="inertiad image">
   </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases/latest">
