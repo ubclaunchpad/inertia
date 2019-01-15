@@ -44,7 +44,7 @@
 <br>
 
 <p align="center">
-    <img src="/.static/inertia-init.png" width="45%" />
+    <img src="/.static/inertia-init.png" width="35%" />
 </p>
 
 <br>
