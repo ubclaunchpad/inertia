@@ -59,7 +59,7 @@ Inertia is a simple cross-platform command line application that enables quick a
 🚄  | **Continuous deployment** - Webhook integrations for GitHub, GitLab, and Bitbucket means your project can be automatically updated, rebuilt, and deployed as soon as you `git push`
 🛂  | **In-depth controls** - start up, shut down, and monitor your deployment with ease from the command line or using Inertia's REST API
 🏷  | **Flexible configuration** - branch deployment, environment variables, easy file transfer for configuration files, build settings, and more
-📦  | **Quick provisioning** -  easily provision VPS instances for your project with supported providers such as Amazon Web Services
+📦  | **Built-in provisioning** - easily provision and set up VPS instances for your project with supported providers such as Amazon Web Services using a single command
 👥  | **Built for teams** - provide shared access to an Inertia deployment by adding users
 🔑  | **Secure** - secured with access tokens and HTTPS across the board, as well as features like 2FA for user logins
 
