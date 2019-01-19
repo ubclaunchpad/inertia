@@ -1,4 +1,8 @@
+import Cookies from 'universal-cookie';
 import encodeURL from './encodeURL';
+
+const api = process.env.INERTIA_API || '';
+const cookies = new Cookies();
 
 export default class InertiaAPI {
   static async logout() {
@@ -8,7 +12,9 @@ export default class InertiaAPI {
         Accept: 'application/json',
       },
     };
-    return InertiaAPI.post(endpoint, params);
+
+    await InertiaAPI.post(endpoint, params);
+    cookies.remove('token');
   }
 
   static async login(username, password) {
@@ -23,7 +29,17 @@ export default class InertiaAPI {
         password,
       }),
     };
-    return InertiaAPI.post(endpoint, params);
+
+    const resp = await InertiaAPI.post(endpoint, params);
+    const data = await resp.text();
+    switch (resp.status) {
+      case 200:
+        return data;
+      default:
+        throw new Error(
+          `login failed with status ${resp.status}: ${data}`
+        );
+    }
   }
 
   static async validate() {
@@ -42,6 +58,7 @@ export default class InertiaAPI {
       },
     };
 
+    // todo: websockets
     return InertiaAPI.post(endpoint, params, queryParams);
   }
 
@@ -51,9 +68,21 @@ export default class InertiaAPI {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: this.getToken(),
       },
     };
-    return InertiaAPI.get(endpoint, params);
+
+    let data;
+    const resp = await InertiaAPI.get(endpoint, params);
+    switch (resp.status) {
+      case 200:
+        return resp.json();
+      default:
+        data = await resp.text();
+        throw new Error(
+          `status check failed with status ${resp.status}: ${data}`
+        );
+    }
   }
 
   /**
@@ -69,15 +98,8 @@ export default class InertiaAPI {
       credentials: 'include',
     };
     const queryString = queryParams ? encodeURL(queryParams) : '';
-    const url = endpoint + queryString;
-
-    const request = new Request(url, newParams);
-
-    try {
-      return await fetch(request);
-    } catch (e) {
-      throw e;
-    }
+    const url = api + endpoint + queryString;
+    return fetch(new Request(url, newParams));
   }
 
   /**
@@ -91,13 +113,10 @@ export default class InertiaAPI {
       method: 'POST',
       credentials: 'include',
     };
+    return fetch(new Request(api + endpoint, newParams));
+  }
 
-    const request = new Request(endpoint, newParams);
-
-    try {
-      return await fetch(request);
-    } catch (e) {
-      throw e;
-    }
+  static getToken() {
+    return `Bearer ${cookies.get('token')}`;
   }
 }

@@ -167,13 +167,35 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	err = ph.users.AddUser("bobheadxi", "wowgreat", false)
 	assert.Nil(t, err)
 
-	// Login in as user
-	user := &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	// log in as non user
+	user := &api.UserRequest{Username: "asdfasdf", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
 	assert.Nil(t, err)
 	loginResp, err := http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer loginResp.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, loginResp.StatusCode)
+
+	// Login in with incorrect password
+	user = &api.UserRequest{Username: "bobheadxi", Password: "wowgreaasdfasdft"}
+	body, err = json.Marshal(user)
+	assert.Nil(t, err)
+	req, err = http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
+	assert.Nil(t, err)
+	loginResp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer loginResp.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, loginResp.StatusCode)
+
+	// Login in as user
+	user = &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	body, err = json.Marshal(user)
+	assert.Nil(t, err)
+	req, err = http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
+	assert.Nil(t, err)
+	loginResp, err = http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer loginResp.Body.Close()
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)

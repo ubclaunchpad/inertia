@@ -1,40 +1,17 @@
 import {
   GET_PROJECT_DETAILS_SUCCESS,
+  GET_PROJECT_DETAILS_FAILURE,
   GET_PROJECT_LOGS_SUCCESS,
   GET_PROJECT_LOGS_FAILURE,
-  GET_CONTAINERS_SUCCESS,
+  TEST,
 } from './_constants';
 
-const MOCK_DETAILS = {
-  name: 'your-project-name',
-  branch: 'master',
-  commit: 'e51e133565bd0b0fda6caf69014dd2b2b24bfbaa',
-  message: 'commit message goes here',
-  buildType: 'docker-compose',
-};
+import {
+  MOCK_DETAILS,
+  MOCK_LOGS,
+} from './_mock';
 
-const MOCK_LOGS = [
-  'log1asdasdasdasdasdasdasdssdasdasdssdasdasdssdasdasdssdasdasdsa',
-  'log2asdasdasdasdsdassdasdasdssdasdasdssdasdasdssdasdasdsdsdasds',
-  'log3dasdsdazxcxzsdasdasdssdasdasdssdasdasdssdasdasdsxxxxxxxxxx',
-  'log4dasdsdasdsdasdasdssdasdasdssdasdasdssdasdasdsxzczxczxs',
-  'log5dasdsdaasdsdasdasdssdasdasdssdasdasdssdasdasdsasdasdsds',
-  'log6dasdsdaszsdasdasdssdasdasdssdasdasdssdasdasdsxczxczxczxcwqdqds',
-  'log7dasdsdaxcsdasdasdssdasdasdssdasdasdssdasdasdszxczzxcsds',
-];
-
-const MOCK_CONTAINERS = [
-  {
-    name: '/inertia-deploy-test',
-    status: 'ACTIVE',
-    lastUpdated: '2018-01-01 00:00',
-  },
-  {
-    name: '/docker-compose',
-    status: 'ACTIVE',
-    lastUpdated: '2018-01-01 00:00',
-  },
-];
+import api from '../api';
 
 function promiseState(p) {
   const t = {};
@@ -43,15 +20,33 @@ function promiseState(p) {
     .then(v => (v === t ? 'pending' : ('fulfilled', () => 'rejected')));
 }
 
-export const handleGetProjectDetails = () => (dispatch) => {
-  // TODO: put fetch request here
-  dispatch({
-    type: GET_PROJECT_DETAILS_SUCCESS,
-    payload: { project: MOCK_DETAILS },
-  });
+function detailsDispatch(payload, failure = false) {
+  return {
+    type: failure ? GET_PROJECT_DETAILS_SUCCESS : GET_PROJECT_DETAILS_FAILURE,
+    payload,
+  };
+}
+
+export const getStatus = () => {
+  if (TEST) return (dispatch) => {
+    // TODO: put fetch request here
+    dispatch({
+      type: GET_PROJECT_DETAILS_SUCCESS,
+      payload: { project: MOCK_DETAILS },
+    });
+  };
+
+  return async (dispatch) => {
+    try {
+      const status = await api.getRemoteStatus();
+      dispatch(detailsDispatch({ status }));
+    } catch (error) {
+      dispatch(detailsDispatch({ error }, true));
+    }
+  };
 };
 
-export const handleGetLogs = ({ container }) => (dispatch) => {
+export const getLogs = ({ container }) => (dispatch) => {
   try {
     let resp;
     if (!container) {
@@ -107,12 +102,4 @@ export const handleGetLogs = ({ container }) => (dispatch) => {
       type: GET_PROJECT_LOGS_FAILURE,
       payload: { logs: MOCK_LOGS } });
   }
-};
-
-export const handleGetContainers = () => (dispatch) => {
-  // TODO: put fetch request here
-  dispatch({
-    type: GET_CONTAINERS_SUCCESS,
-    payload: { containers: MOCK_CONTAINERS },
-  });
 };

@@ -160,7 +160,7 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !admin {
-			http.Error(w, "Admin privileges required", http.StatusForbidden)
+			http.Error(w, "admin privileges required", http.StatusForbidden)
 			return
 		}
 	}
@@ -422,7 +422,7 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	err := h.sessions.EndSession(r)
 	if err != nil {
-		http.Error(w, "Logout failed: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "logout failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

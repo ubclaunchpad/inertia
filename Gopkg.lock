@@ -26,7 +26,7 @@
   version = "v0.4.11"
 
 [[projects]]
-  digest = "1:9cf1f42958cdca9dc630e4e101d0a13ba0e28f97bb1c4577e1c1120ddf07d986"
+  digest = "1:524c8fbe457b5f7ff259595d8386d62673959fc221a8c0491601f738678fbff3"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -62,8 +62,8 @@
     "service/sts",
   ]
   pruneopts = "NUT"
-  revision = "3991042237b45cf58c9d5f34295942d5533c28c6"
-  version = "v1.16.11"
+  revision = "fb5f514796fc4fdc6afdcf5a675a5b2baa714b9f"
+  version = "v1.16.14"
 
 [[projects]]
   digest = "1:90f59f03e8a0c973faff6d6122a4000efaee118907b5c695cc7615d2d8240538"
@@ -106,7 +106,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cd21447b0dc5895161750aea1bd6a3118f143cfdc98be6cf2b40a5e9e6bb923f"
+  digest = "1:217379d380974a38e00c7a81fe8772650eeba27b549df349259e7d732f198ef8"
   name = "github.com/docker/docker"
   packages = [
     "api",
@@ -129,7 +129,7 @@
     "errdefs",
   ]
   pruneopts = "NUT"
-  revision = "f76d6a078d881f410c00e8d900dcdfc2e026c841"
+  revision = "545d00e7521414f648140b5834d41a072592a484"
 
 [[projects]]
   digest = "1:2a47f7eb1a2c30428d1ee6808cb66d4deb17e68a3e55d696f03c8068552ba5e8"
@@ -265,12 +265,12 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:5cf3f025cbee5951a4ee961de067c8a89fc95a5adabead774f82822efabab121"
+  digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -302,7 +302,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6d5f91e94b84274a726f31e8d98f1f789e9afae639bd7555d3ca610c966823c4"
+  digest = "1:9e1cf667f2f78e30e9c12dcbb5900632d7ddde2252f89283becc4f12a427caf7"
   name = "github.com/skip2/go-qrcode"
   packages = [
     ".",
@@ -310,7 +310,7 @@
     "reedsolomon",
   ]
   pruneopts = "NUT"
-  revision = "cf5f9fa2f0d847edb8e038db7ed975e239095e1a"
+  revision = "bcdd5e378222dd9f20da94a99c0101d30ebf3a50"
 
 [[projects]]
   branch = "master"
@@ -342,12 +342,12 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:bacb8b590716ab7c33f2277240972c9582d389593ee8d66fc10074e0508b8126"
+  digest = "1:42e8c2456d7ec0f31e182c20022e74324c4da2cb3bd9069ff9b131fe33466308"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   pruneopts = "NUT"
-  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
-  version = "v1.2.2"
+  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:3148cb3478c26a92b4c1a18abb9428234b281e278af6267840721a24b6cbc6a3"
@@ -392,7 +392,7 @@
     "ssh/terminal",
   ]
   pruneopts = "NUT"
-  revision = "505ab145d0a99da450461ae2c1a9f6cd10d1f447"
+  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
 
 [[projects]]
   branch = "master"
@@ -410,14 +410,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2075537ba5a9b2cc70c521cd4404bb5368b47f87fddc97fdf6fd2327fad21fe1"
+  digest = "1:9c4192900018de73237d33a270f12a7faac6609bf16190c8e3671f5cb00ff330"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "9a3f9b0469bbc6b8802087ae5c0af9f61502de01"
+  revision = "1775db3f06b568179d273425900dd09125831dd5"
 
 [[projects]]
   digest = "1:8029e9743749d4be5bc9f7d42ea1659471767860f0cdc34d37c3111bd308a295"

@@ -9,7 +9,7 @@ import {
 
 import * as mainActions from '../../actions/main';
 
-import InertiaAPI from '../../common/API';
+import api from '../../api';
 
 import { Containers, Dashboard, Settings } from '../../pages';
 
@@ -49,23 +49,26 @@ const styles = {
   },
 };
 
-
 class MainWrapper extends React.Component {
   constructor(props) {
     super(props);
 
     this.handleLogout = this.handleLogout.bind(this);
-    this.handleGetStatus = this.handleGetStatus.bind(this);
     this.state = { status: {} };
+  }
 
-    this.handleGetStatus()
-      .then(() => {})
-      .catch(() => {}); // TODO: Log error
+  async componentDidMount() {
+    try {
+      const status = await api.getRemoteStatus();
+      this.setState({ status });
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async handleLogout() {
     const { history } = this.props;
-    const response = await InertiaAPI.logout();
+    const response = await api.logout();
     if (response.status !== 200) {
       // TODO: Log Error
       return;
@@ -73,20 +76,10 @@ class MainWrapper extends React.Component {
     history.push('/login');
   }
 
-  async handleGetStatus() {
-    const response = await InertiaAPI.getRemoteStatus();
-    if (response.status !== 200) {
-      // TODO: Log Error
-      return;
-    }
-    // just a stub for now
-    this.setState({ status: await response.json() });
-  }
-
   render() {
     const { match: { url } } = this.props;
-    const { status } = this.state;
-    console.debug(status);
+    const { status = {} } = this.state;
+    console.log({ status });
     return (
       <div style={styles.container}>
         <NavBar url={url} />
@@ -113,7 +106,7 @@ class MainWrapper extends React.Component {
           </div>
         </div>
 
-        <Footer version="v0.0.0" />
+        <Footer version={status.version} />
       </div>
     );
   }
@@ -123,12 +116,7 @@ MainWrapper.propTypes = {
   match: PropTypes.object,
 };
 
-
-const mapStateToProps = ({ Main }) => {
-  return {
-    testState: Main.testState,
-  };
-};
+const mapStateToProps = ({ Main }) => ({ status: Main.status });
 
 const mapDispatchToProps = dispatch => bindActionCreators({ ...mainActions }, dispatch);
 

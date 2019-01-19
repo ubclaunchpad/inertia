@@ -90,9 +90,9 @@ docker-compose
 
 SettingsWrapper.propTypes = {};
 
-const mapStateToProps = () => { return {}; };
+const mapStateToProps = () => ({});
 
-const mapDispatchToProps = () => { return {}; };
+const mapDispatchToProps = () => ({});
 
 const Settings = connect(mapStateToProps, mapDispatchToProps)(SettingsWrapper);
 
