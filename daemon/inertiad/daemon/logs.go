@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	docker "github.com/docker/docker/client"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
@@ -22,8 +22,8 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get container name and stream from request query params
 	params := r.URL.Query()
-	container := params.Get(common.Container)
-	streamParam := params.Get(common.Stream)
+	container := params.Get(api.Container)
+	streamParam := params.Get(api.Stream)
 	if streamParam != "" {
 		s, err := strconv.ParseBool(streamParam)
 		if err != nil {
@@ -37,7 +37,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Determine number of entries to fetch
-	entriesParam := params.Get(common.Entries)
+	entriesParam := params.Get(api.Entries)
 	var entries int
 	if entriesParam != "" {
 		if entries, err = strconv.Atoi(entriesParam); err != nil {

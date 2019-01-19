@@ -3,7 +3,7 @@ SSH_PORT = 69
 VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = test
-CLI_VERSION_VAR = github.com/ubclaunchpad/inertia/cmd.Version
+CLI_VERSION_VAR = main.Version
 
 all: prod-deps cli
 
@@ -38,14 +38,18 @@ dev-deps:
 docker-deps:
 	bash test/docker_deps.sh
 
-# Install Inertia with release version
 .PHONY: cli
 cli:
+	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)"
+
+# Install Inertia with release version
+.PHONY: install
+install:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)"
 
 # Install Inertia with git tag as release version
-.PHONY: cli-tagged
-cli-tagged:
+.PHONY: install-tagged
+install-tagged:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
 
 # Run static analysis

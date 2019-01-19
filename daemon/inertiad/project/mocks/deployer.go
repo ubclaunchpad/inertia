@@ -6,7 +6,7 @@ import (
 	sync "sync"
 
 	client "github.com/docker/docker/client"
-	common "github.com/ubclaunchpad/inertia/common"
+	api "github.com/ubclaunchpad/inertia/api"
 	project "github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
@@ -83,17 +83,17 @@ type FakeDeployer struct {
 		result1 *project.DeploymentDataManager
 		result2 bool
 	}
-	GetStatusStub        func(*client.Client) (common.DeploymentStatus, error)
+	GetStatusStub        func(*client.Client) (api.DeploymentStatus, error)
 	getStatusMutex       sync.RWMutex
 	getStatusArgsForCall []struct {
 		arg1 *client.Client
 	}
 	getStatusReturns struct {
-		result1 common.DeploymentStatus
+		result1 api.DeploymentStatus
 		result2 error
 	}
 	getStatusReturnsOnCall map[int]struct {
-		result1 common.DeploymentStatus
+		result1 api.DeploymentStatus
 		result2 error
 	}
 	InitializeStub        func(project.DeploymentConfig, io.Writer) error
@@ -496,7 +496,7 @@ func (fake *FakeDeployer) GetDataManagerReturnsOnCall(i int, result1 *project.De
 	}{result1, result2}
 }
 
-func (fake *FakeDeployer) GetStatus(arg1 *client.Client) (common.DeploymentStatus, error) {
+func (fake *FakeDeployer) GetStatus(arg1 *client.Client) (api.DeploymentStatus, error) {
 	fake.getStatusMutex.Lock()
 	ret, specificReturn := fake.getStatusReturnsOnCall[len(fake.getStatusArgsForCall)]
 	fake.getStatusArgsForCall = append(fake.getStatusArgsForCall, struct {
@@ -520,7 +520,7 @@ func (fake *FakeDeployer) GetStatusCallCount() int {
 	return len(fake.getStatusArgsForCall)
 }
 
-func (fake *FakeDeployer) GetStatusCalls(stub func(*client.Client) (common.DeploymentStatus, error)) {
+func (fake *FakeDeployer) GetStatusCalls(stub func(*client.Client) (api.DeploymentStatus, error)) {
 	fake.getStatusMutex.Lock()
 	defer fake.getStatusMutex.Unlock()
 	fake.GetStatusStub = stub
@@ -533,28 +533,28 @@ func (fake *FakeDeployer) GetStatusArgsForCall(i int) *client.Client {
 	return argsForCall.arg1
 }
 
-func (fake *FakeDeployer) GetStatusReturns(result1 common.DeploymentStatus, result2 error) {
+func (fake *FakeDeployer) GetStatusReturns(result1 api.DeploymentStatus, result2 error) {
 	fake.getStatusMutex.Lock()
 	defer fake.getStatusMutex.Unlock()
 	fake.GetStatusStub = nil
 	fake.getStatusReturns = struct {
-		result1 common.DeploymentStatus
+		result1 api.DeploymentStatus
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDeployer) GetStatusReturnsOnCall(i int, result1 common.DeploymentStatus, result2 error) {
+func (fake *FakeDeployer) GetStatusReturnsOnCall(i int, result1 api.DeploymentStatus, result2 error) {
 	fake.getStatusMutex.Lock()
 	defer fake.getStatusMutex.Unlock()
 	fake.GetStatusStub = nil
 	if fake.getStatusReturnsOnCall == nil {
 		fake.getStatusReturnsOnCall = make(map[int]struct {
-			result1 common.DeploymentStatus
+			result1 api.DeploymentStatus
 			result2 error
 		})
 	}
 	fake.getStatusReturnsOnCall[i] = struct {
-		result1 common.DeploymentStatus
+		result1 api.DeploymentStatus
 		result2 error
 	}{result1, result2}
 }

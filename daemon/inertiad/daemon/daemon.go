@@ -54,9 +54,10 @@ func New(version string, state cfg.Config, deployment project.Deployer) (*Server
 // Run starts the server
 func (s *Server) Run(host, port string) error {
 	var (
-		err  error
-		cert = path.Join(s.state.SSLDirectory, "daemon.cert")
-		key  = path.Join(s.state.SSLDirectory, "daemon.key")
+		err    error
+		sslDir = path.Join(s.state.SecretsDirectory, "ssl")
+		cert   = path.Join(sslDir, "daemon.cert")
+		key    = path.Join(sslDir, "daemon.key")
 	)
 
 	// Check if the cert files are available.
@@ -67,13 +68,13 @@ func (s *Server) Run(host, port string) error {
 
 	// If they are not available, generate new ones.
 	if keyNotPresent && certNotPresent {
-		fmt.Printf("No certificates found in %s - generating new ones...", s.state.SSLDirectory)
+		fmt.Printf("No certificates found in %s - generating new ones...", sslDir)
 		if err = crypto.GenerateCertificate(cert, key, host+":"+port, "RSA"); err != nil {
 			return err
 		}
 	} else {
 		fmt.Printf("Found certificates in %s (%s, %s)",
-			s.state.SSLDirectory, cert, key)
+			sslDir, cert, key)
 	}
 
 	// Watch container events
@@ -127,7 +128,7 @@ func (s *Server) Run(host, port string) error {
 	handler.AttachAdminRestrictedHandlerFunc("/env",
 		s.envHandler, http.MethodGet, http.MethodPost)
 	handler.AttachAdminRestrictedHandlerFunc("/prune",
-		s.pruneHandler, http.MethodGet)
+		s.pruneHandler, http.MethodPost)
 	handler.AttachAdminRestrictedHandlerFunc("/token",
 		tokenHandler, http.MethodGet)
 

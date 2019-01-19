@@ -1,4 +1,4 @@
-package common
+package api
 
 const (
 	// MsgDaemonOK is the OK response upon successfully reaching daemon

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 )
 
@@ -32,7 +32,7 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	var envReq common.EnvRequest
+	var envReq api.EnvRequest
 	err = json.Unmarshal(body, &envReq)
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusBadRequest)

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
@@ -20,9 +20,8 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	var upReq common.UpRequest
-	err = json.Unmarshal(body, &upReq)
-	if err != nil {
+	var upReq api.UpRequest
+	if err = json.Unmarshal(body, &upReq); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
