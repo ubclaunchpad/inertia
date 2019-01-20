@@ -1,11 +1,15 @@
 package project
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
 
-	"github.com/boltdb/bolt"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
@@ -19,34 +23,41 @@ type DeploymentDataManager struct {
 	// key/value database where each "bucket" is a collection
 	db *bolt.DB
 
-	// @TODO: should these keys be here?
 	// Keys for encrypting data
-	encryptPublicKey  *[32]byte
-	encryptPrivateKey *[32]byte
-	// Keys for decrypting data
-	decryptPublicKey  *[32]byte
-	decryptPrivateKey *[32]byte
+	symmetricKey []byte
 }
 
-func newDataManager(dbPath string) (*DeploymentDataManager, error) {
-	db, err := bolt.Open(dbPath, 0600, nil)
-	if err != nil {
-		return nil, err
-	}
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists(envVariableBucket)
-		return err
-	})
-	if err != nil {
-		return nil, err
+// NewDataManager instantiates a database associated with a deployment
+func NewDataManager(dbPath string, keyPath string) (*DeploymentDataManager, error) {
+	// retrieve AES key, generate if not present
+	var key []byte
+	var err error
+	if key, err = ioutil.ReadFile(keyPath); err != nil || len(key) != crypto.SymmetricKeyLength {
+		key = make([]byte, crypto.SymmetricKeyLength)
+		if _, err := rand.Read(key); err != nil {
+			return nil, fmt.Errorf("failed to generate key: %s", key)
+		}
+		os.Remove(keyPath)
+		if err := ioutil.WriteFile(keyPath, key, 0600); err != nil {
+			return nil, fmt.Errorf("failed to write key to '%s': %s", keyPath, err.Error())
+		}
 	}
 
-	encryptPublicKey, encryptPrivateKey, decryptPublicKey, decryptPrivateKey, err := crypto.GenerateKeys()
+	// Set up database
+	db, err := bolt.Open(dbPath, 0600, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database at '%s': %s", dbPath, err.Error())
+	}
+	if err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists(envVariableBucket)
+		return err
+	}); err != nil {
+		return nil, fmt.Errorf("failed to instantiate database: %s", err.Error())
+	}
 
 	return &DeploymentDataManager{
 		db,
-		encryptPublicKey, encryptPrivateKey,
-		decryptPublicKey, decryptPrivateKey,
+		key,
 	}, nil
 }
 
@@ -60,8 +71,7 @@ func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 
 	valueBytes := []byte(value)
 	if encrypt {
-		encrypted, err := crypto.Seal(valueBytes,
-			c.encryptPrivateKey, c.decryptPublicKey)
+		encrypted, err := crypto.Encrypt(c.symmetricKey, valueBytes)
 		if err != nil {
 			return err
 		}
@@ -69,7 +79,7 @@ func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
-		users := tx.Bucket(envVariableBucket)
+		vars := tx.Bucket(envVariableBucket)
 		bytes, err := json.Marshal(envVariable{
 			Value:     valueBytes,
 			Encrypted: encrypt,
@@ -77,49 +87,54 @@ func (c *DeploymentDataManager) AddEnvVariable(name, value string,
 		if err != nil {
 			return err
 		}
-		return users.Put([]byte(name), bytes)
+		return vars.Put([]byte(name), bytes)
 	})
 }
 
-// RemoveEnvVariable removes a previously set env variable
-func (c *DeploymentDataManager) RemoveEnvVariable(name string) error {
+// RemoveEnvVariables removes previously set env variables
+func (c *DeploymentDataManager) RemoveEnvVariables(names ...string) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		vars := tx.Bucket(envVariableBucket)
-		return vars.Delete([]byte(name))
+		var vars = tx.Bucket(envVariableBucket)
+		for _, n := range names {
+			if err := vars.Delete([]byte(n)); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 
 // GetEnvVariables retrieves all stored environment variables
 func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) {
-	envs := []string{}
-
-	err := c.db.View(func(tx *bolt.Tx) error {
-		variables := tx.Bucket(envVariableBucket)
+	var envs = []string{}
+	var faulty = []string{}
+	var err = c.db.View(func(tx *bolt.Tx) error {
+		var variables = tx.Bucket(envVariableBucket)
 		return variables.ForEach(func(name, variableBytes []byte) error {
-			variable := &envVariable{}
-			err := json.Unmarshal(variableBytes, variable)
-			if err != nil {
+			var variable = &envVariable{}
+			if err := json.Unmarshal(variableBytes, variable); err != nil {
 				return err
 			}
 
-			nameString := string(name)
+			var nameString = string(name)
 			if !variable.Encrypted {
 				envs = append(envs, nameString+"="+string(variable.Value))
 			} else if !decrypt {
 				envs = append(envs, nameString+"=[ENCRYPTED]")
 			} else {
-				decrypted, err := crypto.UndoSeal(variable.Value,
-					c.encryptPublicKey, c.decryptPrivateKey)
+				decrypted, err := crypto.Decrypt(c.symmetricKey, variable.Value)
 				if err != nil {
 					// If decrypt fails, key is no longer valid - remove var
-					c.RemoveEnvVariable(nameString)
+					faulty = append(faulty, nameString)
 				}
 				envs = append(envs, nameString+"="+string(decrypted))
 			}
-
 			return nil
 		})
 	})
+
+	c.RemoveEnvVariables(faulty...)
+
 	return envs, err
 }
 

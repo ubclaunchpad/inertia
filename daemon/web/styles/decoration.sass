@@ -13,6 +13,9 @@
   &-highlight-light
     background: $highlight-light
 
+  &-terminal
+    background: $darkgrey
+    color: $white
 
 .hover
   &-bg
@@ -24,6 +27,13 @@
     &-lightred
       &:hover
         color: $lightred !important
+
+      &-all
+        &:hover
+          color: $lightred !important
+
+          > *
+            color: $lightred !important
 
   &-fill
     &-lightred
@@ -38,3 +48,11 @@
 .clickable
   &:hover
     cursor: pointer
+
+//Fonts
+.color
+  &-white
+    color: $white
+
+  &-grey
+    color: $grey

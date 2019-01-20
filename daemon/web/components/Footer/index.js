@@ -25,15 +25,15 @@ const Footer = ({ version }) => {
       name: 'fab fa-medium-m',
     },
   ].map(socialFooterIcon => (
-    <span className="icons">
+    <span key={socialFooterIcon.id} className="icons">
       <a
-        key={socialFooterIcon.id}
         href={socialFooterIcon.link}
         rel="noopener noreferrer"
         target="_blank">
         <span className={`${socialFooterIcon.name} pad-right-xs hover-color-lightred`} />
       </a>
-    </span>));
+    </span>
+  ));
   return (
     <footer className="footer flex flow-row ai-center jc-between fill-width" style={{ backgroundColor }}>
       <span className="pad-left-xs">

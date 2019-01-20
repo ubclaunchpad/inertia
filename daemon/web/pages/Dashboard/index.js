@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import * as dashboardActions from '../../actions/dashboard';
+import * as dashboardActions from '../../actions/project';
 import TerminalView from '../../components/TerminalView';
 import {
   Table,
@@ -25,37 +25,36 @@ const styles = {
   },
   underConstruction: {
     textAlign: 'center',
-    fontSize: 24,
+    fontSize: 14,
     color: '#9f9f9f',
   },
 };
 
 class DashboardWrapper extends React.Component {
   componentWillMount() {
-    const { handleGetProjectDetails, handleGetContainers } = this.props;
-    handleGetProjectDetails();
-    handleGetContainers();
+    const { getStatus } = this.props;
+    getStatus();
   }
 
   render() {
     const {
-      project: {
+      getLogs,
+      logs,
+      status: {
         name,
         branch,
         commit,
         message,
         buildType,
-      },
-    } = this.props;
-    const {
-      containers,
-      handleGetLogs,
-      logs,
+        containers,
+      } = {},
     } = this.props;
 
     return (
       <div style={styles.container}>
-        <IconHeader title={branch} type="dashboard" />
+        <div className="pad-sides-s">
+          <IconHeader title={branch} type="dashboard" />
+        </div>
 
         <Table style={{ margin: '0 30px 10px 30px' }}>
           <TableHeader>
@@ -119,7 +118,7 @@ Last Updated
               <TableRowExpandable
                 key={container.name}
                 height={300}
-                onClick={() => handleGetLogs({ container: container.name })}
+                onClick={() => getLogs({ container: container.name })}
                 panel={<TerminalView logs={logs} />}>
                 <TableCell style={{ flex: '0 0 30%' }}>
 Commit
@@ -140,30 +139,26 @@ Commit
 
 DashboardWrapper.propTypes = {
   logs: PropTypes.array,
-  containers: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-    lastUpdated: PropTypes.string.isRequired,
-  })),
-  project: PropTypes.shape({
+  status: PropTypes.shape({
     name: PropTypes.string.isRequired,
     branch: PropTypes.string.isRequired,
     commit: PropTypes.string.isRequired,
     message: PropTypes.string.isRequired,
     buildType: PropTypes.string.isRequired,
+    containers: PropTypes.arrayOf(PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      status: PropTypes.string.isRequired,
+      lastUpdated: PropTypes.string.isRequired,
+    })),
   }),
-  handleGetLogs: PropTypes.func,
-  handleGetContainers: PropTypes.func,
-  handleGetProjectDetails: PropTypes.func,
+  getLogs: PropTypes.func,
+  getStatus: PropTypes.func,
 };
 
-const mapStateToProps = ({ Dashboard }) => {
-  return {
-    project: Dashboard.project,
-    logs: Dashboard.logs,
-    containers: Dashboard.containers,
-  };
-};
+const mapStateToProps = ({ Dashboard }) => ({
+  status: Dashboard.status,
+  logs: Dashboard.logs,
+});
 
 const mapDispatchToProps = dispatch => bindActionCreators({ ...dashboardActions }, dispatch);
 

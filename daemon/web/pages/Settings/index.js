@@ -23,12 +23,12 @@ class SettingsWrapper extends React.Component {
   render() {
     return (
 
-      <div>
-        <IconHeader type="settings" title="PROJECT INFORMATION" style={{ margin: '1rem' }} />
-        <Table style={{ width: '90%', margin: '1rem' }}>
+      <div className="pad-sides-s">
+        <IconHeader type="settings" title="Project Information" />
+        <Table>
           <TableHeader>
             <TableRow>
-              <TableCell style={{ fontWeight: '900', fontSize: '14px' }}>
+              <TableCell>
 Project-name
               </TableCell>
               <TableCell />
@@ -77,8 +77,12 @@ docker-compose
             </TableRow>
           </TableBody>
         </Table>
-        <ShutdownButton style={{ margin: '1rem' }} />
-        <PruneImageButton style={{ margin: '1rem' }} />
+        <div className="pad-top-s">
+          <ShutdownButton />
+        </div>
+        <div className="pad-top-s">
+          <PruneImageButton />
+        </div>
       </div>
     );
   }
@@ -86,9 +90,9 @@ docker-compose
 
 SettingsWrapper.propTypes = {};
 
-const mapStateToProps = () => { return {}; };
+const mapStateToProps = () => ({});
 
-const mapDispatchToProps = () => { return {}; };
+const mapDispatchToProps = () => ({});
 
 const Settings = connect(mapStateToProps, mapDispatchToProps)(SettingsWrapper);
 

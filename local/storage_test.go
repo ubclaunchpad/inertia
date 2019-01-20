@@ -62,14 +62,6 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, config.Remotes["test"], readConfig.Remotes["test"])
 	assert.Equal(t, config.Remotes["test2"], readConfig.Remotes["test2"])
-
-	// Test client read
-	client, _, err := GetClient("test2", "inertia.toml")
-	assert.Nil(t, err)
-	assert.Equal(t, "test2", client.Name)
-	assert.Equal(t, "12343:80801", client.GetIPAndPort())
-	_, _, err = GetClient("asdf", "inertia.toml")
-	assert.NotNil(t, err)
 }
 
 func TestSaveKey(t *testing.T) {

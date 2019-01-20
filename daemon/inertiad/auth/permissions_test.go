@@ -10,9 +10,11 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
@@ -103,7 +105,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Login in as user
-	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	user := &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
@@ -165,13 +167,35 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	err = ph.users.AddUser("bobheadxi", "wowgreat", false)
 	assert.Nil(t, err)
 
-	// Login in as user
-	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	// log in as non user
+	user := &api.UserRequest{Username: "asdfasdf", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
 	assert.Nil(t, err)
 	loginResp, err := http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer loginResp.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, loginResp.StatusCode)
+
+	// Login in with incorrect password
+	user = &api.UserRequest{Username: "bobheadxi", Password: "wowgreaasdfasdft"}
+	body, err = json.Marshal(user)
+	assert.Nil(t, err)
+	req, err = http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
+	assert.Nil(t, err)
+	loginResp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer loginResp.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, loginResp.StatusCode)
+
+	// Login in as user
+	user = &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	body, err = json.Marshal(user)
+	assert.Nil(t, err)
+	req, err = http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
+	assert.Nil(t, err)
+	loginResp, err = http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer loginResp.Body.Close()
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
@@ -212,7 +236,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Login in as user
-	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	user := &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
@@ -258,7 +282,7 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Login in as user
-	user := &common.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
+	user := &api.UserRequest{Username: "bobheadxi", Password: "wowgreat"}
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	req, err := http.NewRequest("POST", ts.URL+"/user/login", bytes.NewReader(body))
@@ -301,7 +325,7 @@ func TestUserControlHandlers(t *testing.T) {
 	bearerTokenString := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
 
 	// Add a new user
-	body, err := json.Marshal(&common.UserRequest{
+	body, err := json.Marshal(&api.UserRequest{
 		Username: "jimmyneutron",
 		Password: "asfasdlfjk",
 		Admin:    false,
@@ -318,7 +342,7 @@ func TestUserControlHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	// Remove a user
-	body, err = json.Marshal(&common.UserRequest{
+	body, err = json.Marshal(&api.UserRequest{
 		Username: "jimmyneutron",
 	})
 	assert.Nil(t, err)
@@ -348,4 +372,194 @@ func TestUserControlHandlers(t *testing.T) {
 	assert.Nil(t, err)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestEnableDisableTotpEndpoints(t *testing.T) {
+	dir := "./test_enabledisable_totp"
+	ts := httptest.NewServer(nil)
+	defer ts.Close()
+
+	// Set up permission handler
+	ph, err := getTestPermissionsHandler(dir)
+	defer os.RemoveAll(dir)
+	assert.Nil(t, err)
+	defer ph.Close()
+	ts.Config.Handler = ph
+
+	// Test handler uses the getFakeAPIToken keylookup, which will match with
+	// the testToken
+	authToken := fmt.Sprintf("Bearer %s", crypto.TestMasterToken)
+
+	// Add a new user
+	body, err := json.Marshal(&api.UserRequest{
+		Username: "jimmyneutron",
+		Password: "asfasdlfjk",
+		Admin:    false,
+	})
+	assert.Nil(t, err)
+	payload := bytes.NewReader(body)
+	req, err := http.NewRequest("POST", ts.URL+"/user/add", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", authToken)
+	resp, err := http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	// Enable Totp
+	payload = bytes.NewReader(body)
+	req, err = http.NewRequest("POST", ts.URL+"/user/totp/enable", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", authToken)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Get Totp key from response
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	totpResp := &api.TotpResponse{}
+	err = json.Unmarshal(respBytes, totpResp)
+	assert.Nil(t, err)
+	totpKey, err := totp.GenerateCode(totpResp.TotpSecret, time.Now())
+	assert.Nil(t, err)
+
+	// Log in with Totp
+	body, err = json.Marshal(&api.UserRequest{
+		Username: "jimmyneutron",
+		Password: "asfasdlfjk",
+		Totp:     totpKey,
+	})
+	payload = bytes.NewReader(body)
+	req, err = http.NewRequest("POST", ts.URL+"/user/login", payload)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Get user JWT from response
+	userTokenBytes, err := ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	authToken = fmt.Sprintf("Bearer %s", string(userTokenBytes))
+
+	// Disable Totp
+	req, err = http.NewRequest("POST", ts.URL+"/user/totp/disable", nil)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", authToken)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestPermissionsHandler_addUserHandler(t *testing.T) {
+	type args struct {
+		method string
+		target string
+		body   interface{}
+	}
+	type want struct {
+		status int
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{"missing body", args{"POST", "/", nil}, want{http.StatusBadRequest}},
+		{"bad credentials", args{"POST", "/", api.UserRequest{
+			Username: "bobheadxi", Password: "bobheadxi",
+		}}, want{http.StatusBadRequest}},
+		{"ok credentials", args{"POST", "/", api.UserRequest{
+			Username: "bobheadxi", Password: "bobdeadxi",
+		}}, want{http.StatusCreated}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up permission handler
+			var dir = "./test_addUserHandler"
+			ph, err := getTestPermissionsHandler(dir)
+			defer os.RemoveAll(dir)
+			assert.Nil(t, err)
+			defer ph.Close()
+
+			// test handler
+			var (
+				b, _ = json.Marshal(tt.args.body)
+				req  = httptest.NewRequest(tt.args.method, tt.args.target, bytes.NewReader(b))
+				rec  = httptest.NewRecorder()
+			)
+			ph.addUserHandler(rec, req)
+
+			// assert
+			if rec.Code != tt.want.status {
+				t.Errorf("expected status '%d', got '%d'", tt.want.status, rec.Code)
+			}
+		})
+	}
+}
+
+func TestPermissionsHandler_loginHandler(t *testing.T) {
+	type fields struct {
+		user api.UserRequest
+	}
+	type args struct {
+		method string
+		target string
+		body   interface{}
+	}
+	type want struct {
+		status int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{"missing body", fields{}, args{"POST", "/", nil}, want{http.StatusBadRequest}},
+		{"invalid user", fields{}, args{"POST", "/", api.UserRequest{
+			Username: "bobhead", Password: "lunchpad",
+		}}, want{http.StatusUnauthorized}},
+		{"valid user, wrong creds", fields{api.UserRequest{
+			Username: "bobhead", Password: "breakfastpad",
+		}}, args{"POST", "/", api.UserRequest{
+			Username: "bobhead", Password: "lunchpad",
+		}}, want{http.StatusUnauthorized}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up permission handler
+			var dir = "./test_loginHandler"
+			ph, err := getTestPermissionsHandler(dir)
+			defer os.RemoveAll(dir)
+			assert.Nil(t, err)
+			defer ph.Close()
+
+			// test situation
+			var testUser = tt.fields.user
+			ph.users.AddUser(testUser.Username, testUser.Password, testUser.Admin)
+			// todo: test totp situations?
+
+			// test handler
+			var (
+				b, _ = json.Marshal(tt.args.body)
+				req  = httptest.NewRequest(tt.args.method, tt.args.target, bytes.NewReader(b))
+				rec  = httptest.NewRecorder()
+			)
+			ph.loginHandler(rec, req)
+
+			// assert
+			if rec.Code != tt.want.status {
+				t.Logf("Received response: '%s'", rec.Body.String())
+				t.Errorf("expected status '%d', got '%d'", tt.want.status, rec.Code)
+			}
+		})
+	}
 }

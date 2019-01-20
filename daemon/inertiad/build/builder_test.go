@@ -25,7 +25,7 @@ func TestNewBuilder(t *testing.T) {
 }
 
 const (
-	DockerComposeVersion = "docker/compose:1.22.0"
+	DockerComposeVersion = "docker/compose:1.23.2"
 )
 
 // killTestContainers is a helper for tests - it implements project.ContainerStopper
@@ -36,9 +36,9 @@ func killTestContainers(cli *docker.Client, w io.Writer) error {
 		return err
 	}
 
-	// Take down all containers except the testvps
+	// Take down all containers except the testvps and testcontainer
 	for _, container := range containers {
-		if container.Names[0] != "/testvps" {
+		if container.Names[0] != "/testvps" && container.Names[0] != "/testcontainer" {
 			err := cli.ContainerKill(ctx, container.ID, "SIGKILL")
 			if err != nil {
 				return err

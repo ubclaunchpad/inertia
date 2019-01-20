@@ -20,9 +20,9 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 		decrypt bool
 		wantErr bool
 	}{
+		{"invalid env", args{"", "", true}, true, true},
 		{"no encrypt", args{"myvar1", "mysekret", false}, true, false},
 		{"encrypt", args{"myvar2", "myothersekret", true}, true, false},
-		{"invalid env", args{"", "", true}, true, true},
 		{"no decrypt", args{"myvar", "asdfasdf", true}, true, false},
 	}
 	for _, tt := range tests {
@@ -33,7 +33,7 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 			defer os.RemoveAll(dir)
 
 			// Instantiate
-			c, err := newDataManager(path.Join(dir, "deployment.db"))
+			c, err := NewDataManager(path.Join(dir, "deployment.db"), path.Join(dir, "key"))
 			assert.Nil(t, err)
 
 			// Add
@@ -46,7 +46,9 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 			if tt.wantErr {
 				assert.Zero(t, len(vars))
 			} else {
-				if tt.decrypt {
+				if len(vars) == 0 {
+					assert.Fail(t, "Expected vars, found none")
+				} else if tt.decrypt {
 					assert.Equal(t, tt.args.name+"="+tt.args.value, vars[0])
 				} else {
 					assert.Equal(t, tt.args.name+"=[ENCRYPTED]", vars[0])
@@ -54,7 +56,7 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 			}
 
 			// Remove
-			err = c.RemoveEnvVariable(tt.args.name)
+			err = c.RemoveEnvVariables(tt.args.name)
 			assert.Nil(t, err)
 			vars, err = c.GetEnvVariables(false)
 			assert.Nil(t, err)
@@ -70,7 +72,7 @@ func TestDataManager_destroy(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	// Instantiate
-	c, err := newDataManager(path.Join(dir, "deployment.db"))
+	c, err := NewDataManager(path.Join(dir, "deployment.db"), path.Join(dir, "key"))
 	assert.Nil(t, err)
 
 	// Reset

@@ -8,7 +8,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	os.Setenv("INERTIA_SSL_DIR", "/user/ssl")
+	os.Setenv("INERTIA_PROJECT_DIR", "/user/project")
 	cfg := New()
-	assert.Equal(t, "/user/ssl", cfg.SSLDirectory)
+	assert.Equal(t, "/user/project", cfg.ProjectDirectory)
 }

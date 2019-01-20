@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
@@ -21,16 +23,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
-// Builder builds projects and returns a callback that can be used to deploy the project.
-// No relation to Bob the Builder, though a Bob did write this.
-type Builder interface {
-	Build(string, build.Config, *docker.Client, io.Writer) (func() error, error)
-	GetBuildStageName() string
-	StopContainers(*docker.Client, io.Writer) error
-	Prune(*docker.Client, io.Writer) error
-	PruneAll(*docker.Client, io.Writer) error
-}
-
 // Deployer manages the deployed user project
 type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) (func() error, error)
@@ -38,7 +30,7 @@ type Deployer interface {
 	Down(*docker.Client, io.Writer) error
 	Destroy(*docker.Client, io.Writer) error
 	Prune(*docker.Client, io.Writer) error
-	GetStatus(*docker.Client) (common.DeploymentStatus, error)
+	GetStatus(*docker.Client) (api.DeploymentStatus, error)
 
 	SetConfig(DeploymentConfig)
 	GetBranch() string
@@ -59,7 +51,7 @@ type Deployment struct {
 	buildType     string
 	buildFilePath string
 
-	builder Builder
+	builder build.ContainerBuilder
 
 	repo *gogit.Repository
 	auth ssh.AuthMethod
@@ -79,9 +71,15 @@ type DeploymentConfig struct {
 }
 
 // NewDeployment creates a new deployment
-func NewDeployment(projectDirectory, databasePath string, builder Builder) (*Deployment, error) {
+func NewDeployment(
+	projectDirectory string,
+	databasePath string,
+	databaseKeyPath string,
+	builder build.ContainerBuilder,
+) (*Deployment, error) {
+
 	// Set up deployment database
-	manager, err := newDataManager(databasePath)
+	manager, err := NewDataManager(databasePath, databaseKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +98,6 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 		return errors.New("remote URL is required for first setup")
 	}
 
-	common.RemoveContents(d.directory)
 	d.SetConfig(cfg)
 
 	// Retrieve authentication
@@ -113,10 +110,15 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 		return err
 	}
 
+	// Remove existing git repo if there is one
+	os.RemoveAll(filepath.Join(d.directory, ".git"))
+
 	// Initialize repository
-	d.repo, err = git.InitializeRepository(
-		d.directory, cfg.RemoteURL, cfg.Branch, d.auth, out,
-	)
+	d.repo, err = git.InitializeRepository(cfg.RemoteURL, git.RepoOptions{
+		Directory: d.directory,
+		Branch:    cfg.Branch,
+		Auth:      d.auth,
+	}, out)
 	return err
 }
 
@@ -143,15 +145,22 @@ type DeployOptions struct {
 }
 
 // Deploy will update, build, and deploy the project
-func (d *Deployment) Deploy(cli *docker.Client, out io.Writer,
-	opts DeployOptions) (func() error, error) {
+func (d *Deployment) Deploy(
+	cli *docker.Client,
+	out io.Writer,
+	opts DeployOptions,
+) (func() error, error) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	fmt.Println(out, "Preparing to deploy project")
 
 	// Update repository
 	if !opts.SkipUpdate {
-		if err := git.UpdateRepository(d.directory, d.repo, d.branch, d.auth, out); err != nil {
+		if err := git.UpdateRepository(d.repo, git.RepoOptions{
+			Directory: d.directory,
+			Branch:    d.branch,
+			Auth:      d.auth,
+		}, out); err != nil {
 			return func() error { return nil }, err
 		}
 	}
@@ -232,7 +241,7 @@ func (d *Deployment) Destroy(cli *docker.Client, out io.Writer) error {
 }
 
 // GetStatus returns the status of the deployment
-func (d *Deployment) GetStatus(cli *docker.Client) (common.DeploymentStatus, error) {
+func (d *Deployment) GetStatus(cli *docker.Client) (api.DeploymentStatus, error) {
 	var (
 		activeContainers     = make([]string, 0)
 		buildContainerActive = false
@@ -244,23 +253,23 @@ func (d *Deployment) GetStatus(cli *docker.Client) (common.DeploymentStatus, err
 
 	// No repository set up
 	if d.repo == nil {
-		return common.DeploymentStatus{Containers: activeContainers}, nil
+		return api.DeploymentStatus{Containers: activeContainers}, nil
 	}
 
 	// Get repository status
 	head, err := d.repo.Head()
 	if err != nil {
-		return common.DeploymentStatus{Containers: activeContainers}, err
+		return api.DeploymentStatus{Containers: activeContainers}, err
 	}
 	commit, err := d.repo.CommitObject(head.Hash())
 	if err != nil {
-		return common.DeploymentStatus{Containers: activeContainers}, err
+		return api.DeploymentStatus{Containers: activeContainers}, err
 	}
 
 	// Get containers, filtering out non-project containers
 	c, err := containers.GetActiveContainers(cli)
 	if err != nil && err != containers.ErrNoContainers {
-		return common.DeploymentStatus{Containers: activeContainers}, err
+		return api.DeploymentStatus{Containers: activeContainers}, err
 	}
 	for _, container := range c {
 		if !ignore[container.Names[0]] {
@@ -272,7 +281,7 @@ func (d *Deployment) GetStatus(cli *docker.Client) (common.DeploymentStatus, err
 		}
 	}
 
-	return common.DeploymentStatus{
+	return api.DeploymentStatus{
 		Branch:               strings.TrimSpace(head.Name().Short()),
 		CommitHash:           strings.TrimSpace(head.Hash().String()),
 		CommitMessage:        strings.TrimSpace(commit.Message),

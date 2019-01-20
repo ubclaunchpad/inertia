@@ -1,16 +1,17 @@
+#! /bin/bash
 
 # Download our release binary builder
 go get -u github.com/mitchellh/gox
 
 # Specify platforms and release version
-PLATFORMS="linux/amd64 linux/386 darwin/386 windows/amd64 windows/386"
+PLATFORMS="linux/amd64 linux/386 darwin/amd64 windows/amd64 windows/386"
 RELEASE=$(git describe --tags)
 echo "Building release $RELEASE"
 
 # Build, tag and push Inertia Docker image
-make daemon RELEASE=$RELEASE
+make daemon RELEASE="$RELEASE"
 
 # Build Inertia Go binaries for specified platforms
 gox -output="inertia.$(git describe --tags).{{.OS}}.{{.Arch}}" \
-    -ldflags "-w -s -X github.com/ubclaunchpad/inertia/cmd.Version=$RELEASE" \
+    -ldflags "-w -s -X main.Version=$RELEASE" \
     -osarch="$PLATFORMS" \

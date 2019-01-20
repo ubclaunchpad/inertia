@@ -12,6 +12,10 @@ import (
 )
 
 func TestContainerLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
@@ -25,11 +29,11 @@ func TestContainerLogs(t *testing.T) {
 		wantErr bool
 	}{
 		{"successfully get logs", args{
-			LogOptions{Container: "/testvps"}}, false},
+			LogOptions{Container: "/testcontainer"}}, false},
 		{"successfully get logs with lines", args{
-			LogOptions{Container: "/testvps", Entries: 100}}, false},
+			LogOptions{Container: "/testcontainer", Entries: 100}}, false},
 		{"successfully get logs without leading slash", args{
-			LogOptions{Container: "testvps", Entries: 100}}, false},
+			LogOptions{Container: "testcontainer", Entries: 100}}, false},
 		{"fail on unknown container", args{
 			LogOptions{Container: "asdf"}}, true},
 	}
@@ -45,18 +49,26 @@ func TestContainerLogs(t *testing.T) {
 }
 
 func TestStreamContainerLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
 
 	// todo: flesh this out a bit more
 	stop := make(chan struct{})
-	go StreamContainerLogs(cli, "/testvps", os.Stdout, stop)
+	go StreamContainerLogs(cli, "/testcontainer", os.Stdout, stop)
 	time.Sleep(1 * time.Second)
 	close(stop)
 }
 
 func TestGetActiveContainers(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()
@@ -74,6 +86,10 @@ func TestPrune(t *testing.T) {
 }
 
 func TestPruneAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	cli, err := NewDockerClient()
 	assert.Nil(t, err)
 	defer cli.Close()

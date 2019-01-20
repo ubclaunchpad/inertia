@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/.static/inertia-with-name.png" width="30%" alt="Inertia"/>
+  <img src="/.static/inertia-with-name.png" width="25%" alt="Inertia"/>
 </p>
 
 <p align="center">
@@ -24,12 +24,17 @@
 
   <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
     <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg"
-       alt="GoDocs available" />
+      alt="GoDocs available" />
+  </a>
+
+  <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general">
+    <img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed"
+      alt="inertiad image">
   </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases/latest">
     <img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg"
-       alt="Latest release" />
+      alt="Latest release" />
   </a>
 </p>
 
@@ -38,13 +43,14 @@
 <p align="center">
   <a href="#package-getting-started"><strong>Getting Started</strong></a> · 
   <a href="#bulb-motivation-and-design"><strong>Motivation & Design</strong></a> · 
-  <a href="#books-contributing"><strong>Contributing</strong></a>
+  <a href="#books-contributing"><strong>Contributing</strong></a> · 
+  <a href="https://github.com/ubclaunchpad/inertia/wiki"><strong>Wiki</strong></a>
 </p>
 
 <br>
 
 <p align="center">
-    <img src="/.static/inertia-init.png" width="45%" />
+    <img src="/.static/inertia-init.png" width="35%" />
 </p>
 
 <br>
@@ -53,14 +59,15 @@ Inertia is a simple cross-platform command line application that enables quick a
 
 |   | Main Features  |
 ----|-----------------
-🚀  | Simple setup from your computer without ever having to manually SSH into your remote
-🍰  | Use any Linux-based remote virtual private server platform you want
-📦  | Easily provision VPS instances for your project with supported providers such as Amazon EC2
-⚒  | Deploy any Dockerfile or docker-compose project
-🚄  | Webhook integration for GitHub, GitLab, and Bitbucket allow your project to be automatically updated, rebuilt, and deployed as soon as you `git push`
-🛂  | Start up, shut down, and monitor your deployment with ease from the command line
-🏷  | Configure deployment to your liking with branch settings, build configuration, and more
-🔑  | Secured with tokens and HTTPS across the board
+🚀  | **Simple to use** - set up a deployment from your computer without ever having to manually SSH into your remote
+🍰  | **Cloud-agnostic** - use any Linux-based remote virtual private server provider you want
+⚒  | **Versatile project support** - deploy any Dockerfile or docker-compose project
+🚄  | **Continuous deployment** - Webhook integrations for GitHub, GitLab, and Bitbucket means your project can be automatically updated, rebuilt, and deployed as soon as you `git push`
+🛂  | **In-depth controls** - start up, shut down, and monitor your deployment with ease from the command line or using Inertia's REST API
+🏷  | **Flexible configuration** - branch deployment, environment variables, easy file transfer for configuration files, build settings, and more
+📦  | **Built-in provisioning** - easily provision and set up VPS instances for your project with supported providers such as Amazon Web Services using a single command
+👥  | **Built for teams** - provide shared access to an Inertia deployment by adding users
+🔑  | **Secure** - secured with access tokens and HTTPS across the board, as well as features like 2FA for user logins
 
 <br>
 
@@ -125,7 +132,7 @@ ssh-rsa <...>
 Once this is done, you can use Inertia to bring your project online on your remote VPS:
 
 ```bash
-$> inertia $VPS_NAME up --stream
+$> inertia $VPS_NAME up
 ```
 
 Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
@@ -183,8 +190,8 @@ The primary design goals of Inertia are to:
 ### How It Works
 
 There is a detailed [Medium post](https://medium.com/ubc-launch-pad-software-engineering-blog/building-continuous-deployment-87a2bd8eedbe) that goes over the project, its motivations, the design choices we made, and Inertia's implementation. The team has also made a few presentations about Inertia that go over its design in some more detail:
-- [UBC Launch Pad internal demo](https://drive.google.com/file/d/1foO57l6egbaQ7I5zIDDe019XOgJm-ocn/view?usp=sharing)
-- [Vancouver DevOpsDays 2018](https://docs.google.com/presentation/d/e/2PACX-1vRJXUnRmxpegHNVTgn_Kd8VFyeuiIwzDQl9c0oQqi1QSnIjFUIIjawsvLdu2RfHAXv_5T8kvSgSWGuq/pub?start=false&loop=false&delayms=15000) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
+- [UBC Launch Pad internal demo](https://slides.ubclaunchpad.com/projects/inertia/demo-1.pdf)
+- [Vancouver DevOpsDays 2018](https://slides.ubclaunchpad.com/projects/inertia/devopsdays.pdf) ([video](https://youtu.be/amBYMEKGzTs?t=4h59m5s))
 
 In summary, Inertia consists of two major components: a deployment daemon and a command line interface.
 

@@ -41,12 +41,12 @@ COPY --from=web-build-env \
 
 # Directories
 ENV INERTIA_PROJECT_DIR=/app/host/inertia/project/ \
-    INERTIA_SSL_DIR=/app/host/inertia/config/ssl/ \
     INERTIA_DATA_DIR=/app/host/inertia/data/ \
+    INERTIA_SECRETS_DIR=/app/host/.inertia/ \
     INERTIA_GH_KEY_PATH=/app/host/.ssh/id_rsa_inertia_deploy
 
 # Build tool versions
-ENV INERTIA_DOCKERCOMPOSE=docker/compose:1.22.0
+ENV INERTIA_DOCKERCOMPOSE=docker/compose:1.23.2
 
 # Serve the daemon by default.
 ENTRYPOINT ["inertiad", "run"]

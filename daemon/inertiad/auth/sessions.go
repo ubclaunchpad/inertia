@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
@@ -77,7 +77,7 @@ func (s *sessionManager) BeginSession(username string, admin bool) (*crypto.Toke
 	expiration := time.Now().Add(s.sessionTimeout)
 	id, err := common.GenerateRandomString()
 	if err != nil {
-		return nil, "", fmt.Errorf("Faield to begin sesison for %s: %s", username, err.Error())
+		return nil, "", fmt.Errorf("failed to begin session for %s: %s", username, err.Error())
 	}
 
 	claims := &crypto.TokenClaims{

@@ -1,7 +1,6 @@
 package client
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -14,15 +13,15 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
-	"github.com/ubclaunchpad/inertia/common"
 )
 
 var (
 	fakeAuth = "ubclaunchpad"
 )
 
-func getMockClient(ts *httptest.Server) *Client {
+func newMockClient(ts *httptest.Server) *Client {
 	var (
 		url  string
 		port string
@@ -54,7 +53,7 @@ func getMockClient(ts *httptest.Server) *Client {
 	}
 }
 
-func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
+func newMockSSHClient(mockRunner *mockSSHRunner) *Client {
 	remote := &cfg.RemoteVPS{
 		IP:      "127.0.0.1",
 		PEM:     "../test/keys/id_rsa",
@@ -64,20 +63,12 @@ func getIntegrationClient(mockRunner *mockSSHRunner) *Client {
 			Port: "4303",
 		},
 	}
-	if mockRunner != nil {
-		mockRunner.r = remote
-		return &Client{
-			version:   "test",
-			RemoteVPS: remote,
-			out:       os.Stdout,
-			sshRunner: mockRunner,
-		}
-	}
+	mockRunner.r = remote
 	return &Client{
 		version:   "test",
 		RemoteVPS: remote,
 		out:       os.Stdout,
-		sshRunner: NewSSHRunner(remote),
+		SSH:       mockRunner,
 	}
 }
 
@@ -99,10 +90,10 @@ func TestGetNewClient(t *testing.T) {
 	}
 	config.AddRemote(testRemote)
 
-	_, found := NewClient("tst", config)
+	_, found := NewClient("tst", "", config)
 	assert.False(t, found)
 
-	cli, found := NewClient("test", config)
+	cli, found := NewClient("test", "", config)
 	assert.True(t, found)
 	assert.Equal(t, "/some/pem/file", cli.RemoteVPS.PEM)
 	assert.Equal(t, "test", cli.version)
@@ -112,7 +103,7 @@ func TestGetNewClient(t *testing.T) {
 
 func TestInstallDocker(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := getIntegrationClient(session)
+	client := newMockSSHClient(session)
 	script, err := ioutil.ReadFile("scripts/docker.sh")
 	assert.Nil(t, err)
 
@@ -124,13 +115,16 @@ func TestInstallDocker(t *testing.T) {
 
 func TestDaemonUp(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := getIntegrationClient(session)
+	client := newMockSSHClient(session)
+	client.version = "latest"
+	client.IP = "0.0.0.0"
+	client.Daemon.Port = "4303"
 	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
 	assert.Nil(t, err)
 	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
 
 	// Make sure the right command is run.
-	err = client.DaemonUp("latest", "0.0.0.0", "4303")
+	err = client.DaemonUp("latest")
 	assert.Nil(t, err)
 	println(actualCommand)
 	assert.Equal(t, actualCommand, session.Calls[0])
@@ -138,7 +132,7 @@ func TestDaemonUp(t *testing.T) {
 
 func TestKeyGen(t *testing.T) {
 	session := &mockSSHRunner{}
-	remote := getIntegrationClient(session)
+	remote := newMockSSHClient(session)
 	script, err := ioutil.ReadFile("scripts/token.sh")
 	assert.Nil(t, err)
 	tokenScript := fmt.Sprintf(string(script), "test")
@@ -151,7 +145,7 @@ func TestKeyGen(t *testing.T) {
 
 func TestBootstrap(t *testing.T) {
 	session := &mockSSHRunner{}
-	client := getIntegrationClient(session)
+	client := newMockSSHClient(session)
 	assert.False(t, client.verifySSL)
 
 	dockerScript, err := ioutil.ReadFile("scripts/docker.sh")
@@ -178,32 +172,6 @@ func TestBootstrap(t *testing.T) {
 	assert.Equal(t, tokenScript, session.Calls[3])
 }
 
-func TestBootstrapIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
-	cli := getIntegrationClient(nil)
-	err := cli.BootstrapRemote("")
-	assert.Nil(t, err)
-
-	// Daemon setup takes a bit of time - do a crude wait
-	time.Sleep(3 * time.Second)
-
-	// Check if daemon is online following bootstrap
-	host := "https://" + cli.GetIPAndPort()
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-	resp, err := client.Get(host)
-	assert.Nil(t, err)
-	assert.Equal(t, resp.StatusCode, http.StatusOK)
-	defer resp.Body.Close()
-	_, err = ioutil.ReadAll(resp.Body)
-	assert.Nil(t, err)
-}
-
 func TestUp(t *testing.T) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
@@ -215,7 +183,7 @@ func TestUp(t *testing.T) {
 		body, err := ioutil.ReadAll(req.Body)
 		assert.Nil(t, err)
 		defer req.Body.Close()
-		var upReq common.UpRequest
+		var upReq api.UpRequest
 		err = json.Unmarshal(body, &upReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "myremote.git", upReq.GitOptions.RemoteURL)
@@ -232,7 +200,7 @@ func TestUp(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	assert.False(t, d.verifySSL)
 	resp, err := d.Up("myremote.git", "docker-compose", false)
 	assert.Nil(t, err)
@@ -255,7 +223,7 @@ func TestPrune(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Prune()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -277,7 +245,7 @@ func TestDown(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Down()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -299,14 +267,14 @@ func TestStatus(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Status()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func TestStatusFail(t *testing.T) {
-	d := getMockClient(nil)
+	d := newMockClient(nil)
 	_, err := d.Status()
 	assert.Contains(t, err.Error(), "appears offline")
 }
@@ -327,7 +295,7 @@ func TestReset(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Reset()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -347,15 +315,15 @@ func TestLogs(t *testing.T) {
 		// Check body
 		defer req.Body.Close()
 		q := req.URL.Query()
-		assert.Equal(t, "docker-compose", q.Get(common.Container))
-		assert.Equal(t, "10", q.Get(common.Entries))
+		assert.Equal(t, "docker-compose", q.Get(api.Container))
+		assert.Equal(t, "10", q.Get(api.Entries))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.Logs("docker-compose", 10)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -373,9 +341,9 @@ func TestLogsWebsocket(t *testing.T) {
 		// Check body
 		defer req.Body.Close()
 		q := req.URL.Query()
-		assert.Equal(t, "docker-compose", q.Get(common.Container))
-		assert.Equal(t, "true", q.Get(common.Stream))
-		assert.Equal(t, "10", q.Get(common.Entries))
+		assert.Equal(t, "docker-compose", q.Get(api.Container))
+		assert.Equal(t, "true", q.Get(api.Stream))
+		assert.Equal(t, "10", q.Get(api.Entries))
 
 		// Check auth
 		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
@@ -389,7 +357,7 @@ func TestLogsWebsocket(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.LogsWebSocket("docker-compose", 10)
 	assert.Nil(t, err)
 
@@ -415,7 +383,7 @@ func TestUpdateEnv(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.UpdateEnv("", "", false, false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -437,7 +405,7 @@ func TestListEnv(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.ListEnv()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -459,7 +427,7 @@ func TestAddUser(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.AddUser("", "", false)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -481,7 +449,7 @@ func TestRemoveUser(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.RemoveUser("")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -503,7 +471,7 @@ func TestResetUser(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.ResetUsers()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -525,8 +493,60 @@ func TestListUsers(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := getMockClient(testServer)
+	d := newMockClient(testServer)
 	resp, err := d.ListUsers()
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestToken(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, http.MethodGet, req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/token", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := newMockClient(testServer)
+	resp, err := d.Token()
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestLogIn(t *testing.T) {
+	username := "testguy"
+	password := "SomeKindo23asdfpassword"
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, http.MethodPost, req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/login", endpoint)
+
+		// Check auth
+		defer req.Body.Close()
+		body, err := ioutil.ReadAll(req.Body)
+		assert.Equal(t, nil, err)
+		var userReq api.UserRequest
+		assert.Equal(t, nil, json.Unmarshal(body, &userReq))
+		assert.Equal(t, userReq.Username, username)
+		assert.Equal(t, userReq.Password, password)
+	}))
+	defer testServer.Close()
+
+	d := newMockClient(testServer)
+	resp, err := d.LogIn(username, password, "")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

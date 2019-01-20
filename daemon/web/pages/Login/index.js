@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
 // import InertiaAPI from '../../common/API';
-import * as loginActions from '../../actions/login';
+import * as loginActions from '../../actions/auth/login';
 
 const styles = {
   container: {
@@ -23,11 +23,6 @@ const styles = {
     margin: '0.5rem 0',
     marginBottom: '10rem',
   },
-
-  loginAlert: {
-    position: 'absolute',
-    top: '105%',
-  },
 };
 
 class LoginWrapper extends React.Component {
@@ -36,7 +31,6 @@ class LoginWrapper extends React.Component {
     this.state = {
       username: '',
       password: '',
-      loginAlert: '',
     };
     this.handleLoginSubmit = this.handleLoginSubmit.bind(this);
     this.handleUsernameBlur = this.handleUsernameBlur.bind(this);
@@ -44,23 +38,9 @@ class LoginWrapper extends React.Component {
   }
 
   async handleLoginSubmit() {
-    const { testAction, history } = this.props;
+    const { loginAction } = this.props;
     const { username, password } = this.state;
-    // TODO: disable authentication until we get it working
-    /* eslint-disable no-console */
-    console.log(username, password);
-    /* eslint-enable no-console */
-    testAction();
-    // const response = await InertiaAPI.login(
-    //   username,
-    //   password,
-    // );
-
-    // if (response.status !== 200) {
-    //   this.setState({ loginAlert: 'Username and/or password is incorrect' });
-    //   return;
-    // }
-    history.push('/home');
+    loginAction({ username, password });
   }
 
   handleUsernameBlur(e) {
@@ -72,7 +52,11 @@ class LoginWrapper extends React.Component {
   }
 
   render() {
-    const { loginAlert } = this.state;
+    const { error = {}, authenticated, history } = this.props;
+    console.log({ authenticated, error });
+
+    if (authenticated) history.push('/app');
+
     return (
       <div style={styles.container}>
         <p align="center">
@@ -93,9 +77,11 @@ class LoginWrapper extends React.Component {
           <button type="submit" onClick={this.handleLoginSubmit}>
 Login
           </button>
-          <p style={styles.loginAlert}>
-            {loginAlert}
-          </p>
+
+          <br />
+          <h2>
+            {error.message || ''}
+          </h2>
         </div>
       </div>
     );
@@ -103,19 +89,15 @@ Login
 }
 LoginWrapper.propTypes = {
   history: PropTypes.object,
-  testAction: PropTypes.func,
+  loginAction: PropTypes.func,
+  authenticated: PropTypes.bool.isRequired,
+  error: PropTypes.any,
 };
 
-
-const mapStateToProps = ({ Login }) => {
-  return {
-    testState: Login.testState,
-  };
-};
+const mapStateToProps = ({ Auth: { authenticated, error } }) => ({ authenticated, error });
 
 const mapDispatchToProps = dispatch => bindActionCreators({ ...loginActions }, dispatch);
 
 const Login = connect(mapStateToProps, mapDispatchToProps)(LoginWrapper);
-
 
 export default Login;

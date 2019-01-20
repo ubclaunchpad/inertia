@@ -3,7 +3,7 @@ SSH_PORT = 69
 VPS_VERSION = latest
 VPS_OS = ubuntu
 RELEASE = test
-CLI_VERSION_VAR = github.com/ubclaunchpad/inertia/cmd.Version
+CLI_VERSION_VAR = main.Version
 
 all: prod-deps cli
 
@@ -12,9 +12,15 @@ all: prod-deps cli
 ls:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
+.PHONY: clean
+clean: testenv-clean
+	go clean -testcache
+	rm -f ./inertia
+	find . -type f -name inertia.\* -exec rm {} \;
+
 # Install all dependencies
 .PHONY: deps
-deps: prod-deps dev-deps
+deps: prod-deps dev-deps docker-deps
 
 # Sets up production dependencies
 .PHONY: prod-deps
@@ -26,30 +32,34 @@ prod-deps:
 .PHONY: dev-deps
 dev-deps:
 	go get -u github.com/UnnoTed/fileb0x
-	bash test/docker_deps.sh
-	bash test/lint_deps.sh
+	go get -u golang.org/x/lint/golint
 
-# Install Inertia with release version
+.PHONY: docker-deps
+docker-deps:
+	bash test/docker_deps.sh
+
 .PHONY: cli
 cli:
+	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)"
+
+# Install Inertia with release version
+.PHONY: install
+install:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)"
 
 # Install Inertia with git tag as release version
-.PHONY: cli-tagged
-cli-tagged:
+.PHONY: install-tagged
+install-tagged:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
-
-# Remove Inertia binaries
-.PHONY: clean
-clean:
-	go clean -testcache
-	rm -f ./inertia
-	find . -type f -name inertia.\* -exec rm {} \;
 
 # Run static analysis
 .PHONY: lint
+lint: SHELL:=/bin/bash
 lint:
-	PATH=$(PATH):./bin bash -c './bin/gometalinter --vendor --deadline=120s ./...'
+	go vet ./...
+	go test -run xxxx ./...
+	diff -u <(echo -n) <(gofmt -d -s `find . -type f -name '*.go' -not -path "./vendor/*"`)
+	diff -u <(echo -n) <(golint `go list ./... | grep -v /vendor/`)
 	(cd ./daemon/web; npm run lint)
 	(cd ./daemon/web; npm run sass-lint)
 
@@ -84,11 +94,18 @@ test-integration-fast:
 	make testdaemon
 	go test ./... -v -run 'Integration' -ldflags "-X $(CLI_VERSION_VAR)=test" --cover
 
+.PHONY: testenv-clean
+testenv-clean:
+	docker stop testvps testcontainer || true && docker rm testvps testcontainer || true
+
 # Create test VPS
 .PHONY: testenv
-testenv:
-	docker stop testvps || true && docker rm testvps || true
-	docker build -f ./test/vps/Dockerfile.$(VPS_OS) \
+testenv: docker-deps testenv-clean
+	# run nginx container for testing
+	docker run --name testcontainer -d nginx
+
+	# start vps container
+	docker build -f ./test/vps/$(VPS_OS).dockerfile \
 		-t $(VPS_OS)vps \
 		--build-arg VERSION=$(VPS_VERSION) \
 		./test
@@ -138,6 +155,14 @@ daemon:
 scripts:
 	fileb0x b0x.yml
 
+# Rewrites generated code
+.PHONY: gen
+gen: scripts
+	counterfeiter -o ./daemon/inertiad/project/mocks/deployer.go \
+		./daemon/inertiad/project/deployment.go Deployer
+	counterfeiter -o ./daemon/inertiad/build/mocks/builder.go \
+		./daemon/inertiad/build/builder.go ContainerBuilder
+
 # Install Inertia Web dependencies. Use PACKAGE to install something.
 .PHONY: web-deps
 web-deps:
@@ -147,6 +172,11 @@ web-deps:
 .PHONY: web-run
 web-run:
 	(cd ./daemon/web; npm start)
+
+# Run sandboxed development instance of Inertia Web.
+.PHONY: web-run
+web-run-sandbox:
+	(cd ./daemon/web; npm start:sandbox)
 
 # Build and minify Inertia Web.
 .PHONY: web-build
