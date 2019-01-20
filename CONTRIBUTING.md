@@ -223,11 +223,10 @@ You will need a GitHub repository you own, since you need permission to add depl
 $> git clone https://github.com/$AWESOME_YOU/inertia-deploy-test.git
 $> cd inertia-deploy-test
 $> inertia init
-$> inertia remote add local
+$> inertia remote add local --ssh.port 69
 # - PEM file: $INERTIA_PATH/test/keys/id_rsa
 # - Address:  127.0.0.1 
 # - User:     root
-$> inertia remote set local ssh-port 69 # defaults to 69
 $> inertia local init
 $> inertia local status
 ```
@@ -237,7 +236,7 @@ The above steps will pull and use a daemon image from Docker Hub based on the ve
 Following these steps, you can run Inertia through deployment:
 
 ```bash
-$> inertia local up --stream
+$> inertia local up
 $> inertia local status
 $> inertia local logs
 ```
