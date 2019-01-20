@@ -180,7 +180,9 @@ Make sure you have a local daemon set up for this web app to work - see the prev
 
 ## Setting up a Testing Environment
 
-You will need Docker installed and running to run whole the Inertia test suite, which includes a number of integration tests.
+You will need Docker installed and running to run whole the Inertia test suite,
+which includes a number of integration tests. To run these tests, you can use
+the following commands:
 
 ```bash
 $> make dev-deps                              # install various development dependencies
@@ -190,7 +192,9 @@ $> make test-all VPS_OS=ubuntu VERSION=14.04  # test against ubuntu:14.04
 
 Alternatively, `make test` will just run the unit tests.
 
-Setting up a more comprehensive test environment, where you take a project from setup to deployment using Inertia, is a bit trickier - these are the recommended steps:
+Setting up a more comprehensive test environment, where you take a project from
+setup to deployment using Inertia, is a bit trickier - these are the recommended
+steps:
 
 1. **Manually set up a mock VPS**
 
@@ -206,7 +210,7 @@ You can [SSH into this testvps container](https://bobheadxi.github.io/dockercept
 2. **Compile and install Inertia**
 
 ```bash
-$> make
+$> make # this only builds a binary - to use inertia globally, use 'make install'
 ```
 
 3. **Build and deliver Inertia daemon to the `testvps`**
@@ -228,6 +232,8 @@ $> inertia remote add local --ssh.port 69
 # - Address:  127.0.0.1 
 # - User:     root
 $> inertia local init
+# Make sure to read through the output for this step to work - notably, you'll
+# need to add the SSH deploy key to your test repository
 $> inertia local status
 ```
 
