@@ -1,0 +1,33 @@
+{
+  "name": "test1234abc1234",
+  "version": "0.0.2",
+  "description": "Inertia-CLI",
+  "files":[
+    "/npm/src",
+    "/npm/test"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "node ./npm/src/install.js",
+    "preuninstall": "node ./npm/src/uninstall.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ubclaunchpad/inertia.git"
+  },
+  "keywords": [
+    "inertia",
+    "inertia-cli"
+  ],
+  "author": "UBC-Launchpad",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ubclaunchpad/inertia/issues"
+  },
+  "homepage": "https://github.com/ubclaunchpad/inertia#readme",
+  "dependencies": {
+    "mkdirp": "^0.5.1",
+    "path": "^0.12.7",
+    "request": "^2.88.0"
+  }
+}
