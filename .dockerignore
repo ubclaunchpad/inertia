@@ -23,4 +23,5 @@ client
 
 # Dependencies
 bin
+vendor
 daemon/web/node_modules
