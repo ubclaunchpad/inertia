@@ -1,16 +1,21 @@
 # This Dockerfile builds a tiny little image to ship the Inertia daemon in.
 
-### Part 1 - Building the Web Client
-FROM node:carbon AS web-build-env
+### Part 1 - Setting up web build dependencies
+FROM node:carbon AS web-build-base
 ENV BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia/daemon/web
+WORKDIR ${BUILD_HOME}
+COPY ./daemon/web/package.json .
+COPY ./daemon/web/package-lock.json .
+RUN npm install --production
+
+### Part 2 - Building the web client
+FROM web-build-base AS web-build-env
 # Mount source code.
 ADD ./daemon/web ${BUILD_HOME}
-WORKDIR ${BUILD_HOME}
-# Build and minify client.
-RUN npm install --production
+# Build and minify client
 RUN npm run build
 
-### Part 2 - Seting up daemon build dependencies
+### Part 3 - Setting up daemon build dependencies
 FROM golang:alpine AS daemon-build-base
 ARG INERTIA_VERSION
 ENV BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia \
@@ -22,7 +27,7 @@ RUN apk add --update --no-cache git
 RUN go get -u github.com/golang/dep/cmd/dep
 RUN dep ensure -v -vendor-only
 
-### Part 3 - Building the Inertia daemon
+### Part 4 - Building the Inertia daemon
 FROM daemon-build-base AS daemon-build-env
 # Mount source code.
 ADD . .
@@ -31,7 +36,7 @@ RUN go build -o /bin/inertiad \
     -ldflags "-w -s -X main.Version=$INERTIA_VERSION" \
     ./daemon/inertiad
 
-### Part 4 - Copy builds into combined image for distribution
+### Part 5 - Copy builds into combined image for distribution
 FROM alpine
 LABEL maintainer "UBC Launch Pad team@ubclaunchpad.com"
 RUN mkdir -p /daemon
