@@ -26,7 +26,7 @@
   version = "v0.4.11"
 
 [[projects]]
-  digest = "1:524c8fbe457b5f7ff259595d8386d62673959fc221a8c0491601f738678fbff3"
+  digest = "1:bd656681cbe059e319c341e1f7990d77ebe3afda6aaa2b62df423a8aeac66abf"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -62,8 +62,8 @@
     "service/sts",
   ]
   pruneopts = "NUT"
-  revision = "fb5f514796fc4fdc6afdcf5a675a5b2baa714b9f"
-  version = "v1.16.14"
+  revision = "81f3829f5a9d041041bdf56e55926691309d7699"
+  version = "v1.16.26"
 
 [[projects]]
   digest = "1:90f59f03e8a0c973faff6d6122a4000efaee118907b5c695cc7615d2d8240538"
@@ -101,12 +101,12 @@
     "reference",
   ]
   pruneopts = "NUT"
-  revision = "40b7b5830a2337bb07627617740c0e39eb92800c"
-  version = "v2.7.0"
+  revision = "2461543d988979529609e8cb6fca9ca190dc48da"
+  version = "v2.7.1"
 
 [[projects]]
   branch = "master"
-  digest = "1:217379d380974a38e00c7a81fe8772650eeba27b549df349259e7d732f198ef8"
+  digest = "1:6e13d10a7940ca65fc8e54be8b0e564aa05b98333970b4a94eaa2fe52b9e0bb7"
   name = "github.com/docker/docker"
   packages = [
     "api",
@@ -129,7 +129,7 @@
     "errdefs",
   ]
   pruneopts = "NUT"
-  revision = "545d00e7521414f648140b5834d41a072592a484"
+  revision = "50e63adf30d33fc1547527a4097c796cbe4b770f"
 
 [[projects]]
   digest = "1:2a47f7eb1a2c30428d1ee6808cb66d4deb17e68a3e55d696f03c8068552ba5e8"
@@ -230,12 +230,12 @@
   version = "v0.0.4"
 
 [[projects]]
-  digest = "1:a4df73029d2c42fabcb6b41e327d2f87e685284ec03edf76921c267d9cfc9c23"
+  digest = "1:f9f72e583aaacf1d1ac5d6121abd4afd3c690baa9e14e1d009df26bf831ba347"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
-  version = "v1.0.0"
+  revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:e0cc8395ea893c898ff5eb0850f4d9851c1f57c78c232304a026379a47a552d0"
@@ -302,7 +302,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9e1cf667f2f78e30e9c12dcbb5900632d7ddde2252f89283becc4f12a427caf7"
+  digest = "1:d84fb712f1b90170c122e80599e274397cda404d55e833b03e58709e4057f5d3"
   name = "github.com/skip2/go-qrcode"
   packages = [
     ".",
@@ -310,7 +310,7 @@
     "reedsolomon",
   ]
   pruneopts = "NUT"
-  revision = "bcdd5e378222dd9f20da94a99c0101d30ebf3a50"
+  revision = "dc11ecdae0a9889dc81a343585516404e8dc6ead"
 
 [[projects]]
   branch = "master"
@@ -318,7 +318,7 @@
   name = "github.com/spf13/cobra"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "d2d81d9a96e23f0255397222bb0b4e3165e492dc"
+  revision = "7547e83b2d85fd1893c7d76916f67689d761fecb"
 
 [[projects]]
   digest = "1:9d8420bbf131d1618bde6530af37c3799340d3762cc47210c1d9532a4c3a2779"
@@ -358,16 +358,16 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:e907c2cf2df370592f4e3a5b8c2bcdf6e16709cace789d53ea7d22720e8b79c2"
+  digest = "1:ae8eea1a24ae43a46c2e96631b6303fcc4210ca0ac9d643e4da965029d1b511d"
   name = "go.etcd.io/bbolt"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "7ee3ded59d4835e10f3e7d0f7603c42aa5e83820"
-  version = "v1.3.1-etcd.8"
+  revision = "63597a96ec0ad9e6d43c3fc81e809909e0237461"
+  version = "v1.3.2"
 
 [[projects]]
   branch = "master"
-  digest = "1:c5e91ac553056743d8d5ad9069ff501f8656dd2a1f28be7713cf8464bc61067f"
+  digest = "1:534e6c6c171feb3a326cb08d02a690f3ce2ce946f72b37597e3f27de1f53f069"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
@@ -392,11 +392,11 @@
     "ssh/terminal",
   ]
   pruneopts = "NUT"
-  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
+  revision = "b8fe1690c61389d7d2a8074a507d1d40c5d30448"
 
 [[projects]]
   branch = "master"
-  digest = "1:bce3c0777f8c9dd226e37e6a26fa6b7451adcf8a201d6aadf5b3a9d402fde90a"
+  digest = "1:69e9bee7ded37dc4b61cb2a7772c6114b9dd75bf8aeef91af8a1b44c4e6d7566"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -406,18 +406,18 @@
     "webdav/internal/xml",
   ]
   pruneopts = "NUT"
-  revision = "927f97764cc334a6575f4b7a1584a147864d5723"
+  revision = "d26f9f9a57f3fab6a695bec0d84433c2c50f8bbf"
 
 [[projects]]
   branch = "master"
-  digest = "1:9c4192900018de73237d33a270f12a7faac6609bf16190c8e3671f5cb00ff330"
+  digest = "1:c8b0ddc18c9e831e9d2d222f2555715ce6d447d1305b450f0c58622fb91cc078"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "1775db3f06b568179d273425900dd09125831dd5"
+  revision = "afcc84fd7533758f95a6e93ae710aa945a0b7e73"
 
 [[projects]]
   digest = "1:8029e9743749d4be5bc9f7d42ea1659471767860f0cdc34d37c3111bd308a295"
@@ -449,7 +449,7 @@
   version = "v4.3.0"
 
 [[projects]]
-  digest = "1:5ac294a32214a1838a0df4af6b8fb4d161316f16b3dd59c3479dc25b5c90aab2"
+  digest = "1:121a091d3097060d20b8fa3f3da6d153f4e19922a70a458466d8b74380760ff7"
   name = "gopkg.in/src-d/go-git.v4"
   packages = [
     ".",
@@ -494,8 +494,8 @@
     "utils/merkletrie/noder",
   ]
   pruneopts = "NUT"
-  revision = "3dbfb89e0f5bce0008724e547b999fe3af9f60db"
-  version = "v4.8.1"
+  revision = "a1f6ef44dfed1253ef7f3bc049f66b15f8fc2ab2"
+  version = "v4.9.1"
 
 [[projects]]
   digest = "1:b233ad4ec87ac916e7bf5e678e98a2cb9e8b52f6de6ad3e11834fc7a71b8e3bf"
