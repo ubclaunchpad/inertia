@@ -60,7 +60,7 @@ func (p *EC2Provisioner) GetUser() string { return p.user }
 // ListImageOptions lists available Amazon images for your given region
 func (p *EC2Provisioner) ListImageOptions(region string) ([]string, error) {
 	// Set requested region
-	p.client.Config.WithRegion(region)
+	p.WithRegion(region)
 
 	// Query for easily supported images
 	output, err := p.client.DescribeImages(&ec2.DescribeImagesInput{
@@ -139,7 +139,7 @@ type EC2CreateInstanceOptions struct {
 // CreateInstance creates an EC2 instance with given properties
 func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.RemoteVPS, error) {
 	// Set requested region
-	p.client.Config.WithRegion(opts.Region)
+	p.WithRegion(opts.Region)
 
 	// Generate authentication
 	var keyName = fmt.Sprintf("%s_%s_inertia_key_%d", opts.Name, p.user, time.Now().UnixNano())
@@ -299,6 +299,12 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 			WebHookSecret: webhookSecret,
 		},
 	}, nil
+}
+
+// WithRegion assigns a region to the client
+func (p *EC2Provisioner) WithRegion(region string) {
+	p.client.Config.WithRegion(region)
+	p.client = ec2.New(p.session, &p.client.Config)
 }
 
 // exposePorts updates the security rules of given security group to expose
