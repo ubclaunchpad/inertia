@@ -17,3 +17,13 @@ func parseGitlabEvent(rawJSON map[string]interface{}, event string) (Payload, er
 		return nil, errors.New("unsupported Gitlab event")
 	}
 }
+
+// get payload bytes from request body
+func getGitlabPayloadBytes(contentType string, body []byte) ([]byte, error) {
+	switch contentType {
+	case "application/json":
+		return body, nil
+	default:
+		return nil, errors.New("Gitlab Webhook Content-Type must be application/json")
+	}
+}

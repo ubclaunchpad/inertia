@@ -1,8 +1,14 @@
 package webhook
 
+import (
+	"fmt"
+	"net/url"
+)
+
 // Github Push Event
 // see https://developer.github.com/v3/activity/events/types/#pushevent
-var githubPushRawJSON = []byte(`
+
+var githubPushRawJSONStr = `
 {
 	"ref": "refs/heads/master",
 	"before": "0000000000000000000000000000000000000000",
@@ -157,4 +163,8 @@ var githubPushRawJSON = []byte(`
 	  "type": "User",
 	  "site_admin": false
 	}
-}`)
+}`
+
+var githubPushRawJSON = []byte(githubPushRawJSONStr)
+
+var githubPushFormEncoded = []byte(fmt.Sprintf("payload=%v", url.QueryEscape(githubPushRawJSONStr)))

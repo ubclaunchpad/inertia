@@ -17,3 +17,13 @@ func parseBitbucketEvent(rawJSON map[string]interface{}, event string) (Payload,
 		return nil, errors.New("unsupported Bitbucket event")
 	}
 }
+
+// get payload bytes from request body
+func getBitbucketPayloadBytes(contentType string, body []byte) ([]byte, error) {
+	switch contentType {
+	case "application/json":
+		return body, nil
+	default:
+		return nil, errors.New("Bitbucket Webhook Content-Type must be application/json")
+	}
+}

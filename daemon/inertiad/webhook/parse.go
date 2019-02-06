@@ -31,14 +31,17 @@ type Payload interface {
 
 // Parse takes in a webhook request and parses it into one of the supported types
 func Parse(host, eventHeader string, h http.Header, body []byte) (Payload, error) {
-	// todo: more content-types
-	if h.Get("content-type") != "application/json" {
-		return nil, errors.New("Webhook Content-Type must be JSON")
+	contentType := h.Get("content-type")
+
+	// get payload bytes
+	payloadBytes, err := getPayloadBytes(host, contentType, body)
+	if err != nil {
+		return nil, err
 	}
 
-	// Decode request body to raw JSON
+	// Decode request payloadBytes to raw JSON
 	var raw interface{}
-	if err := json.Unmarshal(body, &raw); err != nil {
+	if err := json.Unmarshal(payloadBytes, &raw); err != nil {
 		return nil, err
 	}
 	rawJSON := raw.(map[string]interface{})
@@ -98,4 +101,18 @@ func Type(h http.Header) (host string, eventHeader string) {
 		eventHeader = h.Get("x-event-key")
 	}
 	return
+}
+
+// get payload bytes from request body
+func getPayloadBytes(host, contentType string, body []byte) ([]byte, error) {
+	switch host {
+	case GitHub:
+		return getGithubPayloadBytes(contentType, body)
+	case GitLab:
+		return getGitlabPayloadBytes(contentType, body)
+	case BitBucket:
+		return getBitbucketPayloadBytes(contentType, body)
+	default:
+		return nil, errors.New("Unsupported webhook received")
+	}
 }
