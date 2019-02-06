@@ -32,6 +32,6 @@ func getGithubPayloadBytes(contentType string, body []byte) ([]byte, error) {
 	case "application/json":
 		return body, nil
 	default:
-		return nil, errors.New("Github Webhook Content-Type must be application/json or x-www-form-urlencoded")
+		return nil, errors.New("Github Webhook Content-Type must be application/json or application/x-www-form-urlencoded")
 	}
 }
