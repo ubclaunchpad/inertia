@@ -24,11 +24,13 @@ func TestTypeAndParse(t *testing.T) {
 		reqBody     []byte
 		eventHeader string
 		eventValue  string
+		wantType    EventType
 	}{
-		{GitHub, "application/x-www-form-urlencoded", githubPushFormEncoded, "x-github-event", GithubPushHeader},
-		{GitHub, "application/json", githubPushRawJSON, "x-github-event", GithubPushHeader},
-		{GitLab, "application/json", gitlabPushRawJSON, "x-gitlab-event", GitlabPushHeader},
-		{BitBucket, "application/json", bitbucketPushRawJSON, "x-event-key", BitbucketPushHeader},
+		{GitHub, "application/x-www-form-urlencoded", githubPushFormEncoded, "x-github-event", GithubPushHeader, PushEvent},
+		{GitHub, "application/json", githubPushRawJSON, "x-github-event", GithubPushHeader, PushEvent},
+		{GitHub, "application/json", githubPushRawJSON, "x-github-event", GithubPingHeader, PingEvent},
+		{GitLab, "application/json", gitlabPushRawJSON, "x-gitlab-event", GitlabPushHeader, PushEvent},
+		{BitBucket, "application/json", bitbucketPushRawJSON, "x-event-key", BitbucketPushHeader, PushEvent},
 	}
 	for _, tc := range testCases {
 		req := getMockRequest("/webhook", tc.contentType, tc.reqBody)
@@ -51,9 +53,12 @@ func TestTypeAndParse(t *testing.T) {
 		assert.Nil(t, err)
 
 		assert.Equal(t, tc.source, payload.GetSource())
-		assert.Equal(t, "push", payload.GetEventType())
-		assert.Equal(t, "inertia-deploy-test", payload.GetRepoName())
-		assert.Equal(t, "refs/heads/master", payload.GetRef())
+		assert.Equal(t, tc.wantType, payload.GetEventType())
+		switch tc.wantType {
+		case PushEvent:
+			assert.Equal(t, "inertia-deploy-test", payload.GetRepoName())
+			assert.Equal(t, "refs/heads/master", payload.GetRef())
+		}
 	}
 }
 

@@ -3,7 +3,7 @@ package webhook
 // Implements Payload interface
 // See gitlab_test.go for an example request body
 type gitlabPushEvent struct {
-	eventType string
+	eventType EventType
 	ref       string
 	name      string
 	gitURL    string
@@ -34,7 +34,7 @@ func (g gitlabPushEvent) GetSource() string {
 }
 
 // GetEventType returns the event type of the webhook
-func (g gitlabPushEvent) GetEventType() string {
+func (g gitlabPushEvent) GetEventType() EventType {
 	return g.eventType
 }
 

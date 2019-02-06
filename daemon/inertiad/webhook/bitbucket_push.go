@@ -8,7 +8,7 @@ import (
 // Implements Payload interface
 // See bitbucket_test.go for an example request body
 type bitbucketPushEvent struct {
-	eventType  string
+	eventType  EventType
 	branchName string
 	fullName   string
 }
@@ -37,7 +37,7 @@ func (b bitbucketPushEvent) GetSource() string {
 }
 
 // GetEventType returns the event type of the webhook
-func (b bitbucketPushEvent) GetEventType() string {
+func (b bitbucketPushEvent) GetEventType() EventType {
 	return b.eventType
 }
 
