@@ -3,3 +3,6 @@
 
 # Force Unix EOLs, to prevent Windows from breaking them.
 *.* text eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary
