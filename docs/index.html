@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>API Reference</title>
+    <title>Inertia Usage Guide</title>
 
     <style>
       .highlight table td { padding: 5px; }
@@ -221,9 +221,6 @@
                   <li>
                     <a href="#what-is-inertia" class="toc-h2 toc-link" data-title="What is Inertia?">What is Inertia?</a>
                   </li>
-                  <li>
-                    <a href="#why-use-inertia" class="toc-h2 toc-link" data-title="Why use Inertia?">Why use Inertia?</a>
-                  </li>
               </ul>
           </li>
           <li>
@@ -236,7 +233,7 @@
                     <a href="#setup" class="toc-h2 toc-link" data-title="Setup">Setup</a>
                   </li>
                   <li>
-                    <a href="#configuring-inertia" class="toc-h2 toc-link" data-title="Configuring Inertia">Configuring Inertia</a>
+                    <a href="#project-configuration" class="toc-h2 toc-link" data-title="Project Configuration">Project Configuration</a>
                   </li>
               </ul>
           </li>
@@ -250,7 +247,21 @@
                     <a href="#provisioning-a-remote" class="toc-h2 toc-link" data-title="Provisioning a Remote">Provisioning a Remote</a>
                   </li>
                   <li>
+                    <a href="#deployment-configuration" class="toc-h2 toc-link" data-title="Deployment Configuration">Deployment Configuration</a>
+                  </li>
+                  <li>
                     <a href="#configuring-your-repository" class="toc-h2 toc-link" data-title="Configuring Your Repository">Configuring Your Repository</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#managing-your-deployment" class="toc-h1 toc-link" data-title="Managing Your Deployment">Managing Your Deployment</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#todo" class="toc-h2 toc-link" data-title="TODO">TODO</a>
+                  </li>
+                  <li>
+                    <a href="#todo-2" class="toc-h2 toc-link" data-title="TODO">TODO</a>
                   </li>
               </ul>
           </li>
@@ -272,10 +283,12 @@
 <h2 id='what-is-inertia'>What is Inertia?</h2>
 <p>Inertia is a simple cross-platform command line application that enables quick
 and easy setup and management of continuous, automated deployment of a variety
-of project types on any virtual private server. The project is used, built, and maintained with ❤️ by <a href="https://www.ubclaunchpad.com">UBC Launch Pad</a>, UBC&#39;s
+of project types on any virtual private server. The project is used, built, and
+maintained with ❤️ by <a href="https://www.ubclaunchpad.com">UBC Launch Pad</a>, UBC&#39;s
 student-run software engineering club.</p>
-<h2 id='why-use-inertia'>Why use Inertia?</h2>
-<p>TODO</p>
+
+<p>Check out our <a href="https://github.com/ubclaunchpad/inertia">GitHub repository</a> to
+learn more!</p>
 <h1 id='getting-started'>Getting Started</h1><h2 id='installation'>Installation</h2>
 <blockquote>
 <p>MacOS users can install the CLI using <a href="https://brew.sh">Homebrew</a>:</p>
@@ -288,12 +301,27 @@ student-run software engineering club.</p>
 <pre class="highlight shell tab-shell"><code>scoop bucket add ubclaunchpad https://github.com/ubclaunchpad/scoop-bucket
 scoop install inertia
 </code></pre>
-<p>All you need to get started is a 
-<a href="https://github.com/ubclaunchpad/inertia/wiki/Project-Compatibility">compatible project</a>, the Inertia CLI, and access to a virtual private server. </p>
+<blockquote>
+<p>Verify that Inertia has been installed properly:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code><span class="c"># should output a version number correctly</span>
+inertia --version
+
+<span class="c"># display help text</span>
+inertia --help
+</code></pre>
+<p>Inertia can be installed from a few package managers, such as Homebrew and Scoop.</p>
 
 <p>For other platforms, you can <a href="https://github.com/ubclaunchpad/inertia/releases">download the appropriate binary from the Releases page</a>.</p>
-<h2 id='setup'>Setup</h2><pre class="highlight shell tab-shell"><code>inertia init
+
+<p>You can also build Inertia from source.</p>
+<h2 id='setup'>Setup</h2><pre class="highlight plaintext"><code>cd /path/to/project
+inertia init
 </code></pre>
+<p>To set up Inertia, you must first navigate to your project directory, which
+must be a git repository. If Inertia cannot detect your project type, it will
+prompt for more information.</p>
+
 <blockquote>
 <p>This will generate a configuration file inside your repository.</p>
 </blockquote>
@@ -302,14 +330,59 @@ scoop install inertia
 Do not commit the generated configuration file - add it to your 
 <code>.gitignore</code>.
 </aside>
-<h2 id='configuring-inertia'>Configuring Inertia</h2><pre class="highlight toml tab-toml"><code><span class="py">version</span> <span class="p">=</span> <span class="s">"test"</span>
+<h2 id='project-configuration'>Project Configuration</h2>
+<blockquote>
+<p>An example <code>inertia.toml</code>:</p>
+</blockquote>
+<pre class="highlight toml tab-toml"><code><span class="py">version</span> <span class="p">=</span> <span class="s">"test"</span>
 <span class="py">project-name</span> <span class="p">=</span> <span class="s">"inertia"</span>
 <span class="py">build-type</span> <span class="p">=</span> <span class="s">"dockerfile"</span>
 <span class="py">build-file-path</span> <span class="p">=</span> <span class="s">"Dockerfile"</span>
+</code></pre>
+<p>Your Inertia configuration, stored in <code>inertia.toml</code> by default, contains a few
+key pieces of information.</p>
 
-<span class="nn">[remotes]</span>
-  <span class="nn">[remotes.local]</span>
-    <span class="py">name</span> <span class="p">=</span> <span class="s">"local"</span>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>TODO</td>
+<td>false</td>
+<td>TODO</td>
+</tr>
+<tr>
+<td>TODO</td>
+<td>true</td>
+<td>TODO</td>
+</tr>
+</tbody></table>
+<h1 id='deploying-your-project'>Deploying Your Project</h1><h2 id='using-an-existing-remote'>Using an Existing Remote</h2><pre class="highlight shell tab-shell"><code>inertia remote add <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+</code></pre>
+<p>To use an existing remote, you&#39;ll need its address and a PEM key that can
+be used to access it. Inertia will also need a few ports exposed, namely
+one for its daemon (<code>4303</code> by default) and whatever ports you need for your
+deployed project.</p>
+<h2 id='provisioning-a-remote'>Provisioning a Remote</h2><pre class="highlight shell tab-shell"><code>inertia provision <span class="k">${</span><span class="nv">cloud_provider</span><span class="k">}</span> <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+</code></pre>
+<p>Inertia has integrations with some cloud providers to allow you to easily
+provision a new VPS instance and set it up for Inertia. You can run <code>inertia
+provision --help</code> to see what options are available.</p>
+<h3 id='example-provisioning-an-ec2-instance'>Example: Provisioning an EC2 Instance</h3><pre class="highlight shell tab-shell"><code>inertia provision ec2 my_remote <span class="se">\</span>
+  --from-profile <span class="se">\</span>
+  --ports 8080
+</code></pre>
+<p>TODO: IAM setup, saving profile in aws config, choosing an image etc.</p>
+<h2 id='deployment-configuration'>Deployment Configuration</h2>
+<blockquote>
+<p>In your <code>inertia.toml</code>:</p>
+</blockquote>
+<pre class="highlight toml tab-toml"><code><span class="nn">[remotes]</span>
+  <span class="nn">[remotes.my_remote]</span>
+    <span class="py">name</span> <span class="p">=</span> <span class="s">"my_remote"</span>
     <span class="py">IP</span> <span class="p">=</span> <span class="s">"127.0.0.1"</span>
     <span class="py">user</span> <span class="p">=</span> <span class="s">"root"</span>
     <span class="py">pemfile</span> <span class="p">=</span> <span class="s">"/Users/robertlin/.ssh/id_rsa"</span>
@@ -317,13 +390,51 @@ Do not commit the generated configuration file - add it to your
     <span class="py">ssh-port</span> <span class="p">=</span> <span class="s">"69"</span>
     <span class="nn">[remotes.local.daemon]</span>
       <span class="py">port</span> <span class="p">=</span> <span class="s">"4303"</span>
-      <span class="py">token</span> <span class="p">=</span> <span class="s">"12345"</span>
-      <span class="py">webhook-secret</span> <span class="p">=</span> <span class="s">"abcde"</span>
+      <span class="py">token</span> <span class="p">=</span> <span class="s">"12345678910"</span>
+      <span class="py">webhook-secret</span> <span class="p">=</span> <span class="s">"abcdefg"</span>
 </code></pre>
-<p>Your Inertia configuration contains a few key pieces of information.</p>
-<h1 id='deploying-your-project'>Deploying Your Project</h1><h2 id='using-an-existing-remote'>Using an Existing Remote</h2><h2 id='provisioning-a-remote'>Provisioning a Remote</h2><pre class="highlight shell tab-shell"><code>inertia provision ec2 <span class="o">[</span>remote_name]
-</code></pre><h2 id='configuring-your-repository'>Configuring Your Repository</h2>
-<p>Inertia outputs a </p>
+<p>Deployment-specific settings are available under the <code>[remote]</code> section of your
+Inertia configuration.</p>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>TODO</td>
+<td>false</td>
+<td>TODO</td>
+</tr>
+<tr>
+<td>TODO</td>
+<td>true</td>
+<td>TODO</td>
+</tr>
+</tbody></table>
+<h2 id='configuring-your-repository'>Configuring Your Repository</h2>
+<blockquote>
+<p>The <code>inertia ${remote_name} init</code> command should output something like the
+following:</p>
+</blockquote>
+<pre class="highlight sh tab-shell"><code>GitHub Deploy Key <span class="o">(</span>add here https://www.github.com/&lt;your_repo&gt;/settings/keys/new<span class="o">)</span>:
+ssh-rsa &lt;...&gt;
+GitHub WebHook URL <span class="o">(</span>add here https://www.github.com/&lt;your_repo&gt;/settings/hooks/new<span class="o">)</span>:
+http://myhost.com:4303/webhook
+Github WebHook Secret: inertia
+</code></pre>
+<p>TODO: deploy key, webhooks, etc.</p>
+
+<blockquote>
+<p>Add some Inertia bling to your project repository!</p>
+</blockquote>
+<pre class="highlight markdown tab-markdown"><code><span class="p">[</span><span class="nv">![Deployed with Inertia</span><span class="p">](</span><span class="sx">https://img.shields.io/badge/deploying%20with-inertia-blue.svg</span><span class="p">)</span>](https://github.com/ubclaunchpad/inertia)
+</code></pre><h1 id='managing-your-deployment'>Managing Your Deployment</h1><h2 id='todo'>TODO</h2>
+<p>Lorem ipsum</p>
+<h2 id='todo-2'>TODO</h2>
+<p>Lorem ipsum</p>
 
       </div>
       <div class="dark-box">
