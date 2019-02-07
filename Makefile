@@ -182,3 +182,11 @@ web-run-sandbox:
 .PHONY: web-build
 web-build:
 	(cd ./daemon/web; npm install --production; npm run build)
+
+.PHONY: docs
+docs:
+	sh .scripts/build_docs.sh
+
+.PHONY: run-docs
+run-docs:
+	( cd docs_build/slate ; bundle exec middleman server )
