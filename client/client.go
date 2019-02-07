@@ -323,7 +323,7 @@ func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, err
 		return nil, fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to daemon at %s: %s", url.Host, err.Error())
 	}
 	return socket, nil
 }
