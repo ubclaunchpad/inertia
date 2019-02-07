@@ -367,6 +367,17 @@ func TestLogsWebsocket(t *testing.T) {
 	assert.Equal(t, []byte("hello world"), m)
 }
 
+func TestLogsWebsocketNoDaemon(t *testing.T) {
+	testServer := httptest.NewTLSServer(nil)
+	// close the server to test error
+	testServer.Close()
+
+	d := newMockClient(testServer)
+	_, err := d.LogsWebSocket("docker-compose", 10)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "connect: connection refused")
+}
+
 func TestUpdateEnv(t *testing.T) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusOK)
