@@ -322,6 +322,9 @@ func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, err
 	if err == websocket.ErrBadHandshake {
 		return nil, fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
 	}
+	if err != nil {
+		return nil, err
+	}
 	return socket, nil
 }
 
