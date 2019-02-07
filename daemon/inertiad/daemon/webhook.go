@@ -51,6 +51,10 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	// process event
 	switch event := payload.GetEventType(); event {
+	case webhook.PingEvent:
+		fmt.Fprint(w, api.MsgDaemonOK)
+		println("ping webhook received")
+		return
 	case webhook.PushEvent:
 		fmt.Fprint(w, api.MsgDaemonOK)
 		processPushEvent(s, payload, os.Stdout)

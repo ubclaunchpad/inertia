@@ -7,11 +7,14 @@ import (
 	"strings"
 )
 
+// EventType denotes types of webhook events
+type EventType string
+
 // Constants for the generic webhook interface
 const (
-	// Events
-	PushEvent = "push"
-	PullEvent = "pull"
+	PushEvent EventType = "push"
+	PullEvent EventType = "pull"
+	PingEvent EventType = "ping"
 
 	// Hosts
 	GitHub    = "github"
@@ -22,7 +25,7 @@ const (
 // Payload represents a generic webhook payload
 type Payload interface {
 	GetSource() string
-	GetEventType() string
+	GetEventType() EventType
 	GetRepoName() string
 	GetRef() string
 	GetGitURL() string

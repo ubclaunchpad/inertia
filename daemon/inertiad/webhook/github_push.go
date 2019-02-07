@@ -3,7 +3,7 @@ package webhook
 // Implements Payload interface
 // See github_test.go for an example request body
 type githubPushEvent struct {
-	eventType string
+	eventType EventType
 	ref       string
 	name      string
 	gitURL    string
@@ -36,7 +36,7 @@ func (g githubPushEvent) GetSource() string {
 }
 
 // GetEventType returns the event type of the webhook
-func (g githubPushEvent) GetEventType() string {
+func (g githubPushEvent) GetEventType() EventType {
 	return g.eventType
 }
 
