@@ -1,14 +1,18 @@
 #! /bin/bash
 
+set -e
+
 # Get Slate
 echo "[INFO] Getting Slate"
 mkdir -p docs_build
-cd docs_build || exit
-git clone https://github.com/lord/slate.git
+cd docs_build
+if [ ! -d slate ]; then
+  git clone https://github.com/lord/slate.git
+fi
 
 # Set up Slate for build
 echo "[INFO] Installing Slate dependencies"
-cd slate || exit
+cd slate
 bundle install
 echo "[INFO] Linking assets"
 ln -f ../../docs_src/index.html.md \
@@ -24,7 +28,7 @@ bundle exec middleman build --clean
 
 # Move output to /docs
 echo "[INFO] Migrating build to /docs"
-cd ../../ || exit
+cd ../../
 rm -rf docs
 mkdir -p docs
 mv -v docs_build/slate/build/* docs
