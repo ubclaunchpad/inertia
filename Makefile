@@ -16,6 +16,7 @@ ls:
 clean: testenv-clean
 	go clean -testcache
 	rm -f ./inertia
+	rm -rf ./docs_build
 	find . -type f -name inertia.\* -exec rm {} \;
 
 # Install all dependencies
