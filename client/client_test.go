@@ -375,7 +375,8 @@ func TestLogsWebsocketNoDaemon(t *testing.T) {
 	d := newMockClient(testServer)
 	_, err := d.LogsWebSocket("docker-compose", 10)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "connect: connection refused")
+
+	assert.True(t, strings.Contains(err.Error(), "connect: connection refused") || strings.Contains(err.Error(), "connectex: No connection could be made"))
 }
 
 func TestUpdateEnv(t *testing.T) {
