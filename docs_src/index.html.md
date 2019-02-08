@@ -11,7 +11,7 @@ toc_footers:
 includes:
   # - errors
 
-search: true
+search: false
 ---
 
 # Inertia
