@@ -427,8 +427,8 @@ prompt for more information.</p>
 </blockquote>
 <pre class="highlight shell tab-shell"><code>inertia config <span class="nb">set</span> <span class="k">${</span><span class="nv">parameter</span><span class="k">}</span> <span class="k">${</span><span class="nv">new_value</span><span class="k">}</span>
 </code></pre>
-<p>Your Inertia configuration, stored in <code>inertia.toml</code> by default, contains a few
-key pieces of information.</p>
+<p>Your Inertia configuration is stored in <code>inertia.toml</code> by default. There are
+a few project-wide settings stored here:</p>
 
 <table><thead>
 <tr>
@@ -521,14 +521,20 @@ credentials from my AWS profile and expose port 8080 for my project&quot;.</p>
 <pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set</span> <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> <span class="k">${</span><span class="nv">parameter</span><span class="k">}</span> <span class="k">${</span><span class="nv">new_value</span><span class="k">}</span>
 </code></pre>
 <blockquote>
-<p>For example, the following will change the <code>user</code> associated with <code>my_remote</code>
-to <code>bobheadxi</code> and print out the new settings:</p>
+<p>For example, the following will change the <code>branch</code> deployed on <code>my_remote</code>
+to <code>dev</code> and print out the new settings:</p>
 </blockquote>
-<pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set </span>my_remote user bobheadxi
+<pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set </span>my_remote branch dev
 inertia remote show my_remote
 </code></pre>
 <p>Once you&#39;ve added a remote, remote-specific settings are available under the
-<code>[remote]</code> section of your Inertia configuration. If you&#39;ve </p>
+<code>[remote]</code> section of your Inertia configuration. </p>
+
+<aside class="notice">
+For the most part, unless you filled in something incorrectly while adding a
+remote or provisioning an instance, you won't need to change any of these
+settings.
+</aside>
 
 <table><thead>
 <tr>
@@ -580,14 +586,14 @@ Inertia daemon:</p>
 <td>This is used to verify that incoming webhooks are authenticate - you&#39;ll need this later!</td>
 </tr>
 </tbody></table>
-<h2 id='initializing-the-inertia-daemon'>Initializing the Inertia Daemon</h2><pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> init
-<span class="c"># ... lots of output</span>
-</code></pre>
+<h2 id='initializing-the-inertia-daemon'>Initializing the Inertia Daemon</h2>
 <aside class="notice">
 If you used <code>inertia provision</code> to set up your remote, you can skip
 this step, as Inertia will have already done all this for you!
 </aside>
-
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> init
+<span class="c"># ... lots of output</span>
+</code></pre>
 <p>Initializing the Inertia daemon means installing <a href="https://www.docker.com/">Docker</a>,
 setting up some prerequisites, downloading the Inertia daemon image, and getting
 it up and running. Luckily, this is all done by a single, handy command so you
@@ -600,7 +606,7 @@ for updates to your repository. You can read more about this in the
 
 <aside class="success">
 Once this step is done, it means that Inertia and all its prerequisites are now
-set up on your VPS, and that the Inertia daemon should be up and running! Try
+set up on your VPS, and the Inertia daemon should be up and running! Try
 running <code>inertia ${remote_name} status</code> to connect to the daemon.
 </aside>
 
@@ -610,8 +616,8 @@ the next step to see what else needs to be done!
 </aside>
 <h2 id='configuring-your-repository'>Configuring Your Repository</h2>
 <blockquote>
-<p>The <code>inertia ${remote_name} init</code> command should output something like the
-following:</p>
+<p>The <code>inertia ${remote_name} init</code> or <code>provision</code> command&#39;s output should
+include something like the following:</p>
 </blockquote>
 <pre class="highlight shell tab-shell"><code>GitHub Deploy Key <span class="o">(</span>add here https://www.github.com/&lt;your_repo&gt;/settings/keys/new<span class="o">)</span>:
 ssh-rsa &lt;...&gt; <span class="c"># this is important!</span>
@@ -619,8 +625,8 @@ GitHub WebHook URL <span class="o">(</span>add here https://www.github.com/&lt;y
 http://myhost.com:4303/webhook <span class="c"># this is important!</span>
 Github WebHook Secret: inertia <span class="c"># this is important!</span>
 </code></pre>
-<p>The <code>inertia ${remote_name} init</code> command outputs several key pieces of
-information:</p>
+<p>The <code>inertia ${remote_name} init</code> or <code>provision</code> command outputs several key
+pieces of information to get your repository set up for continuous deployment:</p>
 
 <ul>
 <li>A deploy key: you need to allow this key read access to your repository. On
@@ -635,15 +641,11 @@ GitHub, this is under your project&#39;s &quot;Settings -&gt; Webhooks&quot; tab
 Unless you've set up a custom SSL certificate for your remote, you'll have to
 <b>disable SSL verification</b> when setting up your webhook registration.
 </aside>
-
-<blockquote>
-<p>Deploy your project!</p>
-</blockquote>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> up
 </code></pre>
 <aside class="success">
-With your repository now configured, you can now start continuously deploying
-your project using the <code>up</code> command!
+With your repository now configured correctly, you can now start get your project
+running using the <code>up</code> command!
 </aside>
 <h1 id='deployment-management'>Deployment Management</h1>
 <blockquote>
@@ -841,8 +843,6 @@ with Inertia&#39;s codebase.</p>
 <p><a href="https://golang.org/doc/gopher/pencil/"><img src="https://golang.org/doc/gopher/pencil/gophermega.jpg" alt="Gophermega" /></a></p>
 
 <p><br />
-<br />
-<br />
 <br />
 <br />
 <br />

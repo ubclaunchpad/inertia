@@ -136,8 +136,8 @@ build-file-path = "dockerfiles/Dockerfile.web"
 inertia config set ${parameter} ${new_value}
 ```
 
-Your Inertia configuration, stored in `inertia.toml` by default, contains a few
-key pieces of information.
+Your Inertia configuration is stored in `inertia.toml` by default. There are
+a few project-wide settings stored here:
 
 Parameter         | Description
 ----------------- | -----------
@@ -229,16 +229,22 @@ TODO: IAM setup, saving profile in aws config, choosing an image etc.
 inertia remote set ${remote_name} ${parameter} ${new_value}
 ```
 
-> For example, the following will change the `user` associated with `my_remote`
-> to `bobheadxi` and print out the new settings:
+> For example, the following will change the `branch` deployed on `my_remote`
+> to `dev` and print out the new settings:
 
 ```shell
-inertia remote set my_remote user bobheadxi
+inertia remote set my_remote branch dev
 inertia remote show my_remote
 ```
 
 Once you've added a remote, remote-specific settings are available under the
-`[remote]` section of your Inertia configuration. If you've 
+`[remote]` section of your Inertia configuration. 
+
+<aside class="notice">
+For the most part, unless you filled in something incorrectly while adding a
+remote or provisioning an instance, you won't need to change any of these
+settings.
+</aside>
 
 Parameter  | Description
 ---------- | -----------
@@ -259,15 +265,15 @@ Parameter        | Description
 
 ## Initializing the Inertia Daemon
 
-```shell
-inertia ${remote_name} init
-# ... lots of output
-```
-
 <aside class="notice">
 If you used <code>inertia provision</code> to set up your remote, you can skip
 this step, as Inertia will have already done all this for you!
 </aside>
+
+```shell
+inertia ${remote_name} init
+# ... lots of output
+```
 
 Initializing the Inertia daemon means installing [Docker](https://www.docker.com/),
 setting up some prerequisites, downloading the Inertia daemon image, and getting
@@ -281,7 +287,7 @@ for updates to your repository. You can read more about this in the
 
 <aside class="success">
 Once this step is done, it means that Inertia and all its prerequisites are now
-set up on your VPS, and that the Inertia daemon should be up and running! Try
+set up on your VPS, and the Inertia daemon should be up and running! Try
 running <code>inertia ${remote_name} status</code> to connect to the daemon.
 </aside>
 
@@ -293,8 +299,8 @@ the next step to see what else needs to be done!
 
 ## Configuring Your Repository
 
-> The `inertia ${remote_name} init` command should output something like the
-> following:
+> The `inertia ${remote_name} init` or `provision` command's output should
+> include something like the following:
 
 ```shell
 GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new):
@@ -304,8 +310,8 @@ http://myhost.com:4303/webhook # this is important!
 Github WebHook Secret: inertia # this is important!
 ```
 
-The `inertia ${remote_name} init` command outputs several key pieces of
-information:
+The `inertia ${remote_name} init` or `provision` command outputs several key
+pieces of information to get your repository set up for continuous deployment:
 
 * A deploy key: you need to allow this key read access to your repository. On
   GitHub, this is under your project's "Settings -> Deploy Keys" tab. This will
@@ -319,15 +325,13 @@ Unless you've set up a custom SSL certificate for your remote, you'll have to
 <b>disable SSL verification</b> when setting up your webhook registration.
 </aside>
 
-> Deploy your project!
-
 ```shell
 inertia ${remote_name} up
 ```
 
 <aside class="success">
-With your repository now configured, you can now start continuously deploying
-your project using the <code>up</code> command!
+With your repository now configured correctly, you can now start get your project
+running using the <code>up</code> command!
 </aside>
 
 # Deployment Management
@@ -580,8 +584,6 @@ with Inertia's codebase.
 
 [![](https://golang.org/doc/gopher/pencil/gophermega.jpg)](https://golang.org/doc/gopher/pencil/)
 
-<br />
-<br />
 <br />
 <br />
 <br />
