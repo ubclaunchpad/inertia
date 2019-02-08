@@ -153,13 +153,13 @@ inertia remote add ${remote_name}
 
 To use an existing remote, you'll need its address and a PEM key that can be
 used to access it. Inertia will also need a few ports exposed, namely one for
-the Inertia daemon (`4303` by default) and whatever ports you need for your
+the Inertia daemon (port `4303` by default) and whatever ports you need for your
 deployed project.
 
 <aside class="notice">
-If you use a non-standard SSH port (i.e. not port 22) or want to use a different
-port for the Inertia daemon, use the <code>--ssh.port ${port}</code> and
-<code>--port ${port}</code> flags respectively.
+If you use a non-standard SSH port (i.e. not port <code>22</code>) or want to
+use a different port for the Inertia daemon, use the <code>--ssh.port ${port}</code>
+and <code>--port ${port}</code> flags respectively when adding youre remote.
 </aside>
 
 ## Provisioning a Remote
@@ -247,8 +247,8 @@ inertia ${remote_name} init
 ```
 
 <aside class="notice">
-If you used the <code>inertia provision</code>, you can skip this step, as
-Inertia will have already done all this for you!
+If you used <code>inertia provision</code> to set up your remote, you can skip
+this step, as Inertia will have already done all this for you!
 </aside>
 
 Initializing the Inertia daemon means installing [Docker](https://www.docker.com/),
