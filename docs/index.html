@@ -198,7 +198,7 @@
     </style>
     <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
     <link href="stylesheets/print.css" rel="stylesheet" media="print" />
-      <script src="javascripts/all.js"></script>
+      <script src="javascripts/all_nosearch.js"></script>
   </head>
 
   <body class="index" data-languages="[]">
@@ -210,18 +210,9 @@
     </a>
     <div class="toc-wrapper">
       <img src="images/logo.png" class="logo" alt="Logo" />
-        <div class="search">
-          <input type="text" class="search" id="input-search" placeholder="Search">
-        </div>
-        <ul class="search-results"></ul>
       <ul id="toc" class="toc-list-h1">
           <li>
             <a href="#inertia" class="toc-h1 toc-link" data-title="Inertia">Inertia</a>
-              <ul class="toc-list-h2">
-                  <li>
-                    <a href="#what-is-inertia" class="toc-h2 toc-link" data-title="What is Inertia?">What is Inertia?</a>
-                  </li>
-              </ul>
           </li>
           <li>
             <a href="#getting-started" class="toc-h1 toc-link" data-title="Getting Started">Getting Started</a>
@@ -255,7 +246,7 @@
               </ul>
           </li>
           <li>
-            <a href="#managing-your-deployment" class="toc-h1 toc-link" data-title="Managing Your Deployment">Managing Your Deployment</a>
+            <a href="#deployment-management" class="toc-h1 toc-link" data-title="Deployment Management">Deployment Management</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#todo" class="toc-h2 toc-link" data-title="TODO">TODO</a>
@@ -275,24 +266,36 @@
       <div class="dark-box"></div>
       <div class="content">
         <h1 id='inertia'>Inertia</h1>
+<blockquote>
+<ul>
+<li>🚀 <strong>Simple to use</strong> - set up a deployment from your computer without ever having to manually SSH into your remote</li>
+<li>🍰 <strong>Cloud-agnostic</strong> - use any Linux-based remote virtual private server provider you want</li>
+<li>⚒  <strong>Versatile project support</strong> - deploy any Dockerfile or docker-compose project</li>
+<li>🚄 <strong>Continuous deployment</strong> - Webhook integrations for GitHub, GitLab, and Bitbucket means your project can be automatically updated, rebuilt, and deployed as soon as you <code>git push</code></li>
+<li>🛂 <strong>In-depth controls</strong> - start up, shut down, and monitor your deployment with ease from the command line or using Inertia&#39;s REST API</li>
+<li>🏷 <strong>Flexible configuration</strong> - branch deployment, environment variables, easy file transfer for configuration files, build settings, and more</li>
+<li>📦 <strong>Built-in provisioning</strong> - easily provision and set up VPS instances for your project with supported providers such as Amazon Web Services using a single command</li>
+<li>👥 <strong>Built for teams</strong> - provide shared access to an Inertia deployment by adding users</li>
+<li>🔑 <strong>Secure</strong> - secured with access tokens and HTTPS across the board, as well as features like 2FA for user logins</li>
+</ul>
+</blockquote>
+
 <p>✈️ Effortless, self-hosted continuous deployment for small teams and projects</p>
 
 <p><a href="https://github.com/ubclaunchpad/inertia/releases/latest"><img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg" alt="Inertia" /></a>
 <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general"><img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed" alt="Inertia" /></a>
 <a href="https://github.com/ubclaunchpad/inertia"><img src="https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social" alt="Inertia" /></a></p>
-<h2 id='what-is-inertia'>What is Inertia?</h2>
-<blockquote>
-<p>Goodbye world!</p>
-</blockquote>
 
-<p>Inertia is a simple cross-platform command line application that enables quick
+<p><br /></p>
+
+<p><em>Inertia</em> is a simple cross-platform command line application that enables quick
 and easy setup and management of continuous, automated deployment of a variety
 of project types on any virtual private server. The project is used, built, and
 maintained with ❤️ by <a href="https://www.ubclaunchpad.com">UBC Launch Pad</a>, UBC&#39;s
 student-run software engineering club.</p>
 
-<p>Check out our <a href="https://github.com/ubclaunchpad/inertia">GitHub repository</a> to
-learn more!</p>
+<p>This site primarily documents how to set up and use Inertia - to learn more
+about the project, check out our <a href="https://github.com/ubclaunchpad/inertia">GitHub repository</a>!</p>
 <h1 id='getting-started'>Getting Started</h1><h2 id='installation'>Installation</h2>
 <blockquote>
 <p>MacOS users can install the CLI using <a href="https://brew.sh">Homebrew</a>:</p>
@@ -306,29 +309,27 @@ learn more!</p>
 scoop install inertia
 </code></pre>
 <blockquote>
-<p>Verify that Inertia has been installed properly:</p>
+<p>Build from source:</p>
 </blockquote>
-<pre class="highlight shell tab-shell"><code><span class="c"># should output a version number correctly</span>
-inertia --version
-
-<span class="c"># display help text</span>
-inertia --help
+<pre class="highlight shell tab-shell"><code>go get -u github.com/ubclaunchpad/inertia
 </code></pre>
-<p>Inertia can be installed from a few package managers, such as Homebrew and Scoop.</p>
+<p>Inertia can be installed from a few package managers, such as Homebrew and Scoop.
+For other platforms, you can <a href="https://github.com/ubclaunchpad/inertia/releases">download the appropriate binary from the Releases page</a>.</p>
 
-<p>For other platforms, you can <a href="https://github.com/ubclaunchpad/inertia/releases">download the appropriate binary from the Releases page</a>.</p>
+<p>You can also build Inertia from source, though this requires Golang to be
+installed.</p>
 
-<p>You can also build Inertia from source.</p>
-<h2 id='setup'>Setup</h2><pre class="highlight plaintext"><code>cd /path/to/project
+<p>To verify your installation, try running <code>inertia --help</code>.</p>
+<h2 id='setup'>Setup</h2>
+<blockquote>
+<p>This will generate a configuration file inside your repository:</p>
+</blockquote>
+<pre class="highlight plaintext"><code>cd /path/to/project
 inertia init
 </code></pre>
 <p>To set up Inertia, you must first navigate to your project directory, which
 must be a git repository. If Inertia cannot detect your project type, it will
 prompt for more information.</p>
-
-<blockquote>
-<p>This will generate a configuration file inside your repository.</p>
-</blockquote>
 
 <aside class="warning">
 Do not commit the generated configuration file - add it to your 
@@ -435,7 +436,19 @@ Github WebHook Secret: inertia
 <p>Add some Inertia bling to your project repository!</p>
 </blockquote>
 <pre class="highlight markdown tab-markdown"><code><span class="p">[</span><span class="nv">![Deployed with Inertia</span><span class="p">](</span><span class="sx">https://img.shields.io/badge/deploying%20with-inertia-blue.svg</span><span class="p">)</span>](https://github.com/ubclaunchpad/inertia)
-</code></pre><h1 id='managing-your-deployment'>Managing Your Deployment</h1><h2 id='todo'>TODO</h2>
+</code></pre><h1 id='deployment-management'>Deployment Management</h1>
+<blockquote>
+<p>Bring project online, check its status, and shut it down:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> up
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> status
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> down
+</code></pre>
+<p>The main commands used to control your deployed project is <code>up</code>, <code>status</code>, and
+<code>down</code>. These commands are associated with the state of your project, not with
+that of the Inertia daemon - <code>inertia ${remote_name} down</code>, for example, will
+<em>not</em> shut down the Inertia daemon.</p>
+<h2 id='todo'>TODO</h2>
 <p>Lorem ipsum</p>
 <h2 id='todo-2'>TODO</h2>
 <p>Lorem ipsum</p>

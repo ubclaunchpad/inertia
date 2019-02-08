@@ -7,7 +7,8 @@ echo "[INFO] Getting Slate"
 mkdir -p docs_build
 cd docs_build
 if [ ! -d slate ]; then
-  git clone https://github.com/lord/slate.git
+  # Using Robert's fork for now, for extra swag
+  git clone https://github.com/bobheadxi/slate.git
 else
   echo "[INFO] Slate already present in docs_build/slate"
 fi
@@ -23,7 +24,7 @@ ln -fs "$(dirname "$(pwd)")"/docs_src/index.html.md \
   slate/source/index.html.md
 ln -fs "$(dirname "$(pwd)")"/docs_src/stylesheets/_variables.scss \
   slate/source/stylesheets/_variables.scss
-ln -fs "$(dirname "$(pwd)")"/.static/inertia-with-name.png \
+ln -fs "$(dirname "$(pwd)")"/.static/inertia.png \
   slate/source/images/logo.png
 echo "[INFO] Installing Slate dependencies"
 cd slate
