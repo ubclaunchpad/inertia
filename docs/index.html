@@ -349,7 +349,7 @@ scoop install inertia
 </blockquote>
 <pre class="highlight shell tab-shell"><code>go get -u github.com/ubclaunchpad/inertia
 </code></pre>
-<p>The Inertia command line interface, or &quot;CLI&quot;, can be installed from a few package
+<p>The Inertia command line interface (CLI) can be installed from a few package
 managers such as Homebrew and Scoop. For other platforms, you can 
 <a href="https://github.com/ubclaunchpad/inertia/releases">download the appropriate binary from the Releases page</a>.</p>
 
@@ -411,7 +411,7 @@ key pieces of information.</p>
 </tr>
 <tr>
 <td><code>build-type</code></td>
-<td>This should be either <code>dockerfile</code> or <code>docker-compose</code>, depending on what you are using.</td>
+<td>This should be either <code>dockerfile</code> or <code>docker-compose</code>, depending on which you are using.</td>
 </tr>
 <tr>
 <td><code>build-file-path</code></td>
@@ -423,7 +423,7 @@ key pieces of information.</p>
 
 <p>A &quot;remote&quot; is a remote VPS, such as a <a href="https://cloud.google.com/compute/">Google Cloud Compute</a>
 or <a href="https://aws.amazon.com/ec2/">AWS Elastic Cloud Compute (EC2)</a> instance. These
-are computers in the &quot;cloud&quot; that will be used to deploy your project, so that
+are computers in the cloud that will be used to deploy your project, so that
 you don&#39;t have to use your own.</p>
 
 <p>If this is your first time setting up a VPS, jump ahead to the
@@ -443,7 +443,7 @@ the Inertia daemon (<code>4303</code> by default) and whatever ports you need fo
 deployed project.</p>
 
 <aside class="notice">
-If you use a non-standard SSH port (ie not port 22) or want to use a different
+If you use a non-standard SSH port (i.e. not port 22) or want to use a different
 port for the Inertia daemon, use the <code>--ssh.port ${port}</code> and
 <code>--port ${port}</code> flags respectively.
 </aside>
@@ -457,7 +457,7 @@ provision --help</code> to see what options are available.</p>
   --ports 8080
 </code></pre>
 <blockquote>
-<p>This command says: &quot;provision an ec2 instance called &quot;my_remote&quot; using
+<p>This command says: &quot;provision an ec2 instance called &#39;my_remote&#39; using
 credentials from my AWS profile and expose port 8080 for my project&quot;.</p>
 </blockquote>
 
@@ -493,7 +493,7 @@ to <code>bobheadxi</code> and print out the new settings:</p>
 inertia remote show my_remote
 </code></pre>
 <p>Once you&#39;ve added a remote, remote-specific settings are available under the
-<code>[remote]</code> section of your Inertia configuration.</p>
+<code>[remote]</code> section of your Inertia configuration. If you&#39;ve </p>
 
 <table><thead>
 <tr>
@@ -548,6 +548,11 @@ Inertia daemon:</p>
 <h2 id='initializing-the-inertia-daemon'>Initializing the Inertia Daemon</h2><pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> init
 <span class="c"># ... lots of output</span>
 </code></pre>
+<aside class="notice">
+If you used the <code>inertia provision</code>, you can skip this step, as
+Inertia will have already done all this for you!
+</aside>
+
 <p>Initializing the Inertia daemon means installing <a href="https://www.docker.com/">Docker</a>,
 setting up some prerequisites, downloading the Inertia daemon image, and getting
 it up and running. Luckily, this is all done by a single, handy command so you
@@ -617,7 +622,7 @@ inertia <span class="k">${</span><span class="nv">remote_name</span><span class=
 </blockquote>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> down
 </code></pre>
-<p>The main commands used to control your deployed project is <code>up</code>, <code>status</code>, and
+<p>The main commands used to control your deployed project are <code>up</code>, <code>status</code>, and
 <code>down</code>. These commands are associated with the state of your project, not with
 that of the Inertia daemon - <code>inertia ${remote_name} down</code>, for example, will
 <em>not</em> shut down the Inertia daemon.</p>
