@@ -271,12 +271,16 @@ inertia provision ec2 my_remote \
 Now that you have your user and access keys all set up, you can provision your
 remote instance! Just set your keys in your
 [shell environment](https://www.tutorialspoint.com/unix/unix-using-variables.htm)
-and use the example command to provision a remote using those credentials.
+and use the `--from-env` flag as in the example to provision a remote using
+those credentials.
 
 Alternatively, you can save your credentials in your
 [AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
 To use these with Inertia, just call the `provision ec2` command with the
 `--from-profile` flag.
+
+Inertia will just prompt you for the keys if you don't provide them using one
+of the methods above.
 
 The provisioning command will ask you to choose a
 [region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
