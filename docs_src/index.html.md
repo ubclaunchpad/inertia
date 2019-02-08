@@ -68,7 +68,7 @@ scoop install inertia
 go get -u github.com/ubclaunchpad/inertia
 ```
 
-The Inertia command line interface, or "CLI", can be installed from a few package
+The Inertia command line interface (CLI) can be installed from a few package
 managers such as Homebrew and Scoop. For other platforms, you can 
 [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases).
 
@@ -180,7 +180,7 @@ inertia provision ec2 my_remote \
   --ports 8080
 ```
 
-> This command says: "provision an ec2 instance called "my_remote" using
+> This command says: "provision an ec2 instance called 'my_remote' using
 > credentials from my AWS profile and expose port 8080 for my project".
 
 TODO: IAM setup, saving profile in aws config, choosing an image etc.
