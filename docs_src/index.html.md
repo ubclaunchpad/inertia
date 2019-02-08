@@ -7,6 +7,7 @@ language_tabs: # must be one of https://git.io/vQNgJ
 toc_footers:
   - <a href='https://github.com/ubclaunchpad/inertia'>GitHub Repository</a>
   - <a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>Report a Problem</a>
+  - <a href='https://www.ubclaunchpad.com'><br/>UBC Launch Pad</a> 
 
 includes:
   # - errors
@@ -576,3 +577,13 @@ For development, please see our
 [contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/CONTRIBUTING.md)
 for contribution guidelines as well as a detailed guide to help you get started
 with Inertia's codebase.
+
+[![](https://golang.org/doc/gopher/pencil/gophermega.jpg)](https://golang.org/doc/gopher/pencil/)
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
