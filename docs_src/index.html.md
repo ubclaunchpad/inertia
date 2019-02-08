@@ -327,7 +327,7 @@ inertia ${remote_name} status
 inertia ${remote_name} down
 ```
 
-The main commands used to control your deployed project is `up`, `status`, and
+The main commands used to control your deployed project are `up`, `status`, and
 `down`. These commands are associated with the state of your project, not with
 that of the Inertia daemon - `inertia ${remote_name} down`, for example, will
 *not* shut down the Inertia daemon.
