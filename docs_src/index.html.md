@@ -666,6 +666,29 @@ To use these tokens, you can place them in your `inertia.toml` under `token`, or
 use them in requests to the Inertia API by placing them as a `Bearer` token in
 your request header under `Authorization`.
 
+## Inertia Release Streams
+
+The version of Inertia you are using can be seen in Inertia's `inertia.toml`
+configuration file, or by running `inertia --version`. The version in
+`inertia.toml` is used to determine what version of the Inertia daemon to use
+when you run `inertia ${remote_name} init`.
+
+> To switch over to the latest build and upgrade your remote:
+
+```shell
+inertia config set version "latest"
+inertia ${remote_name} upgrade
+```
+
+You can manually change the daemon version used by editing the Inertia
+configuration file. If you are building from source, you can also check out the
+desired version and run `make inertia-tagged` or `make RELEASE=$STREAM`.
+Inertia daemon releases are tagged as follows:
+
+- `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
+- `latest` denotes the newest builds on `master`.
+- `canary` denotes experimental builds used for testing and development - do not use this.
+
 # Miscellaneous
 
 ## Learn More
