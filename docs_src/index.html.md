@@ -244,7 +244,7 @@ This will take you through a brief walkthrough to configure your new IAM user:
 * Page 5 - you should be shown a **Access Key ID** and a **Secret access key**.
   Copy these somewhere safe!
 
-<aside class="notice">
+<aside class="warning">
 Make sure you don't reveal your keys to anyone else, as a malicious user could
 incure pretty significant charges at your expense. Also make sure you keep them
 somewhere you won't lose the keys, especially the "secret access key", as you won't
