@@ -41,7 +41,7 @@
 <br>
 
 <p align="center">
-  <a href="#package-getting-started"><strong>Getting Started</strong></a> · 
+  <a href="#package-usage"><strong>Usage</strong></a> · 
   <a href="#bulb-motivation-and-design"><strong>Motivation & Design</strong></a> · 
   <a href="#books-contributing"><strong>Contributing</strong></a> · 
   <a href="https://github.com/ubclaunchpad/inertia/wiki"><strong>Wiki</strong></a>
@@ -71,10 +71,22 @@ Inertia is a simple cross-platform command line application that enables quick a
 
 <br>
 
-# :package: Getting Started
+# :package: Usage
 
-Check out our new [Inertia Usage Guide](https://inertia.ubclaunchpad.com)
-to get started with using Inertia for your project!
+Check out our new [Inertia Usage Guide](https://inertia.ubclaunchpad.com) to get
+started with using Inertia for your project!
+
+## Why Use Inertia?
+
+If you:
+
+* want a simple utility to quickly build and deploy the latest iterations of your projects
+* are new to the concept of "deployment" and related tooling
+* are not deploying to production
+* are on a tight budget and need to switch between cloud providers as your free trials run out
+* want some lightweight team features for managing your deployment
+
+Inertia might be for you!
 
 <br><br>
 
