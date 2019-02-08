@@ -125,7 +125,7 @@ Parameter         | Description
 ----------------- | -----------
 `version`         | This should match the version of your Inertia CLI, which you can see by running `inertia --version`. It is used to determine which version of the [Inertia daemon](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/) to use.
 `project-name`    | The name of the project you are deploying.
-`build-type`      | This should be either `dockerfile` or `docker-compose`, depending on what you are using.
+`build-type`      | This should be either `dockerfile` or `docker-compose`, depending on which you are using.
 `build-file-path` | Path to your build configuration file, such as `Dockerfile` or `docker-compose.yml`, relative to the root of your project.
 
 # Deploying Your Project
@@ -134,7 +134,7 @@ When deploying a project, you typically deploy to a "remote".
 
 A "remote" is a remote VPS, such as a [Google Cloud Compute](https://cloud.google.com/compute/)
 or [AWS Elastic Cloud Compute (EC2)](https://aws.amazon.com/ec2/) instance. These
-are computers in the "cloud" that will be used to deploy your project, so that
+are computers in the cloud that will be used to deploy your project, so that
 you don't have to use your own.
 
 If this is your first time setting up a VPS, jump ahead to the
@@ -157,7 +157,7 @@ the Inertia daemon (`4303` by default) and whatever ports you need for your
 deployed project.
 
 <aside class="notice">
-If you use a non-standard SSH port (ie not port 22) or want to use a different
+If you use a non-standard SSH port (i.e. not port 22) or want to use a different
 port for the Inertia daemon, use the <code>--ssh.port ${port}</code> and
 <code>--port ${port}</code> flags respectively.
 </aside>
@@ -220,7 +220,7 @@ inertia remote show my_remote
 ```
 
 Once you've added a remote, remote-specific settings are available under the
-`[remote]` section of your Inertia configuration.
+`[remote]` section of your Inertia configuration. If you've 
 
 Parameter  | Description
 ---------- | -----------
@@ -245,6 +245,11 @@ Parameter        | Description
 inertia ${remote_name} init
 # ... lots of output
 ```
+
+<aside class="notice">
+If you used the <code>inertia provision</code>, you can skip this step, as
+Inertia will have already done all this for you!
+</aside>
 
 Initializing the Inertia daemon means installing [Docker](https://www.docker.com/),
 setting up some prerequisites, downloading the Inertia daemon image, and getting
