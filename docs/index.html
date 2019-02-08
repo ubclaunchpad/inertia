@@ -218,9 +218,6 @@
             <a href="#getting-started" class="toc-h1 toc-link" data-title="Getting Started">Getting Started</a>
               <ul class="toc-list-h2">
                   <li>
-                    <a href="#installation" class="toc-h2 toc-link" data-title="Installation">Installation</a>
-                  </li>
-                  <li>
                     <a href="#setup" class="toc-h2 toc-link" data-title="Setup">Setup</a>
                   </li>
                   <li>
@@ -256,9 +253,6 @@
                   </li>
                   <li>
                     <a href="#secrets-management" class="toc-h2 toc-link" data-title="Secrets Management">Secrets Management</a>
-                  </li>
-                  <li>
-                    <a href="#todo" class="toc-h2 toc-link" data-title="TODO">TODO</a>
                   </li>
               </ul>
           </li>
@@ -318,11 +312,13 @@
       <div class="dark-box"></div>
       <div class="content">
         <h1 id='inertia'>Inertia</h1>
-<p>✈️ Effortless, self-hosted continuous deployment for small teams and projects</p>
+<p>✈️ <em>Effortless, self-hosted continuous deployment for small teams and projects</em></p>
 
 <p><a href="https://github.com/ubclaunchpad/inertia/releases/latest"><img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg" alt="Inertia" /></a>
 <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general"><img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed" alt="Inertia" /></a>
 <a href="https://github.com/ubclaunchpad/inertia"><img src="https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social" alt="Inertia" /></a></p>
+
+<p><br /></p>
 
 <blockquote>
 <p><strong>Main Features</strong></p>
@@ -339,8 +335,6 @@
 <li>🔑 <strong>Secure</strong> - secured with access tokens and HTTPS across the board, as well as features like 2FA for user logins</li>
 </ul>
 </blockquote>
-
-<p><br /></p>
 
 <p><em>Inertia</em> is a simple cross-platform command line application that enables quick
 and easy setup and management of continuous, automated deployment of a variety
@@ -361,13 +355,15 @@ itself can already be a frustrating task, especially for students with little to
 no experience setting up applications on remote hosts. Inertia is a project we
 started to address these problems.</p>
 
-<p><br /></p>
-
 <p>This site primarily documents how to set up and use Inertia - to learn more
 about the project, check out our <a href="https://github.com/ubclaunchpad/inertia">GitHub repository</a>!</p>
 
-<p><br /></p>
-<h1 id='getting-started'>Getting Started</h1><h2 id='installation'>Installation</h2>
+<aside class="notice">
+This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
+please feel free to
+<a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>open a ticket</a>!
+</aside>
+<h1 id='getting-started'>Getting Started</h1>
 <blockquote>
 <p>MacOS users can install the CLI using <a href="https://brew.sh">Homebrew</a>:</p>
 </blockquote>
@@ -404,18 +400,25 @@ some helpful text about Inertia.</p>
 inertia init
 </code></pre>
 <p>To set up Inertia, you must first navigate to your project directory, which
-must be a git repository. If Inertia cannot detect your project type, it will
-prompt for more information.</p>
+must be a git repository, and run <code>inertia init</code> to set up configuration. If
+Inertia cannot detect your project type, it will prompt for more information.</p>
+
+<aside class="notice">
+To use your project with Inertia, you must have some kind of
+<a href='https://docs.docker.com/engine/reference/builder/'>Docker</a> or
+<a href='https://docs.docker.com/compose/overview/'>docker-compose</a>
+configuration set up for running your app.
+</aside>
 
 <aside class="warning">
-<b>Do not commit the generated configuration file</b> - add it to your
+<b>Do not commit the generated Inertia configuration file</b> - add it to your
 <code>.gitignore</code>!
 </aside>
 <h2 id='project-configuration'>Project Configuration</h2>
 <blockquote>
 <p>An example <code>inertia.toml</code>:</p>
 </blockquote>
-<pre class="highlight toml tab-toml"><code><span class="py">version</span> <span class="p">=</span> <span class="s">"test"</span>
+<pre class="highlight toml tab-toml"><code><span class="py">version</span> <span class="p">=</span> <span class="s">"canary"</span>
 <span class="py">project-name</span> <span class="p">=</span> <span class="s">"my_project"</span>
 <span class="py">build-type</span> <span class="p">=</span> <span class="s">"dockerfile"</span>
 <span class="py">build-file-path</span> <span class="p">=</span> <span class="s">"dockerfiles/Dockerfile.web"</span>
@@ -644,8 +647,8 @@ Unless you've set up a custom SSL certificate for your remote, you'll have to
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> up
 </code></pre>
 <aside class="success">
-With your repository now configured correctly, you can now start get your project
-running using the <code>up</code> command!
+With your repository now configured correctly, you can now get your project
+up and running using the <code>up</code> command!
 </aside>
 <h1 id='deployment-management'>Deployment Management</h1>
 <blockquote>
@@ -690,8 +693,6 @@ remote - this file will then become accessible by your project:</p>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> send <span class="k">${</span><span class="nv">file_name</span><span class="k">}</span>
 </code></pre>
 <p>TODO: details</p>
-<h2 id='todo'>TODO</h2>
-<p>Lorem ipsum</p>
 <h1 id='teams'>Teams</h1><h2 id='configuring-users'>Configuring Users</h2>
 <blockquote>
 <p>The following command will prompt for a password, and add the given user as
@@ -738,20 +739,45 @@ inertia <span class="k">${</span><span class="nv">remote_name</span><span class=
 </code></pre>
 <p>TODO</p>
 <h1 id='advanced-usage'>Advanced Usage</h1>
-<p>TODO</p>
+<p>This section details various advanced usage tips. If you can&#39;t find what you&#39;re
+looking for here, try using the <code>--help</code> flag on relevant commands - Inertia
+will display help text and all the different options available to you.</p>
 <h2 id='troubleshooting'>Troubleshooting</h2>
+<aside class="notice">
+If you need help, please feel free to
+<a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>open a ticket</a>!
+</aside>
+
 <blockquote>
 <p>To view more of the Inertia daemon&#39;s logs (the number of entries retrieved
 is capped by default), run:</p>
 </blockquote>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> logs --entries 100000
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> logs <span class="k">${</span><span class="nv">container</span><span class="k">}</span> --entries 100000
 </code></pre>
+<p>Inertia is a large and rather complex project, and as such you might encounter
+bugs, either because of Inertia or due to some kind of misconfiguration.</p>
+
+<p>The Inertia daemon outputs a lot of verbose logs that might help you out. You
+can also make use of the <code>inertia ${remote} status</code> command to output details
+about the state of your deployment. Also pay attention to the output of the
+Inertia CLI when things go awry - it might hint at what happened, and it&#39;ll be
+useful context if you decide to open a ticket.</p>
+
 <blockquote>
 <p>To start an SSH session with your remote, you can use the shortcut:</p>
 </blockquote>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> ssh
 </code></pre>
-<p>TODO</p>
+<p>If you are more experienced, you can SSH into your remote to investigate. This
+lets you access more advanced Docker commands and whatever else you might need
+to work out what is happening.</p>
+
+<aside class="warning">
+When interacting with your remote over SSH, be wary of manipulating assets that
+Inertia depends on such as files in <code>~/inertia/data/</code> and
+<code>~/.inertia</code>, as well as build images such as <code>docker/compose</code>.
+</aside>
 <h2 id='2-factor-authentication'>2-Factor Authentication</h2><pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> user totp <span class="nb">enable</span> <span class="k">${</span><span class="nv">username</span><span class="k">}</span>
 inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> user totp disable <span class="k">${</span><span class="nv">username</span><span class="k">}</span>
 </code></pre>
@@ -788,7 +814,7 @@ backup codes.</p>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> prune
 </code></pre>
 <blockquote>
-<p>You can also interact with Docker over SSH:</p>
+<p>You can also interact with Docker directly over SSH:</p>
 </blockquote>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> ssh
 <span class="gp">root@remote:~$ </span>docker container ls -a
@@ -800,11 +826,23 @@ storage).</p>
 
 <p>Inertia offers a few ways of managing resources, either through commands like
 <code>prune</code> or directly over SSH.</p>
+
+<aside class="warning">
+When interacting with your remote over SSH, be wary of manipulating assets that
+Inertia depends on such as files in <code>~/inertia/data/</code> and
+<code>~/.inertia</code>, as well as build images such as <code>docker/compose</code>.
+</aside>
 <h2 id='generating-api-keys'>Generating API Keys</h2><pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> token
 </code></pre>
 <p>If you want to develop integrations with Inertia, you&#39;ll probably want a
-non-expiring API key, which you can generate using Inertia if you have SSH
-access to the remote. Be careful not to lose these keys.</p>
+non-expiring API token, which you can generate using Inertia if you have SSH
+access to your remote. Be careful not to lose these tokens.</p>
+<pre class="highlight shell tab-shell"><code>curl -H <span class="s2">"Authorization: Bearer </span><span class="k">${</span><span class="nv">token</span><span class="k">}</span><span class="s2">"</span> <span class="se">\</span>
+  https://<span class="k">${</span><span class="nv">remote_ip</span><span class="k">}</span>:<span class="k">${</span><span class="nv">daemon_port</span><span class="k">}</span>/status
+</code></pre>
+<p>To use these tokens, you can place them in your <code>inertia.toml</code> under <code>token</code>, or
+use them in requests to the Inertia API by placing them as a <code>Bearer</code> token in
+your request header under <code>Authorization</code>.</p>
 <h1 id='miscellaneous'>Miscellaneous</h1><h2 id='learn-more'>Learn More</h2>
 <blockquote>
 <p>Some quick links to help you get started:</p>
