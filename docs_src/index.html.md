@@ -16,6 +16,12 @@ search: false
 
 # Inertia
 
+✈️ Effortless, self-hosted continuous deployment for small teams and projects
+
+[![](https://img.shields.io/github/release/ubclaunchpad/inertia.svg)](https://github.com/ubclaunchpad/inertia/releases/latest)
+[![](https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed)](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general)
+[![](https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social)](https://github.com/ubclaunchpad/inertia)
+
 > **Main Features**
 > 
 > * 🚀 **Simple to use** - set up a deployment from your computer without ever having to manually SSH into your remote
@@ -28,12 +34,6 @@ search: false
 > * 👥 **Built for teams** - provide shared access to an Inertia deployment by adding users
 > * 🔑 **Secure** - secured with access tokens and HTTPS across the board, as well as features like 2FA for user logins
 
-✈️ Effortless, self-hosted continuous deployment for small teams and projects
-
-[![](https://img.shields.io/github/release/ubclaunchpad/inertia.svg)](https://github.com/ubclaunchpad/inertia/releases/latest)
-[![](https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed)](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general)
-[![](https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social)](https://github.com/ubclaunchpad/inertia)
-
 <br />
 
 *Inertia* is a simple cross-platform command line application that enables quick
@@ -42,8 +42,25 @@ of project types on any virtual private server. The project is used, built, and
 maintained with ❤️ by [UBC Launch Pad](https://www.ubclaunchpad.com), UBC's
 student-run software engineering club.
 
+[UBC Launch Pad](https://www.ubclaunchpad.com) is a student-run software
+engineering club at the University of British Columbia that aims to provide
+students with a community where they can work together to build a all sorts of
+cool projects, ranging from mobile apps and web services to cryptocurrencies and
+machine learning applications.
+
+Many of our projects rely on hosting providers for deployment. Unfortunately we
+frequently change hosting providers based on available funding and sponsorship,
+meaning our projects often need to be redeployed. On top of that, deployment
+itself can already be a frustrating task, especially for students with little to
+no experience setting up applications on remote hosts. Inertia is a project we
+started to address these problems.
+
+<br />
+
 This site primarily documents how to set up and use Inertia - to learn more
 about the project, check out our [GitHub repository](https://github.com/ubclaunchpad/inertia)!
+
+<br />
 
 # Getting Started
 
@@ -518,3 +535,15 @@ inertia ${remote_name} token
 If you want to develop integrations with Inertia, you'll probably want a
 non-expiring API key, which you can generate using Inertia if you have SSH
 access to the remote. Be careful not to lose these keys.
+
+# Miscellaneous
+
+## Swag
+
+```markdown
+[![Deployed with Inertia](https://img.shields.io/badge/deploying%20with-inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
+```
+
+Add a cool Inertia badge to your README if you use Inertia!
+
+[![Deployed with Inertia](https://img.shields.io/badge/deploying%20with-inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
