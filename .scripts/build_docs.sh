@@ -8,19 +8,21 @@ mkdir -p docs_build
 cd docs_build
 if [ ! -d slate ]; then
   git clone https://github.com/lord/slate.git
+else
+  echo "[INFO] Slate already present in docs_build/slate"
 fi
 
 # Set up Slate for build
+echo "[INFO] Linking assets"
+ln -fs "$(dirname "$(pwd)")"/docs_src/index.html.md \
+  slate/source/index.html.md
+ln -fs "$(dirname "$(pwd)")"/docs_src/_variables.scss \
+  slate/source/stylesheets/_variables.scss
+ln -fs "$(dirname "$(pwd)")"/.static/inertia-with-name.png \
+  slate/source/images/logo.png
 echo "[INFO] Installing Slate dependencies"
 cd slate
 bundle install
-echo "[INFO] Linking assets"
-ln -f ../../docs_src/index.html.md \
-  source/index.html.md
-ln -f ../../docs_src/_variables.scss \
-  source/stylesheets/_variables.scss
-ln -f ../../.static/inertia-with-name.png \
-  source/images/logo.png
 
 # Execute build
 echo "[INFO] Building documentation"
