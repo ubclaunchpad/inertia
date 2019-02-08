@@ -538,6 +538,23 @@ access to the remote. Be careful not to lose these keys.
 
 # Miscellaneous
 
+## Learn More
+
+> Some quick links to help you get started:
+
+> * [Motivation and Design](https://github.com/ubclaunchpad/inertia#bulb-motivation-and-design)
+> * [Continuous Deployment?](https://github.com/ubclaunchpad/inertia/wiki/Continuous-Deployment%3F)
+> * [Architecture](https://github.com/ubclaunchpad/inertia/wiki/Architecture)
+> * [Daemon, API, and Builds](https://github.com/ubclaunchpad/inertia/wiki/Daemon,-API,-and-Builds)
+> * [Web App](https://github.com/ubclaunchpad/inertia/wiki/Web-App)
+> * [CI Pipeline](https://github.com/ubclaunchpad/inertia/wiki/CI-Pipeline)
+> * [Documentation](https://godoc.org/github.com/ubclaunchpad/inertia)
+
+Check out our [GitHub repository](https://github.com/ubclaunchpad/inertia) and
+[Wiki](https://github.com/ubclaunchpad/inertia/wiki)!
+
+![](https://bobheadxi.github.io/assets/images/posts/inertia-diagram.png)
+
 ## Swag
 
 ```markdown
@@ -547,3 +564,15 @@ access to the remote. Be careful not to lose these keys.
 Add a cool Inertia badge to your README if you use Inertia!
 
 [![Deployed with Inertia](https://img.shields.io/badge/deploying%20with-inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
+
+# Contributing
+
+Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome!
+
+You can report issues with documentation, bugs, or anything via our
+[issue tracker](https://github.com/ubclaunchpad/inertia/issues).
+
+For development, please see our
+[contribution guide](https://github.com/ubclaunchpad/inertia/blob/master/CONTRIBUTING.md)
+for contribution guidelines as well as a detailed guide to help you get started
+with Inertia's codebase.
