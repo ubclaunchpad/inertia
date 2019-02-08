@@ -189,26 +189,100 @@ and <code>--port ${port}</code> flags respectively when adding your remote.
 
 ## Provisioning a Remote
 
+<aside class="notice">
+If you've already added a remote manually, you can skip ahead to
+<a href='#initializing-the-inertia-daemon'>Initializing the Inertia Daemon</a>.
+</aside>
+
 ```shell
+inertia provision --help
 inertia provision ${cloud_provider} ${remote_name}
 ```
 
 Inertia has integrations with some cloud providers to allow you to easily
-provision a new VPS instance and set it up for Inertia. You can run `inertia
-provision --help` to see what options are available.
+provision a new VPS instance and set it up for Inertia. This includes generating
+key pairs, setting network rules, and initializing the Inertia daemon.
+
+You can use the `--help` on the `provision` command to see what options are
+available.
 
 ### Example: Provisioning an EC2 Instance
 
+[Elastic Cloud Compute (EC2)](https://aws.amazon.com/ec2) is a service provided
+by Amazon Web Services (AWS) that can be used to deploy Inertia projects. It
+offers a [750 free hours a month for your first 12 months](https://aws.amazon.com/free/),
+which is just enough for 1 EC2 VPS instance. Even after the trial it's pretty
+affordable, and a good choice to get started with.
+
+> The IAM Management page:
+> ![](/images/aws-ec2-iam-add.png)
+
+To get started, make an account on the [AWS website](aws.amazon.com). If you're
+a student, you'll also be eligible for
+[yearly free credits](https://aws.amazon.com/education/awseducate/), so make sure
+you sign up for that as well.
+
+Next, you'll want to head over to the
+[IAM management page of the AWS Management Console](https://console.aws.amazon.com/iam).
+IAM stands for "Identity and Access Management", and this is where you'll
+configure programmatic access to your AWS account. Under the "Users" tab, click
+"Add User".
+
+> Configuring IAM permissions:
+> ![](/images/aws-ec2-iam-perm.png)
+
+This will take you through a brief walkthrough to configure your new IAM user:
+
+* Page 1 - make sure you enable **Programmatic Access** to tell AWS to generate
+  access keys for your new user - Inertia will need this.
+* Page 2 - make sure to choose a permission set that allows the user to
+  manipulate EC2 resources, such as **AmazonEC2FullAccess** (this will be
+  under the 3rd tab titled "Attach existing policies directly").
+* Page 3 - don't worry about setting tags, as these are typically used for
+  organizations with large numbers of users.
+* Page 4 - confirm that you've configured the user correctly
+* Page 5 - you should be shown a **Access Key ID** and a **Secret access key**.
+  Copy these somewhere safe!
+
+<aside class="notice">
+Make sure you don't reveal your keys to anyone else, as a malicious user could
+incure pretty significant charges at your expense. Also make sure you keep them
+somewhere you won't lose the keys, especially the "secret access key", as you won't
+be able to see them again later from the console (you'll have to create a new
+user).
+</aside>
+
 ```shell
+# set credentials in environment
+export AWS_ACCESS_KEY_ID=${access_key_id}
+export AWS_ACCESS_KEY=${secret_access_key}
 inertia provision ec2 my_remote \
-  --from-profile \
+  --from-env \
   --ports 8080
 ```
 
 > This command says: "provision an ec2 instance called 'my_remote' using
-> credentials from my AWS profile and expose port 8080 for my project".
+> credentials in my environment and expose port 8080 for my project".
 
-TODO: IAM setup, saving profile in aws config, choosing an image etc.
+Now that you have your user and access keys all set up, you can provision your
+remote instance! Just set your keys in your
+[shell environment](https://www.tutorialspoint.com/unix/unix-using-variables.htm)
+and use the example command to provision a remote using those credentials.
+
+Alternatively, you can save your credentials in your
+[AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+To use these with Inertia, just call the `provision ec2` command with the
+`--from-profile` flag.
+
+The provisioning command will ask you to choose a
+[region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
+and an [image](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) to
+use. The region should probably be whatever is closest to you, and then you
+should just choose one of the images that Inertia lists as options.
+
+Inertia will then create an EC2 instance, generate a key pair to give you SSH
+access to the remote, set up network rules, install Inertia's prerequisites on
+your remote, and spin up the Inertia daemon!
 
 ## Deployment Configuration
 
