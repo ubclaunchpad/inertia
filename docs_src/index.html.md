@@ -456,16 +456,33 @@ TODO
 
 # Advanced Usage
 
-TODO
+This section details various advanced usage tips. If you can't find what you're
+looking for here, try using the `--help` flag on relevant commands - Inertia
+will display help text and all the different options available to you.
 
 ## Troubleshooting
+
+<aside class="notice">
+If you need help, please feel free to
+<a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>open a ticket</a>!
+</aside>
 
 > To view more of the Inertia daemon's logs (the number of entries retrieved
 > is capped by default), run:
 
 ```shell
 inertia ${remote_name} logs --entries 100000
+inertia ${remote_name} logs ${container} --entries 100000
 ```
+
+Inertia is a large and rather complex project, and as such you might encounter
+bugs, either because of Inertia or due to some kind of misconfiguration.
+
+The Inertia daemon outputs a lot of verbose logs that might help you out. You
+can also make use of the `inertia ${remote} status` command to output details
+about the state of your deployment. Also pay attention to the output of the
+Inertia CLI when things go awry - it might hint at what happened, and it'll be
+useful context if you decide to open a ticket.
 
 > To start an SSH session with your remote, you can use the shortcut:
 
@@ -473,7 +490,15 @@ inertia ${remote_name} logs --entries 100000
 inertia ${remote_name} ssh
 ```
 
-TODO
+If you are more experienced, you can SSH into your remote to investigate. This
+lets you access more advanced Docker commands and whatever else you might need
+to work out what is happening.
+
+<aside class="warning">
+When interacting with your remote over SSH, be wary of manipulating assets that
+Inertia depends on such as files in <code>~/inertia/data/</code> and
+<code>~/.inertia</code>, as well as build images such as <code>docker/compose</code>.
+</aside>
 
 ## 2-Factor Authentication
 
@@ -516,7 +541,7 @@ backup codes.
 inertia ${remote_name} prune
 ```
 
-> You can also interact with Docker over SSH:
+> You can also interact with Docker directly over SSH:
 
 ```shell
 inertia ${remote_name} ssh
@@ -531,6 +556,12 @@ storage).
 Inertia offers a few ways of managing resources, either through commands like
 `prune` or directly over SSH.
 
+<aside class="warning">
+When interacting with your remote over SSH, be wary of manipulating assets that
+Inertia depends on such as files in <code>~/inertia/data/</code> and
+<code>~/.inertia</code>, as well as build images such as <code>docker/compose</code>.
+</aside>
+
 ## Generating API Keys
 
 ```shell
@@ -538,8 +569,17 @@ inertia ${remote_name} token
 ```
 
 If you want to develop integrations with Inertia, you'll probably want a
-non-expiring API key, which you can generate using Inertia if you have SSH
-access to the remote. Be careful not to lose these keys.
+non-expiring API token, which you can generate using Inertia if you have SSH
+access to your remote. Be careful not to lose these tokens.
+
+```shell
+curl -H "Authorization: Bearer ${token}" \
+  https://${remote_ip}:${daemon_port}/status
+```
+
+To use these tokens, you can place them in your `inertia.toml` under `token`, or
+use them in requests to the Inertia API by placing them as a `Bearer` token in
+your request header under `Authorization`.
 
 # Miscellaneous
 
