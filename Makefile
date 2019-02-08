@@ -190,4 +190,4 @@ docs:
 
 .PHONY: run-docs
 run-docs:
-	( cd docs_build/slate ; bundle exec middleman server )
+	( cd docs_build/slate ; bundle exec middleman server --verbose )

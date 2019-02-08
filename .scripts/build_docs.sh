@@ -12,11 +12,16 @@ else
   echo "[INFO] Slate already present in docs_build/slate"
 fi
 
+# Add custom config to Slate
+echo "[INFO] Hacking Slate configuration"
+echo "files.watch :source, path: File.join(root, '../../docs_src')" \
+  >> slate/config.rb
+
 # Set up Slate for build
 echo "[INFO] Linking assets"
 ln -fs "$(dirname "$(pwd)")"/docs_src/index.html.md \
   slate/source/index.html.md
-ln -fs "$(dirname "$(pwd)")"/docs_src/_variables.scss \
+ln -fs "$(dirname "$(pwd)")"/docs_src/stylesheets/_variables.scss \
   slate/source/stylesheets/_variables.scss
 ln -fs "$(dirname "$(pwd)")"/.static/inertia-with-name.png \
   slate/source/images/logo.png
@@ -26,11 +31,5 @@ bundle install
 
 # Execute build
 echo "[INFO] Building documentation"
-bundle exec middleman build --clean
-
-# Move output to /docs
-echo "[INFO] Migrating build to /docs"
-cd ../../
 rm -rf docs
-mkdir -p docs
-mv -v docs_build/slate/build/* docs
+bundle exec middleman build --clean --build-dir=../../docs
