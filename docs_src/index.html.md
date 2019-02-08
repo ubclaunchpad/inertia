@@ -488,4 +488,10 @@ backup codes.
 
 ## Generating API Keys
 
-TODO
+```shell
+inertia ${remote_name} token
+```
+
+If you want to develop integrations with Inertia, you'll probably want a
+non-expiring API key, which you can generate using Inertia if you have SSH
+access to the remote. Be careful not to lose these keys.
