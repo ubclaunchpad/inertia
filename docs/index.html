@@ -502,12 +502,12 @@ available.</p>
 <h3 id='example-provisioning-an-ec2-instance'>Example: Provisioning an EC2 Instance</h3>
 <p><a href="https://aws.amazon.com/ec2">Elastic Cloud Compute (EC2)</a> is a service provided
 by Amazon Web Services (AWS) that can be used to deploy Inertia projects. It
-offers a <a href="https://aws.amazon.com/free/">750 free hours a month for your first 12 months</a>,
+offers <a href="https://aws.amazon.com/free/">750 free EC2 hours a month for your first 12 months</a>,
 which is just enough for 1 EC2 VPS instance. Even after the trial it&#39;s pretty
 affordable, and a good choice to get started with.</p>
 
 <blockquote>
-<p>The IAM Management page:
+<p>The IAM users page:
 <img src="images/aws-ec2-iam-add.png" alt="Aws ec2 iam add" /></p>
 </blockquote>
 
@@ -517,7 +517,7 @@ a student, you&#39;ll also be eligible for
 you sign up for that as well.</p>
 
 <p>Next, you&#39;ll want to head over to the
-<a href="https://console.aws.amazon.com/iam">IAM management page of the AWS Management Console</a>.
+<a href="https://console.aws.amazon.com/iam">IAM page of the AWS Management Console</a>.
 IAM stands for &quot;Identity and Access Management&quot;, and this is where you&#39;ll
 configure programmatic access to your AWS account. Under the &quot;Users&quot; tab, click
 &quot;Add User&quot;.</p>
@@ -544,10 +544,14 @@ Copy these somewhere safe!</li>
 
 <aside class="warning">
 Make sure you don't reveal your keys to anyone else, as a malicious user could
-incure pretty significant charges at your expense. Also make sure you keep them
-somewhere you won't lose the keys, especially the "secret access key", as you won't
-be able to see them again later from the console (you'll have to create a new
-user).
+incur pretty significant charges at your expense.
+</aside>
+
+<aside class="notice">
+If you lose your keys, you can simply
+<a href='https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey'>
+invalidate and create new keys</a> for the same user (and indeed key rotation on
+a regular basis is strongly encouraged by AWS anyway).
 </aside>
 <pre class="highlight shell tab-shell"><code><span class="c"># set credentials in environment</span>
 <span class="nb">export </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="k">${</span><span class="nv">access_key_id</span><span class="k">}</span>
@@ -564,12 +568,16 @@ credentials in my environment and expose port 8080 for my project&quot;.</p>
 <p>Now that you have your user and access keys all set up, you can provision your
 remote instance! Just set your keys in your
 <a href="https://www.tutorialspoint.com/unix/unix-using-variables.htm">shell environment</a>
-and use the example command to provision a remote using those credentials.</p>
+and use the <code>--from-env</code> flag as in the example to provision a remote using
+those credentials.</p>
 
 <p>Alternatively, you can save your credentials in your
 <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">AWS credentials file</a>.
 To use these with Inertia, just call the <code>provision ec2</code> command with the
 <code>--from-profile</code> flag.</p>
+
+<p>Inertia will just prompt you for the keys if you don&#39;t provide them using one
+of the methods above.</p>
 
 <p>The provisioning command will ask you to choose a
 <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions">region</a>

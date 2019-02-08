@@ -214,7 +214,7 @@ offers [750 free EC2 hours a month for your first 12 months](https://aws.amazon.
 which is just enough for 1 EC2 VPS instance. Even after the trial it's pretty
 affordable, and a good choice to get started with.
 
-> The IAM Management page:
+> The IAM users page:
 > ![](/images/aws-ec2-iam-add.png)
 
 To get started, make an account on the [AWS website](aws.amazon.com). If you're
@@ -223,7 +223,7 @@ a student, you'll also be eligible for
 you sign up for that as well.
 
 Next, you'll want to head over to the
-[IAM management page of the AWS Management Console](https://console.aws.amazon.com/iam).
+[IAM page of the AWS Management Console](https://console.aws.amazon.com/iam).
 IAM stands for "Identity and Access Management", and this is where you'll
 configure programmatic access to your AWS account. Under the "Users" tab, click
 "Add User".
