@@ -159,7 +159,7 @@ deployed project.
 <aside class="notice">
 If you use a non-standard SSH port (i.e. not port <code>22</code>) or want to
 use a different port for the Inertia daemon, use the <code>--ssh.port ${port}</code>
-and <code>--port ${port}</code> flags respectively when adding youre remote.
+and <code>--port ${port}</code> flags respectively when adding your remote.
 </aside>
 
 ## Provisioning a Remote
