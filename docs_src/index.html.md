@@ -210,7 +210,7 @@ available.
 
 [Elastic Cloud Compute (EC2)](https://aws.amazon.com/ec2) is a service provided
 by Amazon Web Services (AWS) that can be used to deploy Inertia projects. It
-offers a [750 free hours a month for your first 12 months](https://aws.amazon.com/free/),
+offers [750 free EC2 hours a month for your first 12 months](https://aws.amazon.com/free/),
 which is just enough for 1 EC2 VPS instance. Even after the trial it's pretty
 affordable, and a good choice to get started with.
 
