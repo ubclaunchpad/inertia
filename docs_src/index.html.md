@@ -17,11 +17,13 @@ search: false
 
 # Inertia
 
-✈️ Effortless, self-hosted continuous deployment for small teams and projects
+✈️ *Effortless, self-hosted continuous deployment for small teams and projects*
 
 [![](https://img.shields.io/github/release/ubclaunchpad/inertia.svg)](https://github.com/ubclaunchpad/inertia/releases/latest)
 [![](https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed)](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general)
 [![](https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social)](https://github.com/ubclaunchpad/inertia)
+
+<br />
 
 > **Main Features**
 > 
@@ -34,8 +36,6 @@ search: false
 > * 📦 **Built-in provisioning** - easily provision and set up VPS instances for your project with supported providers such as Amazon Web Services using a single command
 > * 👥 **Built for teams** - provide shared access to an Inertia deployment by adding users
 > * 🔑 **Secure** - secured with access tokens and HTTPS across the board, as well as features like 2FA for user logins
-
-<br />
 
 *Inertia* is a simple cross-platform command line application that enables quick
 and easy setup and management of continuous, automated deployment of a variety
@@ -56,16 +56,16 @@ itself can already be a frustrating task, especially for students with little to
 no experience setting up applications on remote hosts. Inertia is a project we
 started to address these problems.
 
-<br />
-
 This site primarily documents how to set up and use Inertia - to learn more
 about the project, check out our [GitHub repository](https://github.com/ubclaunchpad/inertia)!
 
-<br />
+<aside class="notice">
+This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
+please feel free to
+<a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>open a ticket</a>!
+</aside>
 
 # Getting Started
-
-## Installation
 
 > MacOS users can install the CLI using [Homebrew](https://brew.sh):
 
@@ -109,11 +109,18 @@ inertia init
 ```
 
 To set up Inertia, you must first navigate to your project directory, which
-must be a git repository. If Inertia cannot detect your project type, it will
-prompt for more information.
+must be a git repository, and run `inertia init` to set up configuration. If
+Inertia cannot detect your project type, it will prompt for more information.
+
+<aside class="notice">
+To use your project with Inertia, you must have some kind of
+<a href='https://docs.docker.com/engine/reference/builder/'>Docker</a> or
+<a href='https://docs.docker.com/compose/overview/'>docker-compose</a>
+configuration set up for running your app.
+</aside>
 
 <aside class="warning">
-<b>Do not commit the generated configuration file</b> - add it to your
+<b>Do not commit the generated Inertia configuration file</b> - add it to your
 <code>.gitignore</code>!
 </aside>
 
@@ -122,7 +129,7 @@ prompt for more information.
 > An example `inertia.toml`:
 
 ```toml
-version = "test"
+version = "canary"
 project-name = "my_project"
 build-type = "dockerfile"
 build-file-path = "dockerfiles/Dockerfile.web"
@@ -330,8 +337,8 @@ inertia ${remote_name} up
 ```
 
 <aside class="success">
-With your repository now configured correctly, you can now start get your project
-running using the <code>up</code> command!
+With your repository now configured correctly, you can now get your project
+up and running using the <code>up</code> command!
 </aside>
 
 # Deployment Management
@@ -390,10 +397,6 @@ inertia ${remote_name} send ${file_name}
 ```
 
 TODO: details
-
-## TODO
-
-Lorem ipsum
 
 # Teams
 
