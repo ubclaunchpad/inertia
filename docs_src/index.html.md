@@ -246,10 +246,14 @@ This will take you through a brief walkthrough to configure your new IAM user:
 
 <aside class="warning">
 Make sure you don't reveal your keys to anyone else, as a malicious user could
-incure pretty significant charges at your expense. Also make sure you keep them
-somewhere you won't lose the keys, especially the "secret access key", as you won't
-be able to see them again later from the console (you'll have to create a new
-user).
+incur pretty significant charges at your expense.
+</aside>
+
+<aside class="notice">
+If you lose your keys, you can simply
+<a href='https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey'>
+invalidate and create new keys</a> for the same user (and indeed key rotation on
+a regular basis is strongly encouraged by AWS anyway).
 </aside>
 
 ```shell
