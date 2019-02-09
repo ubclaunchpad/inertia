@@ -212,7 +212,7 @@ steps:
 
 ```bash
 $> make testenv VPS_OS=ubuntu VERSION=16.04
-# This defaults to ubuntu:lastest without args.
+# This defaults to ubuntu:latest without args.
 # Note the location of the key that is printed and use that when
 # adding your local remote.
 ```
