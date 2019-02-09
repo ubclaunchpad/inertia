@@ -280,8 +280,7 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	return func() error { return b.run(ctx, cli, d.Name, containerResp.ID, out) }, nil
 }
 
-// run starts project and tracks all active project containers and pipes an error
-// to the returned channel if any container exits or errors.
+// run starts project and tracks all active project containers
 func (b *Builder) run(ctx context.Context, client *docker.Client, name, id string, out io.Writer) error {
 	reportProjectStartup(name, out)
 	return client.ContainerStart(ctx, id, types.ContainerStartOptions{})
