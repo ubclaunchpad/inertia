@@ -2,6 +2,7 @@
 <!doctype html>
 <html>
   <head>
+<link href="images/favicon.ico" rel="icon" type="image/ico" />
     <meta charset="utf-8">
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -284,6 +285,9 @@
                   </li>
                   <li>
                     <a href="#generating-api-keys" class="toc-h2 toc-link" data-title="Generating API Keys">Generating API Keys</a>
+                  </li>
+                  <li>
+                    <a href="#inertia-release-streams" class="toc-h2 toc-link" data-title="Inertia Release Streams">Inertia Release Streams</a>
                   </li>
               </ul>
           </li>
@@ -931,6 +935,28 @@ access to your remote. Be careful not to lose these tokens.</p>
 <p>To use these tokens, you can place them in your <code>inertia.toml</code> under <code>token</code>, or
 use them in requests to the Inertia API by placing them as a <code>Bearer</code> token in
 your request header under <code>Authorization</code>.</p>
+<h2 id='inertia-release-streams'>Inertia Release Streams</h2>
+<p>The version of Inertia you are using can be seen in Inertia&#39;s <code>inertia.toml</code>
+configuration file, or by running <code>inertia --version</code>. The version in
+<code>inertia.toml</code> is used to determine what version of the Inertia daemon to use
+when you run <code>inertia ${remote_name} init</code>.</p>
+
+<blockquote>
+<p>To switch over to the latest build and upgrade your remote:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia config <span class="nb">set </span>version <span class="s2">"latest"</span>
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> upgrade
+</code></pre>
+<p>You can manually change the daemon version used by editing the Inertia
+configuration file. If you are building from source, you can also check out the
+desired version and run <code>make inertia-tagged</code> or <code>make RELEASE=$STREAM</code>.
+Inertia daemon releases are tagged as follows:</p>
+
+<ul>
+<li><code>v0.x.x</code> denotes <a href="https://github.com/ubclaunchpad/inertia/releases">official, tagged releases</a> - these are recommended.</li>
+<li><code>latest</code> denotes the newest builds on <code>master</code>.</li>
+<li><code>canary</code> denotes experimental builds used for testing and development - do not use this.</li>
+</ul>
 <h1 id='miscellaneous'>Miscellaneous</h1><h2 id='learn-more'>Learn More</h2>
 <blockquote>
 <p>Some quick links to help you get started:</p>
