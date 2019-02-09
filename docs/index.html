@@ -289,6 +289,9 @@
                   <li>
                     <a href="#inertia-release-streams" class="toc-h2 toc-link" data-title="Inertia Release Streams">Inertia Release Streams</a>
                   </li>
+                  <li>
+                    <a href="#custom-ssl-certificate" class="toc-h2 toc-link" data-title="Custom SSL Certificate">Custom SSL Certificate</a>
+                  </li>
               </ul>
           </li>
           <li>
@@ -733,8 +736,9 @@ GitHub, this is under your project&#39;s &quot;Settings -&gt; Webhooks&quot; tab
 </ul>
 
 <aside class="warning">
-Unless you've set up a custom SSL certificate for your remote, you'll have to
-<b>disable SSL verification</b> when setting up your webhook registration.
+Unless you've <a href='#custom-ssl-certificate'>set up a custom SSL certificate</a> for your remote, Inertia will use
+a self-signed SSL certificate, so you'll have to <b>disable SSL verification</b>
+when setting up your webhook registration.
 </aside>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> up
 </code></pre>
@@ -957,6 +961,23 @@ Inertia daemon releases are tagged as follows:</p>
 <li><code>latest</code> denotes the newest builds on <code>master</code>.</li>
 <li><code>canary</code> denotes experimental builds used for testing and development - do not use this.</li>
 </ul>
+
+<p>You can see the list of available tags on
+<a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags">Docker Hub</a>.</p>
+<h2 id='custom-ssl-certificate'>Custom SSL Certificate</h2>
+<p>By default, the Inertia daemon generates a self-signed SSL certificate for its
+API. This means that Inertia, by default, doesn&#39;t verify SSL communications,
+and you&#39;ll have to do things like disable SSL verification in your repository
+for webhooks.</p>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> --verify-ssl status
+</code></pre>
+<p>If you provide your own SSL certificate, you can enable SSL verification in
+Inertia using the <code>--verify-ssl</code> flag, and enable SSL verification in your
+repository&#39;s webhook deliveries as well.</p>
+
+<p>Just place your SSL certificate and key on your remote in <code>~/.inertia/ssl</code> as
+<code>daemon.cert</code> and <code>daemon.key</code> respectively, and the Inertia daemon will use
+them automatically.</p>
 <h1 id='miscellaneous'>Miscellaneous</h1><h2 id='learn-more'>Learn More</h2>
 <blockquote>
 <p>Some quick links to help you get started:</p>
@@ -992,7 +1013,11 @@ Inertia daemon releases are tagged as follows:</p>
 for contribution guidelines as well as a detailed guide to help you get started
 with Inertia&#39;s codebase.</p>
 
-<p><a href="https://golang.org/doc/gopher/pencil/"><img src="https://golang.org/doc/gopher/pencil/gophermega.jpg" alt="Gophermega" /></a></p>
+<p align='center'>
+  <a href='https://golang.org/doc/gopher/pencil/'>
+    <img src='https://golang.org/doc/gopher/pencil/gopherhelmet.jpg' width="40%" />
+  </a>
+</p>
 
 <p><br />
 <br />

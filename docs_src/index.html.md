@@ -410,8 +410,9 @@ pieces of information to get your repository set up for continuous deployment:
   GitHub, this is under your project's "Settings -> Webhooks" tab.
 
 <aside class="warning">
-Unless you've set up a custom SSL certificate for your remote, you'll have to
-<b>disable SSL verification</b> when setting up your webhook registration.
+Unless you've <a href='#custom-ssl-certificate'>set up a custom SSL certificate</a> for your remote, Inertia will use
+a self-signed SSL certificate, so you'll have to <b>disable SSL verification</b>
+when setting up your webhook registration.
 </aside>
 
 ```shell
@@ -689,6 +690,28 @@ Inertia daemon releases are tagged as follows:
 - `latest` denotes the newest builds on `master`.
 - `canary` denotes experimental builds used for testing and development - do not use this.
 
+You can see the list of available tags on
+[Docker Hub](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags).
+
+## Custom SSL Certificate
+
+By default, the Inertia daemon generates a self-signed SSL certificate for its
+API. This means that Inertia, by default, doesn't verify SSL communications,
+and you'll have to do things like disable SSL verification in your repository
+for webhooks.
+
+```shell
+inertia ${remote_name} --verify-ssl status
+```
+
+If you provide your own SSL certificate, you can enable SSL verification in
+Inertia using the `--verify-ssl` flag, and enable SSL verification in your
+repository's webhook deliveries as well.
+
+Just place your SSL certificate and key on your remote in `~/.inertia/ssl` as
+`daemon.cert` and `daemon.key` respectively, and the Inertia daemon will use
+them automatically.
+
 # Miscellaneous
 
 ## Learn More
@@ -730,7 +753,11 @@ For development, please see our
 for contribution guidelines as well as a detailed guide to help you get started
 with Inertia's codebase.
 
-[![](https://golang.org/doc/gopher/pencil/gophermega.jpg)](https://golang.org/doc/gopher/pencil/)
+<p align='center'>
+  <a href='https://golang.org/doc/gopher/pencil/'>
+    <img src='https://golang.org/doc/gopher/pencil/gopherhelmet.jpg' width="40%" />
+  </a>
+</p>
 
 <br />
 <br />
