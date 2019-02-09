@@ -73,12 +73,14 @@ Inertia is a simple cross-platform command line application that enables quick a
 
 # :package: Usage
 
-Check out our new [Inertia Usage Guide](https://inertia.ubclaunchpad.com) to get
-started with using Inertia for your project!
+Check out our new **[Inertia Usage Guide](https://inertia.ubclaunchpad.com)** to
+get started with using Inertia for your project! The guide will walk you through
+installing Inertia, setting up a project, deploying to a remote, managing your
+deployment, and advanced usage tips.
 
-## Why Use Inertia?
+### Why Use Inertia?
 
-If you:
+If you...
 
 * want a simple utility to quickly build and deploy the latest iterations of your projects
 * are new to the concept of "deployment" and related tooling
