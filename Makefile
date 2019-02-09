@@ -16,6 +16,7 @@ ls:
 clean: testenv-clean
 	go clean -testcache
 	rm -f ./inertia
+	rm -rf ./docs_build
 	find . -type f -name inertia.\* -exec rm {} \;
 
 # Install all dependencies
@@ -182,3 +183,11 @@ web-run-sandbox:
 .PHONY: web-build
 web-build:
 	(cd ./daemon/web; npm install --production; npm run build)
+
+.PHONY: docs
+docs:
+	sh .scripts/build_docs.sh
+
+.PHONY: run-docs
+run-docs:
+	( cd docs_build/slate ; bundle exec middleman server --verbose )
