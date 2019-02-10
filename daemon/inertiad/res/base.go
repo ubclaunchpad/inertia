@@ -8,7 +8,7 @@ import (
 	"github.com/ubclaunchpad/inertia/api"
 )
 
-func newBaseRequest(r *http.Request, message string, code int, kvs []interface{}) api.BaseResponse {
+func newBaseResponse(r *http.Request, message string, code int, kvs []interface{}) api.BaseResponse {
 	var data = make(map[string]interface{})
 	var e string
 	for i := 0; i < len(kvs)-1; i += 2 {

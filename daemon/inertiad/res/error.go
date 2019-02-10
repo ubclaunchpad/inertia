@@ -22,7 +22,7 @@ func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 // Err is a basic error response constructor
 func Err(r *http.Request, message string, code int, kvs ...interface{}) render.Renderer {
 	return &ErrResponse{
-		BaseResponse: newBaseRequest(r, message, code, kvs),
+		BaseResponse: newBaseResponse(r, message, code, kvs),
 	}
 }
 
@@ -35,34 +35,34 @@ func ErrInternalServer(r *http.Request, message string, err error, kvs ...interf
 		kvs = append(kvs, "error", err.Error())
 	}
 	return &ErrResponse{
-		BaseResponse: newBaseRequest(r, message, http.StatusInternalServerError, kvs),
+		BaseResponse: newBaseResponse(r, message, http.StatusInternalServerError, kvs),
 	}
 }
 
 // ErrBadRequest is a shortcut for bad requests
 func ErrBadRequest(r *http.Request, message string, kvs ...interface{}) render.Renderer {
 	return &ErrResponse{
-		BaseResponse: newBaseRequest(r, message, http.StatusBadRequest, kvs),
+		BaseResponse: newBaseResponse(r, message, http.StatusBadRequest, kvs),
 	}
 }
 
 // ErrUnauthorized is a shortcut for unauthorized requests
 func ErrUnauthorized(r *http.Request, message string, kvs ...interface{}) render.Renderer {
 	return &ErrResponse{
-		BaseResponse: newBaseRequest(r, message, http.StatusUnauthorized, kvs),
+		BaseResponse: newBaseResponse(r, message, http.StatusUnauthorized, kvs),
 	}
 }
 
 // ErrForbidden is a shortcut for forbidden requests
 func ErrForbidden(r *http.Request, message string, kvs ...interface{}) render.Renderer {
 	return &ErrResponse{
-		BaseResponse: newBaseRequest(r, message, http.StatusForbidden, kvs),
+		BaseResponse: newBaseResponse(r, message, http.StatusForbidden, kvs),
 	}
 }
 
 // ErrNotFound is a shortcut for forbidden requests
 func ErrNotFound(r *http.Request, message string, kvs ...interface{}) render.Renderer {
 	return &ErrResponse{
-		BaseResponse: newBaseRequest(r, message, http.StatusForbidden, kvs),
+		BaseResponse: newBaseResponse(r, message, http.StatusForbidden, kvs),
 	}
 }

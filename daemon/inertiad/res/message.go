@@ -22,6 +22,6 @@ func (m *MsgResponse) Render(w http.ResponseWriter, r *http.Request) error {
 // Message is a shortcut for non-error statuses
 func Message(r *http.Request, message string, code int, kvs ...interface{}) render.Renderer {
 	return &MsgResponse{
-		BaseResponse: newBaseRequest(r, message, code, kvs),
+		BaseResponse: newBaseResponse(r, message, code, kvs),
 	}
 }

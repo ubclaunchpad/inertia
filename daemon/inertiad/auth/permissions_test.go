@@ -19,12 +19,10 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
 
-func getTokenFromResponse(body io.ReadCloser) string {
+func getTokenFromResponse(body io.ReadCloser) (token string) {
 	defer body.Close()
-	bodyBytes, _ := ioutil.ReadAll(body)
-	var b api.BaseResponse
-	json.Unmarshal(bodyBytes, &b)
-	return b.Data["token"].(string)
+	api.Unmarshal(body, api.KV{Key: "token", Value: &token})
+	return token
 }
 
 func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
@@ -424,16 +422,11 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Get Totp key from response
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	assert.Nil(t, err)
-	var b api.BaseResponse
-	json.Unmarshal(respBytes, &b)
-	totpResp := &api.TotpResponse{}
-	respBytes, _ = json.Marshal(b.Data["totp"])
-	err = json.Unmarshal(respBytes, totpResp)
-	assert.Nil(t, err)
+	var totpResp = &api.TotpResponse{}
+	_, err = api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: totpResp})
+	assert.NoError(t, err)
 	totpKey, err := totp.GenerateCode(totpResp.TotpSecret, time.Now())
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Log in with Totp
 	body, err = json.Marshal(&api.UserRequest{

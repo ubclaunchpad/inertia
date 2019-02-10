@@ -1,5 +1,11 @@
 package api
 
+import (
+	"encoding/json"
+	"io"
+	"io/ioutil"
+)
+
 // BaseResponse is the underlying response structure to all responses.
 type BaseResponse struct {
 	// Basic metadata
@@ -13,8 +19,43 @@ type BaseResponse struct {
 	Error string `json:"error,omitempty"`
 
 	// Data contains information the server wants to return
-	// To parse data into a particular type, you can
-	Data map[string]interface{} `json:"data,omitempty"`
+	Data interface{} `json:"data,omitempty"`
+}
+
+// KV is used for defining specific values to be unmarshalled from BaseResponse
+// data
+type KV struct {
+	Key   string
+	Value interface{}
+}
+
+// Unmarshal reads the response and unmarshalls the BaseResponse as well any
+// requested key-value pairs.
+// For example:
+//
+// 	  var totpResp = &api.TotpResponse{}
+//    api.Unmarshal(resp.Body, api.KeyValue{Key: "totp", Value: totpResp})
+//
+func Unmarshal(r io.Reader, kvs ...KV) (*BaseResponse, error) {
+	bytes, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		data = make(map[string]json.RawMessage)
+		resp = BaseResponse{Data: &data}
+	)
+	if err := json.Unmarshal(bytes, &resp); err != nil {
+		return nil, err
+	}
+
+	// Unmarshal all requested kv-pairs, silently ignoring errors
+	for _, kv := range kvs {
+		json.Unmarshal(data[kv.Key], kv.Value)
+	}
+
+	return &resp, nil
 }
 
 // TotpResponse is used for sending users their Totp secret and backup codes
