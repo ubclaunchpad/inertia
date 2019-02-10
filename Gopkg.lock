@@ -167,6 +167,25 @@
   version = "v1.12.0"
 
 [[projects]]
+  digest = "1:9883e4bc6a4b3e0c2266ff322ccfcdf5566d11c889160fe798589a4633edc871"
+  name = "github.com/go-chi/chi"
+  packages = [
+    ".",
+    "middleware",
+  ]
+  pruneopts = "NUT"
+  revision = "1a6bb108ccf279c8dac6f9bad857d773b4f9b421"
+  version = "v4.0.1"
+
+[[projects]]
+  digest = "1:c831043316efe18a5b81f75568c0de847645e127cac35082c68de5b4b417d18f"
+  name = "github.com/go-chi/cors"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "dba6525398619dead495962a916728e7ee2ca322"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:8ba832f19021187b30cf505ea0335c1b779b378e61c2468790082f7262925c4d"
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
@@ -521,6 +540,9 @@
     "github.com/docker/docker/api/types/filters",
     "github.com/docker/docker/client",
     "github.com/docker/go-connections/nat",
+    "github.com/go-chi/chi",
+    "github.com/go-chi/chi/middleware",
+    "github.com/go-chi/cors",
     "github.com/gorilla/websocket",
     "github.com/pquerna/otp",
     "github.com/pquerna/otp/totp",

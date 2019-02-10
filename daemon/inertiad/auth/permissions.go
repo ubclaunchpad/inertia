@@ -9,9 +9,12 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
+
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/util"
 )
 
 // ctxKey represents keys used in request contexts
@@ -28,14 +31,14 @@ type PermissionsHandler struct {
 	domain     string
 	users      *userManager
 	sessions   *sessionManager
-	mux        *http.ServeMux
+	mux        *chi.Mux
 	userPaths  []string
 	adminPaths []string
 }
 
-// NewPermissionsHandler returns a new handler for authenticating
-// users and handling user administration. Param userlandPath is
-// used to set cookie domain.
+// NewPermissionsHandler returns a new handler for authenticating users and
+// handling user administration. It also serves as the primary server for the
+// Inertia daemon.
 func NewPermissionsHandler(
 	dbPath, hostDomain string, timeout int,
 	keyLookup ...func(*jwt.Token) (interface{}, error),
@@ -53,54 +56,59 @@ func NewPermissionsHandler(
 	}
 	sessionManager := newSessionManager(hostDomain, timeout, lookup)
 
-	// Set up permissions handler
-	mux := http.NewServeMux()
-	handler := &PermissionsHandler{
+	// Set up handler
+	var h = &PermissionsHandler{
 		domain:   hostDomain,
 		users:    userManager,
 		sessions: sessionManager,
-		mux:      mux,
+		mux:      chi.NewMux(),
+
+		// paths restricted to users
+		userPaths: []string{
+			"/user/validate",
+			"/user/totp/enable",
+			"/user/totp/disable"},
+
+		// paths restricted to administrators
+		adminPaths: []string{
+			"/user/add",
+			"/user/remove",
+			"/user/reset",
+			"/user/list"},
 	}
 
-	// The following endpoints are for user administration and session administration
-	userHandler := http.NewServeMux()
-	userHandler.HandleFunc("/login",
-		util.WithMethods(handler.loginHandler, http.MethodPost))
-	userHandler.HandleFunc("/logout",
-		util.WithMethods(handler.logoutHandler, http.MethodPost))
+	// Register useful middleware
+	h.mux.Use(
+		cors.New(cors.Options{
+			AllowedOrigins:   []string{"*"},
+			AllowedMethods:   []string{"HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"},
+			AllowedHeaders:   []string{"*"},
+			AllowCredentials: true,
+		}).Handler,
+		middleware.RequestID,
+		middleware.RealIP,
+		middleware.Recoverer)
 
-	// User-only paths
-	handler.userPaths = []string{
-		"/user/validate",
-		"/user/list",
-		"/user/totp/enable",
-		"/user/totp/disable",
-	}
-	userHandler.HandleFunc("/validate",
-		util.WithMethods(handler.validateHandler, http.MethodGet))
-	userHandler.HandleFunc("/list",
-		util.WithMethods(handler.listUsersHandler, http.MethodGet))
-	userHandler.HandleFunc("/totp/enable",
-		util.WithMethods(handler.enableTotpHandler, http.MethodPost))
-	userHandler.HandleFunc("/totp/disable",
-		util.WithMethods(handler.disableTotpHandler, http.MethodPost))
+	// Register all user-related routes that managed by the permissions handler
+	h.mux.Route("/user", func(r chi.Router) {
+		r.Post("/login", h.loginHandler)
+		r.Post("/logout", h.logoutHandler)
 
-	// Admin-only paths
-	handler.adminPaths = []string{
-		"/user/add",
-		"/user/remove",
-		"/user/reset",
-	}
-	userHandler.HandleFunc("/add",
-		util.WithMethods(handler.addUserHandler, http.MethodPost))
-	userHandler.HandleFunc("/remove",
-		util.WithMethods(handler.removeUserHandler, http.MethodPost))
-	userHandler.HandleFunc("/reset",
-		util.WithMethods(handler.resetUsersHandler, http.MethodPost))
+		// user-only paths
+		r.Get("/validate", h.validateHandler)
+		r.Route("/totp", func(r chi.Router) {
+			r.Post("/enable", h.enableTotpHandler)
+			r.Post("/disable", h.disableTotpHandler)
+		})
 
-	mux.Handle("/user/", http.StripPrefix("/user", userHandler))
+		// admin-only paths
+		r.Get("/list", h.listUsersHandler)
+		r.Post("/add", h.addUserHandler)
+		r.Post("/remove", h.removeUserHandler)
+		r.Post("/reset", h.resetUsersHandler)
+	})
 
-	return handler, nil
+	return h, nil
 }
 
 // Close releases resources held by the PermissionsHandler
@@ -185,17 +193,29 @@ func (h *PermissionsHandler) AttachPublicHandlerFunc(path string, handler http.H
 // AttachUserRestrictedHandlerFunc attaches and restricts given path and handler to logged in users.
 func (h *PermissionsHandler) AttachUserRestrictedHandlerFunc(path string,
 	handler http.HandlerFunc, methods ...string) {
-	// Add path to user-restricted paths
 	h.userPaths = append(h.userPaths, path)
-	h.mux.HandleFunc(path, util.WithMethods(handler, methods...))
+	for _, m := range methods {
+		switch m {
+		case http.MethodGet:
+			h.mux.Get(path, handler)
+		case http.MethodPost:
+			h.mux.Post(path, handler)
+		}
+	}
 }
 
 // AttachAdminRestrictedHandlerFunc attaches and restricts given path and handler to logged in admins.
 func (h *PermissionsHandler) AttachAdminRestrictedHandlerFunc(path string,
 	handler http.HandlerFunc, methods ...string) {
-	// Add path as one that requires elevated permissions
 	h.adminPaths = append(h.adminPaths, path)
-	h.mux.HandleFunc(path, util.WithMethods(handler, methods...))
+	for _, m := range methods {
+		switch m {
+		case http.MethodGet:
+			h.mux.Get(path, handler)
+		case http.MethodPost:
+			h.mux.Post(path, handler)
+		}
+	}
 }
 
 func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Request) {
