@@ -8,10 +8,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/render"
 
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
@@ -254,9 +257,8 @@ func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "[SUCCESS %d] User %s added!\n", http.StatusCreated, userReq.Username)
+	render.Render(w, r, res.Message(r, "user succesfully added", http.StatusCreated,
+		"user", userReq.Username))
 }
 
 func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -284,9 +286,8 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 	// End user sessions
 	h.sessions.EndAllUserSessions(userReq.Username)
 
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "[SUCCESS %d] User %s removed\n", http.StatusOK, userReq.Username)
+	render.Render(w, r, res.Message(r, "user succesfully removed", http.StatusOK,
+		"user", userReq.Username))
 }
 
 func (h *PermissionsHandler) enableTotpHandler(w http.ResponseWriter, r *http.Request) {
@@ -325,17 +326,11 @@ func (h *PermissionsHandler) enableTotpHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	body, err := json.Marshal(&api.TotpResponse{
-		TotpSecret:  totpSecret,
-		BackupCodes: backupCodes,
-	})
-	if err != nil {
-		http.Error(w, "Failed to create TOTP keys", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(body)
+	render.Render(w, r, res.Message(r, "TOTP successfully enabled", http.StatusOK,
+		"totp", &api.TotpResponse{
+			TotpSecret:  totpSecret,
+			BackupCodes: backupCodes,
+		}))
 }
 
 func (h *PermissionsHandler) disableTotpHandler(w http.ResponseWriter, r *http.Request) {
@@ -355,8 +350,8 @@ func (h *PermissionsHandler) disableTotpHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	return
+	render.Render(w, r, res.Message(r, "TOTP successfully disabled", http.StatusOK,
+		"user", username))
 }
 
 func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -370,25 +365,12 @@ func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Re
 	// Delete all sessions
 	h.sessions.EndAllSessions()
 
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "[SUCCESS %d] User and session databases reset\n", http.StatusOK)
+	render.Render(w, r, res.Message(r, "user and session databases reset", http.StatusOK))
 }
 
 func (h *PermissionsHandler) listUsersHandler(w http.ResponseWriter, r *http.Request) {
-	users := h.users.UserList()
-	userList := ""
-	for _, user := range users {
-		userList += " - " + user + "\n"
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	if len(users) != 0 {
-		fmt.Fprintf(w, "[SUCCESS %d] Users: \n%s\n", http.StatusOK, userList)
-	} else {
-		fmt.Fprintf(w, "[SUCCESS %d] No users registered.", http.StatusOK)
-	}
+	render.Render(w, r, res.Message(r, "users retrieved", http.StatusOK,
+		"users", h.users.UserList()))
 }
 
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -445,9 +427,8 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Write back
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(token))
+	render.Render(w, r, res.Message(r, "session created", http.StatusOK,
+		"token", token))
 }
 
 func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -457,8 +438,7 @@ func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "[SUCCESS %d] Session ended\n", http.StatusOK)
+	render.Render(w, r, res.Message(r, "session ended", http.StatusOK))
 }
 
 func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Request) {

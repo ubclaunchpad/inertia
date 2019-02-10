@@ -41,8 +41,8 @@ type UserRequest struct {
 
 // TotpResponse is used for sending users their Totp secret and backup codes
 type TotpResponse struct {
-	TotpSecret  string `json:"key"`
-	BackupCodes []string
+	TotpSecret  string   `json:"secret"`
+	BackupCodes []string `json:"backup_codes"`
 }
 
 // EnvRequest represents a request to manage environment variables
