@@ -24,8 +24,10 @@ func Err(r *http.Request, message string, code int, kvs ...interface{}) render.R
 	}
 }
 
-// ErrInternalServer is a shortcut for internal server errors
-func ErrInternalServer(r *http.Request, message string, kvs ...interface{}) render.Renderer {
+// ErrInternalServer is a shortcut for internal server errors. It should be
+// accompanied by an actual error.
+func ErrInternalServer(r *http.Request, message string, err error, kvs ...interface{}) render.Renderer {
+	kvs = append(kvs, "error", err.Error())
 	return &ErrResponse{
 		BaseResponse: newBaseRequest(r, message, http.StatusInternalServerError, kvs),
 	}
@@ -42,5 +44,19 @@ func ErrBadRequest(r *http.Request, message string, kvs ...interface{}) render.R
 func ErrUnauthorized(r *http.Request, message string, kvs ...interface{}) render.Renderer {
 	return &ErrResponse{
 		BaseResponse: newBaseRequest(r, message, http.StatusUnauthorized, kvs),
+	}
+}
+
+// ErrForbidden is a shortcut for forbidden requests
+func ErrForbidden(r *http.Request, message string, kvs ...interface{}) render.Renderer {
+	return &ErrResponse{
+		BaseResponse: newBaseRequest(r, message, http.StatusForbidden, kvs),
+	}
+}
+
+// ErrNotFound is a shortcut for forbidden requests
+func ErrNotFound(r *http.Request, message string, kvs ...interface{}) render.Renderer {
+	return &ErrResponse{
+		BaseResponse: newBaseRequest(r, message, http.StatusForbidden, kvs),
 	}
 }
