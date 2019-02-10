@@ -23,8 +23,7 @@ import (
 type ctxKey int
 
 const (
-	errMalformedHeaderMsg        = "malformed authorization error"
-	ctxUsername           ctxKey = iota
+	ctxUsername ctxKey = iota
 )
 
 // PermissionsHandler handles users, permissions, and sessions on top
@@ -155,10 +154,11 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check if token is valid
 	claims, err := h.sessions.GetSession(r)
 	if err != nil {
-		if err == errSessionNotFound {
+		switch err {
+		case errSessionNotFound:
 			render.Render(w, r, res.ErrUnauthorized(r, err.Error()))
-		} else {
-			render.Render(w, r, res.ErrInternalServer(r, "failed to retrieve session", err))
+		default:
+			render.Render(w, r, res.ErrUnauthorized(r, "failed to read token", "error", err))
 		}
 		return
 	}
@@ -166,10 +166,13 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check if user has sufficient permissions for path
 	if adminRestricted {
 		admin, err := h.users.IsAdmin(claims.User)
-		if err != nil {
+		switch {
+		case err != nil:
 			render.Render(w, r, res.ErrInternalServer(r, "failed to check admin status", err))
-		} else if !admin {
+			return
+		case !admin:
 			render.Render(w, r, res.ErrForbidden(r, "admin privileges required"))
+			return
 		}
 	}
 
@@ -383,14 +386,15 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 	// Check the password is correct
 	props, correct, err := h.users.IsCorrectCredentials(
 		userReq.Username, userReq.Password)
-	if err == errMissingCredentials {
+	switch {
+	case err == errMissingCredentials:
 		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
 		return
-	} else if err != nil && err != errUserNotFound {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to log in", err))
-		return
-	} else if !correct || err == errUserNotFound {
+	case !correct || err == errUserNotFound:
 		render.Render(w, r, res.ErrUnauthorized(r, "invalid credentials provided"))
+		return
+	case err != nil:
+		render.Render(w, r, res.ErrInternalServer(r, "failed to log in", err))
 		return
 	}
 
@@ -399,7 +403,8 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		render.Render(w, r, res.ErrInternalServer(r, "failed to check TOTP status", err))
 		return
-	} else if totpEnabled {
+	}
+	if totpEnabled {
 		if userReq.Totp == "" {
 			render.Render(w, r, res.ErrBadRequest(r, "no TOTP provided"))
 			return

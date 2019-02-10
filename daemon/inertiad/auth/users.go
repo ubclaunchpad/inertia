@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	errSessionNotFound    = errors.New("session not found")
 	errUserNotFound       = errors.New("user not found")
 	errBackupCodeNotFound = errors.New("backup code not found")
 	errMissingCredentials = errors.New("no credentials provided")

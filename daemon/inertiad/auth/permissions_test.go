@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +18,14 @@ import (
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 )
+
+func getTokenFromResponse(body io.ReadCloser) string {
+	defer body.Close()
+	bodyBytes, _ := ioutil.ReadAll(body)
+	var b api.BaseResponse
+	json.Unmarshal(bodyBytes, &b)
+	return b.Data["token"].(string)
+}
 
 func getTestPermissionsHandler(dir string) (*PermissionsHandler, error) {
 	err := os.Mkdir(dir, os.ModePerm)
@@ -80,14 +89,16 @@ func TestServeHTTPWithUserReject(t *testing.T) {
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
-	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
 	// With malformed token
 	req.Header.Set("Authorization", "Bearer badtoken")
 	resp, err = http.DefaultClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
-	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	b, _ := ioutil.ReadAll(resp.Body)
+	t.Logf(string(b))
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
 
 func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
@@ -118,9 +129,7 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
 	// Get token
-	tokenBytes, err := ioutil.ReadAll(loginResp.Body)
-	assert.Nil(t, err)
-	token := string(tokenBytes)
+	token := getTokenFromResponse(loginResp.Body)
 
 	// Attempt to validate
 	req, err = http.NewRequest("GET", ts.URL+"/user/validate", nil)
@@ -203,9 +212,7 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
 	// Get token
-	tokenBytes, err := ioutil.ReadAll(loginResp.Body)
-	assert.Nil(t, err)
-	token := string(tokenBytes)
+	token := getTokenFromResponse(loginResp.Body)
 
 	// Attempt to access restricted endpoint
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
@@ -249,9 +256,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
 	// Get token
-	tokenBytes, err := ioutil.ReadAll(loginResp.Body)
-	assert.Nil(t, err)
-	token := string(tokenBytes)
+	token := getTokenFromResponse(loginResp.Body)
 
 	// Attempt to access restricted endpoint
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
@@ -295,9 +300,7 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
 	// Get token
-	tokenBytes, err := ioutil.ReadAll(loginResp.Body)
-	assert.Nil(t, err)
-	token := string(tokenBytes)
+	token := getTokenFromResponse(loginResp.Body)
 
 	// Attempt to access restricted endpoint
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
@@ -423,7 +426,10 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	// Get Totp key from response
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	assert.Nil(t, err)
+	var b api.BaseResponse
+	json.Unmarshal(respBytes, &b)
 	totpResp := &api.TotpResponse{}
+	respBytes, _ = json.Marshal(b.Data["totp"])
 	err = json.Unmarshal(respBytes, totpResp)
 	assert.Nil(t, err)
 	totpKey, err := totp.GenerateCode(totpResp.TotpSecret, time.Now())
@@ -445,8 +451,7 @@ func TestEnableDisableTotpEndpoints(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Get user JWT from response
-	userTokenBytes, err := ioutil.ReadAll(resp.Body)
-	assert.Nil(t, err)
+	userTokenBytes := getTokenFromResponse(resp.Body)
 	authToken = fmt.Sprintf("Bearer %s", string(userTokenBytes))
 
 	// Disable Totp

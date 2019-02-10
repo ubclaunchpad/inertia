@@ -8,9 +8,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+)
+
+var (
+	errSessionNotFound = errors.New("session not found")
+	errMalformedHeader = errors.New("authorization is malformed")
 )
 
 type sessionManager struct {
@@ -119,7 +124,7 @@ func (s *sessionManager) GetSession(r *http.Request) (*crypto.TokenClaims, error
 	bearerString := r.Header.Get("Authorization")
 	splitToken := strings.Split(bearerString, "Bearer ")
 	if len(splitToken) != 2 {
-		return nil, errors.New(errMalformedHeaderMsg)
+		return nil, errMalformedHeader
 	}
 
 	// Validate token and get claims
