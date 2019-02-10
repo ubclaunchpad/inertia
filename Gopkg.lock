@@ -186,6 +186,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:6982473e328c7049bdc425618872e37609d4bc58dc4198f4dcbe7cf64ca7b7f0"
+  name = "github.com/go-chi/render"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3215478343fbc559bd3fc08f7031bb134d6bdad5"
+  version = "v1.0.1"
+
+[[projects]]
   digest = "1:8ba832f19021187b30cf505ea0335c1b779b378e61c2468790082f7262925c4d"
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
@@ -543,6 +551,7 @@
     "github.com/go-chi/chi",
     "github.com/go-chi/chi/middleware",
     "github.com/go-chi/cors",
+    "github.com/go-chi/render",
     "github.com/gorilla/websocket",
     "github.com/pquerna/otp",
     "github.com/pquerna/otp/totp",
