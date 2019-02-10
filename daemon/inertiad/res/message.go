@@ -4,11 +4,13 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+
+	"github.com/ubclaunchpad/inertia/api"
 )
 
 // MsgResponse is the template for a typical HTTP response for messages
 type MsgResponse struct {
-	BaseResponse
+	api.BaseResponse
 }
 
 // Render renders a MsgResponse

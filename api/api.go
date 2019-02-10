@@ -14,6 +14,22 @@ const (
 	Entries = "entries"
 )
 
+// BaseResponse is the underlying response structure to all responses
+type BaseResponse struct {
+	// Basic metadata
+	HTTPStatusCode int    `json:"code"`
+	RequestID      string `json:"request_id,omitempty"`
+
+	// Message is included in all responses, and is a summary of the server's response
+	Message string `json:"message"`
+
+	// Error contains additional context in the event of an error
+	Error string `json:"error,omitempty"`
+
+	// Data contains information the server wants to return
+	Data map[string]interface{} `json:"data,omitempty"`
+}
+
 // UpRequest is the configurable body of a UP request to the daemon.
 type UpRequest struct {
 	Stream        bool       `json:"stream"`

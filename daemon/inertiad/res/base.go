@@ -4,24 +4,34 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/middleware"
+
+	"github.com/ubclaunchpad/inertia/api"
 )
 
-// BaseResponse is the underlying response structure to all responses
-type BaseResponse struct {
-	HTTPStatusCode int                    `json:"-"`
-	Message        string                 `json:"message"`
-	RequestID      string                 `json:"request_id"`
-	Body           map[string]interface{} `json:"body,omitempty"`
-}
-
-func newBaseRequest(r *http.Request, message string, code int, kvs []interface{}) BaseResponse {
-	var body = make(map[string]interface{})
+func newBaseRequest(r *http.Request, message string, code int, kvs []interface{}) api.BaseResponse {
+	var data = make(map[string]interface{})
+	var e string
 	for i := 0; i < len(kvs)-1; i += 2 {
-		body[kvs[i].(string)] = kvs[i+1]
+		var (
+			k = kvs[i].(string)
+			v = kvs[i+1]
+		)
+		if k == "error" {
+			switch err := v.(type) {
+			case error:
+				e = err.Error()
+			case string:
+				e = err
+			}
+		} else {
+			data[k] = v
+		}
 	}
-	return BaseResponse{
+	return api.BaseResponse{
 		HTTPStatusCode: code,
 		Message:        message,
 		RequestID:      middleware.GetReqID(r.Context()),
+		Error:          e,
+		Data:           data,
 	}
 }

@@ -4,11 +4,13 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+
+	"github.com/ubclaunchpad/inertia/api"
 )
 
 // ErrResponse is the template for a typical HTTP response for errors
 type ErrResponse struct {
-	BaseResponse
+	api.BaseResponse
 }
 
 // Render renders an ErrResponse
@@ -27,7 +29,11 @@ func Err(r *http.Request, message string, code int, kvs ...interface{}) render.R
 // ErrInternalServer is a shortcut for internal server errors. It should be
 // accompanied by an actual error.
 func ErrInternalServer(r *http.Request, message string, err error, kvs ...interface{}) render.Renderer {
-	kvs = append(kvs, "error", err.Error())
+	if len(kvs) == 0 {
+		kvs = []interface{}{"error", err.Error()}
+	} else {
+		kvs = append(kvs, "error", err.Error())
+	}
 	return &ErrResponse{
 		BaseResponse: newBaseRequest(r, message, http.StatusInternalServerError, kvs),
 	}
