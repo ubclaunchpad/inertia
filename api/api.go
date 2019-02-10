@@ -14,22 +14,6 @@ const (
 	Entries = "entries"
 )
 
-// BaseResponse is the underlying response structure to all responses
-type BaseResponse struct {
-	// Basic metadata
-	HTTPStatusCode int    `json:"code"`
-	RequestID      string `json:"request_id,omitempty"`
-
-	// Message is included in all responses, and is a summary of the server's response
-	Message string `json:"message"`
-
-	// Error contains additional context in the event of an error
-	Error string `json:"error,omitempty"`
-
-	// Data contains information the server wants to return
-	Data map[string]interface{} `json:"data,omitempty"`
-}
-
 // UpRequest is the configurable body of a UP request to the daemon.
 type UpRequest struct {
 	Stream        bool       `json:"stream"`
@@ -55,12 +39,6 @@ type UserRequest struct {
 	Totp     string `json:"totp"`
 }
 
-// TotpResponse is used for sending users their Totp secret and backup codes
-type TotpResponse struct {
-	TotpSecret  string   `json:"secret"`
-	BackupCodes []string `json:"backup_codes"`
-}
-
 // EnvRequest represents a request to manage environment variables
 type EnvRequest struct {
 	Name    string `json:"name,omitempty"`
@@ -68,15 +46,4 @@ type EnvRequest struct {
 	Encrypt bool   `json:"encrypt,omitempty"`
 
 	Remove bool `json:"remove,omitempty"`
-}
-
-// DeploymentStatus lists details about the deployed project
-type DeploymentStatus struct {
-	InertiaVersion       string   `json:"version"`
-	Branch               string   `json:"branch"`
-	CommitHash           string   `json:"commit_hash"`
-	CommitMessage        string   `json:"commit_message"`
-	BuildType            string   `json:"build_type"`
-	Containers           []string `json:"containers"`
-	BuildContainerActive bool     `json:"build_active"`
 }
