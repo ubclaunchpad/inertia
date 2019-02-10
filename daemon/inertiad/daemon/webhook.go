@@ -2,14 +2,15 @@ package daemon
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 
+	"github.com/go-chi/render"
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/webhook"
 )
 
@@ -21,8 +22,8 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		msg := "unable to read payload: " + err.Error()
-		http.Error(w, msg, http.StatusBadRequest)
 		println(msg)
+		render.Render(w, r, res.ErrBadRequest(r, msg))
 		return
 	}
 
@@ -35,8 +36,8 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := webhook.Verify(host, s.state.WebhookSecret, r.Header, body); err != nil {
 		msg := "unable to verify payload: " + err.Error()
-		http.Error(w, msg, http.StatusBadRequest)
 		println(msg)
+		render.Render(w, r, res.ErrBadRequest(r, msg))
 		return
 	}
 
@@ -44,8 +45,8 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	payload, err := webhook.Parse(host, event, r.Header, body)
 	if err != nil {
 		msg := "unable to parse payload: " + err.Error()
-		http.Error(w, msg, http.StatusBadRequest)
 		println(msg)
+		render.Render(w, r, res.ErrBadRequest(r, msg))
 		return
 	}
 
@@ -57,12 +58,12 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	case webhook.PushEvent:
 		fmt.Fprint(w, api.MsgDaemonOK)
-		processPushEvent(s, payload, os.Stdout)
+		processPushEvent(s, payload)
 	// case webhook.PullEvent:
 	//	fmt.Fprint(w, common.MsgDaemonOK)
 	// 	processPullRequestEvent(payload)
 	default:
-		http.Error(w, "unrecognized event type", http.StatusBadRequest)
+		render.Render(w, r, res.ErrBadRequest(r, "unrecognized event type"))
 		println("unrecognized event type")
 	}
 }
@@ -79,41 +80,41 @@ func dockerWebhookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // processPushEvent prints information about the given PushEvent.
-func processPushEvent(s *Server, p webhook.Payload, out io.Writer) {
-	fmt.Fprintf(out, "Received %s push event: %s (%s)\n",
+func processPushEvent(s *Server, p webhook.Payload) {
+	fmt.Printf("Received %s push event: %s (%s)\n",
 		p.GetSource(), p.GetRepoName(), p.GetRef())
 
 	// Ignore event if repository not set up yet, otherwise
 	// let deploy() handle the update.
 	if status, _ := s.deployment.GetStatus(s.docker); status.CommitHash == "" {
-		fmt.Fprintln(out, msgNoDeployment)
+		fmt.Println(msgNoDeployment)
 		return
 	}
 
 	// Check for matching remotes
 	if err := s.deployment.CompareRemotes(p.GetSSHURL()); err != nil {
-		fmt.Fprintln(out, err.Error())
+		fmt.Println(err.Error())
 		return
 	}
 
 	// Check for matching branch
 	var branch = common.GetBranchFromRef(p.GetRef())
 	if s.deployment.GetBranch() != branch {
-		fmt.Fprintf(out, "Ignoring event: event branch %s does not match deployed branch %s\n",
+		fmt.Printf("Ignoring event: event branch %s does not match deployed branch %s\n",
 			branch, s.deployment.GetBranch())
 		return
 	}
 
 	// If branches match, deploy
-	fmt.Fprintf(out, "Accepting event: event branch %s matches deployed branch %s\n",
+	fmt.Printf("Accepting event: event branch %s matches deployed branch %s\n",
 		branch, s.deployment.GetBranch())
 	deploy, err := s.deployment.Deploy(s.docker, os.Stdout, project.DeployOptions{})
 	if err != nil {
-		fmt.Fprintln(out, "Build failed: "+err.Error())
+		fmt.Println("Build failed: " + err.Error())
 		return
 	}
 
 	if err = deploy(); err != nil {
-		fmt.Fprintln(out, "Deploy failed: "+err.Error())
+		fmt.Println("Deploy failed: " + err.Error())
 	}
 }

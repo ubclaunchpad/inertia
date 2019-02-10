@@ -7,12 +7,15 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/render"
 	"github.com/gorilla/websocket"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // DaemonLogger is a multilogger used by the daemon to pipe
 // output to multiple places depending on context.
 type DaemonLogger struct {
+	req        *http.Request
 	httpWriter http.ResponseWriter
 	httpStream bool
 	socket     SocketWriter
@@ -21,6 +24,7 @@ type DaemonLogger struct {
 
 // LoggerOptions defines configuration for a daemon logger
 type LoggerOptions struct {
+	Request    *http.Request
 	Stdout     io.Writer
 	Socket     SocketWriter
 	HTTPWriter http.ResponseWriter
@@ -71,7 +75,7 @@ func (l *DaemonLogger) Println(a interface{}) {
 func (l *DaemonLogger) WriteErr(msg string, status int) {
 	fmt.Fprintf(l.Writer, "[ERROR %s] %s\n", strconv.Itoa(status), msg)
 	if l.socket == nil {
-		http.Error(l.httpWriter, msg, status)
+		render.Render(l.httpWriter, l.req, res.Err(l.req, msg, status))
 	} else {
 		l.Close(CloseOpts{msg, status})
 	}
@@ -81,9 +85,7 @@ func (l *DaemonLogger) WriteErr(msg string, status int) {
 func (l *DaemonLogger) WriteSuccess(msg string, status int) {
 	fmt.Fprintf(l.Writer, "[SUCCESS %s] %s\n", strconv.Itoa(status), msg)
 	if l.socket == nil && !l.httpStream {
-		l.httpWriter.Header().Set("Content-Type", "text/html")
-		l.httpWriter.WriteHeader(status)
-		fmt.Fprintln(l.httpWriter, msg)
+		render.Render(l.httpWriter, l.req, res.Message(l.req, msg, status))
 	} else {
 		l.Close(CloseOpts{msg, status})
 	}

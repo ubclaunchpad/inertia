@@ -4,13 +4,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/render"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // resetHandler shuts down and wipes the project directory
 func (s *Server) resetHandler(w http.ResponseWriter, r *http.Request) {
 	if s.deployment == nil {
-		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
+		render.Render(w, r, res.Err(r, msgNoDeployment, http.StatusPreconditionFailed))
 		return
 	}
 

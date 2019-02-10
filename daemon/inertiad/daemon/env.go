@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/render"
+
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // envHandler manages requests to manage environment variables
@@ -28,7 +31,7 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusLengthRequired)
+		logger.WriteErr(err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
@@ -40,6 +43,7 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	if envReq.Name == "" {
 		logger.WriteErr("no variable name provided", http.StatusBadRequest)
+		return
 	}
 
 	manager, found := s.deployment.GetDataManager()
@@ -67,6 +71,7 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 func envGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Set up logger
 	logger := log.NewLogger(log.LoggerOptions{
+		Request:    r,
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 	})
@@ -80,8 +85,9 @@ func envGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	values, err := manager.GetEnvVariables(false)
 	if err != nil {
 		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(values)
+
+	render.Render(w, r, res.Message(r, "configured environment variables retrieved", http.StatusOK,
+		"variables", values))
 }

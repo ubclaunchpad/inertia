@@ -2,15 +2,18 @@ package daemon
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	docker "github.com/docker/docker/client"
+	"github.com/go-chi/render"
+
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // logHandler handles requests for container logs
@@ -28,7 +31,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 		s, err := strconv.ParseBool(streamParam)
 		if err != nil {
 			println(err.Error())
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			render.Render(w, r, res.ErrBadRequest(r, err.Error()))
 			return
 		}
 		stream = s
@@ -41,7 +44,8 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	var entries int
 	if entriesParam != "" {
 		if entries, err = strconv.Atoi(entriesParam); err != nil {
-			http.Error(w, "invalid number of entries", http.StatusBadRequest)
+			render.Render(w, r, res.ErrBadRequest(r, "invalid number of entries",
+				"error", err))
 			return
 		}
 	}
@@ -55,16 +59,19 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	if stream {
 		socket, err := s.websocket.Upgrade(w, r, nil)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			render.Render(w, r,
+				res.ErrInternalServer(r, "failed to esablish websocket connection", err))
 			return
 		}
 		logger = log.NewLogger(log.LoggerOptions{
+			Request:    r,
 			Stdout:     os.Stdout,
 			Socket:     socket,
 			HTTPWriter: w,
 		})
 	} else {
 		logger = log.NewLogger(log.LoggerOptions{
+			Request:    r,
 			Stdout:     os.Stdout,
 			HTTPWriter: w,
 		})
@@ -90,6 +97,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 		socket, err := logger.GetSocketWriter()
 		if err != nil {
 			logger.WriteErr(err.Error(), http.StatusInternalServerError)
+			return
 		}
 		log.FlushRoutine(socket, logs, stop)
 		defer logger.Close()
@@ -97,8 +105,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, buf.String())
+		render.Render(w, r, res.Message(r, "configured environment variables retrieved", http.StatusOK,
+			"logs", strings.Split(buf.String(), "\n")))
 	}
 }

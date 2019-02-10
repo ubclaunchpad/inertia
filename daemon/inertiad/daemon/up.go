@@ -6,23 +6,25 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/render"
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // upHandler tries to bring the deployment online
 func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusLengthRequired)
+		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
 		return
 	}
 	defer r.Body.Close()
 	var upReq api.UpRequest
 	if err = json.Unmarshal(body, &upReq); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
 		return
 	}
 	var gitOpts = upReq.GitOptions

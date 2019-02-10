@@ -4,14 +4,17 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/render"
+
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // pruneHandler cleans up Docker assets
 func (s *Server) pruneHandler(w http.ResponseWriter, r *http.Request) {
 	if s.deployment == nil {
-		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
+		render.Render(w, r, res.Err(r, msgNoDeployment, http.StatusPreconditionFailed))
 		return
 	}
 
