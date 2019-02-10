@@ -186,34 +186,45 @@ func (h *PermissionsHandler) AttachPublicHandler(path string, handler http.Handl
 }
 
 // AttachPublicHandlerFunc attaches given path and handler and makes it publicly available
-func (h *PermissionsHandler) AttachPublicHandlerFunc(path string, handler http.HandlerFunc) {
-	h.mux.HandleFunc(path, handler)
+func (h *PermissionsHandler) AttachPublicHandlerFunc(
+	path string,
+	handler http.HandlerFunc,
+	methods ...string,
+) {
+	h.register(path, handler, methods)
 }
 
 // AttachUserRestrictedHandlerFunc attaches and restricts given path and handler to logged in users.
-func (h *PermissionsHandler) AttachUserRestrictedHandlerFunc(path string,
-	handler http.HandlerFunc, methods ...string) {
+func (h *PermissionsHandler) AttachUserRestrictedHandlerFunc(
+	path string,
+	handler http.HandlerFunc,
+	methods ...string,
+) {
 	h.userPaths = append(h.userPaths, path)
-	for _, m := range methods {
-		switch m {
-		case http.MethodGet:
-			h.mux.Get(path, handler)
-		case http.MethodPost:
-			h.mux.Post(path, handler)
-		}
-	}
+	h.register(path, handler, methods)
 }
 
 // AttachAdminRestrictedHandlerFunc attaches and restricts given path and handler to logged in admins.
-func (h *PermissionsHandler) AttachAdminRestrictedHandlerFunc(path string,
-	handler http.HandlerFunc, methods ...string) {
+func (h *PermissionsHandler) AttachAdminRestrictedHandlerFunc(
+	path string,
+	handler http.HandlerFunc,
+	methods ...string,
+) {
 	h.adminPaths = append(h.adminPaths, path)
-	for _, m := range methods {
-		switch m {
-		case http.MethodGet:
-			h.mux.Get(path, handler)
-		case http.MethodPost:
-			h.mux.Post(path, handler)
+	h.register(path, handler, methods)
+}
+
+func (h *PermissionsHandler) register(path string, handler http.HandlerFunc, methods []string) {
+	if len(methods) == 0 {
+		h.mux.HandleFunc(path, handler)
+	} else {
+		for _, m := range methods {
+			switch m {
+			case http.MethodGet:
+				h.mux.Get(path, handler)
+			case http.MethodPost:
+				h.mux.Post(path, handler)
+			}
 		}
 	}
 }

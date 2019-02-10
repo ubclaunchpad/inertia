@@ -43,15 +43,20 @@ func TestServeHTTPPublicPath(t *testing.T) {
 	ts.Config.Handler = ph
 	ph.AttachPublicHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-	}))
+	}), http.MethodGet)
 
-	req, err := http.NewRequest("POST", ts.URL+"/test", nil)
+	req, err := http.NewRequest("GET", ts.URL+"/test", nil)
 	assert.Nil(t, err)
 	resp, err := http.DefaultClient.Do(req)
 	assert.Nil(t, err)
-	defer resp.Body.Close()
-
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// should not allow forbidden method
+	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
+	assert.Nil(t, err)
+	resp, err = http.DefaultClient.Do(req)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
 }
 
 func TestServeHTTPWithUserReject(t *testing.T) {
@@ -67,7 +72,7 @@ func TestServeHTTPWithUserReject(t *testing.T) {
 	ts.Config.Handler = ph
 	ph.AttachUserRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-	}))
+	}), http.MethodPost)
 
 	// Without token
 	req, err := http.NewRequest("POST", ts.URL+"/test", nil)
@@ -96,9 +101,6 @@ func TestServeHTTPWithUserLoginAndLogout(t *testing.T) {
 	assert.Nil(t, err)
 	defer ph.Close()
 	ts.Config.Handler = ph
-	ph.AttachUserRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
 
 	// Register user
 	err = ph.users.AddUser("bobheadxi", "wowgreat", false)
@@ -161,7 +163,7 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	ts.Config.Handler = ph
 	ph.AttachUserRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-	}))
+	}), http.MethodPost)
 
 	// Register user
 	err = ph.users.AddUser("bobheadxi", "wowgreat", false)
@@ -205,7 +207,7 @@ func TestServeHTTPWithUserLoginAndAccept(t *testing.T) {
 	assert.Nil(t, err)
 	token := string(tokenBytes)
 
-	// Attempt to access restricted endpoint with cookie
+	// Attempt to access restricted endpoint
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -229,7 +231,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	ts.Config.Handler = ph
 	ph.AttachAdminRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-	}))
+	}), http.MethodPost)
 
 	// Register user
 	err = ph.users.AddUser("bobheadxi", "wowgreat", false)
@@ -251,7 +253,7 @@ func TestServeHTTPDenyNonAdmin(t *testing.T) {
 	assert.Nil(t, err)
 	token := string(tokenBytes)
 
-	// Attempt to access restricted endpoint with cookie
+	// Attempt to access restricted endpoint
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -275,7 +277,7 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	ts.Config.Handler = ph
 	ph.AttachAdminRestrictedHandlerFunc("/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-	}))
+	}), http.MethodPost)
 
 	// Register user
 	err = ph.users.AddUser("bobheadxi", "wowgreat", true)
@@ -297,7 +299,7 @@ func TestServeHTTPAllowAdmin(t *testing.T) {
 	assert.Nil(t, err)
 	token := string(tokenBytes)
 
-	// Attempt to access restricted endpoint with cookie
+	// Attempt to access restricted endpoint
 	req, err = http.NewRequest("POST", ts.URL+"/test", nil)
 	assert.Nil(t, err)
 	req.Header.Set("Authorization", "Bearer "+token)
