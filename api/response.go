@@ -34,7 +34,7 @@ type KV struct {
 // For example:
 //
 // 	  var totpResp = &api.TotpResponse{}
-//    api.Unmarshal(resp.Body, api.KeyValue{Key: "totp", Value: totpResp})
+//    api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: totpResp})
 //
 func Unmarshal(r io.Reader, kvs ...KV) (*BaseResponse, error) {
 	bytes, err := ioutil.ReadAll(r)

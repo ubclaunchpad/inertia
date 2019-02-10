@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -162,8 +163,8 @@ func (root *UserCmd) attachLoginCmd() {
 				return
 			}
 			defer resp.Body.Close()
-			token, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
+			var token string
+			if api.Unmarshal(resp.Body, api.KV{Key: "token", Value: &token}); err != nil {
 				printutil.Fatal(err)
 			}
 
