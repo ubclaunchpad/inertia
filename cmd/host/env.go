@@ -105,7 +105,7 @@ variables are not be decrypted.`,
 				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
-			var variables []string
+			var variables = make([]string, 0)
 			b, err := api.Unmarshal(resp.Body, api.KV{Key: "variables", Value: &variables})
 			if err != nil {
 				printutil.Fatal(err)

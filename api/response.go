@@ -37,6 +37,8 @@ type KV struct {
 // 	  var totpResp = &api.TotpResponse{}
 //    api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: totpResp})
 //
+// Values provided in KV.Value MUST be explicit pointers, even if the value is
+// a pointer type, ie maps and slices.
 func Unmarshal(r io.Reader, kvs ...KV) (*BaseResponse, error) {
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -47,7 +49,7 @@ func Unmarshal(r io.Reader, kvs ...KV) (*BaseResponse, error) {
 	// map to preserve raw JSON data in the keys
 	var (
 		data = make(map[string]json.RawMessage)
-		resp = BaseResponse{Data: data}
+		resp = BaseResponse{Data: &data}
 	)
 	if err := json.Unmarshal(bytes, &resp); err != nil {
 		return nil, fmt.Errorf("could not unmarshal data from reader: %s", err.Error())

@@ -59,8 +59,9 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Render(w, r, res.Msg(
-		"environment variable saved - this will be applied the next time your container is started",
-		http.StatusAccepted))
+		"environment variable updated - this will be applied the next time your container is started",
+		http.StatusAccepted,
+		"variable", envReq.Name))
 }
 
 func envGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
