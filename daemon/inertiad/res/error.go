@@ -16,7 +16,7 @@ func Err(message string, code int, kvs ...interface{}) *ErrResponse {
 
 // ErrInternalServer is a shortcut for internal server errors. It should be
 // accompanied by an actual error.
-func ErrInternalServer(r *http.Request, message string, err error, kvs ...interface{}) *ErrResponse {
+func ErrInternalServer(message string, err error, kvs ...interface{}) *ErrResponse {
 	var b = newBaseResponse(message, http.StatusInternalServerError, kvs)
 	b.Err = err.Error()
 	return &ErrResponse{b}

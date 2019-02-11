@@ -88,12 +88,12 @@ func TestSuccess(t *testing.T) {
 		Writer:     &b,
 		socket:     &mockSocketWriter{},
 	}
-	logger.Success(res.Message("Wee!", 200))
+	logger.Success(res.MsgOK("Wee!"))
 	assert.Equal(t, "[SUCCESS 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.socket = nil
-	logger.Success(res.Message("Wee!", 200))
+	logger.Success(res.MsgOK("Wee!"))
 	body, err := api.Unmarshal(w.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, "Wee!", body.Message)

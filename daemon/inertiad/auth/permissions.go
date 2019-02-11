@@ -156,9 +156,9 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case errSessionNotFound:
-			render.Render(w, r, res.ErrUnauthorized(r, err.Error()))
+			render.Render(w, r, res.ErrUnauthorized(err.Error()))
 		default:
-			render.Render(w, r, res.ErrUnauthorized(r, "failed to read token", "error", err))
+			render.Render(w, r, res.ErrUnauthorized("failed to read token", "error", err))
 		}
 		return
 	}
@@ -168,10 +168,10 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		admin, err := h.users.IsAdmin(claims.User)
 		switch {
 		case err != nil:
-			render.Render(w, r, res.ErrInternalServer(r, "failed to check admin status", err))
+			render.Render(w, r, res.ErrInternalServer("failed to check admin status", err))
 			return
 		case !admin:
-			render.Render(w, r, res.ErrForbidden(r, "admin privileges required"))
+			render.Render(w, r, res.ErrForbidden("admin privileges required"))
 			return
 		}
 	}
@@ -236,29 +236,29 @@ func (h *PermissionsHandler) addUserHandler(w http.ResponseWriter, r *http.Reque
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	defer r.Body.Close()
 	var userReq api.UserRequest
 	if err = json.Unmarshal(body, &userReq); err != nil {
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 
 	// Add user (as admin if specified)
 	if err = h.users.AddUser(userReq.Username, userReq.Password, userReq.Admin); err != nil {
 		if crypto.IsCredentialFormatError(err) {
-			render.Render(w, r, res.ErrBadRequest(r, "invalid credentials format",
+			render.Render(w, r, res.ErrBadRequest("invalid credentials format",
 				"error", err))
 		} else {
-			render.Render(w, r, res.ErrBadRequest(r, "failed to add user",
+			render.Render(w, r, res.ErrBadRequest("failed to add user",
 				"error", err))
 		}
 		return
 	}
 
-	render.Render(w, r, res.Message(r, "user succesfully added", http.StatusCreated,
+	render.Render(w, r, res.Msg("user succesfully added", http.StatusCreated,
 		"user", userReq.Username))
 }
 
@@ -266,22 +266,22 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 	// Retrieve user details from request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	defer r.Body.Close()
 	var userReq api.UserRequest
 	if err = json.Unmarshal(body, &userReq); err != nil {
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 
 	// Remove user credentials
 	if err = h.users.RemoveUser(userReq.Username); err != nil {
 		if err == errUserNotFound {
-			render.Render(w, r, res.ErrNotFound(r, err.Error()))
+			render.Render(w, r, res.ErrNotFound(err.Error()))
 		} else {
-			render.Render(w, r, res.ErrInternalServer(r, "failed to remove user", err))
+			render.Render(w, r, res.ErrInternalServer("failed to remove user", err))
 		}
 		return
 	}
@@ -289,14 +289,14 @@ func (h *PermissionsHandler) removeUserHandler(w http.ResponseWriter, r *http.Re
 	// End user sessions
 	h.sessions.EndAllUserSessions(userReq.Username)
 
-	render.Render(w, r, res.Message(r, "user succesfully removed", http.StatusOK,
+	render.Render(w, r, res.MsgOK("user succesfully removed",
 		"user", userReq.Username))
 }
 
 func (h *PermissionsHandler) enableTotpHandler(w http.ResponseWriter, r *http.Request) {
 	userReq, err := readCredentials(r)
 	if err != nil {
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 	}
 
 	// Check if password is correct (we do this first because we don't want to
@@ -305,31 +305,31 @@ func (h *PermissionsHandler) enableTotpHandler(w http.ResponseWriter, r *http.Re
 	_, correct, err := h.users.IsCorrectCredentials(
 		userReq.Username, userReq.Password)
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to check credentials", err))
+		render.Render(w, r, res.ErrInternalServer("failed to check credentials", err))
 		return
 	} else if !correct {
-		render.Render(w, r, res.ErrUnauthorized(r, "invalid credentials provided"))
+		render.Render(w, r, res.ErrUnauthorized("invalid credentials provided"))
 		return
 	}
 
 	// Make sure the user does not already have TOTP enabled
 	totpEnabled, err := h.users.IsTotpEnabled(userReq.Username)
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to check 2FA status", err))
+		render.Render(w, r, res.ErrInternalServer("failed to check 2FA status", err))
 		return
 	} else if totpEnabled {
-		render.Render(w, r, res.Err(r, "TOTP is already enabled on this user", http.StatusConflict,
+		render.Render(w, r, res.Err("TOTP is already enabled on this user", http.StatusConflict,
 			"user", userReq.Username))
 		return
 	}
 
 	totpSecret, backupCodes, err := h.users.EnableTotp(userReq.Username)
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to create TOTP keys", err))
+		render.Render(w, r, res.ErrInternalServer("failed to create TOTP keys", err))
 		return
 	}
 
-	render.Render(w, r, res.Message(r, "TOTP successfully enabled", http.StatusOK,
+	render.Render(w, r, res.MsgOK("TOTP successfully enabled",
 		"totp", &api.TotpResponse{
 			TotpSecret:  totpSecret,
 			BackupCodes: backupCodes,
@@ -341,45 +341,45 @@ func (h *PermissionsHandler) disableTotpHandler(w http.ResponseWriter, r *http.R
 	// Make sure that TOTP is actually enabled
 	totpEnabled, err := h.users.IsTotpEnabled(username)
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to check 2FA status", err))
+		render.Render(w, r, res.ErrInternalServer("failed to check 2FA status", err))
 		return
 	} else if !totpEnabled {
-		render.Render(w, r, res.Err(r, "TOTP is not enabled on this user", http.StatusConflict,
+		render.Render(w, r, res.Err("TOTP is not enabled on this user", http.StatusConflict,
 			"user", username))
 		return
 	}
 
 	if err = h.users.DisableTotp(username); err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to disable 2FA", err))
+		render.Render(w, r, res.ErrInternalServer("failed to disable 2FA", err))
 		return
 	}
 
-	render.Render(w, r, res.Message(r, "TOTP successfully disabled", http.StatusOK,
+	render.Render(w, r, res.MsgOK("TOTP successfully disabled",
 		"user", username))
 }
 
 func (h *PermissionsHandler) resetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete all users
 	if err := h.users.Reset(); err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to reset users and sessions", err))
+		render.Render(w, r, res.ErrInternalServer("failed to reset users and sessions", err))
 		return
 	}
 
 	// Delete all sessions
 	h.sessions.EndAllSessions()
 
-	render.Render(w, r, res.Message(r, "user and session databases reset", http.StatusOK))
+	render.Render(w, r, res.MsgOK("user and session databases reset"))
 }
 
 func (h *PermissionsHandler) listUsersHandler(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, res.Message(r, "users retrieved", http.StatusOK,
+	render.Render(w, r, res.MsgOK("users retrieved",
 		"users", h.users.UserList()))
 }
 
 func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 	userReq, err := readCredentials(r)
 	if err != nil {
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 
@@ -388,39 +388,39 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 		userReq.Username, userReq.Password)
 	switch {
 	case err == errMissingCredentials:
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	case !correct || err == errUserNotFound:
-		render.Render(w, r, res.ErrUnauthorized(r, "invalid credentials provided"))
+		render.Render(w, r, res.ErrUnauthorized("invalid credentials provided"))
 		return
 	case err != nil:
-		render.Render(w, r, res.ErrInternalServer(r, "failed to log in", err))
+		render.Render(w, r, res.ErrInternalServer("failed to log in", err))
 		return
 	}
 
 	// Make sure TOTP is valid if the user has TOTP enabled
 	totpEnabled, err := h.users.IsTotpEnabled(userReq.Username)
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to check TOTP status", err))
+		render.Render(w, r, res.ErrInternalServer("failed to check TOTP status", err))
 		return
 	}
 	if totpEnabled {
 		if userReq.Totp == "" {
-			render.Render(w, r, res.ErrBadRequest(r, "no TOTP provided"))
+			render.Render(w, r, res.ErrBadRequest("no TOTP provided"))
 			return
 		}
 		validTotp, err := h.users.IsValidTotp(userReq.Username, userReq.Totp)
 		if err != nil {
-			render.Render(w, r, res.ErrInternalServer(r, "unable to verify TOTP", err))
+			render.Render(w, r, res.ErrInternalServer("unable to verify TOTP", err))
 			return
 		} else if !validTotp {
 			// Check if the user entered a backup code
 			validBackup, err := h.users.IsValidBackupCode(userReq.Username, userReq.Totp)
 			if err != nil {
-				render.Render(w, r, res.ErrInternalServer(r, "unable to verify TOTP", err))
+				render.Render(w, r, res.ErrInternalServer("unable to verify TOTP", err))
 				return
 			} else if !validBackup {
-				render.Render(w, r, res.ErrUnauthorized(r, "invalid credentials provided"))
+				render.Render(w, r, res.ErrUnauthorized("invalid credentials provided"))
 				return
 			}
 		}
@@ -428,26 +428,26 @@ func (h *PermissionsHandler) loginHandler(w http.ResponseWriter, r *http.Request
 
 	_, token, err := h.sessions.BeginSession(userReq.Username, props.Admin)
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to create session", err))
+		render.Render(w, r, res.ErrInternalServer("failed to create session", err))
 		return
 	}
 
-	render.Render(w, r, res.Message(r, "session created", http.StatusOK,
+	render.Render(w, r, res.MsgOK("session created",
 		"token", token))
 }
 
 func (h *PermissionsHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	err := h.sessions.EndSession(r)
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to end session", err))
+		render.Render(w, r, res.ErrInternalServer("failed to end session", err))
 		return
 	}
 
-	render.Render(w, r, res.Message(r, "session ended", http.StatusOK))
+	render.Render(w, r, res.MsgOK("session ended"))
 }
 
 func (h *PermissionsHandler) validateHandler(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, res.Message(r, "hi there!", http.StatusOK))
+	render.Render(w, r, res.MsgOK("hi there!"))
 }
 
 func readCredentials(r *http.Request) (api.UserRequest, error) {

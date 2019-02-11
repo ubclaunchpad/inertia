@@ -12,7 +12,7 @@ import (
 // resetHandler shuts down and wipes the project directory
 func (s *Server) resetHandler(w http.ResponseWriter, r *http.Request) {
 	if s.deployment == nil {
-		render.Render(w, r, res.Err(r, msgNoDeployment, http.StatusPreconditionFailed))
+		render.Render(w, r, res.Err(msgNoDeployment, http.StatusPreconditionFailed))
 		return
 	}
 
@@ -24,9 +24,9 @@ func (s *Server) resetHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Goodbye deployment
 	if err := s.deployment.Destroy(s.docker, logger); err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		logger.Error(res.ErrInternalServer("failed to remove deployment", err))
 		return
 	}
 
-	logger.WriteSuccess("Project removed from remote.", http.StatusOK)
+	logger.Success(res.MsgOK("project removed"))
 }

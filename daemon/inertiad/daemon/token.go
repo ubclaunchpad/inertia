@@ -12,16 +12,16 @@ import (
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	keyBytes, err := crypto.GetAPIPrivateKey(nil)
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to get signing key", err))
+		render.Render(w, r, res.ErrInternalServer("failed to get signing key", err))
 		return
 	}
 
 	token, err := crypto.GenerateMasterToken(keyBytes.([]byte))
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to generate token", err))
+		render.Render(w, r, res.ErrInternalServer("failed to generate token", err))
 		return
 	}
 
-	render.Render(w, r, res.Message(r, "token generated", http.StatusOK,
+	render.Render(w, r, res.MsgOK("token generated",
 		"token", token))
 }

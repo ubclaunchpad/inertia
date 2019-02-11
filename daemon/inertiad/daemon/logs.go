@@ -31,7 +31,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 		s, err := strconv.ParseBool(streamParam)
 		if err != nil {
 			println(err.Error())
-			render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+			render.Render(w, r, res.ErrBadRequest(err.Error()))
 			return
 		}
 		stream = s
@@ -44,7 +44,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	var entries int
 	if entriesParam != "" {
 		if entries, err = strconv.Atoi(entriesParam); err != nil {
-			render.Render(w, r, res.ErrBadRequest(r, "invalid number of entries",
+			render.Render(w, r, res.ErrBadRequest("invalid number of entries",
 				"error", err))
 			return
 		}
@@ -60,7 +60,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 		socket, err := s.websocket.Upgrade(w, r, nil)
 		if err != nil {
 			render.Render(w, r,
-				res.ErrInternalServer(r, "failed to esablish websocket connection", err))
+				res.ErrInternalServer("failed to esablish websocket connection", err))
 			return
 		}
 		logger = log.NewLogger(log.LoggerOptions{
@@ -84,9 +84,9 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if docker.IsErrNotFound(err) {
-			logger.WriteErr(err.Error(), http.StatusNotFound)
+			logger.Error(res.ErrNotFound(err.Error()))
 		} else {
-			logger.WriteErr(err.Error(), http.StatusInternalServerError)
+			logger.Error(res.ErrInternalServer("failed to find logs for container", err))
 		}
 		return
 	}
@@ -96,7 +96,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 		var stop = make(chan struct{})
 		socket, err := logger.GetSocketWriter()
 		if err != nil {
-			logger.WriteErr(err.Error(), http.StatusInternalServerError)
+			logger.Error(res.ErrInternalServer("failed to write to socket", err))
 			return
 		}
 		log.FlushRoutine(socket, logs, stop)
@@ -105,7 +105,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)
-		render.Render(w, r, res.Message(r, "configured environment variables retrieved", http.StatusOK,
+		render.Render(w, r, res.MsgOK("configured environment variables retrieved",
 			"logs", strings.Split(buf.String(), "\n")))
 	}
 }

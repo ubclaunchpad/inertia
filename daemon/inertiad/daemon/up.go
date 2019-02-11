@@ -18,13 +18,13 @@ import (
 func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	defer r.Body.Close()
 	var upReq api.UpRequest
 	if err = json.Unmarshal(body, &upReq); err != nil {
-		render.Render(w, r, res.ErrBadRequest(r, err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	var gitOpts = upReq.GitOptions
@@ -62,7 +62,7 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			logger,
 		); err != nil {
-			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
+			logger.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 			return
 		}
 
@@ -72,7 +72,7 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check for matching remotes
 	if err = s.deployment.CompareRemotes(gitOpts.RemoteURL); err != nil {
-		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
+		logger.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 		return
 	}
 
@@ -87,14 +87,14 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 		SkipUpdate: skipUpdate,
 	})
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		logger.Error(res.ErrInternalServer("failed to deploy project", err))
 		return
 	}
 
 	if err = deploy(); err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		logger.Error(res.ErrInternalServer("failed to deploy project", err))
 		return
 	}
 
-	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
+	logger.Success(res.Msg("Project startup initiated!", http.StatusCreated))
 }

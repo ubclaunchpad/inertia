@@ -69,9 +69,9 @@ func (b *BaseResponse) Error() error {
 		return nil
 	}
 	if b.Err == "" {
-		return fmt.Errorf("error status %d: %s", b.HTTPStatusCode, b.Message)
+		return fmt.Errorf("[error %d] %s", b.HTTPStatusCode, b.Message)
 	}
-	return fmt.Errorf("error stats %d: %s (%s)", b.HTTPStatusCode, b.Message, b.Err)
+	return fmt.Errorf("[error %d] %s: (%s)", b.HTTPStatusCode, b.Message, b.Err)
 }
 
 // TotpResponse is used for sending users their Totp secret and backup codes

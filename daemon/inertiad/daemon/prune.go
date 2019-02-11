@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
@@ -14,7 +13,7 @@ import (
 // pruneHandler cleans up Docker assets
 func (s *Server) pruneHandler(w http.ResponseWriter, r *http.Request) {
 	if s.deployment == nil {
-		render.Render(w, r, res.Err(r, msgNoDeployment, http.StatusPreconditionFailed))
+		render.Render(w, r, res.Err(msgNoDeployment, http.StatusPreconditionFailed))
 		return
 	}
 
@@ -24,17 +23,10 @@ func (s *Server) pruneHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	defer logger.Close()
 
-	cli, err := containers.NewDockerClient()
-	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-
-	if err = s.deployment.Prune(cli, logger); err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+	if err := s.deployment.Prune(s.docker, logger); err != nil {
+		logger.Error(res.ErrInternalServer("failed to prune Docker assets", err))
 		return
 	}
 
-	logger.WriteSuccess("Docker assets have been pruned.", http.StatusOK)
+	logger.Success(res.MsgOK("docker assets have been pruned"))
 }

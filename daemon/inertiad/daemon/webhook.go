@@ -23,7 +23,7 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := "unable to read payload: " + err.Error()
 		println(msg)
-		render.Render(w, r, res.ErrBadRequest(r, msg))
+		render.Render(w, r, res.ErrBadRequest(msg))
 		return
 	}
 
@@ -37,7 +37,7 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	if err := webhook.Verify(host, s.state.WebhookSecret, r.Header, body); err != nil {
 		msg := "unable to verify payload: " + err.Error()
 		println(msg)
-		render.Render(w, r, res.ErrBadRequest(r, msg))
+		render.Render(w, r, res.ErrBadRequest(msg))
 		return
 	}
 
@@ -46,7 +46,7 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := "unable to parse payload: " + err.Error()
 		println(msg)
-		render.Render(w, r, res.ErrBadRequest(r, msg))
+		render.Render(w, r, res.ErrBadRequest(msg))
 		return
 	}
 
@@ -63,7 +63,7 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	//	fmt.Fprint(w, common.MsgDaemonOK)
 	// 	processPullRequestEvent(payload)
 	default:
-		render.Render(w, r, res.ErrBadRequest(r, "unrecognized event type"))
+		render.Render(w, r, res.ErrBadRequest("unrecognized event type"))
 		println("unrecognized event type")
 	}
 }

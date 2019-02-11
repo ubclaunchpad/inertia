@@ -31,24 +31,24 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusBadRequest)
+		logger.Error(res.ErrBadRequest(err.Error()))
 		return
 	}
 	defer r.Body.Close()
 	var envReq api.EnvRequest
 	err = json.Unmarshal(body, &envReq)
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusBadRequest)
+		logger.Error(res.ErrBadRequest(err.Error()))
 		return
 	}
 	if envReq.Name == "" {
-		logger.WriteErr("no variable name provided", http.StatusBadRequest)
+		logger.Error(res.ErrBadRequest("no variable name provided"))
 		return
 	}
 
 	manager, found := s.deployment.GetDataManager()
 	if !found {
-		logger.WriteErr("no environment manager found", http.StatusPreconditionFailed)
+		logger.Error(res.Err("no environment manager found", http.StatusPreconditionFailed))
 		return
 	}
 
@@ -61,11 +61,11 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		)
 	}
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		logger.Error(res.ErrInternalServer("failed to update variable", err))
 		return
 	}
 
-	logger.WriteSuccess("environment variable saved - this will be applied the next time your container is started", http.StatusAccepted)
+	logger.Success(res.Msg("environment variable saved - this will be applied the next time your container is started", http.StatusAccepted))
 }
 
 func envGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
@@ -78,16 +78,16 @@ func envGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	manager, found := s.deployment.GetDataManager()
 	if !found {
-		logger.WriteErr("no environment manager found", http.StatusPreconditionFailed)
+		logger.Error(res.Err("no environment manager found", http.StatusPreconditionFailed))
 		return
 	}
 
 	values, err := manager.GetEnvVariables(false)
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		logger.Error(res.ErrInternalServer("failed to retrieve environment variables", err))
 		return
 	}
 
-	render.Render(w, r, res.Message(r, "configured environment variables retrieved", http.StatusOK,
+	render.Render(w, r, res.Msg("configured environment variables retrieved", http.StatusOK,
 		"variables", values))
 }

@@ -18,7 +18,7 @@ const (
 // downHandler tries to take the deployment offline
 func (s *Server) downHandler(w http.ResponseWriter, r *http.Request) {
 	if status, _ := s.deployment.GetStatus(s.docker); len(status.Containers) == 0 {
-		render.Render(w, r, res.Err(r, msgNoDeployment, http.StatusPreconditionFailed))
+		render.Render(w, r, res.Err(msgNoDeployment, http.StatusPreconditionFailed))
 		return
 	}
 
@@ -30,12 +30,12 @@ func (s *Server) downHandler(w http.ResponseWriter, r *http.Request) {
 	defer logger.Close()
 
 	if err := s.deployment.Down(s.docker, logger); err == containers.ErrNoContainers {
-		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
+		logger.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 		return
 	} else if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		logger.Error(res.ErrInternalServer("failed to shut down project", err))
 		return
 	}
 
-	logger.WriteSuccess("project shut down", http.StatusOK)
+	logger.Success(res.MsgOK("project shut down"))
 }

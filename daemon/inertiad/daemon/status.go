@@ -15,15 +15,15 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	status.InertiaVersion = s.version
 	if status.CommitHash == "" {
 		status.Containers = make([]string, 0)
-		render.Render(w, r, res.Message(r, "status retrieved", http.StatusOK,
+		render.Render(w, r, res.MsgOK("status retrieved",
 			"status", status))
 		return
 	}
 	if err != nil {
-		render.Render(w, r, res.ErrInternalServer(r, "failed to get status", err))
+		render.Render(w, r, res.ErrInternalServer("failed to get status", err))
 		return
 	}
 
-	render.Render(w, r, res.Message(r, "status retrieved", http.StatusOK,
+	render.Render(w, r, res.MsgOK("status retrieved",
 		"status", status))
 }
