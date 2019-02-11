@@ -18,6 +18,7 @@ func (s *Server) pruneHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var stream = log.NewStreamer(log.StreamerOptions{
+		Request:    r,
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 	})

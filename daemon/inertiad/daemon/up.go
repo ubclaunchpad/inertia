@@ -41,6 +41,7 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Configure streamer
 	var stream = log.NewStreamer(log.StreamerOptions{
+		Request:    r,
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 		HTTPStream: upReq.Stream,

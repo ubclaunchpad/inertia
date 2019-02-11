@@ -37,13 +37,12 @@ func (b *BaseResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func formatData(kvs []interface{}) (e string, data map[string]interface{}) {
+func formatData(kvs []interface{}) (e string, d interface{}) {
 	if len(kvs) < 1 {
 		return "", nil
 	}
 
-	data = make(map[string]interface{})
-	var hasNonErrorData = false
+	var data = make(map[string]interface{})
 	for i := 0; i < len(kvs)-1; i += 2 {
 		var (
 			k = kvs[i].(string)
@@ -57,12 +56,16 @@ func formatData(kvs []interface{}) (e string, data map[string]interface{}) {
 				e = err
 			}
 		} else {
-			hasNonErrorData = true
 			data[k] = v
 		}
 	}
 
-	if !hasNonErrorData {
+	// We need to make sure we *explicitly* return a nil-value interface, since
+	// if we assign a map, even if it is null, an empty interface will now assume
+	// a type value, making it non-nil, which means the `omitempty` directive will
+	// no longer trigger.
+	// See https://golang.org/doc/faq#nil_error
+	if len(data) < 1 {
 		return e, nil
 	}
 	return e, data

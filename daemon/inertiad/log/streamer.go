@@ -51,6 +51,7 @@ func NewStreamer(opts StreamerOptions) *Streamer {
 	}
 
 	return &Streamer{
+		req:        opts.Request,
 		httpWriter: opts.HTTPWriter,
 		httpStream: opts.HTTPStream,
 		socket:     opts.Socket,
