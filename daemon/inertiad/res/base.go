@@ -8,7 +8,12 @@ import (
 	"github.com/ubclaunchpad/inertia/api"
 )
 
-func newBaseResponse(r *http.Request, message string, code int, kvs []interface{}) api.BaseResponse {
+func newBaseResponse(
+	r *http.Request,
+	message string,
+	code int,
+	kvs []interface{},
+) api.BaseResponse {
 	var data = make(map[string]interface{})
 	var e string
 	for i := 0; i < len(kvs)-1; i += 2 {
@@ -31,7 +36,7 @@ func newBaseResponse(r *http.Request, message string, code int, kvs []interface{
 		HTTPStatusCode: code,
 		Message:        message,
 		RequestID:      middleware.GetReqID(r.Context()),
-		Error:          e,
+		Err:            e,
 		Data:           data,
 	}
 }

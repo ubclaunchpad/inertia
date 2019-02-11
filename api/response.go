@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 )
@@ -15,8 +16,8 @@ type BaseResponse struct {
 	// Message is included in all responses, and is a summary of the server's response
 	Message string `json:"message"`
 
-	// Error contains additional context in the event of an error
-	Error string `json:"error,omitempty"`
+	// Err contains additional context in the event of an error
+	Err string `json:"error,omitempty"`
 
 	// Data contains information the server wants to return
 	Data interface{} `json:"data,omitempty"`
@@ -39,15 +40,17 @@ type KV struct {
 func Unmarshal(r io.Reader, kvs ...KV) (*BaseResponse, error) {
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read bytes from reader: %s", err.Error())
 	}
 
+	// Unmarshal data into a BaseResponse, replacing BaseResponse.Data with a
+	// map to preserve raw JSON data in the keys
 	var (
 		data = make(map[string]json.RawMessage)
-		resp = BaseResponse{Data: &data}
+		resp = BaseResponse{Data: data}
 	)
 	if err := json.Unmarshal(bytes, &resp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not unmarshal data from reader: %s", err.Error())
 	}
 
 	// Unmarshal all requested kv-pairs, silently ignoring errors
@@ -56,6 +59,19 @@ func Unmarshal(r io.Reader, kvs ...KV) (*BaseResponse, error) {
 	}
 
 	return &resp, nil
+}
+
+// Error returns a summary of an encountered error. For more details, you may
+// want to interrogate Data. Returns nil if StatusCode is not an HTTP error
+// code, ie if the code is in 1xx, 2xx, or 3xx
+func (b *BaseResponse) Error() error {
+	if 100 <= b.HTTPStatusCode && b.HTTPStatusCode < 400 {
+		return nil
+	}
+	if b.Err == "" {
+		return fmt.Errorf("error status %d: %s", b.HTTPStatusCode, b.Message)
+	}
+	return fmt.Errorf("error stats %d: %s (%s)", b.HTTPStatusCode, b.Message, b.Err)
 }
 
 // TotpResponse is used for sending users their Totp secret and backup codes
