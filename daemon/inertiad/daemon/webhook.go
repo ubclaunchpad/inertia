@@ -53,18 +53,19 @@ func (s *Server) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	// process event
 	switch event := payload.GetEventType(); event {
 	case webhook.PingEvent:
-		fmt.Fprint(w, api.MsgDaemonOK)
 		println("ping webhook received")
+		render.Render(w, r, res.Msg(api.MsgDaemonOK, http.StatusAccepted))
 		return
 	case webhook.PushEvent:
-		fmt.Fprint(w, api.MsgDaemonOK)
+		render.Render(w, r, res.Msg(api.MsgDaemonOK, http.StatusAccepted))
 		processPushEvent(s, payload)
 	// case webhook.PullEvent:
 	//	fmt.Fprint(w, common.MsgDaemonOK)
 	// 	processPullRequestEvent(payload)
 	default:
-		render.Render(w, r, res.ErrBadRequest("unrecognized event type"))
 		println("unrecognized event type")
+		render.Render(w, r, res.ErrBadRequest("unrecognized event type",
+			"type", event))
 	}
 }
 
