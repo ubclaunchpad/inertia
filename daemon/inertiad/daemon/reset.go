@@ -16,17 +16,17 @@ func (s *Server) resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger := log.NewLogger(log.LoggerOptions{
+	var stream = log.NewStreamer(log.StreamerOptions{
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 	})
-	defer logger.Close()
+	defer stream.Close()
 
 	// Goodbye deployment
-	if err := s.deployment.Destroy(s.docker, logger); err != nil {
-		logger.Error(res.ErrInternalServer("failed to remove deployment", err))
+	if err := s.deployment.Destroy(s.docker, stream); err != nil {
+		stream.Error(res.ErrInternalServer("failed to remove deployment", err))
 		return
 	}
 
-	logger.Success(res.MsgOK("project removed"))
+	stream.Success(res.MsgOK("project removed"))
 }

@@ -39,18 +39,18 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 		Branch:        gitOpts.Branch,
 	})
 
-	// Configure logger
-	logger := log.NewLogger(log.LoggerOptions{
+	// Configure streamer
+	var stream = log.NewStreamer(log.StreamerOptions{
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 		HTTPStream: upReq.Stream,
 	})
-	defer logger.Close()
+	defer stream.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
 	var skipUpdate = false
 	if status, _ := s.deployment.GetStatus(s.docker); status.CommitHash == "" {
-		logger.Println("No deployment detected")
+		stream.Println("No deployment detected")
 		if err = s.deployment.Initialize(
 			project.DeploymentConfig{
 				ProjectName:   upReq.Project,
@@ -60,9 +60,9 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 				Branch:        gitOpts.Branch,
 				PemFilePath:   crypto.DaemonGithubKeyLocation,
 			},
-			logger,
+			stream,
 		); err != nil {
-			logger.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
+			stream.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 			return
 		}
 
@@ -72,7 +72,7 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check for matching remotes
 	if err = s.deployment.CompareRemotes(gitOpts.RemoteURL); err != nil {
-		logger.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
+		stream.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 		return
 	}
 
@@ -83,18 +83,18 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Deploy project
-	deploy, err := s.deployment.Deploy(s.docker, logger, project.DeployOptions{
+	deploy, err := s.deployment.Deploy(s.docker, stream, project.DeployOptions{
 		SkipUpdate: skipUpdate,
 	})
 	if err != nil {
-		logger.Error(res.ErrInternalServer("failed to deploy project", err))
+		stream.Error(res.ErrInternalServer("failed to build project", err))
 		return
 	}
 
 	if err = deploy(); err != nil {
-		logger.Error(res.ErrInternalServer("failed to deploy project", err))
+		stream.Error(res.ErrInternalServer("failed to deploy project", err))
 		return
 	}
 
-	logger.Success(res.Msg("Project startup initiated!", http.StatusCreated))
+	stream.Success(res.Msg("Project startup initiated!", http.StatusCreated))
 }

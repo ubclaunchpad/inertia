@@ -24,14 +24,14 @@ func (m *mockSocketWriter) WriteMessage(t int, bytes []byte) error {
 }
 func (m *mockSocketWriter) getWrittenBytes() *bytes.Buffer { return &m.Buffer }
 
-func TestNewLogger(t *testing.T) {
-	logger := NewLogger(LoggerOptions{})
+func TestNewStreamer(t *testing.T) {
+	logger := NewStreamer(StreamerOptions{})
 	assert.NotNil(t, logger)
 }
 
 func TestWrite(t *testing.T) {
 	var b bytes.Buffer
-	writer := NewLogger(LoggerOptions{Stdout: &b})
+	writer := NewStreamer(StreamerOptions{Stdout: &b})
 	writer.Write([]byte("whoah!"))
 	assert.Equal(t, "whoah!", b.String())
 }
@@ -39,7 +39,7 @@ func TestWrite(t *testing.T) {
 func TestWriteMulti(t *testing.T) {
 	var b1 bytes.Buffer
 	socketWriter := &mockSocketWriter{}
-	writer := NewLogger(LoggerOptions{Stdout: &b1, Socket: socketWriter})
+	writer := NewStreamer(StreamerOptions{Stdout: &b1, Socket: socketWriter})
 	writer.Write([]byte("whoah!"))
 	assert.Equal(t, "whoah!", b1.String())
 	assert.Equal(t, "whoah!", socketWriter.getWrittenBytes().String())
@@ -47,7 +47,7 @@ func TestWriteMulti(t *testing.T) {
 
 func TestPrintln(t *testing.T) {
 	var b bytes.Buffer
-	logger := &DaemonLogger{Writer: &b}
+	logger := &Streamer{Writer: &b}
 	logger.Println("what???")
 	assert.Equal(t, "what???\n", b.String())
 }
@@ -58,7 +58,7 @@ func TestErr(t *testing.T) {
 
 	// Test streaming
 	var req = httptest.NewRequest("GET", "/asdf", nil)
-	logger := &DaemonLogger{
+	logger := &Streamer{
 		req:        req,
 		Writer:     &b,
 		httpWriter: w,
@@ -82,7 +82,7 @@ func TestSuccess(t *testing.T) {
 
 	// Test streaming
 	var req = httptest.NewRequest("GET", "/asdf", nil)
-	logger := &DaemonLogger{
+	logger := &Streamer{
 		req:        req,
 		httpWriter: w,
 		Writer:     &b,

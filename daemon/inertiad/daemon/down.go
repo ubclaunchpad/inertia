@@ -22,20 +22,20 @@ func (s *Server) downHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger := log.NewLogger(log.LoggerOptions{
+	var stream = log.NewStreamer(log.StreamerOptions{
 		Request:    r,
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 	})
-	defer logger.Close()
+	defer s.Close()
 
-	if err := s.deployment.Down(s.docker, logger); err == containers.ErrNoContainers {
-		logger.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
+	if err := s.deployment.Down(s.docker, stream); err == containers.ErrNoContainers {
+		stream.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 		return
 	} else if err != nil {
-		logger.Error(res.ErrInternalServer("failed to shut down project", err))
+		stream.Error(res.ErrInternalServer("failed to shut down project", err))
 		return
 	}
 
-	logger.Success(res.MsgOK("project shut down"))
+	stream.Success(res.MsgOK("project shut down"))
 }

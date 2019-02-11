@@ -19,8 +19,8 @@ import (
 // logHandler handles requests for container logs
 func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		stream bool
-		err    error
+		shouldStream bool
+		err          error
 	)
 
 	// Get container name and stream from request query params
@@ -34,9 +34,9 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 			render.Render(w, r, res.ErrBadRequest(err.Error()))
 			return
 		}
-		stream = s
+		shouldStream = s
 	} else {
-		stream = false
+		shouldStream = false
 	}
 
 	// Determine number of entries to fetch
@@ -54,23 +54,23 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Upgrade to websocket connection if required, otherwise just set up a
-	// standard logger
-	var logger *log.DaemonLogger
-	if stream {
+	// standard streamer
+	var stream *log.Streamer
+	if shouldStream {
 		socket, err := s.websocket.Upgrade(w, r, nil)
 		if err != nil {
 			render.Render(w, r,
 				res.ErrInternalServer("failed to esablish websocket connection", err))
 			return
 		}
-		logger = log.NewLogger(log.LoggerOptions{
+		stream = log.NewStreamer(log.StreamerOptions{
 			Request:    r,
 			Stdout:     os.Stdout,
 			Socket:     socket,
 			HTTPWriter: w,
 		})
 	} else {
-		logger = log.NewLogger(log.LoggerOptions{
+		stream = log.NewStreamer(log.StreamerOptions{
 			Request:    r,
 			Stdout:     os.Stdout,
 			HTTPWriter: w,
@@ -79,28 +79,28 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 
 	logs, err := containers.ContainerLogs(s.docker, containers.LogOptions{
 		Container: container,
-		Stream:    stream,
+		Stream:    shouldStream,
 		Entries:   entries,
 	})
 	if err != nil {
 		if docker.IsErrNotFound(err) {
-			logger.Error(res.ErrNotFound(err.Error()))
+			stream.Error(res.ErrNotFound(err.Error()))
 		} else {
-			logger.Error(res.ErrInternalServer("failed to find logs for container", err))
+			stream.Error(res.ErrInternalServer("failed to find logs for container", err))
 		}
 		return
 	}
 	defer logs.Close()
 
-	if stream {
+	if shouldStream {
 		var stop = make(chan struct{})
-		socket, err := logger.GetSocketWriter()
+		socket, err := stream.GetSocketWriter()
 		if err != nil {
-			logger.Error(res.ErrInternalServer("failed to write to socket", err))
+			stream.Error(res.ErrInternalServer("failed to write to socket", err))
 			return
 		}
 		log.FlushRoutine(socket, logs, stop)
-		defer logger.Close()
+		defer stream.Close()
 		defer close(stop)
 	} else {
 		buf := new(bytes.Buffer)

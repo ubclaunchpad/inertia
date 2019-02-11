@@ -17,16 +17,16 @@ func (s *Server) pruneHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger := log.NewLogger(log.LoggerOptions{
+	var stream = log.NewStreamer(log.StreamerOptions{
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 	})
-	defer logger.Close()
+	defer stream.Close()
 
-	if err := s.deployment.Prune(s.docker, logger); err != nil {
-		logger.Error(res.ErrInternalServer("failed to prune Docker assets", err))
+	if err := s.deployment.Prune(s.docker, stream); err != nil {
+		stream.Error(res.ErrInternalServer("failed to prune Docker assets", err))
 		return
 	}
 
-	logger.Success(res.MsgOK("docker assets have been pruned"))
+	stream.Success(res.MsgOK("docker assets have been pruned"))
 }
