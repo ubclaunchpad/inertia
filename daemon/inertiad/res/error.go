@@ -2,67 +2,42 @@ package res
 
 import (
 	"net/http"
-
-	"github.com/go-chi/render"
-
-	"github.com/ubclaunchpad/inertia/api"
 )
 
 // ErrResponse is the template for a typical HTTP response for errors
 type ErrResponse struct {
-	api.BaseResponse
-}
-
-// Render renders an ErrResponse
-func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	render.Status(r, e.HTTPStatusCode)
-	return nil
+	*baseResponse
 }
 
 // Err is a basic error response constructor
-func Err(r *http.Request, message string, code int, kvs ...interface{}) render.Renderer {
-	return &ErrResponse{
-		BaseResponse: newBaseResponse(r, message, code, kvs),
-	}
+func Err(message string, code int, kvs ...interface{}) *ErrResponse {
+	return &ErrResponse{newBaseResponse(message, code, kvs)}
 }
 
 // ErrInternalServer is a shortcut for internal server errors. It should be
 // accompanied by an actual error.
-func ErrInternalServer(r *http.Request, message string, err error, kvs ...interface{}) render.Renderer {
-	if len(kvs) == 0 {
-		kvs = []interface{}{"error", err.Error()}
-	} else {
-		kvs = append(kvs, "error", err.Error())
-	}
-	return &ErrResponse{
-		BaseResponse: newBaseResponse(r, message, http.StatusInternalServerError, kvs),
-	}
+func ErrInternalServer(r *http.Request, message string, err error, kvs ...interface{}) *ErrResponse {
+	var b = newBaseResponse(message, http.StatusInternalServerError, kvs)
+	b.Err = err.Error()
+	return &ErrResponse{b}
 }
 
 // ErrBadRequest is a shortcut for bad requests
-func ErrBadRequest(r *http.Request, message string, kvs ...interface{}) render.Renderer {
-	return &ErrResponse{
-		BaseResponse: newBaseResponse(r, message, http.StatusBadRequest, kvs),
-	}
+func ErrBadRequest(message string, kvs ...interface{}) *ErrResponse {
+	return &ErrResponse{newBaseResponse(message, http.StatusBadRequest, kvs)}
 }
 
 // ErrUnauthorized is a shortcut for unauthorized requests
-func ErrUnauthorized(r *http.Request, message string, kvs ...interface{}) render.Renderer {
-	return &ErrResponse{
-		BaseResponse: newBaseResponse(r, message, http.StatusUnauthorized, kvs),
-	}
+func ErrUnauthorized(message string, kvs ...interface{}) *ErrResponse {
+	return &ErrResponse{newBaseResponse(message, http.StatusUnauthorized, kvs)}
 }
 
 // ErrForbidden is a shortcut for forbidden requests
-func ErrForbidden(r *http.Request, message string, kvs ...interface{}) render.Renderer {
-	return &ErrResponse{
-		BaseResponse: newBaseResponse(r, message, http.StatusForbidden, kvs),
-	}
+func ErrForbidden(message string, kvs ...interface{}) *ErrResponse {
+	return &ErrResponse{newBaseResponse(message, http.StatusForbidden, kvs)}
 }
 
 // ErrNotFound is a shortcut for forbidden requests
-func ErrNotFound(r *http.Request, message string, kvs ...interface{}) render.Renderer {
-	return &ErrResponse{
-		BaseResponse: newBaseResponse(r, message, http.StatusForbidden, kvs),
-	}
+func ErrNotFound(message string, kvs ...interface{}) *ErrResponse {
+	return &ErrResponse{newBaseResponse(message, http.StatusForbidden, kvs)}
 }

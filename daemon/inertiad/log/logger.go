@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/render"
 	"github.com/gorilla/websocket"
@@ -71,23 +70,23 @@ func (l *DaemonLogger) Println(a interface{}) {
 	fmt.Fprintln(l.Writer, a)
 }
 
-// WriteErr directs message and status to http.Error when appropriate
-func (l *DaemonLogger) WriteErr(msg string, status int) {
-	fmt.Fprintf(l.Writer, "[ERROR %s] %s\n", strconv.Itoa(status), msg)
+// Error directs message and status to http.Error when appropriate
+func (l *DaemonLogger) Error(res *res.ErrResponse) {
+	fmt.Fprintf(l.Writer, "[ERROR %d] %s\n", res.HTTPStatusCode, res.Message)
 	if l.socket == nil {
-		render.Render(l.httpWriter, l.req, res.Err(l.req, msg, status))
+		render.Render(l.httpWriter, l.req, res)
 	} else {
-		l.Close(CloseOpts{msg, status})
+		l.Close(CloseOpts{res.Message, res.HTTPStatusCode})
 	}
 }
 
-// WriteSuccess directs status to Header and sets content type when appropriate
-func (l *DaemonLogger) WriteSuccess(msg string, status int) {
-	fmt.Fprintf(l.Writer, "[SUCCESS %s] %s\n", strconv.Itoa(status), msg)
+// Success directs status to Header and sets content type when appropriate
+func (l *DaemonLogger) Success(res *res.MsgResponse) {
+	fmt.Fprintf(l.Writer, "[SUCCESS %d] %s\n", res.HTTPStatusCode, res.Message)
 	if l.socket == nil && !l.httpStream {
-		render.Render(l.httpWriter, l.req, res.Message(l.req, msg, status))
+		render.Render(l.httpWriter, l.req, res)
 	} else {
-		l.Close(CloseOpts{msg, status})
+		l.Close(CloseOpts{res.Message, res.HTTPStatusCode})
 	}
 }
 

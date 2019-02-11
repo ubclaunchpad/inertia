@@ -1,27 +1,11 @@
 package res
 
-import (
-	"net/http"
-
-	"github.com/go-chi/render"
-
-	"github.com/ubclaunchpad/inertia/api"
-)
-
 // MsgResponse is the template for a typical HTTP response for messages
 type MsgResponse struct {
-	api.BaseResponse
-}
-
-// Render renders a MsgResponse
-func (m *MsgResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	render.Status(r, m.HTTPStatusCode)
-	return nil
+	*baseResponse
 }
 
 // Message is a shortcut for non-error statuses
-func Message(r *http.Request, message string, code int, kvs ...interface{}) render.Renderer {
-	return &MsgResponse{
-		BaseResponse: newBaseResponse(r, message, code, kvs),
-	}
+func Message(message string, code int, kvs ...interface{}) *MsgResponse {
+	return &MsgResponse{newBaseResponse(message, code, kvs)}
 }

@@ -2,9 +2,11 @@ package log
 
 import (
 	"bytes"
-	"io/ioutil"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ubclaunchpad/inertia/api"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -55,21 +57,23 @@ func TestErr(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// Test streaming
+	var req = httptest.NewRequest("GET", "/asdf", nil)
 	logger := &DaemonLogger{
+		req:        req,
 		Writer:     &b,
 		httpWriter: w,
 		socket:     &mockSocketWriter{},
 	}
-	logger.WriteErr("Wee!", 200)
-	assert.Equal(t, "[ERROR 200] Wee!\n", b.String())
+	logger.Error(res.ErrBadRequest("Wee!"))
+	assert.Equal(t, "[ERROR 400] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.socket = nil
-	logger.WriteErr("Wee!", 200)
-	body, err := ioutil.ReadAll(w.Body)
-	assert.Nil(t, err)
-	assert.Equal(t, "Wee!\n", string(body))
-	assert.Equal(t, 200, w.Code)
+	logger.Error(res.ErrBadRequest("Wee!"))
+	body, err := api.Unmarshal(w.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "Wee!", body.Message)
+	assert.Equal(t, 400, w.Code)
 }
 
 func TestSuccess(t *testing.T) {
@@ -77,20 +81,21 @@ func TestSuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// Test streaming
+	var req = httptest.NewRequest("GET", "/asdf", nil)
 	logger := &DaemonLogger{
+		req:        req,
 		httpWriter: w,
 		Writer:     &b,
 		socket:     &mockSocketWriter{},
 	}
-	logger.WriteSuccess("Wee!", 200)
+	logger.Success(res.Message("Wee!", 200))
 	assert.Equal(t, "[SUCCESS 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.socket = nil
-	logger.WriteSuccess("Wee!", 200)
-	body, err := ioutil.ReadAll(w.Body)
-	assert.Nil(t, err)
-	assert.Equal(t, "Wee!\n", string(body))
+	logger.Success(res.Message("Wee!", 200))
+	body, err := api.Unmarshal(w.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "Wee!", body.Message)
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
 }
