@@ -4,7 +4,7 @@ import "net/http"
 
 // MsgResponse is the template for a typical HTTP response for messages
 type MsgResponse struct {
-	*baseResponse
+	*BaseResponse
 }
 
 // Msg is a shortcut for non-error statuses

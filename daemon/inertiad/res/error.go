@@ -6,7 +6,7 @@ import (
 
 // ErrResponse is the template for a typical HTTP response for errors
 type ErrResponse struct {
-	*baseResponse
+	*BaseResponse
 }
 
 // Err is a basic error response constructor

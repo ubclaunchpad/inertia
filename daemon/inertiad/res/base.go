@@ -9,21 +9,16 @@ import (
 	"github.com/ubclaunchpad/inertia/api"
 )
 
-type baseResponse struct {
+// BaseResponse is a container class around api.BaseResponse
+type BaseResponse struct {
 	api.BaseResponse
-}
-
-func (b *baseResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	b.RequestID = reqID(r)
-	render.Status(r, b.HTTPStatusCode)
-	return nil
 }
 
 func newBaseResponse(
 	message string,
 	code int,
 	kvs []interface{},
-) *baseResponse {
+) *BaseResponse {
 	var data = make(map[string]interface{})
 	var e string
 	for i := 0; i < len(kvs)-1; i += 2 {
@@ -42,7 +37,7 @@ func newBaseResponse(
 			data[k] = v
 		}
 	}
-	return &baseResponse{
+	return &BaseResponse{
 		api.BaseResponse{
 			HTTPStatusCode: code,
 			Message:        message,
@@ -50,6 +45,13 @@ func newBaseResponse(
 			Data:           data,
 		},
 	}
+}
+
+// Render implements chi's render.Renderer
+func (b *BaseResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	b.RequestID = reqID(r)
+	render.Status(r, b.HTTPStatusCode)
+	return nil
 }
 
 func reqID(r *http.Request) string {
