@@ -39,5 +39,5 @@ func ErrForbidden(message string, kvs ...interface{}) *ErrResponse {
 
 // ErrNotFound is a shortcut for forbidden requests
 func ErrNotFound(message string, kvs ...interface{}) *ErrResponse {
-	return &ErrResponse{newBaseResponse(message, http.StatusForbidden, kvs)}
+	return &ErrResponse{newBaseResponse(message, http.StatusNotFound, kvs)}
 }
