@@ -1,15 +1,11 @@
 {
-  "name": "test1234abc1234",
-  "version": "0.0.2",
+  "name": "test123cli123",
+  "version": "0.0.3",
   "description": "Inertia-CLI",
-  "files":[
-    "/npm/src",
-    "/npm/test"
-  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "node ./npm/src/install.js",
-    "preuninstall": "node ./npm/src/uninstall.js"
+    "postinstall": "node ./src/install.js",
+    "preuninstall": "node ./src/uninstall.js"
   },
   "repository": {
     "type": "git",
@@ -29,5 +25,10 @@
     "mkdirp": "^0.5.1",
     "path": "^0.12.7",
     "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.12.1",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.15.0"
   }
 }
