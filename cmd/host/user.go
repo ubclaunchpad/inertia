@@ -226,18 +226,22 @@ func (root *UserCmd) attachListCmd() {
 				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
+
+			var users = make([]string, 0)
+			b, err := api.Unmarshal(resp.Body, api.KV{Key: "users", Value: &users})
 			if err != nil {
 				printutil.Fatal(err)
 			}
+
 			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+				fmt.Printf("(Status code %d) %s:\n%s", resp.StatusCode, b.Message,
+					strings.Join(users, "\n"))
 			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, b.Error())
 			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-					resp.StatusCode, body)
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+					resp.StatusCode, b.Error())
 			}
 		},
 	}
