@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/render"
 
 	"github.com/ubclaunchpad/inertia/api"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
@@ -23,33 +21,27 @@ func (s *Server) envHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	// Set up logger
-	stream := log.NewStreamer(log.StreamerOptions{
-		Stdout:     os.Stdout,
-		HTTPWriter: w,
-	})
-
 	// Parse request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		stream.Error(res.ErrBadRequest(err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	defer r.Body.Close()
 	var envReq api.EnvRequest
 	err = json.Unmarshal(body, &envReq)
 	if err != nil {
-		stream.Error(res.ErrBadRequest(err.Error()))
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	if envReq.Name == "" {
-		stream.Error(res.ErrBadRequest("no variable name provided"))
+		render.Render(w, r, res.ErrBadRequest("no variable name provided"))
 		return
 	}
 
 	manager, found := s.deployment.GetDataManager()
 	if !found {
-		stream.Error(res.Err("no environment manager found", http.StatusPreconditionFailed))
+		render.Render(w, r, res.Err("no environment manager found", http.StatusPreconditionFailed))
 		return
 	}
 
@@ -62,31 +54,25 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		)
 	}
 	if err != nil {
-		stream.Error(res.ErrInternalServer("failed to update variable", err))
+		render.Render(w, r, res.ErrInternalServer("failed to update variable", err))
 		return
 	}
 
-	stream.Success(res.Msg("environment variable saved - this will be applied the next time your container is started",
+	render.Render(w, r, res.Msg(
+		"environment variable saved - this will be applied the next time your container is started",
 		http.StatusAccepted))
 }
 
 func envGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	// Set up logger
-	stream := log.NewStreamer(log.StreamerOptions{
-		Request:    r,
-		Stdout:     os.Stdout,
-		HTTPWriter: w,
-	})
-
 	manager, found := s.deployment.GetDataManager()
 	if !found {
-		stream.Error(res.Err("no environment manager found", http.StatusPreconditionFailed))
+		render.Render(w, r, res.Err("no environment manager found", http.StatusPreconditionFailed))
 		return
 	}
 
 	values, err := manager.GetEnvVariables(false)
 	if err != nil {
-		stream.Error(res.ErrInternalServer("failed to retrieve environment variables", err))
+		render.Render(w, r, res.ErrInternalServer("failed to retrieve environment variables", err))
 		return
 	}
 

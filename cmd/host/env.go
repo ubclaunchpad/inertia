@@ -110,8 +110,12 @@ variables are not be decrypted.`,
 			if err != nil {
 				printutil.Fatal(err)
 			}
-			fmt.Printf("(Status code %d) %s: \n%s\n",
-				resp.StatusCode, b.Message, strings.Join(variables, "\n"))
+			if len(variables) == 0 {
+				fmt.Printf("(Status code %d) no variables configured", resp.StatusCode)
+			} else {
+				fmt.Printf("(Status code %d) %s: \n%s\n",
+					resp.StatusCode, b.Message, strings.Join(variables, "\n"))
+			}
 		},
 	}
 	root.AddCommand(list)
