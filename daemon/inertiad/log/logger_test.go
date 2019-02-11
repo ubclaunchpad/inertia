@@ -65,7 +65,7 @@ func TestErr(t *testing.T) {
 		socket:     &mockSocketWriter{},
 	}
 	logger.Error(res.ErrBadRequest("Wee!"))
-	assert.Equal(t, "[ERROR 400] Wee!\n", b.String())
+	assert.Equal(t, "[error 400] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.socket = nil
@@ -89,7 +89,7 @@ func TestSuccess(t *testing.T) {
 		socket:     &mockSocketWriter{},
 	}
 	logger.Success(res.MsgOK("Wee!"))
-	assert.Equal(t, "[SUCCESS 200] Wee!\n", b.String())
+	assert.Equal(t, "[success 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.socket = nil

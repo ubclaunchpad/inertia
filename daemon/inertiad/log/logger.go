@@ -72,7 +72,7 @@ func (l *DaemonLogger) Println(a interface{}) {
 
 // Error directs message and status to http.Error when appropriate
 func (l *DaemonLogger) Error(res *res.ErrResponse) {
-	fmt.Fprint(l.Writer, res.Error().Error())
+	fmt.Fprintln(l.Writer, res.Error().Error())
 	if l.socket == nil {
 		render.Render(l.httpWriter, l.req, res)
 	} else {
@@ -82,7 +82,7 @@ func (l *DaemonLogger) Error(res *res.ErrResponse) {
 
 // Success directs status to Header and sets content type when appropriate
 func (l *DaemonLogger) Success(res *res.MsgResponse) {
-	fmt.Fprintf(l.Writer, "[SUCCESS %d] %s\n", res.HTTPStatusCode, res.Message)
+	fmt.Fprintf(l.Writer, "[success %d] %s\n", res.HTTPStatusCode, res.Message)
 	if l.socket == nil && !l.httpStream {
 		render.Render(l.httpWriter, l.req, res)
 	} else {
