@@ -171,7 +171,6 @@ func (root *UserCmd) attachLoginCmd() {
 			var config = root.host.config
 			var remote = root.host.remote
 			config.Remotes[remote].Daemon.Token = string(token)
-			config.Remotes[remote].User = username
 			if err = config.Write(root.host.cfgPath); err != nil {
 				printutil.Fatal(err)
 			}
