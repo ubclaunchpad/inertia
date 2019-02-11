@@ -24,3 +24,7 @@ yarn.lock
 
 #others
 .DS_Store
+
+# prepublish
+README.md
+.static
