@@ -208,7 +208,7 @@ testenv-clean:
 install-tagged:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
 
-## daemon: build the daemon and push it to the UBC Launch Pad Docker Hub
+## daemon-release: build the daemon and push it to the UBC Launch Pad Docker Hub
 .PHONY: daemon-release
 daemon-release:
 	docker build --build-arg INERTIA_VERSION=$(RELEASE) \
