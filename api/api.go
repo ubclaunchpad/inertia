@@ -39,12 +39,6 @@ type UserRequest struct {
 	Totp     string `json:"totp"`
 }
 
-// TotpResponse is used for sending users their Totp secret and backup codes
-type TotpResponse struct {
-	TotpSecret  string `json:"key"`
-	BackupCodes []string
-}
-
 // EnvRequest represents a request to manage environment variables
 type EnvRequest struct {
 	Name    string `json:"name,omitempty"`
@@ -52,15 +46,4 @@ type EnvRequest struct {
 	Encrypt bool   `json:"encrypt,omitempty"`
 
 	Remove bool `json:"remove,omitempty"`
-}
-
-// DeploymentStatus lists details about the deployed project
-type DeploymentStatus struct {
-	InertiaVersion       string   `json:"version"`
-	Branch               string   `json:"branch"`
-	CommitHash           string   `json:"commit_hash"`
-	CommitMessage        string   `json:"commit_message"`
-	BuildType            string   `json:"build_type"`
-	Containers           []string `json:"containers"`
-	BuildContainerActive bool     `json:"build_active"`
 }

@@ -3,8 +3,10 @@ package hostcmd
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
 )
 
@@ -103,11 +105,17 @@ variables are not be decrypted.`,
 				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
+			var variables = make([]string, 0)
+			b, err := api.Unmarshal(resp.Body, api.KV{Key: "variables", Value: &variables})
 			if err != nil {
 				printutil.Fatal(err)
 			}
-			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+			if len(variables) == 0 {
+				fmt.Printf("(Status code %d) no variables configured", resp.StatusCode)
+			} else {
+				fmt.Printf("(Status code %d) %s: \n%s\n",
+					resp.StatusCode, b.Message, strings.Join(variables, "\n"))
+			}
 		},
 	}
 	root.AddCommand(list)

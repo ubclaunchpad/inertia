@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"os"
+
+	"github.com/go-chi/render"
 
 	"github.com/ubclaunchpad/inertia/api"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // envHandler manages requests to manage environment variables
@@ -20,31 +21,27 @@ func (s *Server) envHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	// Set up logger
-	logger := log.NewLogger(log.LoggerOptions{
-		Stdout:     os.Stdout,
-		HTTPWriter: w,
-	})
 	// Parse request
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusLengthRequired)
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	defer r.Body.Close()
 	var envReq api.EnvRequest
 	err = json.Unmarshal(body, &envReq)
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusBadRequest)
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	if envReq.Name == "" {
-		logger.WriteErr("no variable name provided", http.StatusBadRequest)
+		render.Render(w, r, res.ErrBadRequest("no variable name provided"))
+		return
 	}
 
 	manager, found := s.deployment.GetDataManager()
 	if !found {
-		logger.WriteErr("no environment manager found", http.StatusPreconditionFailed)
+		render.Render(w, r, res.Err("no environment manager found", http.StatusPreconditionFailed))
 		return
 	}
 
@@ -57,31 +54,29 @@ func envPostHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		)
 	}
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		render.Render(w, r, res.ErrInternalServer("failed to update variable", err))
 		return
 	}
 
-	logger.WriteSuccess("environment variable saved - this will be applied the next time your container is started", http.StatusAccepted)
+	render.Render(w, r, res.Msg(
+		"environment variable updated - this will be applied the next time your container is started",
+		http.StatusAccepted,
+		"variable", envReq.Name))
 }
 
 func envGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	// Set up logger
-	logger := log.NewLogger(log.LoggerOptions{
-		Stdout:     os.Stdout,
-		HTTPWriter: w,
-	})
-
 	manager, found := s.deployment.GetDataManager()
 	if !found {
-		logger.WriteErr("no environment manager found", http.StatusPreconditionFailed)
+		render.Render(w, r, res.Err("no environment manager found", http.StatusPreconditionFailed))
 		return
 	}
 
 	values, err := manager.GetEnvVariables(false)
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		render.Render(w, r, res.ErrInternalServer("failed to retrieve environment variables", err))
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(values)
+
+	render.Render(w, r, res.Msg("configured environment variables retrieved", http.StatusOK,
+		"variables", values))
 }
