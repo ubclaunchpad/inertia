@@ -61,7 +61,7 @@ daemon:
 	docker save -o ./images/inertia-daemon-image ubclaunchpad/inertia:test
 	docker rmi ubclaunchpad/inertia:test
 
-## gen: rewrites all generated code (mocks, scripts)
+## gen: rewrites all generated code (mocks, scripts, etc.)
 .PHONY: gen
 gen: scripts mocks
 
@@ -178,7 +178,7 @@ mocks:
 	counterfeiter -o ./daemon/inertiad/build/mocks/builder.go \
 		./daemon/inertiad/build/builder.go ContainerBuilder
 
-## scripts: recompile script assets - use whenever a script in client/scripts is modified
+## scripts: recompile script assets
 .PHONY: scripts
 scripts:
 	fileb0x b0x.yml
