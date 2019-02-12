@@ -9,7 +9,7 @@ RELEASE=$(git describe --tags)
 echo "Building release $RELEASE"
 
 # Build, tag and push Inertia Docker image
-make daemon RELEASE="$RELEASE"
+make daemon-release RELEASE="$RELEASE"
 
 # Build Inertia Go binaries for specified platforms
 gox -output="inertia.$(git describe --tags).{{.OS}}.{{.Arch}}" \
