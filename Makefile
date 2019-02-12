@@ -11,7 +11,7 @@ help: Makefile
 	@echo " Choose a command run in "$(PROJECTNAME)":\n"
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 
-## all: install production dependencies and build inertia CLI to project directory
+## all: install production dependencies and build the Inertia CLI to project directory
 all: prod-deps cli
 
 ## deps: install all dependencies
