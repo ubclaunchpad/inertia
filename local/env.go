@@ -26,7 +26,7 @@ func GetHomePath() (string, error) {
 
 		// Builds HOME from HOMEDRIVE and HOMEPATH as default
 		drive := os.Getenv("HOMEDRIVE")
-		path := os.Getenv("HOMEPATH")
+		var path = os.Getenv("HOMEPATH")
 		home := drive + path
 		if drive == "" || path == "" {
 			return "", errors.New("HOMEDRIVE, HOMEPATH, or USERPROFILE environment variables are blank")
