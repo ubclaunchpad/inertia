@@ -9,5 +9,6 @@ import (
 func TestGetHomePath(t *testing.T) {
 	env, err := GetHomePath()
 	assert.NoError(t, err)
+	assert.NotEqual(t, env, "")
 	assert.DirExists(t, env)
 }
