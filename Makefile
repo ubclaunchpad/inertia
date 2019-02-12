@@ -215,6 +215,11 @@ daemon-release:
 		-t ubclaunchpad/inertia:$(RELEASE) .
 	docker push ubclaunchpad/inertia:$(RELEASE)
 
+## cli-release: cross-compile Inertia CLI binaries for distribution
+.PHONY: cli-release
+cli-release:
+	bash .scripts/release.sh
+
 ##    ____________
 ##  * EXPERIMENTAL
 ##    ‾‾‾‾‾‾‾‾‾‾‾‾
