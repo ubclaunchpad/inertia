@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"time"
@@ -57,14 +56,6 @@ func NewEC2ProvisionerFromProfile(user, profile, path string, out ...io.Writer) 
 
 // GetUser returns the user attached to given credentials
 func (p *EC2Provisioner) GetUser() string { return p.user }
-
-// GetHomePath returns the homepath based on the operating system used
-func GetHomePath() string {
-	if runtime.GOOS == "windows" {
-		return os.Getenv("USERPROFILE")
-	}
-	return os.Getenv("HOME")
-}
 
 // ListImageOptions lists available Amazon images for your given region
 func (p *EC2Provisioner) ListImageOptions(region string) ([]string, error) {
@@ -160,8 +151,8 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		return nil, err
 	}
 
-	// Save key based on operating system home path
-	keyPath := filepath.Join(GetHomePath(), ".ssh", *keyResp.KeyName)
+	// Save key
+	keyPath := filepath.Join(os.Getenv("HOME"), ".ssh", *keyResp.KeyName)
 	fmt.Printf("Saving key to %s...\n", keyPath)
 	if err = local.SaveKey(*keyResp.KeyMaterial, keyPath); err != nil {
 		return nil, err

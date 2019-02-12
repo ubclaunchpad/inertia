@@ -23,8 +23,3 @@ func TestNewEC2ProvisionerFromProfile(t *testing.T) {
 	assert.NotNil(t, prov.client.Config.Credentials)
 	assert.Equal(t, "bob", prov.GetUser())
 }
-
-func TestHomePath(t *testing.T) {
-	homePath := GetHomePath()
-	assert.NotNil(t, homePath)
-}
