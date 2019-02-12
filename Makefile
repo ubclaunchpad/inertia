@@ -61,7 +61,7 @@ daemon:
 	docker save -o ./images/inertia-daemon-image ubclaunchpad/inertia:test
 	docker rmi ubclaunchpad/inertia:test
 
-## gen: rewrites all generated code (mocks, scripts, etc.)
+## gen: rewrite all generated code (mocks, scripts, etc.)
 .PHONY: gen
 gen: scripts mocks
 
