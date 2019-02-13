@@ -232,7 +232,7 @@ cli-release:
 ## docgen: build the inertia CLI binary with experimental features into project directory
 .PHONY: docgen
 docgen:
-	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)" ./x/inertia-docgen
+	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)" ./contrib/inertia-docgen
 
 ## localdaemon: run a test daemon locally, without testenv
 .PHONY: localdaemon
