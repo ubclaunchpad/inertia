@@ -44,9 +44,10 @@ func (root *XCmd) attachDocCmd() {
 		flagFormat = "format"
 	)
 	var docs = &cobra.Command{
-		Use:   "docs",
-		Short: "List currently configured remotes",
-		Long:  `Lists all currently configured remotes.`,
+		Use:    "docs",
+		Hidden: true,
+		Short:  "List currently configured remotes",
+		Long:   `Lists all currently configured remotes.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var output, _ = cmd.Flags().GetString(flagOutput)
 			var format, _ = cmd.Flags().GetString(flagFormat)
