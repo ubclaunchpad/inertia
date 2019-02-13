@@ -13,10 +13,10 @@ func attachContribPlugins(inertia *inertiacmd.Cmd) {
 	var contrib = &cobra.Command{
 		Use:   "contrib [tool]",
 		Short: "Utilities and plugins from inertia/contrib",
-		Long: `'inertia contrib' provides a shortcut for executing Inertia
-utilities and plugins. These tools are installed as separate binaries,
-and follow the naming convention 'inertia-{tool_name}'. Use these with
-care.
+		Long: `'inertia contrib' provides a shortcut for executing Inertia utilities
+and plugins from inertia/contrib. These tools are installed as separate
+binaries, and follow the naming convention 'inertia-{tool_name}'. Use
+with care.
 
 Install the plugins using 'go get -u github.com/ubclaunchpad/inertia/contrib/...'.
 
@@ -29,6 +29,10 @@ Use $INERTIA_PLUGINSPATH to configure where Inertia should look for plugins.`,
 		DisableFlagParsing: true,
 		TraverseChildren:   false,
 		Run: func(cmd *cobra.Command, args []string) {
+			if args[0] == "--help" {
+				cmd.Help()
+				return
+			}
 			var (
 				path     = os.Getenv("INERTIA_PLUGINSPATH")
 				tool     = path + "inertia-" + args[0]
