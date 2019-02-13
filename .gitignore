@@ -5,6 +5,7 @@
 *.dylib
 /inertia.*
 /inertia
+/inertiax
 /inertiad
 /bin
 

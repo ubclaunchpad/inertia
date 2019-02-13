@@ -33,8 +33,8 @@ func NewInertiaCmd(version string) *inertiacmd.Cmd {
 	root.Command = &cobra.Command{
 		Use:     "inertia",
 		Version: getVersion(version),
-		Short:   "Inertia is a continuous-deployment scaffold",
-		Long: `Inertia provides a continuous deployment scaffold for applications.
+		Short:   "Effortless, self-hosted continuous deployment for small teams and projects",
+		Long: `Inertia is an effortless, self-hosted continuous deployment platform.
 
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continuously update the production server
@@ -46,6 +46,7 @@ available remotes, use 'inertia remote ls'.
 
 Repository:    https://github.com/ubclaunchpad/inertia/
 Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
+		DisableAutoGenTag: true,
 	}
 
 	// persistent flags across all children

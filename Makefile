@@ -228,6 +228,11 @@ cli-release:
 ##  * EXPERIMENTAL
 ##    ‾‾‾‾‾‾‾‾‾‾‾‾
 
+## cli-x: build the inertia CLI binary with experimental features into project directory
+.PHONY: cli-x
+cli-x:
+	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)" ./x/inertiax
+
 ## localdaemon: run a test daemon locally, without testenv
 .PHONY: localdaemon
 localdaemon:
