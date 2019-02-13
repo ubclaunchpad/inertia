@@ -32,7 +32,7 @@ func getDocgenCmd(root *inertiacmd.Cmd) *cobra.Command {
 		flagFormat = "format"
 	)
 	var docs = &cobra.Command{
-		Use:    "docgen",
+		Use:    "inertia-docgen",
 		Hidden: true,
 		Short:  "Generate command reference for the Inertia CLI.",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -70,7 +70,7 @@ func getDocgenCmd(root *inertiacmd.Cmd) *cobra.Command {
 			fmt.Printf("%s documentation generated in %s", format, output)
 		},
 	}
-	docs.Flags().StringP(flagOutput, "o", "./inertia_cli_reference", "output file path")
+	docs.Flags().StringP(flagOutput, "o", "./docs/cli", "output file path")
 	docs.Flags().StringP(flagFormat, "f", "md", "format to generate (md|man)")
 	return docs
 }

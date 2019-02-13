@@ -147,7 +147,7 @@ test-integration-fast:
 .PHONY: docs
 docs: docgen
 	sh .scripts/build_docs.sh
-	./docgen -o ./docs/cli
+	./inertia-docgen -o ./docs/cli
 
 ## run-docs: run local doc server from ./docs_src
 .PHONY: run-docs
@@ -232,7 +232,7 @@ cli-release:
 ## docgen: build the inertia CLI binary with experimental features into project directory
 .PHONY: docgen
 docgen:
-	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)" ./x/docgen
+	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)" ./x/inertia-docgen
 
 ## localdaemon: run a test daemon locally, without testenv
 .PHONY: localdaemon
