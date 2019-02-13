@@ -42,7 +42,7 @@ func getDocgenCmd(root *inertiacmd.Cmd) *cobra.Command {
 			// create *full* Inertia tree, for sake of documentation
 			hostcmd.AttachHostCmd(root, "${remote_name}", &cfg.Config{
 				Remotes: map[string]*cfg.RemoteVPS{
-					"${remote_name}": &cfg.RemoteVPS{Name: "${remote_name}"},
+					"${remote_name}": {Name: "${remote_name}"},
 				},
 			}, "", false)
 
