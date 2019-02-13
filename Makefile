@@ -229,7 +229,12 @@ cli-release:
 ##  * EXPERIMENTAL
 ##    ‾‾‾‾‾‾‾‾‾‾‾‾
 
-## docgen: build the inertia CLI binary with experimental features into project directory
+## contrib: install everything in 'contrib'
+.PHONY: contrib
+contrib:
+	go install  -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)" ./contrib/...
+
+## docgen: build the docgen tool into project directory
 .PHONY: docgen
 docgen:
 	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)" ./contrib/inertia-docgen
