@@ -66,3 +66,10 @@ bundle install
 echo "[INFO] Building documentation"
 rm -rf docs
 bundle exec middleman build --clean --build-dir=../../docs
+
+# Add CNAME back
+echo "[INFO] Setting CNAME"
+echo "inertia.ubclaunchpad.com" >> ../../docs/CNAME
+
+# Done!
+echo "[INFO] Done!"
