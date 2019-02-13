@@ -18,6 +18,8 @@ utilities and plugins. These tools are installed as separate binaries,
 and follow the naming convention 'inertia-{tool_name}'. Use these with
 care.
 
+Install the plugins using 'go get -u github.com/ubclaunchpad/inertia/contrib/...'.
+
 Use $INERTIA_PLUGINSPATH to configure where Inertia should look for plugins.`,
 		Args:    cobra.MinimumNArgs(1),
 		Example: "inertia contrib docgen",
