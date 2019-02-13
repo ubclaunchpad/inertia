@@ -1,19 +1,19 @@
-## inertia [remote_name] user ls
+## inertia ${remote_name} prune
 
-List all users registered on your remote.
+Prune Docker assets and images on your remote
 
 ### Synopsis
 
-Lists all users registered in Inertia's user database.
+Prunes Docker assets and images from your remote to free up storage space.
 
 ```
-inertia [remote_name] user ls [flags]
+inertia ${remote_name} prune [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for ls
+  -h, --help   help for prune
 ```
 
 ### Options inherited from parent commands
@@ -26,5 +26,5 @@ inertia [remote_name] user ls [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] user](inertia_[remote_name]_user.md)	 - Configure user access to Inertia Web
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

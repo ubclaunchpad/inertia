@@ -1,4 +1,4 @@
-## inertia [remote_name] status
+## inertia ${remote_name} status
 
 Print the status of the deployment on this remote
 
@@ -9,7 +9,7 @@ Prints the status of the deployment on this remote.
 Requires the Inertia daemon to be active on your remote - do this by running 'inertia [remote] up'
 
 ```
-inertia [remote_name] status [flags]
+inertia ${remote_name} status [flags]
 ```
 
 ### Options
@@ -28,5 +28,5 @@ inertia [remote_name] status [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

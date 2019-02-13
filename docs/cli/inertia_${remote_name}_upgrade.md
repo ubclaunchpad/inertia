@@ -1,4 +1,4 @@
-## inertia [remote_name] upgrade
+## inertia ${remote_name} upgrade
 
 Upgrade Inertia daemon to match the CLI.
 
@@ -7,7 +7,7 @@ Upgrade Inertia daemon to match the CLI.
 Restarts the Inertia daemon to upgrade it to the same version as your CLI
 
 ```
-inertia [remote_name] upgrade [flags]
+inertia ${remote_name} upgrade [flags]
 ```
 
 ### Options
@@ -27,5 +27,5 @@ inertia [remote_name] upgrade [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

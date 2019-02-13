@@ -1,4 +1,4 @@
-## inertia [remote_name] init
+## inertia ${remote_name} init
 
 Initialize remote host for deployment
 
@@ -16,7 +16,7 @@ The deploy key is required for the daemon to access your repository, and the
 webhook URL enables continuous deployment as your repository is updated.
 
 ```
-inertia [remote_name] init [flags]
+inertia ${remote_name} init [flags]
 ```
 
 ### Options
@@ -35,5 +35,5 @@ inertia [remote_name] init [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

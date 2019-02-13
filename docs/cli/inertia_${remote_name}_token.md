@@ -1,4 +1,4 @@
-## inertia [remote_name] token
+## inertia ${remote_name} token
 
 Generate tokens associated with permission levels for admin to share.
 
@@ -7,7 +7,7 @@ Generate tokens associated with permission levels for admin to share.
 Generate tokens associated with permission levels for team leads to share
 
 ```
-inertia [remote_name] token [flags]
+inertia ${remote_name} token [flags]
 ```
 
 ### Options
@@ -26,5 +26,5 @@ inertia [remote_name] token [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

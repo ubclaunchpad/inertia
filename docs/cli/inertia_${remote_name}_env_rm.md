@@ -1,4 +1,4 @@
-## inertia [remote_name] env rm
+## inertia ${remote_name} env rm
 
 Remove an environment variable from your remote
 
@@ -8,7 +8,7 @@ Removes the specified environment variable from deployed containers
 and persistent environment storage.
 
 ```
-inertia [remote_name] env rm [name] [flags]
+inertia ${remote_name} env rm [name] [flags]
 ```
 
 ### Options
@@ -27,5 +27,5 @@ inertia [remote_name] env rm [name] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] env](inertia_[remote_name]_env.md)	 - Manage environment variables on your remote
+* [inertia ${remote_name} env](inertia_${remote_name}_env.md)	 - Manage environment variables on your remote
 

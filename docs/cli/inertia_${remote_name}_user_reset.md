@@ -1,4 +1,4 @@
-## inertia [remote_name] user reset
+## inertia ${remote_name} user reset
 
 Reset user database on your remote
 
@@ -9,7 +9,7 @@ will no longer be able to log in and view or configure the deployment
 remotely.
 
 ```
-inertia [remote_name] user reset [flags]
+inertia ${remote_name} user reset [flags]
 ```
 
 ### Options
@@ -28,5 +28,5 @@ inertia [remote_name] user reset [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] user](inertia_[remote_name]_user.md)	 - Configure user access to Inertia Web
+* [inertia ${remote_name} user](inertia_${remote_name}_user.md)	 - Configure user access to Inertia Web
 

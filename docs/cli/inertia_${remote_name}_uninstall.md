@@ -1,4 +1,4 @@
-## inertia [remote_name] uninstall
+## inertia ${remote_name} uninstall
 
 Shut down Inertia and remove Inertia assets from remote host
 
@@ -8,7 +8,7 @@ Shuts down and removes the Inertia daemon, and removes the Inertia
 directory (~/inertia) from your remote host.
 
 ```
-inertia [remote_name] uninstall [flags]
+inertia ${remote_name} uninstall [flags]
 ```
 
 ### Options
@@ -27,5 +27,5 @@ inertia [remote_name] uninstall [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

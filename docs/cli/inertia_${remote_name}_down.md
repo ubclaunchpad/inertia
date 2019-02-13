@@ -1,4 +1,4 @@
-## inertia [remote_name] down
+## inertia ${remote_name} down
 
 Bring project offline on remote
 
@@ -9,7 +9,7 @@ Stops your project on your remote. This will kill all active project containers 
 Requires project to be online - do this by running 'inertia [remote] up
 
 ```
-inertia [remote_name] down [flags]
+inertia ${remote_name} down [flags]
 ```
 
 ### Options
@@ -28,5 +28,5 @@ inertia [remote_name] down [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

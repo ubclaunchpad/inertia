@@ -1,4 +1,4 @@
-## inertia [remote_name] send
+## inertia ${remote_name} send
 
 Send a file to your Inertia deployment
 
@@ -7,7 +7,7 @@ Send a file to your Inertia deployment
 Sends a file, such as a configuration or .env file, to your Inertia deployment.
 
 ```
-inertia [remote_name] send [filepath] [flags]
+inertia ${remote_name} send [filepath] [flags]
 ```
 
 ### Options
@@ -28,5 +28,5 @@ inertia [remote_name] send [filepath] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

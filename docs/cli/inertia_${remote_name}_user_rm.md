@@ -1,4 +1,4 @@
-## inertia [remote_name] user rm
+## inertia ${remote_name} user rm
 
 Remove a user
 
@@ -10,7 +10,7 @@ This user will no longer be able to log in and view or configure the deployment
 remotely.
 
 ```
-inertia [remote_name] user rm [user] [flags]
+inertia ${remote_name} user rm [user] [flags]
 ```
 
 ### Options
@@ -29,5 +29,5 @@ inertia [remote_name] user rm [user] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] user](inertia_[remote_name]_user.md)	 - Configure user access to Inertia Web
+* [inertia ${remote_name} user](inertia_${remote_name}_user.md)	 - Configure user access to Inertia Web
 

@@ -1,4 +1,4 @@
-## inertia [remote_name] env set
+## inertia ${remote_name} env set
 
 Set an environment variable on your remote
 
@@ -8,7 +8,7 @@ Sets a persistent environment variable on your remote. Set environment
 variables are applied to all deployed containers.
 
 ```
-inertia [remote_name] env set [name] [value] [flags]
+inertia ${remote_name} env set [name] [value] [flags]
 ```
 
 ### Options
@@ -28,5 +28,5 @@ inertia [remote_name] env set [name] [value] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] env](inertia_[remote_name]_env.md)	 - Manage environment variables on your remote
+* [inertia ${remote_name} env](inertia_${remote_name}_env.md)	 - Manage environment variables on your remote
 

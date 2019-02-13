@@ -1,19 +1,19 @@
-## inertia [remote_name] user totp disable
+## inertia ${remote_name} ssh
 
-Disable TOTP for a user
+Start an interactive SSH session
 
 ### Synopsis
 
-Disable TOTP for a user on your remote
+Starts an interact SSH session with your remote.
 
 ```
-inertia [remote_name] user totp disable [user] [flags]
+inertia ${remote_name} ssh [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for disable
+  -h, --help   help for ssh
 ```
 
 ### Options inherited from parent commands
@@ -26,5 +26,5 @@ inertia [remote_name] user totp disable [user] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] user totp](inertia_[remote_name]_user_totp.md)	 - Manage TOTP settings for a user
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

@@ -1,4 +1,4 @@
-## inertia [remote_name] logs
+## inertia ${remote_name} logs
 
 Access logs of containers on your remote host
 
@@ -11,7 +11,7 @@ argument that specifies the name of the container you wish to retrieve logs for.
 Use 'inertia [remote] status' to see which containers are active.
 
 ```
-inertia [remote_name] logs [container] [flags]
+inertia ${remote_name} logs [container] [flags]
 ```
 
 ### Options
@@ -31,5 +31,5 @@ inertia [remote_name] logs [container] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

@@ -26,7 +26,7 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 * [inertia config](inertia_config.md)	 - Update and configure Inertia project settings
 * [inertia init](inertia_init.md)	 - Initialize an Inertia project in this repository
 * [inertia provision](inertia_provision.md)	 - Provision a new remote host to deploy your project on

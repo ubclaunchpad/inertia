@@ -1,4 +1,4 @@
-## inertia [remote_name] up
+## inertia ${remote_name} up
 
 Bring project online on remote
 
@@ -9,7 +9,7 @@ Builds and deploy your project on your remote.
 This requires an Inertia daemon to be active on your remote - do this by running 'inertia [remote] init'
 
 ```
-inertia [remote_name] up [flags]
+inertia ${remote_name} up [flags]
 ```
 
 ### Options
@@ -29,5 +29,5 @@ inertia [remote_name] up [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
 

@@ -1,4 +1,4 @@
-## inertia [remote_name] user login
+## inertia ${remote_name} user login
 
 Authenticate with the remote
 
@@ -7,7 +7,7 @@ Authenticate with the remote
 Retreives an access token from the remote using your credentials.
 
 ```
-inertia [remote_name] user login [user] [flags]
+inertia ${remote_name} user login [user] [flags]
 ```
 
 ### Options
@@ -27,5 +27,5 @@ inertia [remote_name] user login [user] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] user](inertia_[remote_name]_user.md)	 - Configure user access to Inertia Web
+* [inertia ${remote_name} user](inertia_${remote_name}_user.md)	 - Configure user access to Inertia Web
 

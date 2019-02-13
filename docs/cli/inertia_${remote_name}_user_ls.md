@@ -1,19 +1,19 @@
-## inertia [remote_name] user totp enable
+## inertia ${remote_name} user ls
 
-Enable TOTP for a user
+List all users registered on your remote.
 
 ### Synopsis
 
-Enable TOTP for a user on your remote
+Lists all users registered in Inertia's user database.
 
 ```
-inertia [remote_name] user totp enable [user] [flags]
+inertia ${remote_name} user ls [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for enable
+  -h, --help   help for ls
 ```
 
 ### Options inherited from parent commands
@@ -26,5 +26,5 @@ inertia [remote_name] user totp enable [user] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] user totp](inertia_[remote_name]_user_totp.md)	 - Manage TOTP settings for a user
+* [inertia ${remote_name} user](inertia_${remote_name}_user.md)	 - Configure user access to Inertia Web
 

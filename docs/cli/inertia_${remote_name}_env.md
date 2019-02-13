@@ -1,4 +1,4 @@
-## inertia [remote_name] env
+## inertia ${remote_name} env
 
 Manage environment variables on your remote
 
@@ -29,8 +29,8 @@ as follows:
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
-* [inertia [remote_name] env ls](inertia_[remote_name]_env_ls.md)	 - List currently set and saved environment variables
-* [inertia [remote_name] env rm](inertia_[remote_name]_env_rm.md)	 - Remove an environment variable from your remote
-* [inertia [remote_name] env set](inertia_[remote_name]_env_set.md)	 - Set an environment variable on your remote
+* [inertia ${remote_name}](inertia_${remote_name}.md)	 - Configure deployment to ${remote_name}
+* [inertia ${remote_name} env ls](inertia_${remote_name}_env_ls.md)	 - List currently set and saved environment variables
+* [inertia ${remote_name} env rm](inertia_${remote_name}_env_rm.md)	 - Remove an environment variable from your remote
+* [inertia ${remote_name} env set](inertia_${remote_name}_env_set.md)	 - Set an environment variable on your remote
 

@@ -1,4 +1,4 @@
-## inertia [remote_name] env ls
+## inertia ${remote_name} env ls
 
 List currently set and saved environment variables
 
@@ -8,7 +8,7 @@ Lists currently set and saved environment variables. The values of encrypted
 variables are not be decrypted.
 
 ```
-inertia [remote_name] env ls [flags]
+inertia ${remote_name} env ls [flags]
 ```
 
 ### Options
@@ -27,5 +27,5 @@ inertia [remote_name] env ls [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] env](inertia_[remote_name]_env.md)	 - Manage environment variables on your remote
+* [inertia ${remote_name} env](inertia_${remote_name}_env.md)	 - Manage environment variables on your remote
 

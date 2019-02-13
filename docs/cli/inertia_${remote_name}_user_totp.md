@@ -1,4 +1,4 @@
-## inertia [remote_name] user totp
+## inertia ${remote_name} user totp
 
 Manage TOTP settings for a user
 
@@ -22,7 +22,7 @@ Manage TOTP settings for a registered user on your Inertia daemon
 
 ### SEE ALSO
 
-* [inertia [remote_name] user](inertia_[remote_name]_user.md)	 - Configure user access to Inertia Web
-* [inertia [remote_name] user totp disable](inertia_[remote_name]_user_totp_disable.md)	 - Disable TOTP for a user
-* [inertia [remote_name] user totp enable](inertia_[remote_name]_user_totp_enable.md)	 - Enable TOTP for a user
+* [inertia ${remote_name} user](inertia_${remote_name}_user.md)	 - Configure user access to Inertia Web
+* [inertia ${remote_name} user totp disable](inertia_${remote_name}_user_totp_disable.md)	 - Disable TOTP for a user
+* [inertia ${remote_name} user totp enable](inertia_${remote_name}_user_totp_enable.md)	 - Enable TOTP for a user
 

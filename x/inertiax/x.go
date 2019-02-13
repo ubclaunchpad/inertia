@@ -52,9 +52,9 @@ func (root *XCmd) attachDocCmd() {
 			var format, _ = cmd.Flags().GetString(flagFormat)
 
 			// create *full* Inertia tree, for sake of documentation
-			hostcmd.AttachHostCmd(root.inertia, "[remote_name]", &cfg.Config{
+			hostcmd.AttachHostCmd(root.inertia, "${remote_name}", &cfg.Config{
 				Remotes: map[string]*cfg.RemoteVPS{
-					"[remote_name]": &cfg.RemoteVPS{Name: "[remote_name]"},
+					"${remote_name}": &cfg.RemoteVPS{Name: "${remote_name}"},
 				},
 			}, "", false)
 

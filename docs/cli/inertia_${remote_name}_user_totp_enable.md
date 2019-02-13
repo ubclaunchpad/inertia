@@ -1,19 +1,19 @@
-## inertia [remote_name] prune
+## inertia ${remote_name} user totp enable
 
-Prune Docker assets and images on your remote
+Enable TOTP for a user
 
 ### Synopsis
 
-Prunes Docker assets and images from your remote to free up storage space.
+Enable TOTP for a user on your remote
 
 ```
-inertia [remote_name] prune [flags]
+inertia ${remote_name} user totp enable [user] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for prune
+  -h, --help   help for enable
 ```
 
 ### Options inherited from parent commands
@@ -26,5 +26,5 @@ inertia [remote_name] prune [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name]](inertia_[remote_name].md)	 - Configure deployment to [remote_name]
+* [inertia ${remote_name} user totp](inertia_${remote_name}_user_totp.md)	 - Manage TOTP settings for a user
 

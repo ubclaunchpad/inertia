@@ -1,4 +1,4 @@
-## inertia [remote_name] user add
+## inertia ${remote_name} user add
 
 Create a user with access to this remote's Inertia daemon
 
@@ -12,7 +12,7 @@ from the Inertia CLI (using 'inertia [remote] user login').
 Use the --admin flag to create an admin user.
 
 ```
-inertia [remote_name] user add [user] [flags]
+inertia ${remote_name} user add [user] [flags]
 ```
 
 ### Options
@@ -32,5 +32,5 @@ inertia [remote_name] user add [user] [flags]
 
 ### SEE ALSO
 
-* [inertia [remote_name] user](inertia_[remote_name]_user.md)	 - Configure user access to Inertia Web
+* [inertia ${remote_name} user](inertia_${remote_name}_user.md)	 - Configure user access to Inertia Web
 
