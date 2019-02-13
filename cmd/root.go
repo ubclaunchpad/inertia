@@ -67,6 +67,7 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 	remotecmd.AttachRemoteCmd(root)
 	provisioncmd.AttachProvisionCmd(root)
 	hostcmd.AttachHostCmds(root)
+	attachContribPlugins(root)
 
 	return root
 }
