@@ -34,11 +34,14 @@ lint:
 clean: testenv-clean
 	go clean -testcache
 	rm -f ./inertia
+	rm -f ./inertiad
+	rm -f ./inertia-*
 	rm -rf ./docs_build
 	find . \
 		-type f \
 		-name inertia.\* \
 		-not -path "*.static*" \
+		-not -path "*docs*" \
 		-exec rm {} \;
 
 ##    ____________
@@ -143,10 +146,16 @@ test-integration-fast:
 ##  * DOCUMENTATION
 ##    ‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-## docs: set up doc builder and build documentation site into ./docs from ./docs_src
+## docs: set up doc builder and build usage guide website
 .PHONY: docs
-docs:
+docs: docgen
 	sh .scripts/build_docs.sh
+
+## docs-cli: build CLI reference pages
+.PHONY: docs-cli
+docs-cli: docgen
+	@echo [INFO] Generating CLI documentation
+	@./inertia-docgen -o ./docs/cli
 
 ## run-docs: run local doc server from ./docs_src
 .PHONY: run-docs
@@ -227,6 +236,16 @@ cli-release:
 ##    ____________
 ##  * EXPERIMENTAL
 ##    ‾‾‾‾‾‾‾‾‾‾‾‾
+
+## contrib: install everything in 'contrib'
+.PHONY: contrib
+contrib:
+	go install  -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)" ./contrib/...
+
+## docgen: build the docgen tool into project directory
+.PHONY: docgen
+docgen:
+	go build -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)" ./contrib/inertia-docgen
 
 ## localdaemon: run a test daemon locally, without testenv
 .PHONY: localdaemon

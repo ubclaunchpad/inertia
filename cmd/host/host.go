@@ -38,7 +38,7 @@ func AttachHostCmds(inertia *inertiacmd.Cmd) {
 			config.Version, inertia.Version)
 	}
 	for remote := range config.Remotes {
-		attachHostCmd(inertia, remote, config, path)
+		AttachHostCmd(inertia, remote, config, path)
 	}
 }
 
@@ -56,9 +56,15 @@ const (
 	flagVerifySSL = "verify-ssl"
 )
 
-// attachHostCmd attaches a subcommand for a configured remote host to the
+// AttachHostCmd attaches a subcommand for a configured remote host to the
 // given parent
-func attachHostCmd(inertia *inertiacmd.Cmd, remote string, config *cfg.Config, cfgPath string) {
+func AttachHostCmd(
+	inertia *inertiacmd.Cmd,
+	remote string,
+	config *cfg.Config,
+	cfgPath string,
+	hidden ...bool,
+) {
 	cli, found := client.NewClient(remote, os.Getenv(EnvSSHPassphrase), config, os.Stdout)
 	if !found {
 		printutil.Fatal("Remote not found")
@@ -70,9 +76,15 @@ func attachHostCmd(inertia *inertiacmd.Cmd, remote string, config *cfg.Config, c
 		client:  cli,
 	}
 	host.Command = &cobra.Command{
-		Use:    remote + " [command]",
-		Hidden: true,
-		Short:  "Configure deployment to " + remote,
+		Use: remote + " [command]",
+		Hidden: func() bool {
+			// hide command by default
+			if len(hidden) > 0 {
+				return hidden[0]
+			}
+			return true
+		}(),
+		Short: "Configure deployment to " + remote,
 		Long: `Manages deployment on specified remote.
 
 Requires:
@@ -554,6 +566,6 @@ func (root *HostCmd) attachUpgradeCmd() {
 			}
 		},
 	}
-	upgrade.Flags().String(flagVersion, root.config.Version, "version of Inertia daemon to spin up")
+	upgrade.Flags().String(flagVersion, "", "version of Inertia daemon to spin up")
 	root.AddCommand(upgrade)
 }

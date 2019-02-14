@@ -78,6 +78,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:7cb4fdca4c251b3ef8027c90ea35f70c7b661a593b9eeae34753c65499098bb1"
+  name = "github.com/cpuguy83/go-md2man"
+  packages = ["md2man"]
+  pruneopts = "NUT"
+  revision = "20f5889cbdc3c73dbd2862796665e7c465ade7d1"
+  version = "v1.0.8"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -320,6 +328,14 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:d9afa09f6a45f68ec50047f8187c9d273b1fbf507858a104064bb6d9eb2e2795"
+  name = "github.com/russross/blackfriday"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "05f3235734ad95d0016f6a23902f06461fcf567a"
+  version = "v1.5.2"
+
+[[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
@@ -341,9 +357,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:25aa47e530aa7450b2a0b177fc6bc30b09248cfbb853788b90d7f8f247f80706"
+  digest = "1:5290f8a5a8684523ee36ac44eedcb2ebac4131f042822b9021f9cadea891e588"
   name = "github.com/spf13/cobra"
-  packages = ["."]
+  packages = [
+    ".",
+    "doc",
+  ]
   pruneopts = "NUT"
   revision = "7547e83b2d85fd1893c7d76916f67689d761fecb"
 
@@ -532,6 +551,14 @@
   revision = "ec4a0fea49c7b46c2aeb0b51aac55779c607e52b"
   version = "v0.1.2"
 
+[[projects]]
+  digest = "1:18108594151654e9e696b27b181b953f9a90b16bf14d253dd1b397b025a1487f"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -556,6 +583,7 @@
     "github.com/pquerna/otp",
     "github.com/pquerna/otp/totp",
     "github.com/spf13/cobra",
+    "github.com/spf13/cobra/doc",
     "github.com/stretchr/testify/assert",
     "go.etcd.io/bbolt",
     "golang.org/x/crypto/bcrypt",
