@@ -36,13 +36,13 @@ For a more general usage guide, refer to the [Inertia Usage Guide](https://inert
 
 func main() {
 	var root = cmd.NewInertiaCmd(Version)
-	if err := getDocgenCmd(root).Execute(); err != nil {
+	if err := newDocgenCmd(root).Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
 }
 
-func getDocgenCmd(root *inertiacmd.Cmd) *cobra.Command {
+func newDocgenCmd(root *inertiacmd.Cmd) *cobra.Command {
 	const (
 		flagOutput = "output"
 		flagFormat = "format"

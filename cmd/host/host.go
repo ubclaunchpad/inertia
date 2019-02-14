@@ -63,7 +63,8 @@ func AttachHostCmd(
 	remote string,
 	config *cfg.Config,
 	cfgPath string,
-	hidden ...bool) {
+	hidden ...bool,
+) {
 	cli, found := client.NewClient(remote, os.Getenv(EnvSSHPassphrase), config, os.Stdout)
 	if !found {
 		printutil.Fatal("Remote not found")
