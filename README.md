@@ -41,7 +41,7 @@
 <br>
 
 <p align="center">
-  <a href="#package-getting-started"><strong>Getting Started</strong></a> · 
+  <a href="#package-usage"><strong>Usage</strong></a> · 
   <a href="#bulb-motivation-and-design"><strong>Motivation & Design</strong></a> · 
   <a href="#books-contributing"><strong>Contributing</strong></a> · 
   <a href="https://github.com/ubclaunchpad/inertia/wiki"><strong>Wiki</strong></a>
@@ -71,107 +71,24 @@ Inertia is a simple cross-platform command line application that enables quick a
 
 <br>
 
-# :package: Getting Started
+# :package: Usage
 
-All you need to get started is a [compatible project](https://github.com/ubclaunchpad/inertia/wiki/Project-Compatibility), the Inertia CLI, and access to a virtual private server. 
+Check out our new **[Inertia Usage Guide](https://inertia.ubclaunchpad.com)** to
+get started with using Inertia for your project! The guide will walk you through
+installing Inertia, setting up a project, deploying to a remote, managing your
+deployment, and advanced usage tips.
 
-MacOS users can install the CLI using [Homebrew](https://brew.sh):
+### Why Use Inertia?
 
-```bash
-$> brew install ubclaunchpad/tap/inertia
-```
+If you...
 
-Windows users can install the CLI using [Scoop](http://scoop.sh):
+* want a simple utility to quickly build and deploy the latest iterations of your projects
+* are new to the concept of "deployment" and related tooling
+* are not deploying to production
+* are on a tight budget and need to switch between cloud providers as your free trials run out
+* want some lightweight team features for managing your deployment
 
-```bash
-$> scoop bucket add ubclaunchpad https://github.com/ubclaunchpad/scoop-bucket
-$> scoop install inertia
-```
-
-For other platforms, you can [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases).
-
-### Setup
-
-Initializing a project for use with Inertia only takes a few simple steps:
-
-```bash
-$> inertia init
-```
-
-#### Using an Existing Remote
-
-To use an existing host, you must first add it to your Inertia configuration and initialize it - this will install Inertia on your remote.
-
-```bash
-$> inertia remote add $VPS_NAME
-$> inertia $VPS_NAME init
-$> inertia $VPS_NAME status
-# Confirms that the daemon is online and accepting requests
-```
-
-See our [wiki](https://github.com/ubclaunchpad/inertia/wiki/VPS-Compatibility) for more details on VPS platform compatibility.
-
-#### Provisioning a New Remote
-
-Inertia offers some tools to easily provision a new VPS instance and set it up for Inertia. For example, to create an EC2 instance and initialize it, just run:
-
-```bash
-$> inertia provision ec2 $VPS_NAME
-$> inertia $VPS_NAME status
-```
-
-### Deployment Management
-
-To manually deploy your project, you must first grant Inertia permission to clone your repository. This can be done by adding the GitHub Deploy Key that is displayed in the output of `inertia $VPS_NAME init` to your repository settings:
-
-```bash
-GitHub Deploy Key (add here https://www.github.com/<your_repo>/settings/keys/new):
-ssh-rsa <...>
-```
-
-Once this is done, you can use Inertia to bring your project online on your remote VPS:
-
-```bash
-$> inertia $VPS_NAME up
-```
-
-Run `inertia $VPS_NAME --help` to see the other commands Inertia offers for managing your deployment.
-
-Inertia also offers a web application - this can be accessed at `https://$ADDRESS:4303/web` once users have been added through the `inertia $VPS_NAME user` commands.
-
-### Continuous Deployment
-
-To enable continuous deployment, you need the webhook URL that is printed during `inertia $VPS_NAME init`:
-
-```bash
-GitHub WebHook URL (add here https://www.github.com/<your_repo>/settings/hooks/new):
-http://myhost.com:4303/webhook
-Github WebHook Secret: inertia
-``` 
-
-The daemon will accept POST requests from GitHub at the URL provided. Add this webhook URL in your GitHub settings area (at the URL provided) so that the daemon will receive updates from GitHub when your repository is updated. Once this is done, the daemon will automatically build and deploy any changes that are made to the deployed branch.
-
-### Release Streams
-
-The version of Inertia you are using can be seen in Inertia's `.inertia.toml` configuration file, or by running `inertia --version`. The version in `.inertia.toml` is used to determine what version of the Inertia daemon to use when you run `inertia $VPS_NAME init`.
-
-You can manually change the daemon version used by editing the Inertia configuration file. If you are building from source, you can also check out the desired version and run `make inertia-tagged` or `make RELEASE=$STREAM`. Inertia daemon releases are tagged as follows:
-
-- `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
-- `latest` denotes the newest builds on `master`.
-- `canary` denotes experimental builds used for testing and development - do not use this.
-
-The daemon component of an Inertia release can be patched separately from the CLI component - see our [wiki](https://github.com/ubclaunchpad/inertia/wiki/Daemon-Releases) for more details.
-
-### Swag
-
-Add some bling to your Inertia-deployed project :sunglasses: 
-
-[![Deployed with Inertia](https://img.shields.io/badge/deploying%20with-inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
-
-```
-[![Deployed with Inertia](https://img.shields.io/badge/deploying%20with-inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
-```
+Inertia might be for you!
 
 <br><br>
 

@@ -40,3 +40,6 @@ public/
 
 # JetBrains
 .idea
+
+# Doc build
+docs_build

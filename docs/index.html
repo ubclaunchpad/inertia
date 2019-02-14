@@ -1,0 +1,1033 @@
+
+<!doctype html>
+<html>
+  <head>
+<link href="images/favicon.ico" rel="icon" type="image/ico" />
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Inertia Usage Guide</title>
+
+    <style>
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .gh {
+  color: #999999;
+}
+.highlight .sr {
+  color: #f6aa11;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .nb {
+  color: #f6aa11;
+}
+.highlight .cm {
+  color: #75715e;
+}
+.highlight .cp {
+  color: #75715e;
+}
+.highlight .c1 {
+  color: #75715e;
+}
+.highlight .cs {
+  color: #75715e;
+}
+.highlight .c, .highlight .cd {
+  color: #75715e;
+}
+.highlight .err {
+  color: #960050;
+}
+.highlight .gr {
+  color: #960050;
+}
+.highlight .gt {
+  color: #960050;
+}
+.highlight .gd {
+  color: #49483e;
+}
+.highlight .gi {
+  color: #49483e;
+}
+.highlight .ge {
+  color: #49483e;
+}
+.highlight .kc {
+  color: #66d9ef;
+}
+.highlight .kd {
+  color: #66d9ef;
+}
+.highlight .kr {
+  color: #66d9ef;
+}
+.highlight .no {
+  color: #66d9ef;
+}
+.highlight .kt {
+  color: #66d9ef;
+}
+.highlight .mf {
+  color: #ae81ff;
+}
+.highlight .mh {
+  color: #ae81ff;
+}
+.highlight .il {
+  color: #ae81ff;
+}
+.highlight .mi {
+  color: #ae81ff;
+}
+.highlight .mo {
+  color: #ae81ff;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #ae81ff;
+}
+.highlight .sc {
+  color: #ae81ff;
+}
+.highlight .se {
+  color: #ae81ff;
+}
+.highlight .ss {
+  color: #ae81ff;
+}
+.highlight .sd {
+  color: #e6db74;
+}
+.highlight .s2 {
+  color: #e6db74;
+}
+.highlight .sb {
+  color: #e6db74;
+}
+.highlight .sh {
+  color: #e6db74;
+}
+.highlight .si {
+  color: #e6db74;
+}
+.highlight .sx {
+  color: #e6db74;
+}
+.highlight .s1 {
+  color: #e6db74;
+}
+.highlight .s {
+  color: #e6db74;
+}
+.highlight .na {
+  color: #a6e22e;
+}
+.highlight .nc {
+  color: #a6e22e;
+}
+.highlight .nd {
+  color: #a6e22e;
+}
+.highlight .ne {
+  color: #a6e22e;
+}
+.highlight .nf {
+  color: #a6e22e;
+}
+.highlight .vc {
+  color: #ffffff;
+}
+.highlight .nn {
+  color: #ffffff;
+}
+.highlight .nl {
+  color: #ffffff;
+}
+.highlight .ni {
+  color: #ffffff;
+}
+.highlight .bp {
+  color: #ffffff;
+}
+.highlight .vg {
+  color: #ffffff;
+}
+.highlight .vi {
+  color: #ffffff;
+}
+.highlight .nv {
+  color: #ffffff;
+}
+.highlight .w {
+  color: #ffffff;
+}
+.highlight {
+  color: #ffffff;
+}
+.highlight .n, .highlight .py, .highlight .nx {
+  color: #ffffff;
+}
+.highlight .ow {
+  color: #f92672;
+}
+.highlight .nt {
+  color: #f92672;
+}
+.highlight .k, .highlight .kv {
+  color: #f92672;
+}
+.highlight .kn {
+  color: #f92672;
+}
+.highlight .kp {
+  color: #f92672;
+}
+.highlight .o {
+  color: #f92672;
+}
+    </style>
+    <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
+    <link href="stylesheets/print.css" rel="stylesheet" media="print" />
+      <script src="javascripts/all_nosearch.js"></script>
+  </head>
+
+  <body class="index" data-languages="[]">
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+        <img src="images/navbar.png" alt="Navbar" />
+      </span>
+    </a>
+    <div class="toc-wrapper">
+      <img src="images/logo.png" class="logo" alt="Logo" />
+      <ul id="toc" class="toc-list-h1">
+          <li>
+            <a href="#inertia" class="toc-h1 toc-link" data-title="Inertia">Inertia</a>
+          </li>
+          <li>
+            <a href="#getting-started" class="toc-h1 toc-link" data-title="Getting Started">Getting Started</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#setup" class="toc-h2 toc-link" data-title="Setup">Setup</a>
+                  </li>
+                  <li>
+                    <a href="#project-configuration" class="toc-h2 toc-link" data-title="Project Configuration">Project Configuration</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#deploying-your-project" class="toc-h1 toc-link" data-title="Deploying Your Project">Deploying Your Project</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#using-an-existing-remote" class="toc-h2 toc-link" data-title="Using an Existing Remote">Using an Existing Remote</a>
+                  </li>
+                  <li>
+                    <a href="#provisioning-a-remote" class="toc-h2 toc-link" data-title="Provisioning a Remote">Provisioning a Remote</a>
+                  </li>
+                  <li>
+                    <a href="#deployment-configuration" class="toc-h2 toc-link" data-title="Deployment Configuration">Deployment Configuration</a>
+                  </li>
+                  <li>
+                    <a href="#initializing-the-inertia-daemon" class="toc-h2 toc-link" data-title="Initializing the Inertia Daemon">Initializing the Inertia Daemon</a>
+                  </li>
+                  <li>
+                    <a href="#configuring-your-repository" class="toc-h2 toc-link" data-title="Configuring Your Repository">Configuring Your Repository</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#deployment-management" class="toc-h1 toc-link" data-title="Deployment Management">Deployment Management</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#monitoring" class="toc-h2 toc-link" data-title="Monitoring">Monitoring</a>
+                  </li>
+                  <li>
+                    <a href="#secrets-management" class="toc-h2 toc-link" data-title="Secrets Management">Secrets Management</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#teams" class="toc-h1 toc-link" data-title="Teams">Teams</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#configuring-users" class="toc-h2 toc-link" data-title="Configuring Users">Configuring Users</a>
+                  </li>
+                  <li>
+                    <a href="#logging-in" class="toc-h2 toc-link" data-title="Logging In">Logging In</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#upgrading" class="toc-h1 toc-link" data-title="Upgrading">Upgrading</a>
+          </li>
+          <li>
+            <a href="#advanced-usage" class="toc-h1 toc-link" data-title="Advanced Usage">Advanced Usage</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#troubleshooting" class="toc-h2 toc-link" data-title="Troubleshooting">Troubleshooting</a>
+                  </li>
+                  <li>
+                    <a href="#2-factor-authentication" class="toc-h2 toc-link" data-title="2-Factor Authentication">2-Factor Authentication</a>
+                  </li>
+                  <li>
+                    <a href="#resource-management" class="toc-h2 toc-link" data-title="Resource Management">Resource Management</a>
+                  </li>
+                  <li>
+                    <a href="#generating-api-keys" class="toc-h2 toc-link" data-title="Generating API Keys">Generating API Keys</a>
+                  </li>
+                  <li>
+                    <a href="#inertia-release-streams" class="toc-h2 toc-link" data-title="Inertia Release Streams">Inertia Release Streams</a>
+                  </li>
+                  <li>
+                    <a href="#custom-ssl-certificate" class="toc-h2 toc-link" data-title="Custom SSL Certificate">Custom SSL Certificate</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#miscellaneous" class="toc-h1 toc-link" data-title="Miscellaneous">Miscellaneous</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#learn-more" class="toc-h2 toc-link" data-title="Learn More">Learn More</a>
+                  </li>
+                  <li>
+                    <a href="#swag" class="toc-h2 toc-link" data-title="Swag">Swag</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#contributing" class="toc-h1 toc-link" data-title="Contributing">Contributing</a>
+          </li>
+      </ul>
+        <ul class="toc-footer">
+            <li><a href='https://github.com/ubclaunchpad/inertia'>GitHub Repository</a></li>
+            <li><a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>Report a Problem</a></li>
+            <li><a href='https://www.ubclaunchpad.com'><br/>UBC Launch Pad</a></li>
+        </ul>
+    </div>
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        <h1 id='inertia'>Inertia</h1>
+<p>✈️ <em>Effortless, self-hosted continuous deployment for small teams and projects</em></p>
+
+<p><a href="https://github.com/ubclaunchpad/inertia/releases/latest"><img src="https://img.shields.io/github/release/ubclaunchpad/inertia.svg" alt="Inertia" /></a>
+<a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general"><img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed" alt="Inertia" /></a>
+<a href="https://github.com/ubclaunchpad/inertia"><img src="https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social" alt="Inertia" /></a></p>
+
+<p><br /></p>
+
+<blockquote>
+<p><strong>Main Features</strong></p>
+
+<ul>
+<li>🚀 <strong>Simple to use</strong> - set up a deployment from your computer without ever having to manually SSH into your remote</li>
+<li>🍰 <strong>Cloud-agnostic</strong> - use any Linux-based remote virtual private server provider you want</li>
+<li>⚒  <strong>Versatile project support</strong> - deploy any Dockerfile or docker-compose project</li>
+<li>🚄 <strong>Continuous deployment</strong> - Webhook integrations for GitHub, GitLab, and Bitbucket means your project can be automatically updated, rebuilt, and deployed as soon as you <code>git push</code></li>
+<li>🛂 <strong>In-depth controls</strong> - start up, shut down, and monitor your deployment with ease from the command line or using Inertia&#39;s REST API</li>
+<li>🏷 <strong>Flexible configuration</strong> - branch deployment, environment variables, easy file transfer for configuration files, build settings, and more</li>
+<li>📦 <strong>Built-in provisioning</strong> - easily provision and set up VPS instances for your project with supported providers such as Amazon Web Services using a single command</li>
+<li>👥 <strong>Built for teams</strong> - provide shared access to an Inertia deployment by adding users</li>
+<li>🔑 <strong>Secure</strong> - secured with access tokens and HTTPS across the board, as well as features like 2FA for user logins</li>
+</ul>
+</blockquote>
+
+<p><em>Inertia</em> is a simple cross-platform command line application that enables quick
+and easy setup and management of continuous, automated deployment of a variety
+of project types on any virtual private server. The project is used, built, and
+maintained with ❤️ by <a href="https://www.ubclaunchpad.com">UBC Launch Pad</a>, UBC&#39;s
+student-run software engineering club.</p>
+
+<p><a href="https://www.ubclaunchpad.com">UBC Launch Pad</a> is a student-run software
+engineering club at the University of British Columbia that aims to provide
+students with a community where they can work together to build a all sorts of
+cool projects, ranging from mobile apps and web services to cryptocurrencies and
+machine learning applications.</p>
+
+<p>Many of our projects rely on hosting providers for deployment. Unfortunately we
+frequently change hosting providers based on available funding and sponsorship,
+meaning our projects often need to be redeployed. On top of that, deployment
+itself can already be a frustrating task, especially for students with little to
+no experience setting up applications on remote hosts. Inertia is a project we
+started to address these problems.</p>
+
+<p>This site primarily documents how to set up and use Inertia - to learn more
+about the project, check out our <a href="https://github.com/ubclaunchpad/inertia">GitHub repository</a>!</p>
+
+<aside class="notice">
+This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
+please feel free to
+<a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>open a ticket</a>!
+</aside>
+<h1 id='getting-started'>Getting Started</h1>
+<blockquote>
+<p>MacOS users can install the CLI using <a href="https://brew.sh">Homebrew</a>:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>brew install ubclaunchpad/tap/inertia
+</code></pre>
+<blockquote>
+<p>Windows users can install the CLI using <a href="http://scoop.sh">Scoop</a>:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>scoop bucket add ubclaunchpad https://github.com/ubclaunchpad/scoop-bucket
+scoop install inertia
+</code></pre>
+<blockquote>
+<p>To build and install the CLI from source:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>go get -u github.com/ubclaunchpad/inertia
+</code></pre>
+<p>The Inertia command line interface (CLI) can be installed from a few package
+managers such as Homebrew and Scoop. For other platforms, you can 
+<a href="https://github.com/ubclaunchpad/inertia/releases">download the appropriate binary from the Releases page</a>.</p>
+
+<p>You can also build Inertia from source, though this requires Golang to be
+installed.</p>
+
+<p>To verify your installation, try running <code>inertia --help</code> - this should output
+some helpful text about Inertia.</p>
+
+<p>Run <code>inertia --version</code> to verify that you have the
+<a href="https://github.com/ubclaunchpad/inertia/releases/latest">latest release</a>.</p>
+<h2 id='setup'>Setup</h2>
+<blockquote>
+<p>This will generate a configuration file inside your repository:</p>
+</blockquote>
+<pre class="highlight plaintext"><code>cd /path/to/project
+inertia init
+</code></pre>
+<p>To set up Inertia, you must first navigate to your project directory, which
+must be a git repository, and run <code>inertia init</code> to set up configuration. If
+Inertia cannot detect your project type, it will prompt for more information.</p>
+
+<aside class="notice">
+To use your project with Inertia, you must have some kind of
+<a href='https://docs.docker.com/engine/reference/builder/'>Docker</a> or
+<a href='https://docs.docker.com/compose/overview/'>docker-compose</a>
+configuration set up for running your app.
+</aside>
+
+<aside class="warning">
+<b>Do not commit the generated Inertia configuration file</b> - add it to your
+<code>.gitignore</code>!
+</aside>
+<h2 id='project-configuration'>Project Configuration</h2>
+<blockquote>
+<p>An example <code>inertia.toml</code>:</p>
+</blockquote>
+<pre class="highlight toml tab-toml"><code><span class="py">version</span> <span class="p">=</span> <span class="s">"canary"</span>
+<span class="py">project-name</span> <span class="p">=</span> <span class="s">"my_project"</span>
+<span class="py">build-type</span> <span class="p">=</span> <span class="s">"dockerfile"</span>
+<span class="py">build-file-path</span> <span class="p">=</span> <span class="s">"dockerfiles/Dockerfile.web"</span>
+
+<span class="c"># ... other stuff</span>
+</code></pre>
+<blockquote>
+<p>To change a setting, you can edit the configuration file directly, or run:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia config <span class="nb">set</span> <span class="k">${</span><span class="nv">parameter</span><span class="k">}</span> <span class="k">${</span><span class="nv">new_value</span><span class="k">}</span>
+</code></pre>
+<p>Your Inertia configuration is stored in <code>inertia.toml</code> by default. There are
+a few project-wide settings stored here:</p>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>version</code></td>
+<td>This should match the version of your Inertia CLI, which you can see by running <code>inertia --version</code>. It is used to determine which version of the <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/">Inertia daemon</a> to use.</td>
+</tr>
+<tr>
+<td><code>project-name</code></td>
+<td>The name of the project you are deploying.</td>
+</tr>
+<tr>
+<td><code>build-type</code></td>
+<td>This should be either <code>dockerfile</code> or <code>docker-compose</code>, depending on which you are using.</td>
+</tr>
+<tr>
+<td><code>build-file-path</code></td>
+<td>Path to your build configuration file, such as <code>Dockerfile</code> or <code>docker-compose.yml</code>, relative to the root of your project.</td>
+</tr>
+</tbody></table>
+<h1 id='deploying-your-project'>Deploying Your Project</h1>
+<p>When deploying a project, you typically deploy to a &quot;remote&quot;.</p>
+
+<p>A &quot;remote&quot; is a remote VPS, such as a <a href="https://cloud.google.com/compute/">Google Cloud Compute</a>
+or <a href="https://aws.amazon.com/ec2/">AWS Elastic Cloud Compute (EC2)</a> instance. These
+are computers in the cloud that will be used to deploy your project, so that
+you don&#39;t have to use your own.</p>
+
+<p>If this is your first time setting up a VPS, jump ahead to the
+<a href="#provisioning-a-remote">Provisioning a Remote</a> section, which will help you set
+up a VPS for Inertia.</p>
+<h2 id='using-an-existing-remote'>Using an Existing Remote</h2>
+<blockquote>
+<p>This command will prompt you for the path to your PEM file, your username,
+and the IP address of your remote. These parameters will be used to execute
+SSH commands that set up Inertia on your VPS.</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia remote add <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+</code></pre>
+<p>To use an existing remote, you&#39;ll need its address and a PEM key that can be
+used to access it. Inertia will also need a few ports exposed, namely one for
+the Inertia daemon (port <code>4303</code> by default) and whatever ports you need for your
+deployed project.</p>
+
+<aside class="notice">
+If you use a non-standard SSH port (i.e. not port <code>22</code>) or want to
+use a different port for the Inertia daemon, use the <code>--ssh.port ${port}</code>
+and <code>--port ${port}</code> flags respectively when adding your remote.
+</aside>
+<h2 id='provisioning-a-remote'>Provisioning a Remote</h2>
+<aside class="notice">
+If you've already added a remote manually, you can skip ahead to
+<a href='#initializing-the-inertia-daemon'>Initializing the Inertia Daemon</a>.
+</aside>
+<pre class="highlight shell tab-shell"><code>inertia provision --help
+inertia provision <span class="k">${</span><span class="nv">cloud_provider</span><span class="k">}</span> <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+</code></pre>
+<p>Inertia has integrations with some cloud providers to allow you to easily
+provision a new VPS instance and set it up for Inertia. This includes generating
+key pairs, setting network rules, and initializing the Inertia daemon.</p>
+
+<p>You can use the <code>--help</code> on the <code>provision</code> command to see what options are
+available.</p>
+<h3 id='example-provisioning-an-ec2-instance'>Example: Provisioning an EC2 Instance</h3>
+<p><a href="https://aws.amazon.com/ec2">Elastic Cloud Compute (EC2)</a> is a service provided
+by Amazon Web Services (AWS) that can be used to deploy Inertia projects. It
+offers <a href="https://aws.amazon.com/free/">750 free EC2 hours a month for your first 12 months</a>,
+which is just enough for 1 EC2 VPS instance. Even after the trial it&#39;s pretty
+affordable, and a good choice to get started with.</p>
+
+<blockquote>
+<p>The IAM users page:
+<img src="images/aws-ec2-iam-add.png" alt="Aws ec2 iam add" /></p>
+</blockquote>
+
+<p>To get started, make an account on the <a href="aws.amazon.com">AWS website</a>. If you&#39;re
+a student, you&#39;ll also be eligible for
+<a href="https://aws.amazon.com/education/awseducate/">yearly free credits</a>, so make sure
+you sign up for that as well.</p>
+
+<p>Next, you&#39;ll want to head over to the
+<a href="https://console.aws.amazon.com/iam">IAM page of the AWS Management Console</a>.
+IAM stands for &quot;Identity and Access Management&quot;, and this is where you&#39;ll
+configure programmatic access to your AWS account. Under the &quot;Users&quot; tab, click
+&quot;Add User&quot;.</p>
+
+<blockquote>
+<p>Configuring IAM permissions:
+<img src="images/aws-ec2-iam-perm.png" alt="Aws ec2 iam perm" /></p>
+</blockquote>
+
+<p>This will take you through a brief walkthrough to configure your new IAM user:</p>
+
+<ul>
+<li>Page 1 - make sure you enable <strong>Programmatic Access</strong> to tell AWS to generate
+access keys for your new user - Inertia will need this.</li>
+<li>Page 2 - make sure to choose a permission set that allows the user to
+manipulate EC2 resources, such as <strong>AmazonEC2FullAccess</strong> (this will be
+under the 3rd tab titled &quot;Attach existing policies directly&quot;).</li>
+<li>Page 3 - don&#39;t worry about setting tags, as these are typically used for
+organizations with large numbers of users.</li>
+<li>Page 4 - confirm that you&#39;ve configured the user correctly</li>
+<li>Page 5 - you should be shown a <strong>Access Key ID</strong> and a <strong>Secret access key</strong>.
+Copy these somewhere safe!</li>
+</ul>
+
+<aside class="warning">
+Make sure you don't reveal your keys to anyone else, as a malicious user could
+incur pretty significant charges at your expense.
+</aside>
+
+<aside class="notice">
+If you lose your keys, you can simply
+<a href='https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey'>
+invalidate and create new keys</a> for the same user (and indeed key rotation on
+a regular basis is strongly encouraged by AWS anyway).
+</aside>
+<pre class="highlight shell tab-shell"><code><span class="c"># set credentials in environment</span>
+<span class="nb">export </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="k">${</span><span class="nv">access_key_id</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">AWS_ACCESS_KEY</span><span class="o">=</span><span class="k">${</span><span class="nv">secret_access_key</span><span class="k">}</span>
+inertia provision ec2 my_remote <span class="se">\</span>
+  --from-env <span class="se">\</span>
+  --ports 8080
+</code></pre>
+<blockquote>
+<p>This command says: &quot;provision an ec2 instance called &#39;my_remote&#39; using
+credentials in my environment and expose port 8080 for my project&quot;.</p>
+</blockquote>
+
+<p>Now that you have your user and access keys all set up, you can provision your
+remote instance! Just set your keys in your
+<a href="https://www.tutorialspoint.com/unix/unix-using-variables.htm">shell environment</a>
+and use the <code>--from-env</code> flag as in the example to provision a remote using
+those credentials.</p>
+
+<p>Alternatively, you can save your credentials in your
+<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">AWS credentials file</a>.
+To use these with Inertia, just call the <code>provision ec2</code> command with the
+<code>--from-profile</code> flag.</p>
+
+<p>Inertia will just prompt you for the keys if you don&#39;t provide them using one
+of the methods above.</p>
+
+<p>The provisioning command will ask you to choose a
+<a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions">region</a>
+and an <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html">image</a> to
+use. The region should probably be whatever is closest to you, and then you
+should just choose one of the images that Inertia lists as options.</p>
+
+<p>Inertia will then create an EC2 instance, generate a key pair to give you SSH
+access to the remote, set up network rules, install Inertia&#39;s prerequisites on
+your remote, and spin up the Inertia daemon!</p>
+<h2 id='deployment-configuration'>Deployment Configuration</h2>
+<blockquote>
+<p>An example <code>inertia.toml</code>:</p>
+</blockquote>
+<pre class="highlight toml tab-toml"><code><span class="c"># ... other stuff</span>
+
+<span class="nn">[remotes]</span>
+  <span class="nn">[remotes.my_remote]</span>
+    <span class="py">IP</span> <span class="p">=</span> <span class="s">"ec2-203-0-113-25.compute-1.amazonaws.com"</span>
+    <span class="py">user</span> <span class="p">=</span> <span class="s">"root"</span>
+    <span class="py">pemfile</span> <span class="p">=</span> <span class="s">"/Users/robertlin/.ssh/id_rsa"</span>
+    <span class="py">branch</span> <span class="p">=</span> <span class="s">"master"</span>
+    <span class="py">ssh-port</span> <span class="p">=</span> <span class="s">"22"</span>
+    <span class="nn">[remotes.my_remote.daemon]</span>
+      <span class="py">port</span> <span class="p">=</span> <span class="s">"4303"</span>
+      <span class="py">token</span> <span class="p">=</span> <span class="s">""</span>
+      <span class="py">webhook-secret</span> <span class="p">=</span> <span class="s">"abcdefg"</span>
+</code></pre>
+<blockquote>
+<p>To change a setting, you can edit the configuration file directly, or run:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set</span> <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> <span class="k">${</span><span class="nv">parameter</span><span class="k">}</span> <span class="k">${</span><span class="nv">new_value</span><span class="k">}</span>
+</code></pre>
+<blockquote>
+<p>For example, the following will change the <code>branch</code> deployed on <code>my_remote</code>
+to <code>dev</code> and print out the new settings:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set </span>my_remote branch dev
+inertia remote show my_remote
+</code></pre>
+<p>Once you&#39;ve added a remote, remote-specific settings are available under the
+<code>[remote]</code> section of your Inertia configuration. </p>
+
+<aside class="notice">
+For the most part, unless you filled in something incorrectly while adding a
+remote or provisioning an instance, you won't need to change any of these
+settings.
+</aside>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>IP</code></td>
+<td>This is the address of your remote instance. It&#39;s how other users will access your deployed project as well!</td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td>The user to use to execute commands as on your remote instance.</td>
+</tr>
+<tr>
+<td><code>pemfile</code></td>
+<td>The key to use when executing SSH commands on your remote instance.</td>
+</tr>
+<tr>
+<td><code>branch</code></td>
+<td>The git branch of your project that you want to deploy.</td>
+</tr>
+<tr>
+<td><code>ssh-port</code></td>
+<td>The SSH port on your remote instance - you usually don&#39;t need to change this.</td>
+</tr>
+</tbody></table>
+
+<p>Under <code>remotes.${remote_name}.daemon</code> there are some additional settings for the
+Inertia daemon:</p>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>port</code></td>
+<td>The port that the Inertia daemon is using - you can usually leave this as is.</td>
+</tr>
+<tr>
+<td><code>token</code></td>
+<td>This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later.</td>
+</tr>
+<tr>
+<td><code>webhook-secret</code></td>
+<td>This is used to verify that incoming webhooks are authenticate - you&#39;ll need this later!</td>
+</tr>
+</tbody></table>
+<h2 id='initializing-the-inertia-daemon'>Initializing the Inertia Daemon</h2>
+<aside class="notice">
+If you used <code>inertia provision</code> to set up your remote, you can skip
+this step, as Inertia will have already done all this for you!
+</aside>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> init
+<span class="c"># ... lots of output</span>
+</code></pre>
+<p>Initializing the Inertia daemon means installing <a href="https://www.docker.com/">Docker</a>,
+setting up some prerequisites, downloading the Inertia daemon image, and getting
+it up and running. Luckily, this is all done by a single, handy command so you
+don&#39;t have to worry about it!</p>
+
+<p>The Inertia daemon is a small agent that runs on your VPS instance and handles
+all your deployment-related needs, such as responding to commands and listening
+for updates to your repository. You can read more about this in the
+<a href="#deployment-management">Deployment Management</a> section.</p>
+
+<aside class="success">
+Once this step is done, it means that Inertia and all its prerequisites are now
+set up on your VPS, and the Inertia daemon should be up and running! Try
+running <code>inertia ${remote_name} status</code> to connect to the daemon.
+</aside>
+
+<aside class="notice">
+This does <b>not</b> completely set up Inertia for project deployment - check
+the next step to see what else needs to be done!
+</aside>
+<h2 id='configuring-your-repository'>Configuring Your Repository</h2>
+<blockquote>
+<p>The <code>inertia ${remote_name} init</code> or <code>provision</code> command&#39;s output should
+include something like the following:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>GitHub Deploy Key <span class="o">(</span>add here https://www.github.com/&lt;your_repo&gt;/settings/keys/new<span class="o">)</span>:
+ssh-rsa &lt;...&gt; <span class="c"># this is important!</span>
+GitHub WebHook URL <span class="o">(</span>add here https://www.github.com/&lt;your_repo&gt;/settings/hooks/new<span class="o">)</span>:
+http://myhost.com:4303/webhook <span class="c"># this is important!</span>
+Github WebHook Secret: inertia <span class="c"># this is important!</span>
+</code></pre>
+<p>The <code>inertia ${remote_name} init</code> or <code>provision</code> command outputs several key
+pieces of information to get your repository set up for continuous deployment:</p>
+
+<ul>
+<li>A deploy key: you need to allow this key read access to your repository. On
+GitHub, this is under your project&#39;s &quot;Settings -&gt; Deploy Keys&quot; tab. This will
+allow the Inertia daemon to clone your project.</li>
+<li>A webhook URL and webhook secret: you&#39;ll need to register the Inertia daemon
+for webhook updates to let it automatically deploy your latest changes. On
+GitHub, this is under your project&#39;s &quot;Settings -&gt; Webhooks&quot; tab.</li>
+</ul>
+
+<aside class="warning">
+Unless you've <a href='#custom-ssl-certificate'>set up a custom SSL certificate</a> for your remote, Inertia will use
+a self-signed SSL certificate, so you'll have to <b>disable SSL verification</b>
+when setting up your webhook registration.
+</aside>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> up
+</code></pre>
+<aside class="success">
+With your repository now configured correctly, you can now get your project
+up and running using the <code>up</code> command!
+</aside>
+<h1 id='deployment-management'>Deployment Management</h1>
+<blockquote>
+<p>To bring your project online and check its status:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> up
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> status
+</code></pre>
+<blockquote>
+<p>To shut down your project:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> down
+</code></pre>
+<p>The main commands used to control your deployed project are <code>up</code>, <code>status</code>, and
+<code>down</code>. These commands are associated with the state of your project, not with
+that of the Inertia daemon - <code>inertia ${remote_name} down</code>, for example, will
+<em>not</em> shut down the Inertia daemon.</p>
+
+<p>Commands like <code>up</code> will provide live output to your terminal. It&#39;s pretty normal
+for <code>up</code> to take a while, depending on the performance of your VPS, as it needs
+some time to build your project.</p>
+<h2 id='monitoring'>Monitoring</h2><pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> logs
+</code></pre>
+<blockquote>
+<p>To view the logs of a specific process, get the list of active containers, then
+query for the logs of the container you are interested in:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> status
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> logs <span class="k">${</span><span class="nv">container_name</span><span class="k">}</span>
+</code></pre>
+<p>TODO: details</p>
+<h2 id='secrets-management'>Secrets Management</h2>
+<blockquote>
+<p>Environment variables are a good way to store secrets:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> env <span class="nb">set</span> <span class="k">${</span><span class="nv">key</span><span class="k">}</span> <span class="k">${</span><span class="nv">value</span><span class="k">}</span>
+</code></pre>
+<blockquote>
+<p>If you use configuration files such as a <code>.env</code> file, you can &quot;send&quot; it to your
+remote - this file will then become accessible by your project:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> send <span class="k">${</span><span class="nv">file_name</span><span class="k">}</span>
+</code></pre>
+<p>TODO: details</p>
+<h1 id='teams'>Teams</h1><h2 id='configuring-users'>Configuring Users</h2>
+<blockquote>
+<p>The following command will prompt for a password, and add the given user as
+an administrator:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> user add <span class="k">${</span><span class="nv">username</span><span class="k">}</span> --admin
+</code></pre>
+<blockquote>
+<p>To list existing users:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> user ls
+</code></pre>
+<blockquote>
+<p>Access can be revoked for a user by removing them:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> user rm <span class="k">${</span><span class="nv">username</span><span class="k">}</span>
+</code></pre>
+<p>TODO</p>
+<h2 id='logging-in'>Logging In</h2>
+<blockquote>
+<p>If you want to log in to a remote you have already configured as a specific
+user, you can run:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> login <span class="k">${</span><span class="nv">username</span><span class="k">}</span>
+</code></pre>
+<p>TODO</p>
+
+<aside class="notice">
+User tokens expire periodically for security, so you may have to log in again
+from time to time.
+</aside>
+<h1 id='upgrading'>Upgrading</h1>
+<blockquote>
+<p>Install the latest release - for example, on MacOS:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>brew upgrade ubclaunchpad/tap/inertia
+inertia --version <span class="c"># verify installation</span>
+</code></pre>
+<blockquote>
+<p>To update configuration and daemon to match CLI version:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia config upgrade
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> upgrade
+</code></pre>
+<p>TODO</p>
+<h1 id='advanced-usage'>Advanced Usage</h1>
+<p>This section details various advanced usage tips. If you can&#39;t find what you&#39;re
+looking for here, try using the <code>--help</code> flag on relevant commands - Inertia
+will display help text and all the different options available to you.</p>
+<h2 id='troubleshooting'>Troubleshooting</h2>
+<aside class="notice">
+If you need help, please feel free to
+<a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>open a ticket</a>!
+</aside>
+
+<blockquote>
+<p>To view more of the Inertia daemon&#39;s logs (the number of entries retrieved
+is capped by default), run:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> logs --entries 100000
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> logs <span class="k">${</span><span class="nv">container</span><span class="k">}</span> --entries 100000
+</code></pre>
+<p>Inertia is a large and rather complex project, and as such you might encounter
+bugs, either because of Inertia or due to some kind of misconfiguration.</p>
+
+<p>The Inertia daemon outputs a lot of verbose logs that might help you out. You
+can also make use of the <code>inertia ${remote} status</code> command to output details
+about the state of your deployment. Also pay attention to the output of the
+Inertia CLI when things go awry - it might hint at what happened, and it&#39;ll be
+useful context if you decide to open a ticket.</p>
+
+<blockquote>
+<p>To start an SSH session with your remote, you can use the shortcut:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> ssh
+</code></pre>
+<p>If you are more experienced, you can SSH into your remote to investigate. This
+lets you access more advanced Docker commands and whatever else you might need
+to work out what is happening.</p>
+
+<aside class="warning">
+When interacting with your remote over SSH, be wary of manipulating assets that
+Inertia depends on such as files in <code>~/inertia/data/</code> and
+<code>~/.inertia</code>, as well as build images such as <code>docker/compose</code>.
+</aside>
+<h2 id='2-factor-authentication'>2-Factor Authentication</h2><pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> user totp <span class="nb">enable</span> <span class="k">${</span><span class="nv">username</span><span class="k">}</span>
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> user totp disable <span class="k">${</span><span class="nv">username</span><span class="k">}</span>
+</code></pre>
+<p>2-factor authentication configuration in Inertia is available under the
+<code>inertia ${remote_name} user totp</code> commands.</p>
+
+<p>TOTP stands for &quot;time-based one-time password&quot;. Enabling TOTP on an account
+means that whenever a user logs in using that account, they must also verify
+their identity using a separate authenticator app, which provides a secondary
+factor of authentication - hence why it is called &quot;2-factor authentication&quot;.</p>
+
+<p>There are a wide range of authenticator apps out there, for example:</p>
+
+<ul>
+<li><a href="https://itunes.apple.com/ca/app/authy/id494168017?mt=8">Authy for iOS</a></li>
+<li><a href="https://play.google.com/store/apps/details?id=com.authy.authy&amp;hl=en">Authy for Android</a></li>
+</ul>
+
+<blockquote>
+<p>To log in as a totp-enabled user, you&#39;ll have to provide your TOTP or backup
+code as a flag:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> user login <span class="k">${</span><span class="nv">username</span><span class="k">}</span> --totp <span class="k">${</span><span class="nv">code</span><span class="k">}</span>
+</code></pre>
+<p>When you enable TOTP on an account, Inertia will output a QR code that you can
+scan using your authenticator app, as well as a list of backup codes you should
+keep somewhere safe. When you log in using a TOTP-enabled account, you&#39;ll need
+to provide the TOTP generated by your authenticator app to log in, or one of the
+backup codes.</p>
+<h2 id='resource-management'>Resource Management</h2>
+<blockquote>
+<p>To clear out unused Docker images and containers:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> prune
+</code></pre>
+<blockquote>
+<p>You can also interact with Docker directly over SSH:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> ssh
+<span class="gp">root@remote:~$ </span>docker container ls -a
+</code></pre>
+<p>Inertia does its best to manage resources on its own, but sometimes spare
+containers and images start gathering and you might find your remote starting
+to run out of storage (especially if it is a free/budget instance with low
+storage).</p>
+
+<p>Inertia offers a few ways of managing resources, either through commands like
+<code>prune</code> or directly over SSH.</p>
+
+<aside class="warning">
+When interacting with your remote over SSH, be wary of manipulating assets that
+Inertia depends on such as files in <code>~/inertia/data/</code> and
+<code>~/.inertia</code>, as well as build images such as <code>docker/compose</code>.
+</aside>
+<h2 id='generating-api-keys'>Generating API Keys</h2><pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> token
+</code></pre>
+<p>If you want to develop integrations with Inertia, you&#39;ll probably want a
+non-expiring API token, which you can generate using Inertia if you have SSH
+access to your remote. Be careful not to lose these tokens.</p>
+<pre class="highlight shell tab-shell"><code>curl -H <span class="s2">"Authorization: Bearer </span><span class="k">${</span><span class="nv">token</span><span class="k">}</span><span class="s2">"</span> <span class="se">\</span>
+  https://<span class="k">${</span><span class="nv">remote_ip</span><span class="k">}</span>:<span class="k">${</span><span class="nv">daemon_port</span><span class="k">}</span>/status
+</code></pre>
+<p>To use these tokens, you can place them in your <code>inertia.toml</code> under <code>token</code>, or
+use them in requests to the Inertia API by placing them as a <code>Bearer</code> token in
+your request header under <code>Authorization</code>.</p>
+<h2 id='inertia-release-streams'>Inertia Release Streams</h2>
+<p>The version of Inertia you are using can be seen in Inertia&#39;s <code>inertia.toml</code>
+configuration file, or by running <code>inertia --version</code>. The version in
+<code>inertia.toml</code> is used to determine what version of the Inertia daemon to use
+when you run <code>inertia ${remote_name} init</code>.</p>
+
+<blockquote>
+<p>To switch over to the latest build and upgrade your remote:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia config <span class="nb">set </span>version <span class="s2">"latest"</span>
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> upgrade
+</code></pre>
+<p>You can manually change the daemon version used by editing the Inertia
+configuration file. If you are building from source, you can also check out the
+desired version and run <code>make inertia-tagged</code> or <code>make RELEASE=$STREAM</code>.
+Inertia daemon releases are tagged as follows:</p>
+
+<ul>
+<li><code>v0.x.x</code> denotes <a href="https://github.com/ubclaunchpad/inertia/releases">official, tagged releases</a> - these are recommended.</li>
+<li><code>latest</code> denotes the newest builds on <code>master</code>.</li>
+<li><code>canary</code> denotes experimental builds used for testing and development - do not use this.</li>
+</ul>
+
+<p>You can see the list of available tags on
+<a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags">Docker Hub</a>.</p>
+<h2 id='custom-ssl-certificate'>Custom SSL Certificate</h2>
+<p>By default, the Inertia daemon generates a self-signed SSL certificate for its
+API. This means that Inertia, by default, doesn&#39;t verify SSL communications,
+and you&#39;ll have to do things like disable SSL verification in your repository
+for webhooks.</p>
+<pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> --verify-ssl status
+</code></pre>
+<p>If you provide your own SSL certificate, you can enable SSL verification in
+Inertia using the <code>--verify-ssl</code> flag, and enable SSL verification in your
+repository&#39;s webhook deliveries as well.</p>
+
+<p>Just place your SSL certificate and key on your remote in <code>~/.inertia/ssl</code> as
+<code>daemon.cert</code> and <code>daemon.key</code> respectively, and the Inertia daemon will use
+them automatically.</p>
+<h1 id='miscellaneous'>Miscellaneous</h1><h2 id='learn-more'>Learn More</h2>
+<blockquote>
+<p>Some quick links to help you get started:</p>
+
+<ul>
+<li><a href="https://github.com/ubclaunchpad/inertia#bulb-motivation-and-design">Motivation and Design</a></li>
+<li><a href="https://github.com/ubclaunchpad/inertia/wiki/Continuous-Deployment%3F">Continuous Deployment?</a></li>
+<li><a href="https://github.com/ubclaunchpad/inertia/wiki/Architecture">Architecture</a></li>
+<li><a href="https://github.com/ubclaunchpad/inertia/wiki/Daemon,-API,-and-Builds">Daemon, API, and Builds</a></li>
+<li><a href="https://github.com/ubclaunchpad/inertia/wiki/Web-App">Web App</a></li>
+<li><a href="https://github.com/ubclaunchpad/inertia/wiki/CI-Pipeline">CI Pipeline</a></li>
+<li><a href="https://godoc.org/github.com/ubclaunchpad/inertia">Documentation</a></li>
+</ul>
+</blockquote>
+
+<p>Check out our <a href="https://github.com/ubclaunchpad/inertia">GitHub repository</a> and
+<a href="https://github.com/ubclaunchpad/inertia/wiki">Wiki</a>!</p>
+
+<p><img src="https://bobheadxi.github.io/assets/images/posts/inertia-diagram.png" alt="Inertia diagram" /></p>
+<h2 id='swag'>Swag</h2><pre class="highlight markdown tab-markdown"><code><span class="p">[</span><span class="nv">![Deployed with Inertia</span><span class="p">](</span><span class="sx">https://img.shields.io/badge/deploying%20with-inertia-blue.svg</span><span class="p">)</span>](https://github.com/ubclaunchpad/inertia)
+</code></pre>
+<p>Add a cool Inertia badge to your README if you use Inertia!</p>
+
+<p><a href="https://github.com/ubclaunchpad/inertia"><img src="https://img.shields.io/badge/deploying%20with-inertia-blue.svg" alt="Deployed with Inertia" /></a></p>
+<h1 id='contributing'>Contributing</h1>
+<p>Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome!</p>
+
+<p>You can report issues with documentation, bugs, or anything via our
+<a href="https://github.com/ubclaunchpad/inertia/issues">issue tracker</a>.</p>
+
+<p>For development, please see our
+<a href="https://github.com/ubclaunchpad/inertia/blob/master/CONTRIBUTING.md">contribution guide</a>
+for contribution guidelines as well as a detailed guide to help you get started
+with Inertia&#39;s codebase.</p>
+
+<p align='center'>
+  <a href='https://golang.org/doc/gopher/pencil/'>
+    <img src='https://golang.org/doc/gopher/pencil/gopherhelmet.jpg' width="40%" />
+  </a>
+</p>
+
+<p><br />
+<br />
+<br />
+<br />
+<br /></p>
+
+      </div>
+      <div class="dark-box">
+      </div>
+    </div>
+  </body>
+</html>

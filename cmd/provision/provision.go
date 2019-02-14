@@ -209,8 +209,8 @@ This ensures that your project ports are properly exposed and externally accessi
 		"load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set")
 	provEC2.Flags().Bool(flagFromProfile, false,
 		"load ec2 credentials from profile")
-	provEC2.Flags().String(flagProfilePath, "~/.aws/config",
-		"path to aws profile configuration file")
+	provEC2.Flags().String(flagProfilePath, "~/.aws/credentials",
+		"path to aws profile credentials file")
 	provEC2.Flags().String(flagProfileUser, "default",
 		"user profile for aws credentials file")
 

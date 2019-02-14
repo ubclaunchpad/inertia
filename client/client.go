@@ -124,9 +124,6 @@ func (c *Client) BootstrapRemote(repoName string) error {
 	fmt.Fprint(c.out, "\n"+`Note that you will have to disable SSL verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't
 be able to verify.`+"\n")
-	fmt.Fprint(c.out, "\n"+`Note that you will also have to set the Content-Type for your webhook
-to application/json - GitHub defaults to application/x-www-form-urlencoded, which is not yet
-supported.`+"\n")
 
 	fmt.Fprint(c.out, "\n"+`Inertia daemon successfully deployed! Add your webhook url and deploy
 key to your repository to enable continuous deployment.`+"\n")
@@ -324,6 +321,9 @@ func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, err
 	socket, resp, err := buildWebSocketDialer(c.verifySSL).Dial(url.String(), header)
 	if err == websocket.ErrBadHandshake {
 		return nil, fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to daemon at %s: %s", url.Host, err.Error())
 	}
 	return socket, nil
 }

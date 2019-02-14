@@ -178,6 +178,18 @@ $> make web-run    # run local instance of application
 
 Make sure you have a local daemon set up for this web app to work - see the previous section for more details.
 
+### Documentation
+
+Our [usage documentation website]() is built with [Slate](https://github.com/lord/slate).
+The builds are in `/docs`, but the documentation source is in `/docs_src`.
+
+To build and deploy the documentation locally:
+
+```bash
+$> make docs
+$> make run-docs # visit http://localhost:4567/
+```
+
 ## Setting up a Testing Environment
 
 You will need Docker installed and running to run whole the Inertia test suite,
@@ -200,7 +212,7 @@ steps:
 
 ```bash
 $> make testenv VPS_OS=ubuntu VERSION=16.04
-# This defaults to ubuntu:lastest without args.
+# This defaults to ubuntu:latest without args.
 # Note the location of the key that is printed and use that when
 # adding your local remote.
 ```

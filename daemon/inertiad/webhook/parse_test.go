@@ -11,25 +11,29 @@ import (
 
 // The endpoint does not really matter, we are only interested in
 // how the request body gets parsed by the Webhook package
-func getMockRequest(endpoint string, rawBody []byte) *http.Request {
+func getMockRequest(endpoint string, contentType string, rawBody []byte) *http.Request {
 	req, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(rawBody))
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Content-Type", contentType)
 	return req
 }
 
 func TestTypeAndParse(t *testing.T) {
 	testCases := []struct {
 		source      string
+		contentType string
 		reqBody     []byte
 		eventHeader string
 		eventValue  string
+		wantType    EventType
 	}{
-		{GitHub, githubPushRawJSON, "x-github-event", GithubPushHeader},
-		{GitLab, gitlabPushRawJSON, "x-gitlab-event", GitlabPushHeader},
-		{BitBucket, bitbucketPushRawJSON, "x-event-key", BitbucketPushHeader},
+		{GitHub, "application/x-www-form-urlencoded", githubPushFormEncoded, "x-github-event", GithubPushHeader, PushEvent},
+		{GitHub, "application/json", githubPushRawJSON, "x-github-event", GithubPushHeader, PushEvent},
+		{GitHub, "application/json", githubPushRawJSON, "x-github-event", GithubPingHeader, PingEvent},
+		{GitLab, "application/json", gitlabPushRawJSON, "x-gitlab-event", GitlabPushHeader, PushEvent},
+		{BitBucket, "application/json", bitbucketPushRawJSON, "x-event-key", BitbucketPushHeader, PushEvent},
 	}
 	for _, tc := range testCases {
-		req := getMockRequest("/webhook", tc.reqBody)
+		req := getMockRequest("/webhook", tc.contentType, tc.reqBody)
 		req.Header.Add(tc.eventHeader, tc.eventValue)
 
 		// Special case for Bitbucket because Bitbucket
@@ -49,14 +53,17 @@ func TestTypeAndParse(t *testing.T) {
 		assert.Nil(t, err)
 
 		assert.Equal(t, tc.source, payload.GetSource())
-		assert.Equal(t, "push", payload.GetEventType())
-		assert.Equal(t, "inertia-deploy-test", payload.GetRepoName())
-		assert.Equal(t, "refs/heads/master", payload.GetRef())
+		assert.Equal(t, tc.wantType, payload.GetEventType())
+		switch tc.wantType {
+		case PushEvent:
+			assert.Equal(t, "inertia-deploy-test", payload.GetRepoName())
+			assert.Equal(t, "refs/heads/master", payload.GetRef())
+		}
 	}
 }
 
 func TestParseDocker(t *testing.T) {
-	req := getMockRequest("/docker-webhook", dockerPushRawJSON)
+	req := getMockRequest("/docker-webhook", "application/json", dockerPushRawJSON)
 	payload, err := ParseDocker(req)
 	assert.Nil(t, err)
 
