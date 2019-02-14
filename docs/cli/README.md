@@ -6,4 +6,4 @@ automatically using `inertia-docgen`.
 For a more general usage guide, refer to the [Inertia Usage Guide](https://inertia.ubclaunchpad.com).
 
 * Generated: 2019-Feb-13
-* Version: v0.5.2-20-g805b911
+* Version: v0.5.2-21-g6722eec

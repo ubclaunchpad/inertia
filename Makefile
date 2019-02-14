@@ -143,10 +143,14 @@ test-integration-fast:
 ##  * DOCUMENTATION
 ##    ‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-## docs: set up doc builder and build documentation sites (Usage Guide and CLI reference)
+## docs: set up doc builder and build usage guide website
 .PHONY: docs
 docs: docgen
 	sh .scripts/build_docs.sh
+
+## docs-cli: build CLI reference pages
+.PHONY: docs-cli
+docs-cli: docgen
 	@echo [INFO] Generating CLI documentation
 	@./inertia-docgen -o ./docs/cli
 
@@ -238,7 +242,7 @@ contrib:
 ## docgen: build the docgen tool into project directory
 .PHONY: docgen
 docgen:
-	go build -ldflags "-X $(CLI_VERSION_VAR)=$(RELEASE)" ./contrib/inertia-docgen
+	go build -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)" ./contrib/inertia-docgen
 
 ## localdaemon: run a test daemon locally, without testenv
 .PHONY: localdaemon
