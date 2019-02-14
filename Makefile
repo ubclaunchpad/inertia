@@ -34,11 +34,14 @@ lint:
 clean: testenv-clean
 	go clean -testcache
 	rm -f ./inertia
+	rm -f ./inertiad
+	rm -f ./inertia-*
 	rm -rf ./docs_build
 	find . \
 		-type f \
 		-name inertia.\* \
 		-not -path "*.static*" \
+		-not -path "*docs*" \
 		-exec rm {} \;
 
 ##    ____________
