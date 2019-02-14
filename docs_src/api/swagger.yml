@@ -1,0 +1,162 @@
+
+openapi: 3.0.0
+info:
+  version: 0.5.2
+  title: Inertia Daemon API
+  description: inertiad's REST API
+  contact:
+    name: UBC Launch Pad
+    email: team@ubclaunchpad.com
+    url: https://github.com/ubclaunchpad/inertia
+  license:
+    name: MIT
+    url: https://github.com/ubclaunchpad/inertia/blob/master/LICENSE
+
+servers:
+  - url: https://$DAEMON_ADDR:$DAEMON_PORT/
+
+externaldocs:
+  - url: https://inertia.ubclaunchpad.com
+    description: Inertia Usage Guide
+  - url: https://inertia.ubclaunchpad.com/cli
+    description: Inertia CLI Reference
+
+paths:
+  /:
+    get:
+      summary: Daemon healthcheck
+      description: Returns OK
+      responses:
+        200:
+          description: daemon is online
+  /webhook:
+    post:
+      summary: Webhook endpoint
+      description: Accepts incoming payloads from Git hosts
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OKResponse'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+  /status:
+    get:
+      summary: Deployment status check
+      description: asdf
+      responses:
+  /up:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OKResponse'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+  /down:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+  /reset:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+  /env:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+    get:
+      summary: asdf
+      description: asdf
+      responses:
+
+  # auth
+
+  /user/validate:
+    get:
+      summary: asdf
+      description: asdf
+      responses:
+  /user/login:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+  /user/list:
+    get:
+      summary: asdf
+      description: asdf
+      responses:
+  /user/add:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+  /user/remove:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+  /user/reset:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+  /user/totp/enable:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+  /user/totp/disable:
+    post:
+      summary: asdf
+      description: asdf
+      responses:
+
+components:
+  schemas:
+    OKResponse:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: int
+        message:
+          type: string
+        request_id:
+          type: string
+        data:
+          type: object
+          description: response data and additional context
+    ErrResponse:
+      required:
+        - code
+        - message
+        - error
+      properties:
+        code:
+          type: int
+        message:
+          type: string
+        error:
+          type: string
+        request_id:
+          type: string
+        data:
+          type: object
+          description: additional context

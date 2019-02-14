@@ -157,7 +157,13 @@ docs-cli: docgen
 	@echo [INFO] Generating CLI documentation
 	@./inertia-docgen -o ./docs/cli
 
-## run-docs: run local doc server from ./docs_src
+## docs-api: build API reference from Swagger definitions in /docs_src/api
+.PHONY: docs-api
+docs-api: 
+	@echo [INFO] Generating API documentation
+	@swagger-codegen generate -i ./docs_src/api/swagger.yml -l html2 -o ./docs/api
+
+## run-docs: run doc server from ./docs_src for the usage guide website (not for /cli and /api)
 .PHONY: run-docs
 run-docs:
 	( cd docs_build/slate ; bundle exec middleman server --verbose )
