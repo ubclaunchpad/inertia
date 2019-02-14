@@ -147,7 +147,8 @@ test-integration-fast:
 .PHONY: docs
 docs: docgen
 	sh .scripts/build_docs.sh
-	./inertia-docgen -o ./docs/cli
+	@echo [INFO] Generating CLI documentation
+	@./inertia-docgen -o ./docs/cli
 
 ## run-docs: run local doc server from ./docs_src
 .PHONY: run-docs

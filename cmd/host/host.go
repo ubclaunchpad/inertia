@@ -565,6 +565,6 @@ func (root *HostCmd) attachUpgradeCmd() {
 			}
 		},
 	}
-	upgrade.Flags().String(flagVersion, root.config.Version, "version of Inertia daemon to spin up")
+	upgrade.Flags().String(flagVersion, "", "version of Inertia daemon to spin up")
 	root.AddCommand(upgrade)
 }

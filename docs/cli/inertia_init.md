@@ -16,7 +16,7 @@ inertia init [flags]
 
 ```
   -h, --help             help for init
-      --version string   specify Inertia daemon version to use (default "test")
+      --version string   specify Inertia daemon version to use
 ```
 
 ### Options inherited from parent commands
