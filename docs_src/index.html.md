@@ -66,6 +66,11 @@ please feel free to
 </aside>
 
 # Getting Started
+> Node.js users can install the CLI using [npm](https://www.npmjs.com/get-npm): 
+
+```shell
+npm install -g inertia-cli
+```
 
 > MacOS users can install the CLI using [Homebrew](https://brew.sh):
 
@@ -87,7 +92,7 @@ go get -u github.com/ubclaunchpad/inertia
 ```
 
 The Inertia command line interface (CLI) can be installed from a few package
-managers such as Homebrew and Scoop. For other platforms, you can 
+managers such as npm, Homebrew and Scoop. For other platforms, you can 
 [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases).
 
 You can also build Inertia from source, though this requires Golang to be
