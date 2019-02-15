@@ -14,7 +14,8 @@ import (
 
 var (
 	// database buckets
-	envVariableBucket = []byte("envVariables")
+	envVariableBucket     = []byte("envVariables")
+	builtContainersBucket = []byte("builtContainers")
 )
 
 // DeploymentDataManager stores persistent deployment configuration
@@ -50,6 +51,7 @@ func NewDataManager(dbPath string, keyPath string) (*DeploymentDataManager, erro
 	}
 	if err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(envVariableBucket)
+		_, err = tx.CreateBucketIfNotExists(builtContainersBucket)
 		return err
 	}); err != nil {
 		return nil, fmt.Errorf("failed to instantiate database: %s", err.Error())
@@ -63,8 +65,7 @@ func NewDataManager(dbPath string, keyPath string) (*DeploymentDataManager, erro
 
 // AddEnvVariable adds a new environment variable that will be applied
 // to all project containers
-func (c *DeploymentDataManager) AddEnvVariable(name, value string,
-	encrypt bool) error {
+func (c *DeploymentDataManager) AddEnvVariable(name, value string, encrypt bool) error {
 	if len(name) == 0 || len(value) == 0 {
 		return errors.New("invalid env configuration")
 	}
@@ -136,6 +137,16 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 	c.RemoveEnvVariables(faulty...)
 
 	return envs, err
+}
+
+// AddBuiltContainer adds a new environment variable that will be applied
+// to all project containers
+func (c *DeploymentDataManager) AddBuiltContainer(commitHash, containerID string) error {
+
+	return c.db.Update(func(tx *bolt.Tx) error {
+		containers := tx.Bucket(builtContainersBucket)
+		return containers.Put([]byte(commitHash), []byte(containerID))
+	})
 }
 
 func (c *DeploymentDataManager) destroy() error {

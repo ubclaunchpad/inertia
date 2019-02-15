@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -187,6 +188,10 @@ func (d *Deployment) Deploy(
 	if err != nil {
 		return func() error { return nil }, err
 	}
+
+	// Update db with newly built container
+	head, err := d.repo.Head()
+	d.dataManager.AddBuiltContainer(head.Hash().String(), time.Now().String())
 
 	// Deploy
 	return func() error {
