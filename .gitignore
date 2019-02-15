@@ -3,10 +3,15 @@
 *.dll
 *.so
 *.dylib
+/bin
+
+# Inertia binaries
 /inertia.*
 /inertia
 /inertiad
-/bin
+
+# Inertia contrib binaries
+/inertia-docgen
 
 # Assets
 users.db
@@ -24,6 +29,7 @@ vendor
 .inertia
 inertia*.toml
 bumper
+tmp
 
 # Development
 .vscode
