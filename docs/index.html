@@ -561,8 +561,8 @@ invalidate and create new keys</a> for the same user (and indeed key rotation on
 a regular basis is strongly encouraged by AWS anyway).
 </aside>
 <pre class="highlight shell tab-shell"><code><span class="c"># set credentials in environment</span>
-<span class="nb">export </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="k">${</span><span class="nv">access_key_id</span><span class="k">}</span>
-<span class="nb">export </span><span class="nv">AWS_ACCESS_KEY</span><span class="o">=</span><span class="k">${</span><span class="nv">secret_access_key</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">AWS_ACCESS_KEY</span><span class="o">=</span><span class="k">${</span><span class="nv">access_key_id</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">AWS_SECRET_KEY</span><span class="o">=</span><span class="k">${</span><span class="nv">secret_access_key</span><span class="k">}</span>
 inertia provision ec2 my_remote <span class="se">\</span>
   --from-env <span class="se">\</span>
   --ports 8080
