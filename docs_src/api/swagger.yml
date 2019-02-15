@@ -1,9 +1,9 @@
-
 openapi: 3.0.0
+
 info:
   version: 0.5.2
   title: Inertia Daemon API
-  description: inertiad's REST API
+  description: The Inertia daemon's REST API
   contact:
     name: UBC Launch Pad
     email: team@ubclaunchpad.com
@@ -13,13 +13,7 @@ info:
     url: https://github.com/ubclaunchpad/inertia/blob/master/LICENSE
 
 servers:
-  - url: https://$DAEMON_ADDR:$DAEMON_PORT/
-
-externaldocs:
-  - url: https://inertia.ubclaunchpad.com
-    description: Inertia Usage Guide
-  - url: https://inertia.ubclaunchpad.com/cli
-    description: Inertia CLI Reference
+  - url: https://$DAEMON_ADDR:$DAEMON_PORT
 
 paths:
   /:
@@ -35,54 +29,72 @@ paths:
       description: Accepts incoming payloads from Git hosts
       responses:
         200:
+          description: hello world
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OKResponse'
         default:
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrResponse'
+          $ref: '#/components/responses/Error'
   /status:
     get:
       summary: Deployment status check
-      description: asdf
+      description: Check deployment status
       responses:
+        200:
+          description: hello world
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OKResponse'
+        default:
+          $ref: '#/components/responses/Error'
   /up:
     post:
       summary: asdf
       description: asdf
       responses:
         200:
+          description: 'Deployed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OKResponse'
         default:
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrResponse'
+          $ref: '#/components/responses/Error'
   /down:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /reset:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /env:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
     get:
       summary: asdf
       description: asdf
       responses:
+        200:
+          description: 'penis'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OKResponse'
+        default:
+          $ref: '#/components/responses/Error'
 
   # auth
 
@@ -91,43 +103,66 @@ paths:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /user/login:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /user/list:
     get:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /user/add:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /user/remove:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /user/reset:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /user/totp/enable:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
   /user/totp/disable:
     post:
       summary: asdf
       description: asdf
       responses:
+        default:
+          $ref: '#/components/responses/Error'
 
 components:
+  responses:
+    Error:
+      description: Something went wrong - refer to the error code and message for more details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrResponse'
   schemas:
     OKResponse:
       required:
@@ -135,7 +170,7 @@ components:
         - message
       properties:
         code:
-          type: int
+          type: integer
         message:
           type: string
         request_id:
@@ -150,7 +185,7 @@ components:
         - error
       properties:
         code:
-          type: int
+          type: integer
         message:
           type: string
         error:

@@ -161,7 +161,7 @@ docs-cli: docgen
 .PHONY: docs-api
 docs-api: 
 	@echo [INFO] Generating API documentation
-	@swagger-codegen generate -i ./docs_src/api/swagger.yml -l html2 -o ./docs/api
+	@redoc-cli bundle ./docs_src/api/swagger.yml -o ./docs/api/index.html
 
 ## run-docs: run doc server from ./docs_src for the usage guide website (not for /cli and /api)
 .PHONY: run-docs
@@ -183,6 +183,7 @@ prod-deps:
 dev-deps:
 	go get -u github.com/UnnoTed/fileb0x
 	go get -u golang.org/x/lint/golint
+	npm install -g redoc-cli
 
 ## docker-deps: download required docker containers
 .PHONY: docker-deps
