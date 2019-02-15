@@ -22,10 +22,11 @@ paths:
       description: Returns OK if daemon is online and ready
       responses:
         2XX:
-          description: daemon is online
+          description: Daemon is online
           content:
             text/plain:
               type: string
+              example: Hello world!
 
   /webhook:
     post:
@@ -33,11 +34,7 @@ paths:
       description: Accepts incoming payloads from Git hosts
       responses:
         2XX:
-          description: hello world
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OKResponse'
+          $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
 
@@ -74,6 +71,8 @@ paths:
       summary: Shut down project
       description: Shuts down project containers
       responses:
+        2XX:
+          $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
 
@@ -82,6 +81,8 @@ paths:
       summary: Remove project
       description: Reset daemon and remove project from deployment
       responses:
+        2XX:
+          $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
 
@@ -90,6 +91,8 @@ paths:
       summary: Update environment variables
       description: asdf
       responses:
+        2XX:
+          $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
     get:
@@ -97,6 +100,7 @@ paths:
       description: asdf
       responses:
         200:
+          description: Success!
           content:
             application/json:
               schema:
@@ -109,10 +113,12 @@ paths:
                         type: object
                         required: [ variables ]
                         properties:
-                          varoan;es:
+                          variables:
                             type: array
                             items:
                               type: string
+                            example: [ KEY1=VAL1, KEY2=VAL2 ]
+                            description: all currently set environment variables in KEY=VALUE pairs
         4XX,5XX:
           $ref: '#/components/responses/Error'
 
@@ -195,10 +201,14 @@ paths:
                         properties:
                           secret:
                             type: string
+                            example: secret_key
+                            description: TOTP secret key
                           backup_codes:
                             type: array
                             items:
                               type: string
+                            example: [ code1, code2, code3 ]
+                            description: TOTP backup codes
         4XX,5XX:
           $ref: '#/components/responses/Error'
 
@@ -233,14 +243,18 @@ components:
         code:
           type: integer
           example: 200
+          description: HTTP status code
         message:
           type: string
           example: Successfully did something!
+          description: summary of response
         request_id:
           type: string
           example: bobbook/2Mch7LMzhj-000023
+          description: generated request ID corresponding to request
         data:
           type: object
+          additionalProperties: true
           description: response data and additional context
     ErrResponse:
       required: [ code, message, error ]
@@ -248,18 +262,22 @@ components:
         code:
           type: integer
           example: 400
+          description: HTTP status code
         message:
           type: string
           example: (example) could not do something
+          description: summary of response
         error:
           type: string
-          example: (example) value x is missing.
+          example: (example) value x is missing
+          description: detailed about error message
         request_id:
           type: string
           example: example/2Mch7LMzhj-000023
+          description: generated request ID corresponding to request
         data:
           type: object
           additionalProperties: true
-          description: additional context
+          description: additional context about error
           example:
             example: here is some additional information
