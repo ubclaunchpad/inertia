@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/local"
 )
 
 var (
@@ -26,14 +26,16 @@ func AddRemoteWalkthrough(
 	in io.Reader, config *cfg.Config,
 	name, port, sshPort, currBranch string,
 ) error {
-	homeEnvVar := os.Getenv("HOME")
+	homeEnvVar, err := local.GetHomePath()
+	if err != nil {
+		return err
+	}
 	sshDir := filepath.Join(homeEnvVar, ".ssh")
 	defaultSSHLoc := filepath.Join(sshDir, "id_rsa")
 
 	var response string
 	fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'):")
-	_, err := fmt.Fscanln(in, &response)
-	if err != nil {
+	if _, err = fmt.Fscanln(in, &response); err != nil {
 		response = defaultSSHLoc
 	}
 	pemLoc := response

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -151,8 +150,13 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		return nil, err
 	}
 
+	homeDir, err := local.GetHomePath()
+	if err != nil {
+		return nil, err
+	}
+
 	// Save key
-	keyPath := filepath.Join(os.Getenv("HOME"), ".ssh", *keyResp.KeyName)
+	keyPath := filepath.Join(homeDir, ".ssh", *keyResp.KeyName)
 	fmt.Printf("Saving key to %s...\n", keyPath)
 	if err = local.SaveKey(*keyResp.KeyMaterial, keyPath); err != nil {
 		return nil, err
