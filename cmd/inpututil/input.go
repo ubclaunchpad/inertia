@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/ubclaunchpad/inertia/local"
-
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
 )
