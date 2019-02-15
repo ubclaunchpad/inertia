@@ -6,23 +6,25 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/render"
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // upHandler tries to bring the deployment online
 func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusLengthRequired)
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	defer r.Body.Close()
 	var upReq api.UpRequest
 	if err = json.Unmarshal(body, &upReq); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		render.Render(w, r, res.ErrBadRequest(err.Error()))
 		return
 	}
 	var gitOpts = upReq.GitOptions
@@ -37,18 +39,19 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 		Branch:        gitOpts.Branch,
 	})
 
-	// Configure logger
-	logger := log.NewLogger(log.LoggerOptions{
+	// Configure streamer
+	var stream = log.NewStreamer(log.StreamerOptions{
+		Request:    r,
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 		HTTPStream: upReq.Stream,
 	})
-	defer logger.Close()
+	defer stream.Close()
 
 	// Check for existing git repository, clone if no git repository exists.
 	var skipUpdate = false
 	if status, _ := s.deployment.GetStatus(s.docker); status.CommitHash == "" {
-		logger.Println("No deployment detected")
+		stream.Println("No deployment detected")
 		if err = s.deployment.Initialize(
 			project.DeploymentConfig{
 				ProjectName:   upReq.Project,
@@ -58,9 +61,9 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 				Branch:        gitOpts.Branch,
 				PemFilePath:   crypto.DaemonGithubKeyLocation,
 			},
-			logger,
+			stream,
 		); err != nil {
-			logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
+			stream.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 			return
 		}
 
@@ -70,7 +73,7 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check for matching remotes
 	if err = s.deployment.CompareRemotes(gitOpts.RemoteURL); err != nil {
-		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
+		stream.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 		return
 	}
 
@@ -81,18 +84,18 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Deploy project
-	deploy, err := s.deployment.Deploy(s.docker, logger, project.DeployOptions{
+	deploy, err := s.deployment.Deploy(s.docker, stream, project.DeployOptions{
 		SkipUpdate: skipUpdate,
 	})
 	if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		stream.Error(res.ErrInternalServer("failed to build project", err))
 		return
 	}
 
 	if err = deploy(); err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		stream.Error(res.ErrInternalServer("failed to deploy project", err))
 		return
 	}
 
-	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
+	stream.Success(res.Msg("Project startup initiated!", http.StatusCreated))
 }

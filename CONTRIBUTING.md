@@ -106,6 +106,11 @@ Note that if you install Inertia using these commands or any variation of `go in
 
 The Inertia codebase is split up into several components - this section gives a quick introduction on how to work with each.
 
+### Makefile
+
+The [Makefile](/Makefile) offers a lot of useful commands for development. Run
+`make help` to see the commands that are available.
+
 ### CLI
 
 Inertia's command line application is initiated in the root directory, but the majority of the code is in the `cmd` package. It is built on top of [cobra](https://github.com/spf13/cobra), a library for building command line applications.

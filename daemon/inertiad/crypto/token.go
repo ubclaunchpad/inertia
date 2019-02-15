@@ -35,7 +35,7 @@ func (t *TokenClaims) Valid() error {
 	return nil
 }
 
-// IsMaster returns true if this is a mster key
+// IsMaster returns true if this is a master key
 func (t *TokenClaims) IsMaster() bool {
 	return (t.User == "master" && t.Expiry == time.Time{})
 }

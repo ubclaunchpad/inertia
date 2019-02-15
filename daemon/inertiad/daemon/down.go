@@ -4,8 +4,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/render"
+
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/log"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 const (
@@ -15,23 +18,24 @@ const (
 // downHandler tries to take the deployment offline
 func (s *Server) downHandler(w http.ResponseWriter, r *http.Request) {
 	if status, _ := s.deployment.GetStatus(s.docker); len(status.Containers) == 0 {
-		http.Error(w, msgNoDeployment, http.StatusPreconditionFailed)
+		render.Render(w, r, res.Err(msgNoDeployment, http.StatusPreconditionFailed))
 		return
 	}
 
-	logger := log.NewLogger(log.LoggerOptions{
+	var stream = log.NewStreamer(log.StreamerOptions{
+		Request:    r,
 		Stdout:     os.Stdout,
 		HTTPWriter: w,
 	})
-	defer logger.Close()
+	defer s.Close()
 
-	if err := s.deployment.Down(s.docker, logger); err == containers.ErrNoContainers {
-		logger.WriteErr(err.Error(), http.StatusPreconditionFailed)
+	if err := s.deployment.Down(s.docker, stream); err == containers.ErrNoContainers {
+		stream.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 		return
 	} else if err != nil {
-		logger.WriteErr(err.Error(), http.StatusInternalServerError)
+		stream.Error(res.ErrInternalServer("failed to shut down project", err))
 		return
 	}
 
-	logger.WriteSuccess("Project shut down.", http.StatusOK)
+	stream.Success(res.MsgOK("project shut down"))
 }

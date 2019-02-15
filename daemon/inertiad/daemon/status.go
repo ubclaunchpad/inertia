@@ -1,42 +1,29 @@
 package daemon
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/ubclaunchpad/inertia/api"
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
+	"github.com/go-chi/render"
+
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // statusHandler returns a formatted string about the status of the
 // deployment and lists currently active project containers
 func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
-	cli, err := containers.NewDockerClient()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cli.Close()
-
-	status, err := s.deployment.GetStatus(cli)
-	if status.CommitHash == "" {
-		status := &api.DeploymentStatus{
-			InertiaVersion: s.version,
-			Containers:     make([]string, 0),
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(status)
-		return
-	}
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+	status, err := s.deployment.GetStatus(s.docker)
 	status.InertiaVersion = s.version
+	if status.CommitHash == "" {
+		status.Containers = make([]string, 0)
+		render.Render(w, r, res.MsgOK("status retrieved",
+			"status", status))
+		return
+	}
+	if err != nil {
+		render.Render(w, r, res.ErrInternalServer("failed to get status", err))
+		return
+	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(status)
+	render.Render(w, r, res.MsgOK("status retrieved",
+		"status", status))
 }

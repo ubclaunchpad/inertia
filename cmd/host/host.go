@@ -2,12 +2,12 @@ package hostcmd
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/ubclaunchpad/inertia/client"
 	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
@@ -38,7 +38,7 @@ func AttachHostCmds(inertia *inertiacmd.Cmd) {
 			config.Version, inertia.Version)
 	}
 	for remote := range config.Remotes {
-		attachHostCmd(inertia, remote, config, path)
+		AttachHostCmd(inertia, remote, config, path)
 	}
 }
 
@@ -56,9 +56,15 @@ const (
 	flagVerifySSL = "verify-ssl"
 )
 
-// attachHostCmd attaches a subcommand for a configured remote host to the
+// AttachHostCmd attaches a subcommand for a configured remote host to the
 // given parent
-func attachHostCmd(inertia *inertiacmd.Cmd, remote string, config *cfg.Config, cfgPath string) {
+func AttachHostCmd(
+	inertia *inertiacmd.Cmd,
+	remote string,
+	config *cfg.Config,
+	cfgPath string,
+	hidden ...bool,
+) {
 	cli, found := client.NewClient(remote, os.Getenv(EnvSSHPassphrase), config, os.Stdout)
 	if !found {
 		printutil.Fatal("Remote not found")
@@ -70,9 +76,15 @@ func attachHostCmd(inertia *inertiacmd.Cmd, remote string, config *cfg.Config, c
 		client:  cli,
 	}
 	host.Command = &cobra.Command{
-		Use:    remote + " [command]",
-		Hidden: true,
-		Short:  "Configure deployment to " + remote,
+		Use: remote + " [command]",
+		Hidden: func() bool {
+			// hide command by default
+			if len(hidden) > 0 {
+				return hidden[0]
+			}
+			return true
+		}(),
+		Short: "Configure deployment to " + remote,
 		Long: `Manages deployment on specified remote.
 
 Requires:
@@ -228,7 +240,9 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 				fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n",
 					resp.StatusCode, root.client.Name, host)
 				var status = &api.DeploymentStatus{}
-				if err := json.NewDecoder(resp.Body).Decode(status); err != nil {
+				if _, err := api.Unmarshal(resp.Body, api.KV{
+					Key: "status", Value: status,
+				}); err != nil {
 					printutil.Fatal(err)
 				}
 				println(printutil.FormatStatus(status))
@@ -279,20 +293,22 @@ Use 'inertia [remote] status' to see which containers are active.`,
 				}
 				defer resp.Body.Close()
 
-				body, err := ioutil.ReadAll(resp.Body)
+				var logs []string
+				b, err := api.Unmarshal(resp.Body, api.KV{Key: "logs", Value: &logs})
 				if err != nil {
 					printutil.Fatal(err)
 				}
+
 				switch resp.StatusCode {
 				case http.StatusOK:
-					fmt.Printf("(Status code %d) Logs: \n%s\n", resp.StatusCode, body)
+					fmt.Printf("(Status code %d) Logs: \n%s\n", resp.StatusCode, strings.Join(logs, "\n"))
 				case http.StatusUnauthorized:
-					fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
+					fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, b.Message)
 				case http.StatusPreconditionFailed:
-					fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
+					fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, b.Message)
 				default:
 					fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-						resp.StatusCode, body)
+						resp.StatusCode, b.Message)
 				}
 			} else {
 				// if not short, open a websocket to stream logs
@@ -507,19 +523,20 @@ func (root *HostCmd) attachTokenCmd() {
 			}
 			defer resp.Body.Close()
 
-			body, err := ioutil.ReadAll(resp.Body)
+			var token string
+			b, err := api.Unmarshal(resp.Body, api.KV{Key: "token", Value: &token})
 			if err != nil {
 				printutil.Fatal(err)
 			}
 
 			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("New token: %s\n", string(body))
+				fmt.Printf("New token: %s\n", token)
 			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, string(body))
+				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, b.Message)
 			default:
 				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-					resp.StatusCode, body)
+					resp.StatusCode, b.Message)
 			}
 		},
 	}
@@ -549,6 +566,6 @@ func (root *HostCmd) attachUpgradeCmd() {
 			}
 		},
 	}
-	upgrade.Flags().String(flagVersion, root.config.Version, "version of Inertia daemon to spin up")
+	upgrade.Flags().String(flagVersion, "", "version of Inertia daemon to spin up")
 	root.AddCommand(upgrade)
 }

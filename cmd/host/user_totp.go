@@ -1,9 +1,7 @@
 package hostcmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"syscall"
 
@@ -65,13 +63,10 @@ func (root *UserTotpCmd) attachEnableCmd() {
 				return
 			}
 			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				printutil.Fatal(err)
-			}
 
 			var totpInfo api.TotpResponse
-			if err = json.Unmarshal(body, &totpInfo); err != nil {
+			b, err := api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: &totpInfo})
+			if err != nil {
 				printutil.Fatal(err)
 			}
 
@@ -80,8 +75,8 @@ func (root *UserTotpCmd) attachEnableCmd() {
 			qr.New().Get(fmt.Sprintf("otpauth://totp/%s?secret=%s&issuer=Inertia",
 				username, totpInfo.TotpSecret)).Print()
 
-			fmt.Printf("\n\n(Status code %d) TOTP successfully enabled.\n",
-				resp.StatusCode)
+			fmt.Printf("\n\n(Status code %d) %s\n",
+				resp.StatusCode, b.Message)
 			fmt.Print("Scan the QR code above to " +
 				"add your Inertia account to your authenticator app.\n\n")
 			fmt.Printf("Your secret key is: %s\n", totpInfo.TotpSecret)

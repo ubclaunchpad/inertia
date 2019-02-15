@@ -2,9 +2,11 @@ package log
 
 import (
 	"bytes"
-	"io/ioutil"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ubclaunchpad/inertia/api"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,14 +24,14 @@ func (m *mockSocketWriter) WriteMessage(t int, bytes []byte) error {
 }
 func (m *mockSocketWriter) getWrittenBytes() *bytes.Buffer { return &m.Buffer }
 
-func TestNewLogger(t *testing.T) {
-	logger := NewLogger(LoggerOptions{})
+func TestNewStreamer(t *testing.T) {
+	logger := NewStreamer(StreamerOptions{})
 	assert.NotNil(t, logger)
 }
 
 func TestWrite(t *testing.T) {
 	var b bytes.Buffer
-	writer := NewLogger(LoggerOptions{Stdout: &b})
+	writer := NewStreamer(StreamerOptions{Stdout: &b})
 	writer.Write([]byte("whoah!"))
 	assert.Equal(t, "whoah!", b.String())
 }
@@ -37,7 +39,7 @@ func TestWrite(t *testing.T) {
 func TestWriteMulti(t *testing.T) {
 	var b1 bytes.Buffer
 	socketWriter := &mockSocketWriter{}
-	writer := NewLogger(LoggerOptions{Stdout: &b1, Socket: socketWriter})
+	writer := NewStreamer(StreamerOptions{Stdout: &b1, Socket: socketWriter})
 	writer.Write([]byte("whoah!"))
 	assert.Equal(t, "whoah!", b1.String())
 	assert.Equal(t, "whoah!", socketWriter.getWrittenBytes().String())
@@ -45,7 +47,7 @@ func TestWriteMulti(t *testing.T) {
 
 func TestPrintln(t *testing.T) {
 	var b bytes.Buffer
-	logger := &DaemonLogger{Writer: &b}
+	logger := &Streamer{Writer: &b}
 	logger.Println("what???")
 	assert.Equal(t, "what???\n", b.String())
 }
@@ -55,21 +57,23 @@ func TestErr(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// Test streaming
-	logger := &DaemonLogger{
+	var req = httptest.NewRequest("GET", "/asdf", nil)
+	logger := &Streamer{
+		req:        req,
 		Writer:     &b,
 		httpWriter: w,
 		socket:     &mockSocketWriter{},
 	}
-	logger.WriteErr("Wee!", 200)
-	assert.Equal(t, "[ERROR 200] Wee!\n", b.String())
+	logger.Error(res.ErrBadRequest("Wee!"))
+	assert.Equal(t, "[error 400] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.socket = nil
-	logger.WriteErr("Wee!", 200)
-	body, err := ioutil.ReadAll(w.Body)
-	assert.Nil(t, err)
-	assert.Equal(t, "Wee!\n", string(body))
-	assert.Equal(t, 200, w.Code)
+	logger.Error(res.ErrBadRequest("Wee!"))
+	body, err := api.Unmarshal(w.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "Wee!", body.Message)
+	assert.Equal(t, 400, w.Code)
 }
 
 func TestSuccess(t *testing.T) {
@@ -77,20 +81,21 @@ func TestSuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// Test streaming
-	logger := &DaemonLogger{
+	var req = httptest.NewRequest("GET", "/asdf", nil)
+	logger := &Streamer{
+		req:        req,
 		httpWriter: w,
 		Writer:     &b,
 		socket:     &mockSocketWriter{},
 	}
-	logger.WriteSuccess("Wee!", 200)
-	assert.Equal(t, "[SUCCESS 200] Wee!\n", b.String())
+	logger.Success(res.MsgOK("Wee!"))
+	assert.Equal(t, "[success 200] Wee!\n", b.String())
 
 	// Test direct to httpResponse
 	logger.socket = nil
-	logger.WriteSuccess("Wee!", 200)
-	body, err := ioutil.ReadAll(w.Body)
-	assert.Nil(t, err)
-	assert.Equal(t, "Wee!\n", string(body))
+	logger.Success(res.MsgOK("Wee!"))
+	body, err := api.Unmarshal(w.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "Wee!", body.Message)
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
 }

@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -162,15 +163,14 @@ func (root *UserCmd) attachLoginCmd() {
 				return
 			}
 			defer resp.Body.Close()
-			token, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
+			var token string
+			if api.Unmarshal(resp.Body, api.KV{Key: "token", Value: &token}); err != nil {
 				printutil.Fatal(err)
 			}
 
 			var config = root.host.config
 			var remote = root.host.remote
 			config.Remotes[remote].Daemon.Token = string(token)
-			config.Remotes[remote].User = username
 			if err = config.Write(root.host.cfgPath); err != nil {
 				printutil.Fatal(err)
 			}
@@ -226,18 +226,22 @@ func (root *UserCmd) attachListCmd() {
 				printutil.Fatal(err)
 			}
 			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
+
+			var users = make([]string, 0)
+			b, err := api.Unmarshal(resp.Body, api.KV{Key: "users", Value: &users})
 			if err != nil {
 				printutil.Fatal(err)
 			}
+
 			switch resp.StatusCode {
 			case http.StatusOK:
-				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+				fmt.Printf("(Status code %d) %s:\n%s", resp.StatusCode, b.Message,
+					strings.Join(users, "\n"))
 			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
+				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, b.Error())
 			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-					resp.StatusCode, body)
+				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
+					resp.StatusCode, b.Error())
 			}
 		},
 	}
