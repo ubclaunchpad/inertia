@@ -8,8 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/ubclaunchpad/inertia/local"
 )
 
 // getTrueDirectory converts given filepath to host-based filepath if applicable
@@ -17,8 +15,7 @@ import (
 // executed on the host, using the host's filepaths, which means Docker client
 // commands must use this function when dealing with paths
 func getTrueDirectory(path string) string {
-	homeDir, _ := local.GetHomePath()
-	return strings.Replace(path, "/app/host", homeDir, 1)
+	return strings.Replace(path, "/app/host", os.Getenv("HOME"), 1)
 }
 
 // buildTar takes a source and variable writers and walks 'source' writing each file
