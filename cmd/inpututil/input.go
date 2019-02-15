@@ -6,10 +6,9 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/ubclaunchpad/inertia/local"
-
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/common"
+	"github.com/ubclaunchpad/inertia/local"
 )
 
 var (
@@ -36,8 +35,7 @@ func AddRemoteWalkthrough(
 
 	var response string
 	fmt.Println("Enter location of PEM file (leave blank to use '" + defaultSSHLoc + "'):")
-	_, err = fmt.Fscanln(in, &response)
-	if err != nil {
+	if _, err = fmt.Fscanln(in, &response); err != nil {
 		response = defaultSSHLoc
 	}
 	pemLoc := response
