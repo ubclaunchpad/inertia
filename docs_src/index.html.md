@@ -68,16 +68,16 @@ please feel free to
 </aside>
 
 # Getting Started
-> Node.js users can install the CLI using [npm](https://www.npmjs.com/get-npm): 
-
-```shell
-npm install -g inertia-cli
-```
-
 > MacOS users can install the CLI using [Homebrew](https://brew.sh):
 
 ```shell
 brew install ubclaunchpad/tap/inertia
+```
+
+> Node.js users can install the CLI using [npm](https://www.npmjs.com/get-npm): 
+
+```shell
+npm install -g inertia-cli
 ```
 
 > Windows users can install the CLI using [Scoop](http://scoop.sh):
