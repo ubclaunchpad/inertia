@@ -260,8 +260,8 @@ a regular basis is strongly encouraged by AWS anyway).
 
 ```shell
 # set credentials in environment
-export AWS_ACCESS_KEY_ID=${access_key_id}
-export AWS_ACCESS_KEY=${secret_access_key}
+export AWS_ACCESS_KEY=${access_key_id}
+export AWS_SECRET_KEY=${secret_access_key}
 inertia provision ec2 my_remote \
   --from-env \
   --ports 8080
