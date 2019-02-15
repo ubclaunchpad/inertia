@@ -19,144 +19,207 @@ paths:
   /:
     get:
       summary: Daemon healthcheck
-      description: Returns OK
+      description: Returns OK if daemon is online and ready
       responses:
-        200:
+        2XX:
           description: daemon is online
+          content:
+            text/plain:
+              type: string
+
   /webhook:
     post:
       summary: Webhook endpoint
       description: Accepts incoming payloads from Git hosts
       responses:
-        200:
+        2XX:
           description: hello world
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OKResponse'
-        default:
+        4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /status:
     get:
       summary: Deployment status check
       description: Check deployment status
       responses:
-        200:
+        2XX:
           description: hello world
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OKResponse'
-        default:
+        4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /up:
     post:
-      summary: asdf
-      description: asdf
+      summary: Start up project
+      description: Build and deploys your project
       responses:
-        200:
+        2XX:
           description: 'Deployed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OKResponse'
-        default:
+        4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /down:
     post:
-      summary: asdf
-      description: asdf
+      summary: Shut down project
+      description: Shuts down project containers
       responses:
-        default:
+        4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /reset:
     post:
-      summary: asdf
-      description: asdf
+      summary: Remove project
+      description: Reset daemon and remove project from deployment
       responses:
-        default:
+        4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /env:
     post:
-      summary: asdf
+      summary: Update environment variables
       description: asdf
       responses:
-        default:
+        4XX,5XX:
           $ref: '#/components/responses/Error'
     get:
-      summary: asdf
+      summary: Retrieve environment variables
       description: asdf
       responses:
         200:
-          description: 'penis'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OKResponse'
-        default:
+                allOf:
+                  - $ref: '#/components/schemas/OKResponse'
+                  - type: object
+                    required: [ data ]
+                    properties:
+                      data:
+                        type: object
+                        required: [ variables ]
+                        properties:
+                          varoan;es:
+                            type: array
+                            items:
+                              type: string
+        4XX,5XX:
           $ref: '#/components/responses/Error'
 
   # auth
 
   /user/validate:
     get:
-      summary: asdf
+      summary: Validate token
       description: asdf
       responses:
-        default:
+        2XX:
+          $ref: '#/components/responses/OK'
+        4XX,5XX:
           $ref: '#/components/responses/Error'
   /user/login:
     post:
-      summary: asdf
+      summary: Log in as user
       description: asdf
       responses:
-        default:
+        2XX:
+          $ref: '#/components/responses/OK'
+        4XX,5XX:
           $ref: '#/components/responses/Error'
   /user/list:
     get:
-      summary: asdf
+      summary: List all users
       description: asdf
       responses:
-        default:
+        2XX:
+          $ref: '#/components/responses/OK'
+        4XX,5XX:
           $ref: '#/components/responses/Error'
   /user/add:
     post:
-      summary: asdf
+      summary: Add user
       description: asdf
       responses:
-        default:
+        2XX:
+          $ref: '#/components/responses/OK'
+        4XX,5XX:
           $ref: '#/components/responses/Error'
   /user/remove:
     post:
-      summary: asdf
+      summary: Remove user
       description: asdf
       responses:
-        default:
+        2XX:
+          $ref: '#/components/responses/OK'
+        4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /user/reset:
     post:
-      summary: asdf
+      summary: Reset all users
       description: asdf
       responses:
-        default:
+        2XX:
+          $ref: '#/components/responses/OK'
+        4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /user/totp/enable:
     post:
-      summary: asdf
+      summary: Enable 2FA for user
       description: asdf
       responses:
-        default:
+        2XX:
+          description: '2FA successfully enabled for user'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/OKResponse'
+                  - type: object
+                    required: [ data ]
+                    properties:
+                      data:
+                        type: object
+                        required: [ secret, backup_codes ]
+                        properties:
+                          secret:
+                            type: string
+                          backup_codes:
+                            type: array
+                            items:
+                              type: string
+        4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /user/totp/disable:
     post:
-      summary: asdf
+      summary: Disable 2FA for user
       description: asdf
       responses:
-        default:
+        2XX:
+          $ref: '#/components/responses/OK'
+        4XX,5XX:
           $ref: '#/components/responses/Error'
 
 components:
   responses:
+    OK:
+      description: Success!
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OKResponse'
     Error:
       description: Something went wrong - refer to the error code and message for more details
       content:
@@ -165,33 +228,38 @@ components:
             $ref: '#/components/schemas/ErrResponse'
   schemas:
     OKResponse:
-      required:
-        - code
-        - message
+      required: [ code, message ]
       properties:
         code:
           type: integer
+          example: 200
         message:
           type: string
+          example: Successfully did something!
         request_id:
           type: string
+          example: bobbook/2Mch7LMzhj-000023
         data:
           type: object
           description: response data and additional context
     ErrResponse:
-      required:
-        - code
-        - message
-        - error
+      required: [ code, message, error ]
       properties:
         code:
           type: integer
+          example: 400
         message:
           type: string
+          example: (example) could not do something
         error:
           type: string
+          example: (example) value x is missing.
         request_id:
           type: string
+          example: example/2Mch7LMzhj-000023
         data:
           type: object
+          additionalProperties: true
           description: additional context
+          example:
+            example: here is some additional information
