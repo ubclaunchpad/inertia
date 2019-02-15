@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-
 const util = require('./utils.js');
 
 util.uninstall((err) => {

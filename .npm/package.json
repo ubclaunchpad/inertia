@@ -6,17 +6,19 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "node ./src/install.js",
     "preuninstall": "node ./src/uninstall.js",
-    "prepublishOnly": "node ./src/copyREADME.js"
+    "prepublishOnly": "node ./src/copyAssets.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ubclaunchpad/inertia.git"
   },
   "keywords": [
+    "ubc-launchpad",
+    "launchpad",
     "inertia",
     "inertia-cli"
   ],
-  "author": "UBC-Launchpad",
+  "author": "UBC Launch Pad",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ubclaunchpad/inertia/issues"
@@ -31,6 +33,9 @@
   "devDependencies": {
     "eslint": "^5.12.1",
     "eslint-config-standard": "^12.0.0",
-    "eslint-plugin-import": "^2.15.0"
+    "eslint-plugin-import": "^2.15.0",
+    "eslint-plugin-node": "^8.0.1",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0"
   }
 }

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-
-const utils = require('./utils.js')
+const utils = require('./utils.js');
 
 utils.install((err) => {
   if (err) {
