@@ -137,23 +137,6 @@ func TestDaemonDown(t *testing.T) {
 	client.IP = "0.0.0.0"
 	client.Daemon.Port = "4303"
 	script, err := ioutil.ReadFile("scripts/daemon-down.sh")
-	assert.NoError(t, err)
-	actualCommand := fmt.Sprintf(string(script))
-
-	// Make sure the right command is run.
-	err = client.DaemonDown()
-	assert.NoError(t, err)
-	println(actualCommand)
-	assert.Equal(t, actualCommand, session.Calls[0])
-}
-
-func TestDaemonDown(t *testing.T) {
-	session := &mockSSHRunner{}
-	client := newMockSSHClient(session)
-	client.version = "latest"
-	client.IP = "0.0.0.0"
-	client.Daemon.Port = "4303"
-	script, err := ioutil.ReadFile("scripts/daemon-down.sh")
 	assert.Nil(t, err)
 	actualCommand := fmt.Sprintf(string(script))
 
@@ -592,50 +575,6 @@ func TestLogIn(t *testing.T) {
 
 	d := newMockClient(testServer)
 	resp, err := d.LogIn(username, password, "")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestEnableTotp(t *testing.T) {
-	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-
-		// Check request method
-		assert.Equal(t, "POST", req.Method)
-
-		// Check correct endpoint called
-		endpoint := req.URL.Path
-		assert.Equal(t, "/user/totp/enable", endpoint)
-
-		// Check auth
-		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
-	}))
-	defer testServer.Close()
-
-	d := newMockClient(testServer)
-	resp, err := d.EnableTotp("", "")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestDisableTotp(t *testing.T) {
-	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-
-		// Check request method
-		assert.Equal(t, "POST", req.Method)
-
-		// Check correct endpoint called
-		endpoint := req.URL.Path
-		assert.Equal(t, "/user/totp/disable", endpoint)
-
-		// Check auth
-		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
-	}))
-	defer testServer.Close()
-
-	d := newMockClient(testServer)
-	resp, err := d.DisableTotp()
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
