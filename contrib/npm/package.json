@@ -1,6 +1,6 @@
 {
-  "name": "test123cli123",
-  "version": "0.0.93",
+  "name": "inertia-cli",
+  "version": "0.5.0",
   "description": "Inertia-CLI",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
