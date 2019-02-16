@@ -27,15 +27,15 @@ func TestWriteToPath(t *testing.T) {
 	cfg := NewConfig("test", "best-project", "docker-compose", "")
 
 	cwd, err := os.Getwd()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	absPath := filepath.Join(cwd, configPath)
 	defer os.RemoveAll(absPath)
 
 	err = cfg.Write(absPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	writtenConfigContents, err := ioutil.ReadFile(absPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Contains(t, string(writtenConfigContents), "best-project")
 	assert.Contains(t, string(writtenConfigContents), "docker-compose")
 }
@@ -45,7 +45,7 @@ func TestWriteToWritersAndFile(t *testing.T) {
 	cfg := NewConfig("test", "best-project", "docker-compose", "")
 
 	cwd, err := os.Getwd()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	absPath := filepath.Join(cwd, configPath)
 	defer os.RemoveAll(absPath)
 
@@ -53,10 +53,10 @@ func TestWriteToWritersAndFile(t *testing.T) {
 	buffer2 := bytes.NewBuffer(nil)
 
 	err = cfg.Write(absPath, buffer1, buffer2)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	writtenConfigContents, err := ioutil.ReadFile(absPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Contains(t, string(writtenConfigContents), "best-project")
 	assert.Contains(t, string(writtenConfigContents), "docker-compose")
 	assert.Contains(t, buffer1.String(), "best-project")

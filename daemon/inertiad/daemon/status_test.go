@@ -29,7 +29,7 @@ func TestStatusHandlerBuildInProgress(t *testing.T) {
 
 	// Assmble request
 	req, err := http.NewRequest("GET", "/status", nil)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Record responses
 	recorder := httptest.NewRecorder()
@@ -56,7 +56,7 @@ func TestStatusHandlerNoContainers(t *testing.T) {
 
 	// Assmble request
 	req, err := http.NewRequest("GET", "/status", nil)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Record responses
 	recorder := httptest.NewRecorder()
@@ -83,7 +83,7 @@ func TestStatusHandlerActiveContainers(t *testing.T) {
 
 	// Assmble request
 	req, err := http.NewRequest("GET", "/status", nil)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Record responses
 	recorder := httptest.NewRecorder()
@@ -106,7 +106,7 @@ func TestStatusHandlerStatusError(t *testing.T) {
 
 	// Assmble request
 	req, err := http.NewRequest("GET", "/status", nil)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Record responses
 	recorder := httptest.NewRecorder()

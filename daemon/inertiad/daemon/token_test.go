@@ -21,7 +21,7 @@ func TestTokenHandler(t *testing.T) {
 
 	// Assemble request
 	req, err := http.NewRequest(http.MethodGet, "/token", nil)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Record responses
 	recorder := httptest.NewRecorder()

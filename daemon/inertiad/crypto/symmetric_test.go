@@ -16,10 +16,10 @@ func TestEncryptDecrypt(t *testing.T) {
 	plaintext := []byte("I'm a little teapot, short and STDOUT")
 
 	ciphertext, err := Encrypt(keyGood, plaintext)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	decrypted, err := Decrypt(keyGood, ciphertext)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Decrypted matches plaintext
 	for i := range decrypted {

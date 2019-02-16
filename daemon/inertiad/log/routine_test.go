@@ -19,7 +19,7 @@ func TestFlushRoutineWebSocket(t *testing.T) {
 		// establish socket connection
 		var upgrader = websocket.Upgrader{}
 		socket, err := upgrader.Upgrade(w, r, nil)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 		defer socket.Close()
 
 		// Everything written to writer will be sent to reader
@@ -55,10 +55,10 @@ func TestFlushRoutineWebSocket(t *testing.T) {
 
 	// Dial websocket connection
 	url, err := url.Parse(testServer.URL)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	url.Scheme = "ws"
 	c, _, err := websocket.DefaultDialer.Dial(url.String(), nil)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer c.Close()
 
 	// Read from socket
@@ -105,7 +105,7 @@ func TestFlushRoutineHTTP(t *testing.T) {
 	defer testServer.Close()
 
 	resp, err := http.DefaultClient.Get(testServer.URL)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	reader := bufio.NewReader(resp.Body)
 	i := 0
