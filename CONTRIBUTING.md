@@ -185,7 +185,7 @@ Make sure you have a local daemon set up for this web app to work - see the prev
 
 ### Documentation
 
-Our [usage documentation website]() is built with [Slate](https://github.com/lord/slate).
+Our [usage documentation website](https://inertia.ubclaunchpad.com/) is built with [Slate](https://github.com/lord/slate).
 The builds are in `/docs`, but the documentation source is in `/docs_src`.
 
 To build and deploy the documentation locally:
