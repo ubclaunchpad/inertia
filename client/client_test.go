@@ -136,12 +136,11 @@ func TestDaemonDown(t *testing.T) {
 	client.version = "latest"
 	client.IP = "0.0.0.0"
 	client.Daemon.Port = "4303"
-	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
+	script, err := ioutil.ReadFile("scripts/daemon-down.sh")
 	assert.Nil(t, err)
-	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
+	actualCommand := fmt.Sprintf(string(script))
 
 	// Make sure the right command is run.
-	err = client.DaemonUp("latest")
 	err = client.DaemonDown()
 	assert.Nil(t, err)
 	println(actualCommand)
