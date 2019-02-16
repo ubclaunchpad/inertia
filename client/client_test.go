@@ -130,6 +130,24 @@ func TestDaemonUp(t *testing.T) {
 	assert.Equal(t, actualCommand, session.Calls[0])
 }
 
+func TestDaemonDown(t *testing.T) {
+	session := &mockSSHRunner{}
+	client := newMockSSHClient(session)
+	client.version = "latest"
+	client.IP = "0.0.0.0"
+	client.Daemon.Port = "4303"
+	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
+	assert.Nil(t, err)
+	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
+
+	// Make sure the right command is run.
+	err = client.DaemonUp("latest")
+	err = client.DaemonDown()
+	assert.Nil(t, err)
+	println(actualCommand)
+	assert.Equal(t, actualCommand, session.Calls[0])
+}
+
 func TestKeyGen(t *testing.T) {
 	session := &mockSSHRunner{}
 	remote := newMockSSHClient(session)
@@ -560,4 +578,69 @@ func TestLogIn(t *testing.T) {
 	resp, err := d.LogIn(username, password, "")
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestEnableTotp(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/totp/enable", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := newMockClient(testServer)
+	resp, err := d.EnableTotp("", "")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestDisableTotp(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/totp/disable", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := newMockClient(testServer)
+	resp, err := d.DisableTotp()
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestSetSSLVerification(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+
+		// Check request method
+		assert.Equal(t, "POST", req.Method)
+
+		// Check correct endpoint called
+		endpoint := req.URL.Path
+		assert.Equal(t, "/user/totp/disable", endpoint)
+
+		// Check auth
+		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
+	}))
+	defer testServer.Close()
+
+	d := newMockClient(testServer)
+	d.SetSSLVerification(true)
+	assert.Equal(t, d.verifySSL, true)
 }
