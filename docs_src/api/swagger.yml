@@ -21,7 +21,7 @@ paths:
       summary: Daemon healthcheck
       description: Returns OK if daemon is online and ready
       responses:
-        2XX:
+        200:
           description: Daemon is online
           content:
             text/plain:
@@ -33,7 +33,7 @@ paths:
       summary: Webhook endpoint
       description: Accepts incoming payloads from Git hosts
       responses:
-        2XX:
+        202:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
@@ -43,7 +43,7 @@ paths:
       summary: Deployment status check
       description: Check deployment status
       responses:
-        2XX:
+        200:
           description: hello world
           content:
             application/json:
@@ -57,8 +57,8 @@ paths:
       summary: Start up project
       description: Build and deploys your project
       responses:
-        2XX:
-          description: 'Deployed'
+        201:
+          description: 'Project deployment successfully started'
           content:
             application/json:
               schema:
@@ -71,7 +71,7 @@ paths:
       summary: Shut down project
       description: Shuts down project containers
       responses:
-        2XX:
+        200:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
@@ -81,7 +81,7 @@ paths:
       summary: Remove project
       description: Reset daemon and remove project from deployment
       responses:
-        2XX:
+        200:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
@@ -91,7 +91,7 @@ paths:
       summary: Update environment variables
       description: asdf
       responses:
-        2XX:
+        202:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
@@ -129,43 +129,77 @@ paths:
       summary: Validate token
       description: asdf
       responses:
-        2XX:
+        200:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
   /user/login:
     post:
       summary: Log in as user
-      description: asdf
+      description: Authenticate as a user to Inertia daemon
       responses:
-        2XX:
-          $ref: '#/components/responses/OK'
+        200:
+          description: Success!
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/OKResponse'
+                  - type: object
+                    required: [ data ]
+                    properties:
+                      data:
+                        type: object
+                        required: [ token ]
+                        properties:
+                          token:
+                            type: string
+                            example: abcdefg
+                            description: JWT for API access
         4XX,5XX:
           $ref: '#/components/responses/Error'
   /user/list:
     get:
-      summary: List all users
-      description: asdf
+      summary: List users
+      description: List all currently registered users on the Inertia daemon
       responses:
-        2XX:
-          $ref: '#/components/responses/OK'
+        200:
+          description: Success!
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/OKResponse'
+                  - type: object
+                    required: [ data ]
+                    properties:
+                      data:
+                        type: object
+                        required: [ users ]
+                        properties:
+                          users:
+                            type: array
+                            items:
+                              type: string
+                            example: [ bobheadxi, mRabitsky, seifghazi, terryz21, theblackathena, yaoharry ]
+                            description: list of currently registered users
         4XX,5XX:
           $ref: '#/components/responses/Error'
   /user/add:
     post:
       summary: Add user
-      description: asdf
+      description: Register a new user in the Inertia daemon
       responses:
-        2XX:
+        201:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
   /user/remove:
     post:
       summary: Remove user
-      description: asdf
+      description: Unregister a user from the Inertia daemon
       responses:
-        2XX:
+        200:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
@@ -173,9 +207,9 @@ paths:
   /user/reset:
     post:
       summary: Reset all users
-      description: asdf
+      description: Remove all users from the Inertia daemon
       responses:
-        2XX:
+        200:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
@@ -183,9 +217,9 @@ paths:
   /user/totp/enable:
     post:
       summary: Enable 2FA for user
-      description: asdf
+      description: Enables TOTP-based 2FA for the given user
       responses:
-        2XX:
+        200:
           description: '2FA successfully enabled for user'
           content:
             application/json:
@@ -215,9 +249,9 @@ paths:
   /user/totp/disable:
     post:
       summary: Disable 2FA for user
-      description: asdf
+      description: Disable TOTP-based 2FA for the given user
       responses:
-        2XX:
+        200:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
@@ -242,15 +276,14 @@ components:
       properties:
         code:
           type: integer
-          example: 200
           description: HTTP status code
         message:
           type: string
-          example: Successfully did something!
+          example: (example) successfully did something!
           description: summary of response
         request_id:
           type: string
-          example: bobbook/2Mch7LMzhj-000023
+          example: example/2Mch7LMzhj-000023
           description: generated request ID corresponding to request
         data:
           type: object
@@ -261,7 +294,6 @@ components:
       properties:
         code:
           type: integer
-          example: 400
           description: HTTP status code
         message:
           type: string
