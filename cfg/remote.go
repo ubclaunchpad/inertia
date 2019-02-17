@@ -1,29 +1,44 @@
 package cfg
 
-// RemoteVPS contains parameters for the VPS
-type RemoteVPS struct {
-	Name    string        `toml:"name"`
-	IP      string        `toml:"IP"`
-	User    string        `toml:"user"`
-	PEM     string        `toml:"pemfile"`
-	Branch  string        `toml:"branch"`
-	SSHPort string        `toml:"ssh-port"`
-	Daemon  *DaemonConfig `toml:"daemon"`
+import (
+	"errors"
+)
+
+// SSH denotes SSH options for accessing a remote
+type SSH struct {
+	User    string `toml:"user"`
+	PEM     string `toml:"pemfile"`
+	SSHPort string `toml:"ssh-port"`
 }
 
-// DaemonConfig contains parameters for the Daemon
-type DaemonConfig struct {
+// Daemon contains parameters for the Daemon
+type Daemon struct {
 	Port          string `toml:"port"`
 	Token         string `toml:"token"`
 	WebHookSecret string `toml:"webhook-secret"`
 }
 
-// GetHost creates the user@IP string.
-func (remote *RemoteVPS) GetHost() string {
-	return remote.User + "@" + remote.IP
+// Remote contains parameters for the VPS
+type Remote struct {
+	Version string `toml:"version"`
+
+	IP     string  `toml:"IP"`
+	SSH    *SSH    `toml:"ssh"`
+	Daemon *Daemon `toml:"daemon"`
 }
 
-// GetIPAndPort creates the IP:Port string.
-func (remote *RemoteVPS) GetIPAndPort() string {
-	return remote.IP + ":" + remote.Daemon.Port
+// GetSSHHost creates the user@ip string for executing SSH commands
+func (r *Remote) GetSSHHost() (string, error) {
+	if r.SSH == nil {
+		return "", errors.New("SSH configuration not set for remote")
+	}
+	return r.SSH.User + "@" + r.IP, nil
+}
+
+// GetDaemonAddr creates the IP:Port string for making requests to the Daemon
+func (r *Remote) GetDaemonAddr() (string, error) {
+	if r.Daemon == nil {
+		return "", errors.New("Daemon configuration not set for remote")
+	}
+	return r.IP + ":" + r.Daemon.Port, nil
 }

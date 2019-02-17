@@ -7,17 +7,22 @@ import (
 )
 
 func TestRemoteVPS_GetHost(t *testing.T) {
-	remote := &RemoteVPS{
-		User: "bobheadxi",
-		IP:   "127.0.0.1",
-	}
-	assert.Equal(t, "bobheadxi@127.0.0.1", remote.GetHost())
+	var remote = &Remote{IP: "127.0.0.1"}
+	_, err := remote.GetSSHHost()
+	assert.Error(t, err)
+
+	remote.SSH = &SSH{User: "bobheadxi"}
+	host, err := remote.GetSSHHost()
+	assert.NoError(t, err)
+	assert.Equal(t, "bobheadxi@127.0.0.1", host)
 }
 
 func TestRemoteVPS_GetIPAndPort(t *testing.T) {
-	remote := &RemoteVPS{
-		IP:     "127.0.0.1",
-		Daemon: &DaemonConfig{Port: "4303"},
-	}
-	assert.Equal(t, "127.0.0.1:4303", remote.GetIPAndPort())
+	var remote = &Remote{IP: "127.0.0.1"}
+	_, err := remote.GetDaemonAddr()
+	assert.Error(t, err)
+
+	remote.Daemon = &Daemon{Port: "4303"}
+	addr, err := remote.GetDaemonAddr()
+	assert.Equal(t, "127.0.0.1:4303", addr)
 }
