@@ -59,7 +59,7 @@ started to address these problems.
 This site primarily documents how to set up and use Inertia - to learn more
 about the project, check out our [GitHub repository](https://github.com/ubclaunchpad/inertia)!
 A complete command reference for the Inertia CLI is also available [here](/cli).
-If you're interetsted in building on Inertia, check out the [API reference](/api).
+If you're interested in building on Inertia, check out the [API reference](/api).
 
 <aside class="notice">
 This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
