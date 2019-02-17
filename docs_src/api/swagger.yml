@@ -16,50 +16,12 @@ servers:
   - url: https://$DAEMON_ADDR:$DAEMON_PORT
 
 paths:
-  /:
-    get:
-      summary: Daemon healthcheck
-      description: Returns OK if daemon is online and ready
-      responses:
-        200:
-          description: Daemon is online
-          content:
-            text/plain:
-              type: string
-              example: Hello world!
-
-  /webhook:
-    post:
-      summary: Webhook endpoint
-      description: Accepts incoming payloads from Git hosts (GitHub, GitLab, and Bitbucket)
-      externalDocs:
-        description: Repository configuration
-        url: https://inertia.ubclaunchpad.com/#configuring-your-repository
-      responses:
-        202:
-          $ref: '#/components/responses/OK'
-        4XX,5XX:
-          $ref: '#/components/responses/Error'
-
-  /status:
-    get:
-      summary: Deployment status check
-      description: Check the status of your Inertia deployment
-      security: [ bearerAuth: [] ]
-      responses:
-        200:
-          description: hello world
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OKResponse'
-        4XX,5XX:
-          $ref: '#/components/responses/Error'
 
   /up:
     post:
       summary: Start up project
       description: Build and deploy your project
+      tags: [ Deployment ]
       security: [ bearerAuth: [] ]
       externalDocs:
         description: Repository configuration
@@ -73,6 +35,7 @@ paths:
               properties:
                 stream:
                   type: boolean
+                  description: Whether or not to stream log output 
                 project:
                   type: string
                 build_type:
@@ -102,6 +65,7 @@ paths:
     post:
       summary: Shut down project
       description: Shuts down project containers
+      tags: [ Deployment ]
       security: [ bearerAuth: [] ]
       responses:
         200:
@@ -113,6 +77,7 @@ paths:
     post:
       summary: Remove project
       description: Reset daemon and remove project from deployment
+      tags: [ Deployment ]
       security: [ bearerAuth: [] ]
       responses:
         200:
@@ -124,6 +89,7 @@ paths:
     post:
       summary: Update environment variables
       description: Set environment variables
+      tags: [ Deployment ]
       security: [ bearerAuth: [] ]
       externalDocs:
         description: Secrets management
@@ -134,6 +100,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [ name, value ]
               properties:
                 name:
                   type: string
@@ -151,6 +118,7 @@ paths:
     get:
       summary: Retrieve environment variables
       description: Retrieve configured environment variables
+      tags: [ Deployment ]
       security: [ bearerAuth: [] ]
       responses:
         200:
@@ -176,22 +144,141 @@ paths:
         4XX,5XX:
           $ref: '#/components/responses/Error'
 
+  /webhook:
+    post:
+      summary: Webhooks
+      description: Accepts incoming payloads from Git hosts (GitHub, GitLab, and Bitbucket)
+      tags: [ Deployment ]
+      externalDocs:
+        description: Repository configuration
+        url: https://inertia.ubclaunchpad.com/#configuring-your-repository
+      responses:
+        202:
+          $ref: '#/components/responses/OK'
+        4XX,5XX:
+          $ref: '#/components/responses/Error'
+
+  # monitoring
+
+  /:
+    get:
+      summary: Daemon healthcheck
+      description: Returns OK if daemon is online and ready
+      tags: [ Monitoring ]
+      responses:
+        200:
+          description: Daemon is online
+          content:
+            text/plain:
+              type: string
+              example: Hello world!
+
+  /status:
+    get:
+      summary: Deployment status check
+      description: Check the status of your Inertia deployment
+      tags: [ Deployment, Monitoring ]
+      security: [ bearerAuth: [] ]
+      externalDocs:
+        description: Deployment monitoring
+        url: https://inertia.ubclaunchpad.com/#monitoring
+      responses:
+        200:
+          description: Success!
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/OKResponse'
+                  - type: object
+                    required: [ data ]
+                    properties:
+                      data:
+                        type: object
+                        required: [ version ]
+                        properties:
+                          version:
+                            type: string
+                            description: Inertia daemon version
+                          branch:
+                            type: string
+                            description: Currently deployed project branch
+                          commit_hash:
+                            type: string
+                          commit_message:
+                            type: string
+                          build_type:
+                            type: string
+                          containers:
+                            type: array
+                            items:
+                              type: string
+                            example: [ /docker-compose, /server ]
+                          build_active:
+                            type: boolean
+        4XX,5XX:
+          $ref: '#/components/responses/Error'
+
+  /logs:
+    get:
+      summary: View deployment logs
+      description: View logs of the Inertia daemon or project containers
+      tags: [ Deployment, Monitoring ]
+      security: [ bearerAuth: [] ]
+      externalDocs:
+        description: Deployment monitoring
+        url: https://inertia.ubclaunchpad.com/#monitoring
+      parameters:
+        - in: query
+          name: container
+          schema:
+            type: string
+          description: Name of container to fetch logs for - leave blank for Inertia daemon logs
+          example: /docker-compose
+        - in: query
+          name: stream
+          schema:
+            type: boolean
+          description: Whether or not to upgrade connection to a websocket
+          example: true
+        - in: query
+          name: entries
+          schema:
+            type: integer
+          description: Number of lines of logs to fetch (default 500)
+          example: 500
+      responses:
+        200:
+          description: Log contents retrieved
+          content:
+            text/plain:
+              type: string
+              example: |
+                No deployment detected
+                Setting up project...
+                Cloning branch dev from git@github.com:example/example.git...
+        4XX,5XX:
+          $ref: '#/components/responses/Error'
+
   # auth
 
   /user/validate:
     get:
       summary: Validate JWT
       description: Validate your JWT
+      tags: [ Authentication ]
       security: [ bearerAuth: [] ]
       responses:
         200:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /user/login:
     post:
       summary: Log in as user
       description: Authenticate as a user to Inertia daemon
+      tags: [ Authentication ]
       security: [ bearerAuth: [] ]
       externalDocs:
         description: Team management
@@ -230,10 +317,12 @@ paths:
                             description: JWT for API access
         4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /user/list:
     get:
       summary: List users
       description: List all currently registered users on the Inertia daemon
+      tags: [ Authentication ]
       security: [ bearerAuth: [admin:true] ]
       externalDocs:
         description: Team management
@@ -261,10 +350,12 @@ paths:
                             description: list of currently registered users
         4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /user/add:
     post:
       summary: Add user
       description: Register a new user in the Inertia daemon
+      tags: [ Authentication ]
       security: [ bearerAuth: [admin:true] ]
       externalDocs:
         description: Team management
@@ -275,6 +366,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [ username, password ]
               properties:
                 username:
                   type: string
@@ -287,10 +379,12 @@ paths:
           $ref: '#/components/responses/OK'
         4XX,5XX:
           $ref: '#/components/responses/Error'
+
   /user/remove:
     post:
       summary: Remove user
       description: Unregister a user from the Inertia daemon
+      tags: [ Authentication ]
       security: [ bearerAuth: [admin:true] ]
       externalDocs:
         description: Team management
@@ -301,6 +395,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [ username ]
               properties:
                 username:
                   type: string
@@ -314,6 +409,7 @@ paths:
     post:
       summary: Reset all users
       description: Remove all users from the Inertia daemon
+      tags: [ Authentication ]
       security: [ bearerAuth: [admin:true] ]
       externalDocs:
         description: Team management
@@ -328,6 +424,7 @@ paths:
     post:
       summary: Enable 2FA for user
       description: Enables TOTP-based 2FA for the given user
+      tags: [ Authentication ]
       security: [ bearerAuth: [admin:true] ]
       externalDocs:
         description: 2-factor authentication
@@ -338,6 +435,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [ username, password ]
               properties:
                 username:
                   type: string
@@ -375,6 +473,7 @@ paths:
     post:
       summary: Disable 2FA for user
       description: Disable TOTP-based 2FA for the given user
+      tags: [ Authentication ]
       security: [ bearerAuth: [admin:true] ]
       externalDocs:
         description: 2-factor authentication
