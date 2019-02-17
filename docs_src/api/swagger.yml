@@ -31,7 +31,10 @@ paths:
   /webhook:
     post:
       summary: Webhook endpoint
-      description: Accepts incoming payloads from Git hosts
+      description: Accepts incoming payloads from Git hosts (GitHub, GitLab, and Bitbucket)
+      externalDocs:
+        description: Repository configuration
+        url: https://inertia.ubclaunchpad.com/#configuring-your-repository
       responses:
         202:
           $ref: '#/components/responses/OK'
@@ -41,7 +44,8 @@ paths:
   /status:
     get:
       summary: Deployment status check
-      description: Check deployment status
+      description: Check the status of your Inertia deployment
+      security: [ bearerAuth: [] ]
       responses:
         200:
           description: hello world
@@ -55,7 +59,35 @@ paths:
   /up:
     post:
       summary: Start up project
-      description: Build and deploys your project
+      description: Build and deploy your project
+      security: [ bearerAuth: [] ]
+      externalDocs:
+        description: Repository configuration
+        url: https://inertia.ubclaunchpad.com/#configuring-your-repository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stream:
+                  type: boolean
+                project:
+                  type: string
+                build_type:
+                  type: string
+                build_file_path:
+                  type: string
+                git_options:
+                  type: object
+                  properties:
+                    remote:
+                      type: string
+                    branch:
+                      type: string
+                webhook_secret:
+                  type: string
       responses:
         201:
           description: 'Project deployment successfully started'
@@ -70,6 +102,7 @@ paths:
     post:
       summary: Shut down project
       description: Shuts down project containers
+      security: [ bearerAuth: [] ]
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -80,6 +113,7 @@ paths:
     post:
       summary: Remove project
       description: Reset daemon and remove project from deployment
+      security: [ bearerAuth: [] ]
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -89,7 +123,26 @@ paths:
   /env:
     post:
       summary: Update environment variables
-      description: asdf
+      description: Set environment variables
+      security: [ bearerAuth: [] ]
+      externalDocs:
+        description: Secrets management
+        url: https://inertia.ubclaunchpad.com/#secrets-management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                value:
+                  type: string
+                encrypt:
+                  type: boolean
+                remove:
+                  type: boolean
       responses:
         202:
           $ref: '#/components/responses/OK'
@@ -97,7 +150,8 @@ paths:
           $ref: '#/components/responses/Error'
     get:
       summary: Retrieve environment variables
-      description: asdf
+      description: Retrieve configured environment variables
+      security: [ bearerAuth: [] ]
       responses:
         200:
           description: Success!
@@ -126,8 +180,9 @@ paths:
 
   /user/validate:
     get:
-      summary: Validate token
-      description: asdf
+      summary: Validate JWT
+      description: Validate your JWT
+      security: [ bearerAuth: [] ]
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -137,6 +192,23 @@ paths:
     post:
       summary: Log in as user
       description: Authenticate as a user to Inertia daemon
+      security: [ bearerAuth: [] ]
+      externalDocs:
+        description: Team management
+        url: https://inertia.ubclaunchpad.com/#teams
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                totp:
+                  type: string
       responses:
         200:
           description: Success!
@@ -162,6 +234,10 @@ paths:
     get:
       summary: List users
       description: List all currently registered users on the Inertia daemon
+      security: [ bearerAuth: [admin:true] ]
+      externalDocs:
+        description: Team management
+        url: https://inertia.ubclaunchpad.com/#teams
       responses:
         200:
           description: Success!
@@ -189,6 +265,23 @@ paths:
     post:
       summary: Add user
       description: Register a new user in the Inertia daemon
+      security: [ bearerAuth: [admin:true] ]
+      externalDocs:
+        description: Team management
+        url: https://inertia.ubclaunchpad.com/#teams
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                admin:
+                  type: boolean
       responses:
         201:
           $ref: '#/components/responses/OK'
@@ -198,6 +291,19 @@ paths:
     post:
       summary: Remove user
       description: Unregister a user from the Inertia daemon
+      security: [ bearerAuth: [admin:true] ]
+      externalDocs:
+        description: Team management
+        url: https://inertia.ubclaunchpad.com/#teams
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -208,6 +314,10 @@ paths:
     post:
       summary: Reset all users
       description: Remove all users from the Inertia daemon
+      security: [ bearerAuth: [admin:true] ]
+      externalDocs:
+        description: Team management
+        url: https://inertia.ubclaunchpad.com/#teams
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -218,6 +328,21 @@ paths:
     post:
       summary: Enable 2FA for user
       description: Enables TOTP-based 2FA for the given user
+      security: [ bearerAuth: [admin:true] ]
+      externalDocs:
+        description: 2-factor authentication
+        url: https://inertia.ubclaunchpad.com/#2-factor-authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
       responses:
         200:
           description: '2FA successfully enabled for user'
@@ -250,6 +375,10 @@ paths:
     post:
       summary: Disable 2FA for user
       description: Disable TOTP-based 2FA for the given user
+      security: [ bearerAuth: [admin:true] ]
+      externalDocs:
+        description: 2-factor authentication
+        url: https://inertia.ubclaunchpad.com/#2-factor-authentication
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -257,6 +386,12 @@ paths:
           $ref: '#/components/responses/Error'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      description: JWT issued by Inertia
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   responses:
     OK:
       description: Success!
