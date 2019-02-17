@@ -5,5 +5,7 @@ automatically using `inertia-docgen`.
 
 For a more general usage guide, refer to the [Inertia Usage Guide](https://inertia.ubclaunchpad.com).
 
-* Generated: 2019-Feb-13
-* Version: v0.5.2-21-g6722eec
+For documentation regarding the daemon API, refer to the [API Reference](https://inertia.ubclaunchpad.com/api).
+
+* Generated: 2019-Feb-16
+* Version: v0.5.2-16-gbb67c81
