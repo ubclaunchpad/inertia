@@ -197,9 +197,9 @@ Our [usage documentation website](https://inertia.ubclaunchpad.com/) is built
 with [Slate](https://github.com/lord/slate).
 The builds are in `/docs`, but the documentation source is in `/docs_src`.
 
-In additional to the Slate usage guide, we also have an
+In additional to the Slate usage guide, we also have a
 [CLI reference](https://inertia.ubclaunchpad.com/cli) and an
-[API reference](https://inertia.ubclaunchpad.com/api).
+[API reference](https://inertia.ubclaunchpad.com/api) available online.
 
 To build and deploy all the documentation locally:
 
