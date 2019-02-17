@@ -141,9 +141,11 @@ result, _ := remote.RunSSHCommand(string(shellScriptData))
 
 ### Daemon
 
-The Inertia daemon package manages all serverside functionality and is the core of the Inertia platform. The daemon codebase is in `./daemon/inertiad/`.
+The Inertia daemon package manages all serverside functionality and is the core
+of the Inertia platform. The daemon codebase is in `./daemon/inertiad/`.
 
-To locally test a daemon compiled from source, set your Inertia version in `.inertia.toml` to `test` and run:
+To locally test a daemon compiled from source, set your Inertia version in
+`inertia.toml` to `test` and run:
 
 ```bash
 $> make testdaemon
@@ -151,7 +153,8 @@ $> make testdaemon
 $> inertia local init
 ```
 
-This will build a daemon image and `scp` it over to the test VPS, and use that image for the daemon when setting up `testvps` using `inertia local init`
+This will build a daemon image and `scp` it over to the test VPS, and use that
+image for the daemon when setting up `testvps` using `inertia local init`
 
 If you run into this error when deploying onto the `testvps`:
 
@@ -159,7 +162,8 @@ If you run into this error when deploying onto the `testvps`:
 docker: Error response from daemon: error creating aufs mount to /var/lib/docker/aufs/mnt/fed036790dfcc73da5f7c74a7264e617a2889ccf06f61dc4d426cf606de2f374-init: invalid argument.
 ```
 
-You probably need to go into your Docker settings and add this line to the Docker daemon configuration file:
+You probably need to go into your Docker settings and add this line to the Docker
+daemon configuration file:
 
 ```js
 {
@@ -168,7 +172,11 @@ You probably need to go into your Docker settings and add this line to the Docke
 }
 ```
 
-This sneaky configuration file can be found under `Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
+This sneaky configuration file can be found under
+`Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
+
+The daemon also exposes a [REST API](https://inertia.ubclaunchpad.com/api) for
+the CLI and web app.
 
 ### Web
 
@@ -185,14 +193,20 @@ Make sure you have a local daemon set up for this web app to work - see the prev
 
 ### Documentation
 
-Our [usage documentation website](https://inertia.ubclaunchpad.com/) is built with [Slate](https://github.com/lord/slate).
+Our [usage documentation website](https://inertia.ubclaunchpad.com/) is built
+with [Slate](https://github.com/lord/slate).
 The builds are in `/docs`, but the documentation source is in `/docs_src`.
 
-To build and deploy the documentation locally:
+In additional to the Slate usage guide, we also have a
+[CLI reference](https://inertia.ubclaunchpad.com/cli) and an
+[API reference](https://inertia.ubclaunchpad.com/api) available online.
+
+To build and deploy all the documentation locally:
 
 ```bash
 $> make docs
-$> make run-docs # visit http://localhost:4567/
+$> make run-docs-usage # visit http://localhost:4567/
+$> make run-docs-api   # visit http://localhost:8080
 ```
 
 ## Setting up a Testing Environment
