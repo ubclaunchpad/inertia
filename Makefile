@@ -146,9 +146,13 @@ test-integration-fast:
 ##  * DOCUMENTATION
 ##    ‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-## docs: set up doc builder and build usage guide website
+## docs: build all documentation
 .PHONY: docs
-docs: docgen
+docs: docs-usage docs-cli docs-api
+
+## docs-usage: set up doc builder and build usage guide website
+.PHONY: docs
+docs-usage:
 	sh .scripts/build_docs.sh
 
 ## docs-cli: build CLI reference pages
@@ -157,10 +161,21 @@ docs-cli: docgen
 	@echo [INFO] Generating CLI documentation
 	@./inertia-docgen -o ./docs/cli
 
-## run-docs: run local doc server from ./docs_src
-.PHONY: run-docs
-run-docs:
+## docs-api: build API reference from Swagger definitions in /docs_src/api
+.PHONY: docs-api
+docs-api: 
+	@echo [INFO] Generating API documentation
+	@redoc-cli bundle ./docs_src/api/swagger.yml -o ./docs/api/index.html
+
+## run-docs-usage: run doc server from ./docs_src for the usage guide website only
+.PHONY: run-docs-usage
+run-docs-usage:
 	( cd docs_build/slate ; bundle exec middleman server --verbose )
+
+## run-docs-api: run doc server from ./docs_src for the API reference website only
+.PHONY: run-docs-api
+run-docs-api:
+	redoc-cli serve ./docs_src/api/swagger.yml -w
 
 ##    _______
 ##  * HELPERS
@@ -177,6 +192,7 @@ prod-deps:
 dev-deps:
 	go get -u github.com/UnnoTed/fileb0x
 	go get -u golang.org/x/lint/golint
+	npm install -g redoc-cli
 
 ## docker-deps: download required docker containers
 .PHONY: docker-deps
