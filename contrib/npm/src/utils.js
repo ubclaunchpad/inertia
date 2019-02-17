@@ -23,6 +23,8 @@ const opts = {
   binversion: '0.5.0'
 };
 
+const exe = process.platform === 'win32' ? '.exe' : '';
+
 // Builds Inertia download url depending on user machine
 function getBinURL () {
   // Verify system
@@ -32,7 +34,6 @@ function getBinURL () {
   }
 
   // Build download Url
-  const exe = process.platform === 'win32' ? '.exe' : '';
   return `https://github.com/ubclaunchpad/inertia/releases/download/v${opts.binversion}/inertia.v${opts.binversion}.${ARCH_PLATFORM_MAPPINGS[process.platform]}.${ARCH_PLATFORM_MAPPINGS[process.arch]}${exe}`;
 }
 
@@ -61,7 +62,9 @@ function copyToFinalLocation (binName, binPath, callback) {
   getNpmBinLocation((err, installationPath) => {
     if (err) return callback(new Error('Error getting binary installation path from `npm bin`'));
     // Move the binary file to final location
-    fs.renameSync(path.join(binPath, binName), path.join(installationPath, binName));
+    fs.renameSync(path.join(binPath, binName), path.join(installationPath, binName + exe));
+    // Set file permissions
+    fs.chmodSync(path.join(installationPath, binName + exe), 755);
     callback(null);
   });
 }
@@ -70,7 +73,9 @@ function copyToFinalLocation (binName, binPath, callback) {
 module.exports.install = function (callback) {
   mkdirp.sync(opts.binPath);
 
-  const req = request({ uri: getBinURL() });
+  const req = request({
+    uri: getBinURL()
+  });
 
   req.on('error', callback.bind(null, `Error downloading from URL: ${opts.url}`));
   req.on('response', (res) => {
@@ -81,6 +86,7 @@ module.exports.install = function (callback) {
     // setup piping
     res.pipe(writeStream);
     writeStream.on('finish', copyToFinalLocation.bind(null, opts.binName, opts.binPath, callback));
+    writeStream.on('error', callback.bind(null, 'Error downloading binary'));
   });
 };
 
@@ -90,7 +96,7 @@ module.exports.uninstall = function (callback) {
     if (err) callback(new Error('Error finding binary installation directory'));
 
     try {
-      fs.unlinkSync(path.join(installationPath, opts.binName));
+      fs.unlinkSync(path.join(installationPath, opts.binName + exe));
     } catch (err) {
       console.log('Error while uninstalling');
     }
