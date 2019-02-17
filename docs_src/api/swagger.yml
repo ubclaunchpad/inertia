@@ -2,16 +2,28 @@ openapi: 3.0.0
 
 info:
   version: 0.5.2
-  title: Inertia Daemon API
+  title: Inertia Daemon API Reference
   description: |
 
     This is the reference documentation for the Inertia daemon's REST API.
 
+    # About Inertia
+
     For a more general usage guide, check out the
-    [Inertia Usage Guide](https://inertia.ubclaunchpad.com).
+    [Inertia Usage Guide](https://inertia.ubclaunchpad.com). A
+    [CLI reference](https://inertia.ubclaunchpad.com/cli) is also available.
 
     If you find any issues, please feel free to
     [open an issue](https://github.com/ubclaunchpad/inertia/issues/new/choose)!
+
+    # Request Authentication
+
+    Inertia issues JWTs for request authentication. Using the CLI, a persistent
+    key is generated - for general use, you should
+    [create a user and log in](https://inertia.ubclaunchpad.com/api/#tag/Authentication)
+    to receive a user-specific JWT.
+
+    <security-definitions /> 
   contact:
     name: UBC Launch Pad
     email: team@ubclaunchpad.com
@@ -19,6 +31,13 @@ info:
   license:
     name: MIT
     url: https://github.com/ubclaunchpad/inertia/blob/master/LICENSE
+  x-logo:
+    url: 'https://github.com/ubclaunchpad/inertia/blob/master/.static/inertia.png?raw=true'
+    altText: Inertia logo
+
+x-tagGroups:
+  - name: API
+    tags: [ Deployment, Monitoring, Authentication ]
 
 servers:
   - url: https://$DAEMON_ADDR:$DAEMON_PORT
@@ -30,7 +49,7 @@ paths:
       summary: Start up project
       description: Build and deploy your project
       tags: [ Deployment ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       externalDocs:
         description: Repository configuration
         url: https://inertia.ubclaunchpad.com/#configuring-your-repository
@@ -63,9 +82,12 @@ paths:
         201:
           description: 'Project deployment successfully started'
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OKResponse'
+            text/plain:
+              type: string
+              example: |
+                No deployment detected
+                Setting up project...
+                Cloning branch dev from git@github.com:example/example.git...
         4XX,5XX:
           $ref: '#/components/responses/Error'
 
@@ -74,7 +96,7 @@ paths:
       summary: Shut down project
       description: Shuts down project containers
       tags: [ Deployment ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -86,7 +108,7 @@ paths:
       summary: Remove project
       description: Reset daemon and remove project from deployment
       tags: [ Deployment ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -98,7 +120,7 @@ paths:
       summary: Update environment variables
       description: Set environment variables
       tags: [ Deployment ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       externalDocs:
         description: Secrets management
         url: https://inertia.ubclaunchpad.com/#secrets-management
@@ -127,7 +149,7 @@ paths:
       summary: Retrieve environment variables
       description: Retrieve configured environment variables
       tags: [ Deployment ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       responses:
         200:
           description: Success!
@@ -186,7 +208,7 @@ paths:
       summary: Deployment status check
       description: Check the status of your Inertia deployment
       tags: [ Deployment, Monitoring ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       externalDocs:
         description: Deployment monitoring
         url: https://inertia.ubclaunchpad.com/#monitoring
@@ -232,7 +254,7 @@ paths:
       summary: View deployment logs
       description: View logs of the Inertia daemon or project containers
       tags: [ Deployment, Monitoring ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       externalDocs:
         description: Deployment monitoring
         url: https://inertia.ubclaunchpad.com/#monitoring
@@ -275,7 +297,7 @@ paths:
       summary: Validate JWT
       description: Validate your JWT
       tags: [ Authentication ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       responses:
         200:
           $ref: '#/components/responses/OK'
@@ -287,7 +309,7 @@ paths:
       summary: Log in as user
       description: Authenticate as a user to Inertia daemon
       tags: [ Authentication ]
-      security: [ bearerAuth: [] ]
+      security: [ bearer_auth: [] ]
       externalDocs:
         description: Team management
         url: https://inertia.ubclaunchpad.com/#teams
@@ -331,7 +353,7 @@ paths:
       summary: List users
       description: List all currently registered users on the Inertia daemon
       tags: [ Authentication ]
-      security: [ bearerAuth: [admin:true] ]
+      security: [ bearer_auth: [admin:true] ]
       externalDocs:
         description: Team management
         url: https://inertia.ubclaunchpad.com/#teams
@@ -364,7 +386,7 @@ paths:
       summary: Add user
       description: Register a new user in the Inertia daemon
       tags: [ Authentication ]
-      security: [ bearerAuth: [admin:true] ]
+      security: [ bearer_auth: [admin:true] ]
       externalDocs:
         description: Team management
         url: https://inertia.ubclaunchpad.com/#teams
@@ -393,7 +415,7 @@ paths:
       summary: Remove user
       description: Unregister a user from the Inertia daemon
       tags: [ Authentication ]
-      security: [ bearerAuth: [admin:true] ]
+      security: [ bearer_auth: [admin:true] ]
       externalDocs:
         description: Team management
         url: https://inertia.ubclaunchpad.com/#teams
@@ -418,7 +440,7 @@ paths:
       summary: Reset all users
       description: Remove all users from the Inertia daemon
       tags: [ Authentication ]
-      security: [ bearerAuth: [admin:true] ]
+      security: [ bearer_auth: [admin:true] ]
       externalDocs:
         description: Team management
         url: https://inertia.ubclaunchpad.com/#teams
@@ -433,7 +455,7 @@ paths:
       summary: Enable 2FA for user
       description: Enables TOTP-based 2FA for the given user
       tags: [ Authentication ]
-      security: [ bearerAuth: [admin:true] ]
+      security: [ bearer_auth: [admin:true] ]
       externalDocs:
         description: 2-factor authentication
         url: https://inertia.ubclaunchpad.com/#2-factor-authentication
@@ -482,7 +504,7 @@ paths:
       summary: Disable 2FA for user
       description: Disable TOTP-based 2FA for the given user
       tags: [ Authentication ]
-      security: [ bearerAuth: [admin:true] ]
+      security: [ bearer_auth: [admin:true] ]
       externalDocs:
         description: 2-factor authentication
         url: https://inertia.ubclaunchpad.com/#2-factor-authentication
@@ -494,7 +516,7 @@ paths:
 
 components:
   securitySchemes:
-    bearerAuth:
+    bearer_auth:
       description: JWT issued by Inertia
       type: http
       scheme: bearer
