@@ -71,12 +71,12 @@ func TestVerify(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := bytes.NewBufferString(tt.args.body)
 			req, err := http.NewRequest("GET", "http://127.0.0.1/webhook", buf)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			req.Header.Set(tt.args.header, tt.args.signature)
 			req.Header.Set("Content-Type", "application/json")
 
 			body, err := ioutil.ReadAll(req.Body)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			if err := Verify(tt.args.host, tt.args.key, req.Header, body); (err != nil) != tt.wantErr {
 				t.Errorf("Verify() error = %v, wantErr %v", err, tt.wantErr)

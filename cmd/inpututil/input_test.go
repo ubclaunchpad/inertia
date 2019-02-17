@@ -13,7 +13,7 @@ import (
 func TestRemoteAddWalkthrough(t *testing.T) {
 	config := cfg.NewConfig("", "", "", "")
 	in, err := ioutil.TempFile("", "")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer in.Close()
 
 	fmt.Fprintln(in, "pemfile")
@@ -22,7 +22,7 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 	fmt.Fprintln(in, "master")
 
 	_, err = in.Seek(0, io.SeekStart)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	r, found := config.GetRemote("inertia-rocks")
@@ -30,27 +30,27 @@ func TestRemoteAddWalkthrough(t *testing.T) {
 	assert.Equal(t, "pemfile", r.PEM)
 	assert.Equal(t, "user", r.User)
 	assert.Equal(t, "0.0.0.0", r.IP)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestRemoteAddWalkthroughFailure(t *testing.T) {
 	config := cfg.NewConfig("", "", "", "")
 	in, err := ioutil.TempFile("", "")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer in.Close()
 
 	fmt.Fprintln(in, "pemfile")
 	fmt.Fprintln(in, "")
 
 	_, err = in.Seek(0, io.SeekStart)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	assert.Equal(t, errInvalidUser, err)
 
 	in.WriteAt([]byte("pemfile\nuser\n\n"), 0)
 	_, err = in.Seek(0, io.SeekStart)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
 	assert.Equal(t, errInvalidAddress, err)
@@ -70,14 +70,14 @@ func Test_addProjectWalkthrough(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			in, err := ioutil.TempFile("", "")
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			defer in.Close()
 
 			fmt.Fprintln(in, tt.wantBuildType)
 			fmt.Fprintln(in, tt.wantBuildFilePath)
 
 			_, err = in.Seek(0, io.SeekStart)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			gotBuildType, gotBuildFilePath, err := AddProjectWalkthrough(in)
 			if (err != nil) != tt.wantErr {
@@ -110,14 +110,14 @@ func Test_enterEC2CredentialsWalkthrough(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			in, err := ioutil.TempFile("", "")
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			defer in.Close()
 
 			fmt.Fprintln(in, tt.wantID)
 			fmt.Fprintln(in, tt.wantKey)
 
 			_, err = in.Seek(0, io.SeekStart)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			gotID, gotKey, err := EnterEC2CredentialsWalkthrough(in)
 			if (err != nil) != tt.wantErr {
@@ -152,13 +152,13 @@ func Test_chooseFromListWalkthrough(t *testing.T) {
 	}
 	for _, tt := range tests {
 		in, err := ioutil.TempFile("", "")
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 		defer in.Close()
 
 		fmt.Fprintln(in, tt.want)
 
 		_, err = in.Seek(0, io.SeekStart)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ChooseFromListWalkthrough(in, tt.args.optionName, tt.args.options)
