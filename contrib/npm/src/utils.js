@@ -4,6 +4,7 @@ const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
 const exec = require('child_process').exec;
+const pkg = require('../package.json');
 
 // Mappings
 const ARCH_PLATFORM_MAPPINGS = {
@@ -20,7 +21,7 @@ const ARCH_PLATFORM_MAPPINGS = {
 const opts = {
   binPath: './bin',
   binName: 'inertia',
-  binversion: '0.5.2'
+  binversion: pkg.version
 };
 
 const exe = process.platform === 'win32' ? '.exe' : '';
@@ -65,6 +66,7 @@ function copyToFinalLocation (binName, binPath, callback) {
     fs.renameSync(path.join(binPath, binName), path.join(installationPath, binName + exe));
     // Set file permissions
     fs.chmodSync(path.join(installationPath, binName + exe), 755);
+    console.log('Run `inertia --version` to check if the installation was successful!\n');
     callback(null);
   });
 }
