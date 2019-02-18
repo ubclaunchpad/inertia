@@ -20,7 +20,7 @@ const ARCH_PLATFORM_MAPPINGS = {
 const opts = {
   binPath: './bin',
   binName: 'inertia',
-  binversion: '0.5.0'
+  binversion: '0.5.2'
 };
 
 const exe = process.platform === 'win32' ? '.exe' : '';
@@ -95,12 +95,14 @@ module.exports.uninstall = function (callback) {
   getNpmBinLocation((err, installationPath) => {
     if (err) callback(new Error('Error finding binary installation directory'));
 
-    try {
-      fs.unlinkSync(path.join(installationPath, opts.binName + exe));
-    } catch (err) {
-      console.log('Error while uninstalling');
+    let fullPath = path.join(installationPath, opts.binName + exe);
+    if (fs.existsSync(fullPath)) { // Uinstall only if present
+      try {
+        fs.unlinkSync(fullPath);
+      } catch (err) {
+        console.log('Error while uninstalling');
+      }
     }
-
     return callback(null);
   });
 };
