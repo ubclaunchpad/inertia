@@ -59,11 +59,11 @@ func TestDeployMock(t *testing.T) {
 	}
 
 	cli, err := containers.NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	deploy, err := d.Deploy(cli, os.Stdout, DeployOptions{SkipUpdate: true})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	deploy()
 	assert.Equal(t, true, buildCalled)
@@ -87,12 +87,12 @@ func TestDownIntegration(t *testing.T) {
 	}
 
 	cli, err := containers.NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	err = d.Down(cli, os.Stdout)
 	if err != containers.ErrNoContainers {
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 	}
 
 	assert.True(t, called)
@@ -105,10 +105,10 @@ func TestGetStatusIntegration(t *testing.T) {
 
 	// Traverse back down to root directory of repository
 	repo, err := gogit.PlainOpen("../../../")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	cli, err := containers.NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	var fakeBuilder = newDefaultFakeBuilder(nil, nil)
@@ -118,7 +118,7 @@ func TestGetStatusIntegration(t *testing.T) {
 		builder:   fakeBuilder,
 	}
 	status, err := deployment.GetStatus(cli)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.False(t, status.BuildContainerActive)
 	assert.Equal(t, "test", status.BuildType)
 }
@@ -130,7 +130,7 @@ func TestGetBranch(t *testing.T) {
 
 func TestDeployment_CompareRemotes(t *testing.T) {
 	repo, err := gogit.PlainOpen("../../../")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	type args struct {
 		remoteURL string
 	}

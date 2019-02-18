@@ -112,7 +112,8 @@ func (s *Server) Run(host, port string) error {
 		http.StripPrefix(webPrefix, http.FileServer(http.Dir("/daemon/inertia-web"))))
 
 	// GitHub webhook endpoint
-	handler.AttachPublicHandlerFunc("/webhook", s.webhookHandler)
+	handler.AttachPublicHandlerFunc("/webhook",
+		s.webhookHandler, http.MethodPost)
 
 	// API endpoints
 	handler.AttachUserRestrictedHandlerFunc("/status",

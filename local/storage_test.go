@@ -22,7 +22,7 @@ func TestGetConfigFail(t *testing.T) {
 
 func TestConfigCreateAndWriteAndRead(t *testing.T) {
 	err := createConfigFile("inertia.toml", "test", "dockerfile", "")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Already exists
 	err = createConfigFile("inertia.toml", "test", "dockerfile", "")
@@ -30,7 +30,7 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 
 	// Get config and add remotes
 	config, configPath, err := GetProjectConfigFromDisk("inertia.toml")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer os.Remove(configPath)
 	config.AddRemote(&cfg.RemoteVPS{
 		Name:    "test",
@@ -55,11 +55,11 @@ func TestConfigCreateAndWriteAndRead(t *testing.T) {
 
 	// Test config creation
 	err = config.Write(configPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Test config read
 	readConfig, _, err := GetProjectConfigFromDisk("inertia.toml")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, config.Remotes["test"], readConfig.Remotes["test"])
 	assert.Equal(t, config.Remotes["test2"], readConfig.Remotes["test2"])
 }
@@ -97,14 +97,14 @@ lq07qdr3cY+O1F4otlDitNuhLE88dtGJM5lEyumokiH1yXwhbBtZ4w==
 
 	// Write
 	err := SaveKey(keyMaterial, testKeyPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Read
 	bytes, err := ioutil.ReadFile(testKeyPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, keyMaterial, string(bytes))
 
 	// Test config remove
 	err = os.Remove(testKeyPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }

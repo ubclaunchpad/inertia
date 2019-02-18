@@ -54,7 +54,7 @@ func TestWithMethods(t *testing.T) {
 				})
 			)
 			req, err := http.NewRequest(tt.args.requestMethod, "/down", nil)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			WithMethods(handler, tt.args.allowedMethods...).
 				ServeHTTP(recorder, req)

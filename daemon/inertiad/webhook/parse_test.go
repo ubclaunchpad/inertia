@@ -46,11 +46,11 @@ func TestTypeAndParse(t *testing.T) {
 
 		// Read
 		body, err := ioutil.ReadAll(req.Body)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 
 		// Parse payload
 		payload, err := Parse(host, event, req.Header, body)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 
 		assert.Equal(t, tc.source, payload.GetSource())
 		assert.Equal(t, tc.wantType, payload.GetEventType())
@@ -65,7 +65,7 @@ func TestTypeAndParse(t *testing.T) {
 func TestParseDocker(t *testing.T) {
 	req := getMockRequest("/docker-webhook", "application/json", dockerPushRawJSON)
 	payload, err := ParseDocker(req)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "briannguyen", payload.GetPusher())
 	assert.Equal(t, "latest", payload.GetTag())

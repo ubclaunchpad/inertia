@@ -58,8 +58,8 @@ started to address these problems.
 
 This site primarily documents how to set up and use Inertia - to learn more
 about the project, check out our [GitHub repository](https://github.com/ubclaunchpad/inertia)!
-A complete command reference for the Inertia CLI is also available
-[here](/cli).
+A complete command reference for the Inertia CLI is also available [here](/cli).
+If you're interested in building on Inertia, check out the [API reference](/api).
 
 <aside class="notice">
 This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
@@ -554,6 +554,7 @@ looking for here, try using the `--help` flag on relevant commands - Inertia
 will display help text and all the different options available to you.
 
 A complete command reference for the Inertia CLI is also available [here](/cli).
+To interact with the daemon API directly, refer to the [API reference](/api).
 
 ## Troubleshooting
 
