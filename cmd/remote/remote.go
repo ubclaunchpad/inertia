@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/inpututil"
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
 
 	"github.com/ubclaunchpad/inertia/cfg"
-	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/local"
@@ -23,7 +23,7 @@ type RemoteCmd struct {
 }
 
 // AttachRemoteCmd attaches 'remote' subcommands to the given parent command
-func AttachRemoteCmd(inertia *inertiacmd.Cmd) {
+func AttachRemoteCmd(inertia *core.Cmd) {
 	var remote = RemoteCmd{}
 	remote.Command = &cobra.Command{
 		Use:   "remote",

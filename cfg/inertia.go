@@ -5,9 +5,10 @@ type Inertia struct {
 	Remotes map[string]Remote `toml:"remotes"`
 }
 
-// Init sets up Inertia configuration
-func Init(path string) (*Inertia, error) {
-	return nil, nil
+func NewInertiaConfig() *Inertia {
+	return &Inertia{
+		Remotes: make(map[string]Remote),
+	}
 }
 
 // GetRemote retrieves a remote by name

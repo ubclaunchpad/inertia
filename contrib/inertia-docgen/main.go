@@ -12,7 +12,7 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd"
 
-	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
+	"github.com/ubclaunchpad/inertia/cmd/core"
 	hostcmd "github.com/ubclaunchpad/inertia/cmd/host"
 
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
@@ -44,7 +44,7 @@ func main() {
 	}
 }
 
-func newDocgenCmd(root *inertiacmd.Cmd) *cobra.Command {
+func newDocgenCmd(root *core.Cmd) *cobra.Command {
 	const (
 		flagOutput = "output"
 		flagFormat = "format"

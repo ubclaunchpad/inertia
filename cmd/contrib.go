@@ -5,11 +5,11 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
-	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
+	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
 )
 
-func attachContribPlugins(inertia *inertiacmd.Cmd) {
+func attachContribPlugins(inertia *core.Cmd) {
 	var contrib = &cobra.Command{
 		Use:   "contrib [tool]",
 		Short: "Utilities and plugins from inertia/contrib",

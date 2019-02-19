@@ -136,7 +136,7 @@ type EC2CreateInstanceOptions struct {
 }
 
 // CreateInstance creates an EC2 instance with given properties
-func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.RemoteVPS, error) {
+func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Remote, error) {
 	// Set requested region
 	p.WithRegion(opts.Region)
 
@@ -165,7 +165,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	// Create security group for network configuration
 	group, err := p.client.CreateSecurityGroup(&ec2.CreateSecurityGroupInput{
 		GroupName: aws.String(
-			fmt.Sprintf("%s-%s-%d", opts.ProjectName, opts.Name, time.Now().UnixNano()),
+			fmt.Sprintf("%s-%d", opts.Name, time.Now().UnixNano()),
 		),
 		Description: aws.String(
 			fmt.Sprintf("Rules for project %s on %s", opts.ProjectName, opts.Name),
@@ -292,16 +292,18 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	}
 
 	// Return remote configuration
-	return &cfg.RemoteVPS{
-		Name:    opts.Name,
-		IP:      *instance.PublicDnsName,
-		User:    p.user,
-		PEM:     keyPath,
-		SSHPort: "22",
-		Daemon: &cfg.DaemonConfig{
+	return &cfg.Remote{
+		IP: *instance.PublicDnsName,
+		SSH: &cfg.SSH{
+			User:    p.user,
+			PEM:     keyPath,
+			SSHPort: "22",
+		},
+		Daemon: &cfg.Daemon{
 			Port:          strconv.FormatInt(opts.DaemonPort, 10),
 			WebHookSecret: webhookSecret,
 		},
+		Profiles: make(map[string]string),
 	}, nil
 }
 

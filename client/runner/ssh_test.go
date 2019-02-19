@@ -1,4 +1,4 @@
-package client
+package runner
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 
 // mockSSHRunner is a mocked out implementation of SSHSession
 type mockSSHRunner struct {
-	r     *cfg.RemoteVPS
+	r     *cfg.Remote
 	Calls []string
 }
 

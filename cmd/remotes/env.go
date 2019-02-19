@@ -1,4 +1,4 @@
-package hostcmd
+package remotescmd
 
 import (
 	"fmt"

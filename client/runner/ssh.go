@@ -1,4 +1,4 @@
-package client
+package runner
 
 import (
 	"bytes"
@@ -31,19 +31,23 @@ type SSHRunner struct {
 	pemPassphrase string
 }
 
-// NewSSHRunner returns a new SSHRunner
-func NewSSHRunner(r *cfg.RemoteVPS, keyPassphrase string) *SSHRunner {
-	if r != nil {
-		return &SSHRunner{
-			user:    r.User,
-			ip:      r.IP,
-			sshPort: r.SSHPort,
+type SSHOptions struct {
+	KeyPassphrase string
+}
 
-			pemPath:       r.PEM,
-			pemPassphrase: keyPassphrase,
+// NewSSHRunner returns a new SSHRunner
+func NewSSHRunner(ip string, cfg *cfg.SSH, opts SSHOptions) *SSHRunner {
+	if cfg != nil {
+		return &SSHRunner{
+			ip:      ip,
+			user:    cfg.User,
+			sshPort: cfg.SSHPort,
+
+			pemPath:       cfg.PEM,
+			pemPassphrase: opts.KeyPassphrase,
 		}
 	}
-	return &SSHRunner{}
+	return nil
 }
 
 // Run runs a command remotely.

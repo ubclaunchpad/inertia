@@ -1,4 +1,4 @@
-package local
+package git
 
 import (
 	"errors"
@@ -28,8 +28,8 @@ func GetRepoCurrentBranch() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// checkForGit returns an error if we're not in a git repository.
-func checkForGit(cwd string) error {
+// IsRepo returns an error if we're not in a git repository.
+func IsRepo(cwd string) error {
 	// Quick failure if no .git folder.
 	if _, err := os.Stat(filepath.Join(cwd, ".git")); os.IsNotExist(err) {
 		return fmt.Errorf("directory %s does not appear to be a git repository", cwd)

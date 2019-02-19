@@ -1,6 +1,7 @@
 package local
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -10,58 +11,34 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg"
 )
 
-func TestInitializeInertiaProjetFail(t *testing.T) {
-	err := InitializeInertiaProject("inertia.toml", "", "", "")
-	assert.NotNil(t, err)
-}
-
-func TestGetConfigFail(t *testing.T) {
-	_, _, err := GetProjectConfigFromDisk("inertia.toml")
-	assert.NotNil(t, err)
-}
-
-func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := createConfigFile("inertia.toml", "test", "dockerfile", "")
-	assert.NoError(t, err)
-
-	// Already exists
-	err = createConfigFile("inertia.toml", "test", "dockerfile", "")
-	assert.NotNil(t, err)
-
-	// Get config and add remotes
-	config, configPath, err := GetProjectConfigFromDisk("inertia.toml")
-	assert.NoError(t, err)
-	defer os.Remove(configPath)
-	config.AddRemote(&cfg.RemoteVPS{
-		Name:    "test",
-		IP:      "1234",
-		User:    "bobheadxi",
-		PEM:     "/some/pem/file",
-		SSHPort: "22",
-		Daemon: &cfg.DaemonConfig{
-			Port: "8080",
-		},
-	})
-	config.AddRemote(&cfg.RemoteVPS{
-		Name:    "test2",
-		IP:      "12343",
-		User:    "bobheadxi234",
-		PEM:     "/some/pem/file234",
-		SSHPort: "222",
-		Daemon: &cfg.DaemonConfig{
-			Port: "80801",
-		},
-	})
-
-	// Test config creation
-	err = config.Write(configPath)
-	assert.NoError(t, err)
-
-	// Test config read
-	readConfig, _, err := GetProjectConfigFromDisk("inertia.toml")
-	assert.NoError(t, err)
-	assert.Equal(t, config.Remotes["test"], readConfig.Remotes["test"])
-	assert.Equal(t, config.Remotes["test2"], readConfig.Remotes["test2"])
+func TestWrite(t *testing.T) {
+	type args struct {
+		path    string
+		data    interface{}
+		writers []io.Writer
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"nothing to write to", args{"", nil, nil}, true},
+		{"ok: write to path", args{"./test-config.toml", &cfg.Inertia{
+			Remotes: make(map[string]cfg.Remote),
+		}, nil}, false},
+		{"ok: write to writers", args{"", &cfg.Inertia{
+			Remotes: make(map[string]cfg.Remote),
+		}, []io.Writer{os.Stdout}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.path != "" {
+				defer os.RemoveAll(tt.args.path)
+			}
+			var err = Write(tt.args.path, tt.args.data, tt.args.writers...)
+			assert.Equalf(t, (err != nil), tt.wantErr, "got '%v'", err)
+		})
+	}
 }
 
 func TestSaveKey(t *testing.T) {

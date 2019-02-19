@@ -16,15 +16,30 @@ type Daemon struct {
 	Port          string `toml:"port"`
 	Token         string `toml:"token"`
 	WebHookSecret string `toml:"webhook-secret"`
+	VerifySSL     bool   `toml:"verify-ssl"`
 }
 
 // Remote contains parameters for the VPS
 type Remote struct {
 	Version string `toml:"version"`
 
-	IP     string  `toml:"IP"`
+	IP     string  `toml:"ip"`
 	SSH    *SSH    `toml:"ssh"`
 	Daemon *Daemon `toml:"daemon"`
+
+	Profiles map[string]string `toml:"profiles"`
+}
+
+func (r *Remote) GetProfile(project string) string {
+	if r.Profiles == nil {
+		r.Profiles = make(map[string]string)
+		return "default"
+	}
+	profile, ok := r.Profiles[project]
+	if !ok {
+		return "default"
+	}
+	return profile
 }
 
 // GetSSHHost creates the user@ip string for executing SSH commands
@@ -40,5 +55,5 @@ func (r *Remote) GetDaemonAddr() (string, error) {
 	if r.Daemon == nil {
 		return "", errors.New("Daemon configuration not set for remote")
 	}
-	return r.IP + ":" + r.Daemon.Port, nil
+	return "https://" + r.IP + ":" + r.Daemon.Port, nil
 }

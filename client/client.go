@@ -2,8 +2,8 @@ package client
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,232 +13,70 @@ import (
 	"strings"
 
 	"github.com/gorilla/websocket"
+
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
-	internal "github.com/ubclaunchpad/inertia/client/internal"
+	"github.com/ubclaunchpad/inertia/client/runner"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
 // Client manages a deployment
 type Client struct {
-	*cfg.RemoteVPS
-	version       string
-	project       string
-	buildType     string
-	buildFilePath string
+	version string
+	out     io.Writer
 
-	out io.Writer
+	remoteName string
+	Remote     *cfg.Remote
 
-	SSH       SSHSession
-	verifySSL bool
+	ssh runner.SSHSession
 }
 
-// NewClient sets up a client to communicate to the daemon at
-// the given named remote.
-func NewClient(remoteName, keyPassphrase string, config *cfg.Config, out ...io.Writer) (*Client, bool) {
-	remote, found := config.GetRemote(remoteName)
-	if !found {
-		return nil, false
+type Options struct {
+	SSH runner.SSHOptions
+	Out io.Writer
+}
+
+// NewClient sets up a client to communicate to the daemon at the given remote
+func NewClient(remote *cfg.Remote, opts Options) *Client {
+	if opts.Out == nil {
+		opts.Out = common.DevNull{}
 	}
 
-	var writer io.Writer
-	if len(out) > 0 {
-		writer = out[0]
-	} else {
-		writer = common.DevNull{}
+	if remote.Version == "" {
+		remote.Version = "latest"
 	}
 
 	return &Client{
-		RemoteVPS: remote,
-		SSH:       NewSSHRunner(remote, keyPassphrase),
-
-		version:       config.Version,
-		project:       config.Project,
-		buildType:     config.BuildType,
-		buildFilePath: config.BuildFilePath,
-
-		out: writer,
-	}, true
+		out:    opts.Out,
+		Remote: remote,
+		ssh:    runner.NewSSHRunner(remote.IP, remote.SSH, opts.SSH),
+	}
 }
 
-// SetSSLVerification toggles whether client should verify all SSL communications.
-// This requires a signed certificate to be in use on your daemon.
-func (c *Client) SetSSLVerification(verify bool) {
-	c.verifySSL = verify
-}
-
-// BootstrapRemote configures a remote vps for continuous deployment
-// by installing docker, starting the daemon and building a
-// public-private key-pair. It outputs configuration information
-// for the user.
-func (c *Client) BootstrapRemote(repoName string) error {
-	fmt.Fprintf(c.out, "Setting up remote %s at %s\n", c.Name, c.IP)
-
-	fmt.Fprint(c.out, ">> Step 1/4: Installing docker...\n")
-	err := c.installDocker(c.SSH)
-	if err != nil {
-		return err
+// GetSSHClient instantiates an SSH client for Inertia-related commands
+func (c *Client) GetSSHClient() (*SSHClient, error) {
+	if c.ssh == nil {
+		return nil, errors.New("client not configured for SSH access")
 	}
-
-	fmt.Fprint(c.out, ">> Step 2/4: Building deploy key...\n")
-	if err != nil {
-		return err
-	}
-	pub, err := c.keyGen(c.SSH)
-	if err != nil {
-		return err
-	}
-
-	// This step needs to run before any other commands that rely on
-	// the daemon image, since the daemon is loaded here.
-	fmt.Fprint(c.out, ">> Step 3/4: Starting daemon...\n")
-	if err != nil {
-		return err
-	}
-	err = c.DaemonUp(c.version)
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprint(c.out, ">> Step 4/4: Fetching daemon API token...\n")
-	token, err := c.getDaemonAPIToken(c.SSH, c.version)
-	if err != nil {
-		return err
-	}
-	c.Daemon.Token = token
-
-	fmt.Fprint(c.out, "\nInertia has been set up and daemon is running on remote!")
-	fmt.Fprint(c.out, "\nYou may have to wait briefly for Inertia to set up some dependencies.")
-	fmt.Fprintf(c.out, "\nUse 'inertia %s logs' to check on the daemon's setup progress.\n\n", c.Name)
-
-	fmt.Fprint(c.out, "=============================\n\n")
-
-	// Output deploy key to user.
-	fmt.Fprintf(c.out, ">> GitHub Deploy Key (add to https://www.github.com/%s/settings/keys/new):\n", repoName)
-	fmt.Fprint(c.out, pub.String())
-
-	// Output Webhook url to user.
-	fmt.Fprintf(c.out, "\n>> GitHub WebHook URL (add to https://www.github.com/%s/settings/hooks/new):\n", repoName)
-	fmt.Fprintf(c.out, "Address:  https://%s:%s/webhook\n", c.IP, c.Daemon.Port)
-	fmt.Fprintf(c.out, "Secret:   %s\n", c.Daemon.WebHookSecret)
-	fmt.Fprint(c.out, "\n"+`Note that you will have to disable SSL verification in your webhook
-settings - Inertia uses self-signed certificates that GitHub won't
-be able to verify.`+"\n")
-
-	fmt.Fprint(c.out, "\n"+`Inertia daemon successfully deployed! Add your webhook url and deploy
-key to your repository to enable continuous deployment.`+"\n")
-	fmt.Fprintf(c.out, "Then run 'inertia %s up' to deploy your application.\n", c.Name)
-
-	return nil
-}
-
-// DaemonUp brings the daemon up on the remote instance.
-func (c *Client) DaemonUp(version string) error {
-	scriptBytes, err := internal.ReadFile("client/scripts/daemon-up.sh")
-	if err != nil {
-		return err
-	}
-	daemonCmdStr := fmt.Sprintf(string(scriptBytes), version, c.Daemon.Port, c.IP)
-	return c.SSH.RunStream(daemonCmdStr, false)
-}
-
-// DaemonDown brings the daemon down on the remote instance
-func (c *Client) DaemonDown() error {
-	scriptBytes, err := internal.ReadFile("client/scripts/daemon-down.sh")
-	if err != nil {
-		return err
-	}
-
-	_, stderr, err := c.SSH.Run(string(scriptBytes))
-	if err != nil {
-		return fmt.Errorf("daemon shutdown failed: %s: %s", err.Error(), stderr.String())
-	}
-
-	return nil
-}
-
-// UninstallInertia removes the inertia/ directory on the remote instance
-func (c *Client) UninstallInertia() error {
-	scriptBytes, err := internal.ReadFile("client/scripts/inertia-down.sh")
-	if err != nil {
-		return err
-	}
-
-	_, stderr, err := c.SSH.Run(string(scriptBytes))
-	if err != nil {
-		return fmt.Errorf("Inertia down failed: %s: %s", err.Error(), stderr.String())
-	}
-
-	return nil
-}
-
-// installDocker installs docker on a remote vps.
-func (c *Client) installDocker(session SSHSession) error {
-	installDockerSh, err := internal.ReadFile("client/scripts/docker.sh")
-	if err != nil {
-		return err
-	}
-
-	// Install docker.
-	cmdStr := string(installDockerSh)
-	if err = session.RunStream(cmdStr, false); err != nil {
-		return fmt.Errorf("docker installation: %s", err.Error())
-	}
-
-	return nil
-}
-
-// keyGen creates a public-private key-pair on the remote vps
-// and returns the public key.
-func (c *Client) keyGen(session SSHSession) (*bytes.Buffer, error) {
-	scriptBytes, err := internal.ReadFile("client/scripts/keygen.sh")
-	if err != nil {
-		return nil, err
-	}
-
-	// Create deploy key.
-	result, stderr, err := session.Run(string(scriptBytes))
-	if err != nil {
-		return nil, fmt.Errorf("key generation failed: %s: %s", err.Error(), stderr.String())
-	}
-
-	return result, nil
-}
-
-// getDaemonAPIToken returns the daemon API token for RESTful access
-// to the daemon.
-func (c *Client) getDaemonAPIToken(session SSHSession, daemonVersion string) (string, error) {
-	scriptBytes, err := internal.ReadFile("client/scripts/token.sh")
-	if err != nil {
-		return "", err
-	}
-	daemonCmdStr := fmt.Sprintf(string(scriptBytes), daemonVersion)
-
-	stdout, stderr, err := session.Run(daemonCmdStr)
-	if err != nil {
-		return "", fmt.Errorf("api token generation failed: %s: %s", err.Error(), stderr.String())
-	}
-
-	// There may be a newline, remove it.
-	return strings.TrimSuffix(stdout.String(), "\n"), nil
+	return &SSHClient{
+		ssh:    c.ssh,
+		remote: c.Remote,
+	}, nil
 }
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response, error) {
-	if buildType == "" {
-		buildType = c.buildType
-	}
-
+func (c *Client) Up(project, url string, profile cfg.Profile, stream bool) (*http.Response, error) {
 	return c.post("/up", &api.UpRequest{
 		Stream:        stream,
-		Project:       c.project,
-		BuildType:     buildType,
-		WebHookSecret: c.RemoteVPS.Daemon.WebHookSecret,
-		BuildFilePath: c.buildFilePath,
+		Project:       project,
+		WebHookSecret: c.Remote.Daemon.WebHookSecret,
+
+		BuildType:     string(profile.Build.Type),
+		BuildFilePath: profile.Build.BuildFilePath,
 		GitOptions: api.GitOptions{
-			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
-			Branch:    c.Branch,
+			RemoteURL: common.GetSSHRemoteURL(url),
+			Branch:    profile.Branch,
 		},
 	})
 }
@@ -274,7 +112,7 @@ func (c *Client) Status() (*http.Response, error) {
 	resp, err := c.get("/status", nil)
 	if err != nil &&
 		(strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "refused")) {
-		return nil, fmt.Errorf("daemon on remote %s appears offline or inaccessible", c.Name)
+		return nil, errors.New("daemon on remote appears offline or inaccessible")
 	}
 	return resp, err
 }
@@ -297,7 +135,11 @@ func (c *Client) Logs(container string, entries int) (*http.Response, error) {
 
 // LogsWebSocket opens a websocket connection to given container's logs
 func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, error) {
-	host, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
+	addr, err := c.Remote.GetDaemonAddr()
+	if err != nil {
+		return nil, err
+	}
+	host, err := url.Parse(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -314,11 +156,12 @@ func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, err
 	encodeQuery(url, params)
 
 	// Set up authorization
-	header := http.Header{}
-	header.Set("Authorization", "Bearer "+c.Daemon.Token)
+	var header = http.Header{}
+	header.Set("Authorization", "Bearer "+c.Remote.Daemon.Token)
 
 	// Attempt websocket connection
-	socket, resp, err := buildWebSocketDialer(c.verifySSL).Dial(url.String(), header)
+	socket, resp, err := buildWebSocketDialer(c.Remote.Daemon.VerifySSL).
+		Dial(url.String(), header)
 	if err == websocket.ErrBadHandshake {
 		return nil, fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
 	}
@@ -390,8 +233,7 @@ func (c *Client) get(endpoint string, queries map[string]string) (*http.Response
 		encodeQuery(req.URL, queries)
 	}
 
-	client := buildHTTPSClient(c.verifySSL)
-	return client.Do(req)
+	return buildHTTPSClient(c.Remote.Daemon.VerifySSL).Do(req)
 }
 
 func (c *Client) post(endpoint string, requestBody interface{}) (*http.Response, error) {
@@ -413,54 +255,28 @@ func (c *Client) post(endpoint string, requestBody interface{}) (*http.Response,
 		return nil, err
 	}
 
-	client := buildHTTPSClient(c.verifySSL)
-	return client.Do(req)
+	return buildHTTPSClient(c.Remote.Daemon.VerifySSL).Do(req)
 }
 
 func (c *Client) buildRequest(method string, endpoint string, payload io.Reader) (*http.Request, error) {
 	// Assemble URL
-	url, err := url.Parse("https://" + c.RemoteVPS.GetIPAndPort())
+	addr, err := c.Remote.GetDaemonAddr()
+	if err != nil {
+		return nil, err
+	}
+	url, err := url.Parse(addr)
 	if err != nil {
 		return nil, err
 	}
 	url.Path = path.Join(url.Path, endpoint)
-	urlString := url.String()
 
 	// Assemble request
-	req, err := http.NewRequest(method, urlString, payload)
+	req, err := http.NewRequest(method, url.String(), payload)
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.Daemon.Token)
+	req.Header.Set("Authorization", "Bearer "+c.Remote.Daemon.Token)
 
 	return req, nil
-}
-
-func buildHTTPSClient(verify bool) *http.Client {
-	return &http.Client{Transport: &http.Transport{
-		// Our certificates are self-signed, so will raise
-		// a warning - currently, we ask our client to ignore
-		// this warning.
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: !verify,
-		},
-	}}
-}
-
-func buildWebSocketDialer(verify bool) *websocket.Dialer {
-	return &websocket.Dialer{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: !verify,
-		},
-	}
-}
-
-func encodeQuery(url *url.URL, queries map[string]string) {
-	q := url.Query()
-	for k, v := range queries {
-		q.Add(k, v)
-	}
-	url.RawQuery = q.Encode()
 }

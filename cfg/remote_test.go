@@ -24,5 +24,5 @@ func TestRemoteVPS_GetIPAndPort(t *testing.T) {
 
 	remote.Daemon = &Daemon{Port: "4303"}
 	addr, err := remote.GetDaemonAddr()
-	assert.Equal(t, "127.0.0.1:4303", addr)
+	assert.Equal(t, "https://127.0.0.1:4303", addr)
 }

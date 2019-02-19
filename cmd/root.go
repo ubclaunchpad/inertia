@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
 	configcmd "github.com/ubclaunchpad/inertia/cmd/config"
+	"github.com/ubclaunchpad/inertia/cmd/core"
 	hostcmd "github.com/ubclaunchpad/inertia/cmd/host"
 	provisioncmd "github.com/ubclaunchpad/inertia/cmd/provision"
 	remotecmd "github.com/ubclaunchpad/inertia/cmd/remote"
@@ -20,11 +20,11 @@ func getVersion(version string) string {
 }
 
 // NewInertiaCmd is a new Inertia command
-func NewInertiaCmd(version string) *inertiacmd.Cmd {
+func NewInertiaCmd(version string) *core.Cmd {
 	cobra.EnableCommandSorting = false
 
 	// instantiate top-level command
-	var root = &inertiacmd.Cmd{}
+	var root = &core.Cmd{}
 	root.Command = &cobra.Command{
 		Use:     "inertia",
 		Version: getVersion(version),

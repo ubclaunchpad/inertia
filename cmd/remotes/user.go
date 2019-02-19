@@ -1,4 +1,4 @@
-package hostcmd
+package remotescmd
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"syscall"
+
+	"github.com/ubclaunchpad/inertia/local"
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/api"
@@ -168,10 +170,8 @@ func (root *UserCmd) attachLoginCmd() {
 				printutil.Fatal(err)
 			}
 
-			var config = root.host.config
-			var remote = root.host.remote
-			config.Remotes[remote].Daemon.Token = string(token)
-			if err = config.Write(root.host.cfgPath); err != nil {
+			root.host.client.Remote.Daemon.Token = string(token)
+			if err = local.SaveRemote(root.host.remote, root.host.client.Remote); err != nil {
 				printutil.Fatal(err)
 			}
 

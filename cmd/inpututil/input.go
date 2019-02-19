@@ -23,7 +23,7 @@ var (
 // AddRemoteWalkthrough is the command line walkthrough that asks
 // users for RemoteVPS details. It is up to the caller to save config.
 func AddRemoteWalkthrough(
-	in io.Reader, config *cfg.Config,
+	in io.Reader, config *cfg.Inertia,
 	name, port, sshPort, currBranch string,
 ) error {
 	homeEnvVar, err := local.GetHomePath()
@@ -70,25 +70,25 @@ func AddRemoteWalkthrough(
 	if err == nil && n != 0 {
 		branch = response
 	}
+	println(branch)
 
 	fmt.Println("\nPort " + port + " will be used as the daemon port.")
 	fmt.Println("Port " + sshPort + " will be used as the SSH port.")
 	fmt.Println("Run 'inertia remote add' with the -p flag to set a custom Daemon port")
 	fmt.Println("of the -ssh flag to set a custom SSH port.")
 
-	added := config.AddRemote(&cfg.RemoteVPS{
-		Name:    name,
-		IP:      address,
-		User:    user,
-		PEM:     pemLoc,
-		Branch:  branch,
-		SSHPort: sshPort,
-		Daemon: &cfg.DaemonConfig{
+	if added := config.AddRemote(name, cfg.Remote{
+		IP: address,
+		SSH: &cfg.SSH{
+			User:    user,
+			PEM:     pemLoc,
+			SSHPort: sshPort,
+		},
+		Daemon: &cfg.Daemon{
 			Port:          port,
 			WebHookSecret: secret,
 		},
-	})
-	if !added {
+	}); !added {
 		return errors.New("failed to add remote - you already have a remote with given name")
 	}
 	return nil

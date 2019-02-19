@@ -48,15 +48,15 @@ func TestFormatStatusNoDeployment(t *testing.T) {
 }
 
 func TestFormatRemoteDetails(t *testing.T) {
-	client := &cfg.RemoteVPS{
-		Name:   "bob",
-		Branch: "great",
-		User:   "tree",
-		PEM:    "/wow/amaze",
-	}
-	output := FormatRemoteDetails(client)
+	var output = FormatRemoteDetails("bob", &cfg.Remote{
+		SSH: &cfg.SSH{
+			User: "tree",
+			PEM:  "/wow/amaze",
+		},
+	})
 	assert.Contains(t, output, "bob")
-	assert.Contains(t, output, "great")
 	assert.Contains(t, output, "tree")
 	assert.Contains(t, output, "/wow/amaze")
+	output = FormatRemoteDetails("bob", &cfg.Remote{})
+	assert.Contains(t, output, "bob")
 }

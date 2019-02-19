@@ -4,14 +4,14 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
+	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/inpututil"
 	"github.com/ubclaunchpad/inertia/cmd/printutil"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
-func attachInitCmd(inertia *inertiacmd.Cmd) {
+func attachInitCmd(inertia *core.Cmd) {
 	const flagVersion = "version"
 	var init = &cobra.Command{
 		Use:   "init",

@@ -4,8 +4,8 @@ import "fmt"
 
 // Project represents the current project's configuration.
 type Project struct {
-	Version string `toml:"version"`
-	Project string `toml:"project"`
+	Name string `toml:"name"`
+	URL  string `toml:"url"`
 
 	Profiles map[string]Profile `toml:"profiles"`
 }
@@ -30,20 +30,16 @@ const (
 // Build denotes build configuration
 type Build struct {
 	Type          BuildType `toml:"type"`
-	BuildFilePath string    `toml:"build_file"`
+	BuildFilePath string    `toml:"buildfile"`
 }
 
 // NewProject sets up Inertia configuration with given properties
-func NewProject(version, project string) *Project {
-	if version == "" {
-		version = "latest"
-	}
-	if project == "" {
-		project = "inertia-deployment"
+func NewProject(name string) *Project {
+	if name == "" {
+		name = "inertia-deployment"
 	}
 	return &Project{
-		Version:  version,
-		Project:  project,
+		Name:     name,
 		Profiles: make(map[string]Profile),
 	}
 }

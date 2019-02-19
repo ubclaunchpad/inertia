@@ -1,4 +1,4 @@
-package local
+package git
 
 import (
 	"fmt"
@@ -28,10 +28,10 @@ func TestGetRepoCurrentBranch(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestCheckForGit(t *testing.T) {
+func TestIsRepo(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
-	assert.NotNil(t, checkForGit(cwd))
+	assert.NotNil(t, IsRepo(cwd))
 	inertia, _ := filepath.Split(cwd)
-	assert.Nil(t, checkForGit(inertia))
+	assert.Nil(t, IsRepo(inertia))
 }

@@ -50,12 +50,15 @@ func FormatStatus(s *api.DeploymentStatus) string {
 }
 
 // FormatRemoteDetails prints the given remote configuration
-func FormatRemoteDetails(remote *cfg.RemoteVPS) string {
-	remoteString := fmt.Sprintf("Remote %s: \n", remote.Name)
-	remoteString += fmt.Sprintf(" - Deployed Branch:   %s\n", remote.Branch)
+func FormatRemoteDetails(name string, remote *cfg.Remote) string {
+	remoteString := fmt.Sprintf("Remote %s: \n", name)
 	remoteString += fmt.Sprintf(" - IP Address:        %s\n", remote.IP)
-	remoteString += fmt.Sprintf(" - VPS User:          %s\n", remote.User)
-	remoteString += fmt.Sprintf(" - PEM File Location: %s\n", remote.PEM)
-	remoteString += fmt.Sprintf("Run 'inertia %s status' for more details.\n", remote.Name)
+	if remote.SSH != nil {
+		remoteString += fmt.Sprintf(" - VPS User:          %s\n", remote.SSH.User)
+		remoteString += fmt.Sprintf(" - PEM File Location: %s\n", remote.SSH.PEM)
+	} else {
+		remoteString += " - VPS User:\n - PEM File Location:\n"
+	}
+	remoteString += fmt.Sprintf("Run 'inertia %s status' for more details.\n", name)
 	return remoteString
 }
