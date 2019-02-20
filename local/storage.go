@@ -39,10 +39,17 @@ func GetInertiaConfig() (*cfg.Inertia, error) {
 	return &inertia, nil
 }
 
+// SaveRemote adds or updates the given remote in the global Inertia configuration
+// file. If remote is nil, the named remote is deleted instead.
 func SaveRemote(name string, remote *cfg.Remote) error {
 	inertia, err := GetInertiaConfig()
 	if err != nil {
 		return err
+	}
+	if remote == nil {
+		if !inertia.RemoveRemote(name) {
+			return fmt.Errorf("could not remove remote '%s'", name)
+		}
 	}
 	if !inertia.AddRemote(name, *remote) {
 		return fmt.Errorf("could not update remote '%s'", name)

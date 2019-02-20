@@ -7,9 +7,9 @@ import (
 
 	configcmd "github.com/ubclaunchpad/inertia/cmd/config"
 	"github.com/ubclaunchpad/inertia/cmd/core"
-	hostcmd "github.com/ubclaunchpad/inertia/cmd/host"
 	provisioncmd "github.com/ubclaunchpad/inertia/cmd/provision"
 	remotecmd "github.com/ubclaunchpad/inertia/cmd/remote"
+	remotescmd "github.com/ubclaunchpad/inertia/cmd/remotes"
 )
 
 func getVersion(version string) string {
@@ -45,13 +45,13 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 	}
 
 	// persistent flags across all children
-	root.PersistentFlags().StringVar(&root.ConfigPath, "config", "inertia.toml", "specify relative path to Inertia configuration")
+	root.PersistentFlags().StringVar(&root.ProjectConfigPath, "config", "inertia.toml", "specify relative path to Inertia configuration")
 	// hack in flag parsing - this must be done because we need to initialize the
 	// host commands properly when Cobra first constructs the command tree, which
 	// occurs before the built-in flag parser
 	for i, arg := range os.Args {
 		if arg == "--config" {
-			root.ConfigPath = os.Args[i+1]
+			root.ProjectConfigPath = os.Args[i+1]
 			break
 		}
 	}
@@ -61,7 +61,7 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 	configcmd.AttachConfigCmd(root)
 	remotecmd.AttachRemoteCmd(root)
 	provisioncmd.AttachProvisionCmd(root)
-	hostcmd.AttachHostCmds(root)
+	remotescmd.AttachRemotesCmds(root)
 	attachContribPlugins(root)
 
 	return root

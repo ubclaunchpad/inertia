@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/api"
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 )
 
 // EnvCmd is the parent class for the 'env' subcommands
@@ -55,12 +55,12 @@ variables are applied to all deployed containers.`,
 			var encrypt, _ = cmd.Flags().GetBool(flagEncrypt)
 			resp, err := root.host.client.UpdateEnv(args[0], args[1], encrypt, false)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
 		},
@@ -79,12 +79,12 @@ and persistent environment storage.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.UpdateEnv(args[0], "", false, true)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
@@ -102,13 +102,13 @@ variables are not be decrypted.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.ListEnv()
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			defer resp.Body.Close()
 			var variables = make([]string, 0)
 			b, err := api.Unmarshal(resp.Body, api.KV{Key: "variables", Value: &variables})
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			if len(variables) == 0 {
 				fmt.Printf("(Status code %d) no variables configured", resp.StatusCode)

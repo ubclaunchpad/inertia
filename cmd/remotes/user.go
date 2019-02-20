@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/api"
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -60,7 +60,7 @@ Use the --admin flag to create an admin user.`,
 			fmt.Print("Enter a password for user: ")
 			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
-				printutil.Fatal("Invalid password")
+				output.Fatal("Invalid password")
 			}
 			var password = strings.TrimSpace(string(bytePassword))
 			fmt.Print("\n")
@@ -68,12 +68,12 @@ Use the --admin flag to create an admin user.`,
 			var admin, _ = cmd.Flags().GetBool(flagAdmin)
 			resp, err := root.host.client.AddUser(args[0], password, admin)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			switch resp.StatusCode {
@@ -103,12 +103,12 @@ remotely.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.RemoveUser(args[0])
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			switch resp.StatusCode {
 			case http.StatusOK:
@@ -136,13 +136,13 @@ func (root *UserCmd) attachLoginCmd() {
 			pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 			fmt.Println()
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			var totp, _ = cmd.Flags().GetString("totp")
 			resp, err := root.host.client.LogIn(username, string(pwBytes), totp)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			if resp.StatusCode == http.StatusExpectationFailed {
@@ -151,11 +151,11 @@ func (root *UserCmd) attachLoginCmd() {
 				totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 				fmt.Println()
 				if err != nil {
-					printutil.Fatal(err)
+					output.Fatal(err)
 				}
 				resp, err = root.host.client.LogIn(username, string(pwBytes), string(totpBytes))
 				if err != nil {
-					printutil.Fatal(err)
+					output.Fatal(err)
 				}
 			}
 
@@ -167,12 +167,12 @@ func (root *UserCmd) attachLoginCmd() {
 			defer resp.Body.Close()
 			var token string
 			if api.Unmarshal(resp.Body, api.KV{Key: "token", Value: &token}); err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			root.host.client.Remote.Daemon.Token = string(token)
 			if err = local.SaveRemote(root.host.remote, root.host.client.Remote); err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			fmt.Println("You have been logged in successfully.")
@@ -192,13 +192,13 @@ remotely.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.ResetUsers()
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			defer resp.Body.Close()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			switch resp.StatusCode {
@@ -223,14 +223,14 @@ func (root *UserCmd) attachListCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := root.host.client.ListUsers()
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			defer resp.Body.Close()
 
 			var users = make([]string, 0)
 			b, err := api.Unmarshal(resp.Body, api.KV{Key: "users", Value: &users})
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			switch resp.StatusCode {

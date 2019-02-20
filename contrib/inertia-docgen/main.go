@@ -15,7 +15,7 @@ import (
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	hostcmd "github.com/ubclaunchpad/inertia/cmd/host"
 
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 )
 
 // Version denotes the version of the binary
@@ -78,11 +78,11 @@ func newDocgenCmd(root *core.Cmd) *cobra.Command {
 						root.Version),
 					Manual: "https://inertia.ubclaunchpad.com",
 				}, output); err != nil {
-					printutil.Fatal(err.Error())
+					output.Fatal(err.Error())
 				}
 			default:
 				if err := doc.GenMarkdownTree(root.Command, output); err != nil {
-					printutil.Fatal(err.Error())
+					output.Fatal(err.Error())
 				}
 				var readme = fmt.Sprintf(mdReadmeTemplate, time.Now().Format("2006-Jan-02"), Version)
 				ioutil.WriteFile(filepath.Join(output, "README.md"), []byte(readme), os.ModePerm)

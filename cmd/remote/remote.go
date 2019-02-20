@@ -3,31 +3,31 @@ package remotecmd
 import (
 	"errors"
 	"fmt"
-	"os"
-
-	"github.com/ubclaunchpad/inertia/cmd/core"
-	"github.com/ubclaunchpad/inertia/cmd/inpututil"
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
-
-	"github.com/ubclaunchpad/inertia/cfg"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
+
+	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/cmd/core"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
 // RemoteCmd is the parent class for the 'inertia remote' subcommands
 type RemoteCmd struct {
 	*cobra.Command
-	config  *cfg.Config
-	cfgPath string
+	config *cfg.Inertia
 }
 
 // AttachRemoteCmd attaches 'remote' subcommands to the given parent command
 func AttachRemoteCmd(inertia *core.Cmd) {
 	var remote = RemoteCmd{}
 	remote.Command = &cobra.Command{
-		Use:   "remote",
-		Short: "Configure the local settings for a remote host",
+		Use:     "remote",
+		Version: inertia.Version,
+		Short:   "Configure the local settings for a remote host",
 		Long: `Configures local settings for a remote host - add, remove, and list configured
 Inertia remotes.
 
@@ -42,12 +42,9 @@ inertia gcloud status      # check on status of Inertia daemon
 		PersistentPreRun: func(*cobra.Command, []string) {
 			// Ensure project initialized, load config
 			var err error
-			remote.config, remote.cfgPath, err = local.GetProjectConfigFromDisk(inertia.ConfigPath)
+			remote.config, err = local.GetInertiaConfig()
 			if err != nil {
-				printutil.Fatalf("failed to read config at '%s': %s", remote.cfgPath, err.Error())
-			}
-			if remote.config == nil {
-				printutil.Fatalf("failed to read config at '%s'", remote.cfgPath)
+				output.Fatal(err)
 			}
 		},
 	}
@@ -65,8 +62,8 @@ inertia gcloud status      # check on status of Inertia daemon
 
 func (root *RemoteCmd) attachAddCmd() {
 	const (
-		flagPort    = "port"
-		flagSSHPort = "ssh.port"
+		flagDaemonPort = "daemon.port"
+		flagSSHPort    = "ssh.port"
 	)
 	var addRemote = &cobra.Command{
 		Use:   "add [remote]",
@@ -77,33 +74,70 @@ Inertia commands.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if _, found := root.config.GetRemote(args[0]); found {
-				printutil.Fatal(errors.New("Remote " + args[0] + " already exists."))
+				output.Fatal(errors.New("remote " + args[0] + " already exists"))
 			}
-
-			var port, _ = cmd.Flags().GetString(flagPort)
-			var sshPort, _ = cmd.Flags().GetString(flagSSHPort)
-			branch, err := local.GetRepoCurrentBranch()
+			homeEnvVar, err := local.GetHomePath()
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
+			}
+			var (
+				sshDir     = filepath.Join(homeEnvVar, ".ssh")
+				keyPath    = filepath.Join(sshDir, "id_rsa")
+				port, _    = cmd.Flags().GetString(flagDaemonPort)
+				sshPort, _ = cmd.Flags().GetString(flagSSHPort)
+			)
+			addr, err := input.Prompt("Enter IP address of remote:")
+			if err != nil {
+				output.Fatal(err)
 			}
 
-			// Start prompts and save configuration
-			if err = inpututil.AddRemoteWalkthrough(
-				os.Stdin, root.config, args[0], port, sshPort, branch,
+			println(">> SSH Access Configuration")
+			if resp, err := input.Promptf(
+				"Enter location of PEM file (leave blank to use '%s'):", keyPath,
 			); err != nil {
-				printutil.Fatal(err)
+				keyPath = resp
 			}
-			if err = root.config.Write(root.cfgPath); err != nil {
-				printutil.Fatal(err)
+			user, err := input.Prompt("Enter user:")
+			if err != nil {
+				output.Fatal(err)
+			}
+			fmt.Printf(`Port %s will be used for SSH access.`, sshPort)
+
+			println(">> Daemon Configuration")
+			webhook, err := input.Prompt("Enter webhook secret (leave blank to generate one):")
+			if err != nil {
+				webhook, err = common.GenerateRandomString()
+				if err != nil {
+					output.Fatal(err)
+				}
+			}
+			fmt.Printf(`Port %s will be used as the daemon port.`, port)
+
+			if err := local.SaveRemote(args[0], &cfg.Remote{
+				Version: root.Version,
+				IP:      addr,
+				SSH: &cfg.SSH{
+					User:    user,
+					PEM:     keyPath,
+					SSHPort: sshPort,
+				},
+				Daemon: &cfg.Daemon{
+					Port:          port,
+					WebHookSecret: webhook,
+				},
+				Profiles: make(map[string]string),
+			}); err != nil {
+				output.Fatal(err)
 			}
 
-			fmt.Println("\nRemote '" + args[0] + "' has been added!")
-			fmt.Println("You can now run 'inertia " + args[0] + " init' to set this remote up")
-			fmt.Println("for continuous deployment.")
+			fmt.Printf(`
+Remote '%s' has been added!
+You can now run 'inertia %s init' to set this remote up for continuous deployment.
+`, args[0], args[0])
 		},
 	}
-	addRemote.Flags().StringP(flagPort, "p", "4303", "remote daemon port")
-	addRemote.Flags().StringP(flagSSHPort, "s", "22", "remote SSH port")
+	addRemote.Flags().String(flagDaemonPort, "4303", "remote daemon port")
+	addRemote.Flags().String(flagSSHPort, "22", "remote SSH port")
 	root.AddCommand(addRemote)
 }
 
@@ -116,8 +150,8 @@ func (root *RemoteCmd) attachListCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			var verbose, _ = cmd.Flags().GetBool(flagVerbose)
 			for name, remote := range root.config.Remotes {
-				if remote != nil && verbose {
-					fmt.Println(printutil.FormatRemoteDetails(remote))
+				if verbose {
+					fmt.Println(output.FormatRemoteDetails(name, remote))
 				} else {
 					fmt.Println(name)
 				}
@@ -135,15 +169,10 @@ func (root *RemoteCmd) attachRemoveCmd() {
 		Long:  `Remove a remote from Inertia's configuration file.`,
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			var _, found = root.config.GetRemote(args[0])
-			if found {
-				root.config.RemoveRemote(args[0])
-				if err := root.config.Write(root.cfgPath); err != nil {
-					printutil.Fatal("Failed to remove remote: " + err.Error())
-				}
-				fmt.Println("Remote " + args[0] + " removed.")
+			if err := local.SaveRemote(args[0], nil); err != nil {
+				output.Fatal(err.Error())
 			} else {
-				printutil.Fatal(errors.New("There does not appear to be a remote with this name. Have you modified the Inertia configuration file?"))
+				fmt.Println("remote " + args[0] + " removed")
 			}
 		},
 	}
@@ -159,9 +188,9 @@ func (root *RemoteCmd) attachShowCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			remote, found := root.config.GetRemote(args[0])
 			if found {
-				fmt.Println(printutil.FormatRemoteDetails(remote))
+				fmt.Println(output.FormatRemoteDetails(args[0], *remote))
 			} else {
-				println("No remote '" + args[0] + "' currently set up.")
+				println("no remote '" + args[0] + "' currently configured")
 			}
 		},
 	}
@@ -177,14 +206,11 @@ func (root *RemoteCmd) attachSetCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			remote, found := root.config.GetRemote(args[0])
 			if found {
-				var success = cfg.SetProperty(args[1], args[2], remote)
-				if success {
-					root.config.Write(root.cfgPath)
-					println("Remote '" + args[0] + "' has been updated.")
-					println(printutil.FormatRemoteDetails(remote))
+				if err := cfg.SetProperty(args[1], args[2], remote); err != nil {
+					local.SaveRemote(args[0], remote)
+					println("remote '" + args[0] + "' has been updated")
 				} else {
-					// invalid input
-					println("Remote setting '" + args[1] + "' not found.")
+					output.Fatalf("could not update remote '%s': %s", args[0], err.Error())
 				}
 			} else {
 				println("No remote '" + args[0] + "' currently set up.")

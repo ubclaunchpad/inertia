@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd/core"
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
@@ -44,11 +44,11 @@ func (root *ConfigCmd) attachSetCmd() {
 			// Ensure project initialized.
 			config, err := local.GetProject(root.projectConfigPath)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			if err := cfg.SetProperty(args[0], args[1], config); err != nil {
 				if err := local.Write(root.projectConfigPath, config); err != nil {
-					printutil.Fatal(err)
+					output.Fatal(err)
 				}
 				println("Configuration setting '" + args[0] + "' has been updated.")
 			} else {
@@ -61,7 +61,7 @@ func (root *ConfigCmd) attachSetCmd() {
 
 func (root *ConfigCmd) attachUpgradeCmd() {
 	const flagVersion = "version"
-	const flagRemote = "remote"
+	const flagRemotes = "remotes"
 	var upgrade = &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade your Inertia configuration version to match the CLI",
@@ -70,7 +70,7 @@ func (root *ConfigCmd) attachUpgradeCmd() {
 			// Ensure project initialized.
 			config, err := local.GetInertiaConfig()
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			var version = root.Version
@@ -78,7 +78,7 @@ func (root *ConfigCmd) attachUpgradeCmd() {
 				version = v
 			}
 
-			var remotes, _ = cmd.Flags().GetStringArray(flagRemote)
+			var remotes, _ = cmd.Flags().GetStringArray(flagRemotes)
 			if len(remotes) == 0 {
 				fmt.Printf("Setting Inertia config to version '%s' for all remotes", version)
 				for _, r := range config.Remotes {
@@ -91,16 +91,16 @@ func (root *ConfigCmd) attachUpgradeCmd() {
 					if r, ok := config.Remotes[n]; ok {
 						r.Version = version
 					} else {
-						printutil.Fatalf("could not find remote '%s'", n)
+						output.Fatalf("could not find remote '%s'", n)
 					}
 				}
 			}
 			if err = local.Write(root.projectConfigPath, config); err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 		},
 	}
 	upgrade.Flags().String(flagVersion, root.Version, "specify Inertia daemon version to set")
-	upgrade.Flags().StringArrayP(flagVersion, "r", nil, "specify which remotes to modify (default: all)")
+	upgrade.Flags().StringArrayP(flagRemotes, "r", nil, "specify which remotes to modify (default: all)")
 	root.AddCommand(upgrade)
 }

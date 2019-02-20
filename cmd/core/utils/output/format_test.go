@@ -1,4 +1,4 @@
-package printutil
+package output
 
 import (
 	"testing"

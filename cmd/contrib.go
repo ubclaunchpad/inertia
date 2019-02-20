@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cmd/core"
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 )
 
 func attachContribPlugins(inertia *core.Cmd) {
@@ -44,7 +44,7 @@ Use $INERTIA_PLUGINSPATH to configure where Inertia should look for plugins.`,
 
 			// check if plugin is installed
 			if _, err := os.Stat(tool); os.IsNotExist(err) {
-				printutil.Fatalf("could not find plugin '%s' - please make sure it is installed",
+				output.Fatalf("could not find plugin '%s' - please make sure it is installed",
 					tool)
 			}
 
@@ -53,7 +53,7 @@ Use $INERTIA_PLUGINSPATH to configure where Inertia should look for plugins.`,
 			plugin.Stdout = os.Stdout
 			plugin.Stdin = os.Stdin
 			if err := plugin.Run(); err != nil {
-				printutil.Fatal(err.Error())
+				output.Fatal(err.Error())
 			}
 		},
 	}

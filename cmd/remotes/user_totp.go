@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/ubclaunchpad/inertia/api"
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 )
 
 // UserTotpCmd is the parent class for the 'user totp' subcommands
@@ -50,13 +50,13 @@ func (root *UserTotpCmd) attachEnableCmd() {
 			pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 			fmt.Println()
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			// Endpoint handles user authentication before enabling Totp
 			resp, err := root.host.client.EnableTotp(username, string(pwBytes))
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 			if resp.StatusCode != http.StatusOK {
 				fmt.Printf("(Status code %d) Error Enabling Totp.", resp.StatusCode)
@@ -67,7 +67,7 @@ func (root *UserTotpCmd) attachEnableCmd() {
 			var totpInfo api.TotpResponse
 			b, err := api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: &totpInfo})
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			// Display QR code so users can easily add their keys to their
@@ -104,7 +104,7 @@ func (root *UserTotpCmd) attachDisableCmd() {
 			// Endpoint handles user authentication before disabling Totp
 			resp, err := root.host.client.DisableTotp()
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			fmt.Printf("(Status code %d) ", resp.StatusCode)
