@@ -12,6 +12,8 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg"
 )
 
+const inertiaGlobalName = "inertia.global"
+
 func InertiaDir() string {
 	if os.Getenv("INERTIA_PATH") != "" {
 		return os.Getenv("INERTIA_PATH")
@@ -23,8 +25,10 @@ func InertiaDir() string {
 	return filepath.Join(home, ".inertia")
 }
 
+func InertiaConfigPath() string { return filepath.Join(InertiaDir(), inertiaGlobalName) }
+
 func GetInertiaConfig() (*cfg.Inertia, error) {
-	raw, err := ioutil.ReadFile(InertiaDir())
+	raw, err := ioutil.ReadFile(InertiaConfigPath())
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, errors.New("config file doesn't exist - try running inertia config init")
@@ -48,13 +52,14 @@ func SaveRemote(name string, remote *cfg.Remote) error {
 	}
 	if remote == nil {
 		if !inertia.RemoveRemote(name) {
-			return fmt.Errorf("could not remove remote '%s'", name)
+			return fmt.Errorf("failed to remove remote '%s'", name)
+		}
+	} else {
+		if !inertia.AddRemote(name, *remote) {
+			inertia.Remotes[name] = *remote
 		}
 	}
-	if !inertia.AddRemote(name, *remote) {
-		return fmt.Errorf("could not update remote '%s'", name)
-	}
-	return Write(InertiaDir(), inertia)
+	return Write(InertiaConfigPath(), inertia)
 }
 
 func GetProject(path string) (*cfg.Project, error) {

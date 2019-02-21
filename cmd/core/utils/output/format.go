@@ -51,28 +51,28 @@ func FormatStatus(s *api.DeploymentStatus) string {
 
 // FormatRemoteDetails prints the given remote configuration
 func FormatRemoteDetails(name string, remote cfg.Remote) string {
-	var remoteString = fmt.Sprintf("Remote %s: \n", name)
+	var remoteString string
 	remoteString += fmt.Sprintf(" - IP Address:        %s\n", remote.IP)
-	remoteString += "\nSSH Configuration"
+	remoteString += "\nSSH Configuration\n"
 	if remote.SSH != nil {
 		remoteString += fmt.Sprintf(" - VPS User:          %s\n", remote.SSH.User)
 		remoteString += fmt.Sprintf(" - PEM File Location: %s\n", remote.SSH.PEM)
 	} else {
 		remoteString += " - VPS User:\n - PEM File Location:\n"
 	}
-	remoteString += "\nDaemon Configuration"
+	remoteString += "\nDaemon Configuration\n"
 	if remote.Daemon != nil {
 		remoteString += fmt.Sprintf(" - Daemon Port:       %s\n", remote.Daemon.Port)
 		remoteString += fmt.Sprintf(" - Verify SSL:        %v\n", remote.Daemon.VerifySSL)
 	} else {
 		remoteString += " - Daemon Port:\n - Verify SSL:\n"
 	}
-	remoteString += "\nProject Configuration"
+	remoteString += "\nProject Configuration\n"
 	if remote.Profiles != nil {
 		remoteString += fmt.Sprintf(" - Profiles: %+v\n", remote.Profiles)
 	} else {
 		remoteString += " - Profiles:"
 	}
-	remoteString += fmt.Sprintf("Run 'inertia %s status' for more details.\n", name)
+	remoteString += fmt.Sprintf("\nRun 'inertia %s status' for more details.", name)
 	return remoteString
 }

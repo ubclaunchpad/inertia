@@ -22,7 +22,8 @@ func attachInitCmd(inertia *core.Cmd) {
 		Run: func(cmd *cobra.Command, args []string) {
 			// Check for global inertia configuration
 			if _, err := local.GetInertiaConfig(); err != nil {
-				resp, err := input.Prompt("could not find global inertia configuration - would you like to initialize it?")
+				resp, err := input.Promptf("could not find global inertia configuration in %s (%s) - would you like to initialize it?",
+					local.InertiaDir(), err.Error())
 				if err != nil {
 					output.Fatal(err)
 				}
@@ -52,7 +53,7 @@ func attachInitCmd(inertia *core.Cmd) {
 			if err != nil {
 				output.Fatal(err)
 			}
-			if resp, err := input.Promptf("Enter the branch you would like to deploy (leave blank for '%s')",
+			if resp, err := input.Promptf("Enter the branch you would like to deploy (leave blank for '%s'):",
 				branch); err == nil {
 				branch = resp
 			}
@@ -83,7 +84,7 @@ func attachInitCmd(inertia *core.Cmd) {
 			}
 
 			// Hello world config file!
-			if err := local.InitProject(inertia.ProjectConfigPath, host, "TODO", cfg.Profile{
+			if err := local.InitProject(inertia.ProjectConfigPath, "TODO", host, cfg.Profile{
 				Branch: branch,
 				Build: &cfg.Build{
 					Type:          buildType,
@@ -92,14 +93,10 @@ func attachInitCmd(inertia *core.Cmd) {
 			}); err != nil {
 				output.Fatal(err)
 			}
-			println("An inertia.toml configuration file has been created to store")
-			println("Inertia configuration. It is recommended that you DO NOT commit")
-			println("this file in source control since it will be used to store")
-			println("sensitive information.")
-			println("\nYou can now use 'inertia remote add' to connect your remote")
-			println("VPS instance.")
+			println("An inertia.toml configuration file has been created to store project settings!")
+			println("\nYou can now use 'inertia remote add' to set up your remote VPS instance.")
 		},
 	}
-	init.Flags().String(flagGitRemote, "master", "git remote to use for continuous deployment")
+	init.Flags().String(flagGitRemote, "origin", "git remote to use for continuous deployment")
 	inertia.AddCommand(init)
 }

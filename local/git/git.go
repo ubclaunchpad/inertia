@@ -11,7 +11,7 @@ import (
 
 // GetRepoRemote reads a remote URL
 func GetRepoRemote(remote string) (string, error) {
-	arg := "remote." + remote + ".url"
+	var arg = "remote." + remote + ".url"
 	out, err := exec.Command("git", "config", "--get", arg).CombinedOutput()
 	if err != nil {
 		return "", errors.New(err.Error() + ": " + string(out))

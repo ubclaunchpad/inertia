@@ -64,8 +64,17 @@ inertia gcloud status      # check on status of Inertia daemon
 
 func (root *RemoteCmd) attachAddCmd() {
 	const (
-		flagDaemonPort = "daemon.port"
-		flagSSHPort    = "ssh.port"
+		flagIP              = "ip"
+		flagDaemonPort      = "daemon.port"
+		flagSSHPort         = "ssh.port"
+		flagSSHKey          = "ssh.key"
+		flagSSHUser         = "ssh.user"
+		flagWebhookGenerate = "daemon.gen-secret"
+	)
+	var (
+		daemonPort       string
+		sshPort          string
+		genWebhookSecret bool
 	)
 	var addRemote = &cobra.Command{
 		Use:   "add [remote]",
@@ -73,7 +82,8 @@ func (root *RemoteCmd) attachAddCmd() {
 		Long: `Adds a reference to a remote VPS instance. Requires information about the VPS
 including IP address, user and a PEM file. The provided name will be used in other
 Inertia commands.`,
-		Args: cobra.ExactArgs(1),
+		Example: "inertia remote add staging --daemon.gen-secret --ip 1.2.3.4",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if _, found := root.config.GetRemote(args[0]); found {
 				output.Fatal(errors.New("remote " + args[0] + " already exists"))
@@ -82,38 +92,57 @@ Inertia commands.`,
 			if err != nil {
 				output.Fatal(err)
 			}
+
 			var (
 				sshDir     = filepath.Join(homeEnvVar, ".ssh")
-				keyPath    = filepath.Join(sshDir, "id_rsa")
+				defaultKey = filepath.Join(sshDir, "id_rsa")
+				addr, _    = cmd.Flags().GetString(flagIP)
 				port, _    = cmd.Flags().GetString(flagDaemonPort)
 				sshPort, _ = cmd.Flags().GetString(flagSSHPort)
+				keyPath, _ = cmd.Flags().GetString(flagSSHKey)
+				user, _    = cmd.Flags().GetString(flagSSHUser)
 			)
-			addr, err := input.Prompt("Enter IP address of remote:")
-			if err != nil {
-				output.Fatal(err)
-			}
 
-			println(">> SSH Access Configuration")
-			if resp, err := input.Promptf(
-				"Enter location of PEM file (leave blank to use '%s'):", keyPath,
-			); err != nil {
-				keyPath = resp
-			}
-			user, err := input.Prompt("Enter user:")
-			if err != nil {
-				output.Fatal(err)
-			}
-			fmt.Printf(`Port %s will be used for SSH access.`, sshPort)
-
-			println(">> Daemon Configuration")
-			webhook, err := input.Prompt("Enter webhook secret (leave blank to generate one):")
-			if err != nil {
-				webhook, err = common.GenerateRandomString()
+			if addr == "" {
+				addr, err = input.Prompt("Enter IP address of remote:")
 				if err != nil {
 					output.Fatal(err)
 				}
 			}
-			fmt.Printf(`Port %s will be used as the daemon port.`, port)
+
+			if keyPath == "" {
+				if resp, err := input.Promptf(
+					"Enter location of PEM file (leave blank to use '%s'):", defaultKey,
+				); err == nil && resp != "" {
+					keyPath = resp
+				} else {
+					keyPath = defaultKey
+				}
+			}
+			if user == "" {
+				user, err = input.Prompt("Enter user:")
+				if err != nil {
+					output.Fatal(err)
+				}
+			}
+
+			var webhookSecret string
+			if !genWebhookSecret {
+				secret, err := input.Prompt("Enter webhook secret (leave blank to generate one):")
+				if err == nil && secret != "" {
+					webhookSecret = secret
+				} else {
+					webhookSecret, err = common.GenerateRandomString()
+					if err != nil {
+						output.Fatal(err)
+					}
+				}
+			} else {
+				webhookSecret, err = common.GenerateRandomString()
+				if err != nil {
+					output.Fatal(err)
+				}
+			}
 
 			if err := local.SaveRemote(args[0], &cfg.Remote{
 				Version: root.Version,
@@ -125,7 +154,7 @@ Inertia commands.`,
 				},
 				Daemon: &cfg.Daemon{
 					Port:          port,
-					WebHookSecret: webhook,
+					WebHookSecret: webhookSecret,
 				},
 				Profiles: make(map[string]string),
 			}); err != nil {
@@ -138,8 +167,12 @@ You can now run 'inertia %s init' to set this remote up for continuous deploymen
 `, args[0], args[0])
 		},
 	}
-	addRemote.Flags().String(flagDaemonPort, "4303", "remote daemon port")
-	addRemote.Flags().String(flagSSHPort, "22", "remote SSH port")
+	addRemote.Flags().String(flagIP, "", "IP address of remote")
+	addRemote.Flags().StringVar(&daemonPort, flagDaemonPort, "4303", "remote daemon port")
+	addRemote.Flags().StringVar(&sshPort, flagSSHPort, "22", "remote SSH port")
+	addRemote.Flags().String(flagSSHKey, "", "path to SSH key for remote")
+	addRemote.Flags().String(flagSSHUser, "", "user to use when accessing remote over SSH")
+	addRemote.Flags().BoolVar(&genWebhookSecret, flagWebhookGenerate, true, "toggle webhook secret generation")
 	root.AddCommand(addRemote)
 }
 
@@ -166,15 +199,16 @@ func (root *RemoteCmd) attachListCmd() {
 
 func (root *RemoteCmd) attachRemoveCmd() {
 	var remove = &cobra.Command{
-		Use:   "rm [remote]",
-		Short: "Remove a configured remote",
-		Long:  `Remove a remote from Inertia's configuration file.`,
-		Args:  cobra.ExactArgs(1),
+		Use:     "rm [remote]",
+		Short:   "Remove a configured remote",
+		Long:    `Remove a remote from Inertia's configuration file.`,
+		Example: "inertia remote rm staging",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := local.SaveRemote(args[0], nil); err != nil {
 				output.Fatal(err.Error())
 			} else {
-				fmt.Println("remote " + args[0] + " removed")
+				fmt.Printf("remote '%s' removed\n", args[0])
 			}
 		},
 	}
@@ -183,10 +217,11 @@ func (root *RemoteCmd) attachRemoveCmd() {
 
 func (root *RemoteCmd) attachShowCmd() {
 	var show = &cobra.Command{
-		Use:   "show [remote]",
-		Short: "Show details about a remote",
-		Long:  `Shows details about the given remote.`,
-		Args:  cobra.ExactArgs(1),
+		Use:     "show [remote]",
+		Short:   "Show details about a remote",
+		Long:    `Shows details about the given remote.`,
+		Example: "inertia remote show staging",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			remote, found := root.config.GetRemote(args[0])
 			if found {
@@ -203,9 +238,10 @@ func (root *RemoteCmd) attachUpgradeCmd() {
 	const flagVersion = "version"
 	const flagRemotes = "remotes"
 	var upgrade = &cobra.Command{
-		Use:   "upgrade",
-		Short: "Upgrade your Inertia configuration version to match the CLI",
-		Long:  `Upgrade your Inertia configuration version to match the CLI and saves it to inertia.toml`,
+		Use:     "upgrade",
+		Short:   "Upgrade your remote configuration version to match the CLI",
+		Long:    `Upgrade your remote configuration version to match the CLI and save it to global settings.`,
+		Example: "inertia remote upgrade -r dev -r staging",
 		Run: func(cmd *cobra.Command, args []string) {
 			// Ensure project initialized.
 			config, err := local.GetInertiaConfig()
@@ -220,21 +256,25 @@ func (root *RemoteCmd) attachUpgradeCmd() {
 
 			var remotes, _ = cmd.Flags().GetStringArray(flagRemotes)
 			if len(remotes) == 0 {
-				fmt.Printf("Setting Inertia config to version '%s' for all remotes", version)
+				fmt.Printf("updating configuration to version '%s' for all remotes", version)
 				for n, r := range config.Remotes {
 					r.Version = version
 					if err := local.SaveRemote(n, &r); err != nil {
 						output.Fatalf("could not update remote '%s': %s", n, err.Error())
+					} else {
+						fmt.Printf("remote '%s' updated\n", n)
 					}
 				}
 			} else {
-				fmt.Printf("Setting Inertia config to version '%s' for remotes %s",
+				fmt.Printf("setting configuration to version '%s' for remotes %s\n",
 					version, strings.Join(remotes, ", "))
 				for _, n := range remotes {
 					if r, ok := config.Remotes[n]; ok {
 						r.Version = version
 						if err := local.SaveRemote(n, &r); err != nil {
 							output.Fatalf("could not update remote '%s': %s", n, err.Error())
+						} else {
+							fmt.Printf("remote '%s' updated\n", n)
 						}
 					} else {
 						output.Fatalf("could not find remote '%s'", n)
@@ -257,7 +297,7 @@ func (root *RemoteCmd) attachSetCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			remote, found := root.config.GetRemote(args[0])
 			if found {
-				if err := cfg.SetProperty(args[1], args[2], remote); err != nil {
+				if err := cfg.SetProperty(args[1], args[2], remote); err == nil {
 					local.SaveRemote(args[0], remote)
 					println("remote '" + args[0] + "' has been updated")
 				} else {

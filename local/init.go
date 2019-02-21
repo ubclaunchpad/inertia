@@ -3,7 +3,6 @@ package local
 import (
 	"errors"
 	"os"
-	"path/filepath"
 
 	"github.com/ubclaunchpad/inertia/cfg"
 )
@@ -12,11 +11,10 @@ import (
 func Init() (*cfg.Inertia, error) {
 	var inertiaPath = InertiaDir()
 	os.MkdirAll(inertiaPath, 0400)
-	var configPath = filepath.Join(inertiaPath, "inertia.global")
 	var inertia = &cfg.Inertia{
 		Remotes: make(map[string]cfg.Remote),
 	}
-	return inertia, Write(configPath, inertia)
+	return inertia, Write(InertiaConfigPath(), inertia)
 }
 
 // InitProject creates the inertia config file and returns an error if Inertia
