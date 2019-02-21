@@ -12,6 +12,7 @@ import (
 )
 
 func attachInitCmd(inertia *core.Cmd) {
+	const flagGitRemote = "git.remote"
 	var init = &cobra.Command{
 		Use:   "init",
 		Short: "Initialize an Inertia project in this repository",
@@ -29,7 +30,31 @@ func attachInitCmd(inertia *core.Cmd) {
 					if _, err := local.Init(); err != nil {
 						output.Fatal(err)
 					}
+				} else {
+					output.Fatal("global inertia configuration is required to set up Inertia")
 				}
+			}
+
+			// Check for repo
+			if err := git.IsRepo("."); err != nil {
+				output.Fatalf("could not find git repository: %s", err.Error())
+			}
+
+			// Get host URL
+			var gitRemote, _ = cmd.Flags().GetString(flagGitRemote)
+			host, err := git.GetRepoRemote(gitRemote)
+			if err != nil {
+				output.Fatalf("could not get git remote '%s': %s", gitRemote, err.Error())
+			}
+
+			// Prompt for branch to deploy
+			branch, err := git.GetRepoCurrentBranch()
+			if err != nil {
+				output.Fatal(err)
+			}
+			if resp, err := input.Promptf("Enter the branch you would like to deploy (leave blank for '%s')",
+				branch); err == nil {
+				branch = resp
 			}
 
 			// Determine best build type for project
@@ -57,18 +82,8 @@ func attachInitCmd(inertia *core.Cmd) {
 				}
 			}
 
-			// Prompt for branch to deploy
-			branch, err := git.GetRepoCurrentBranch()
-			if err != nil {
-				output.Fatal(err)
-			}
-			branch, err = input.Promptf("Enter the branch you would like to deploy (leave blank for '%s'", branch)
-			if err != nil {
-				output.Fatal(err)
-			}
-
 			// Hello world config file!
-			if err := local.InitProject(inertia.ProjectConfigPath, "TODO", cfg.Profile{
+			if err := local.InitProject(inertia.ProjectConfigPath, host, "TODO", cfg.Profile{
 				Branch: branch,
 				Build: &cfg.Build{
 					Type:          buildType,
@@ -85,5 +100,6 @@ func attachInitCmd(inertia *core.Cmd) {
 			println("VPS instance.")
 		},
 	}
+	init.Flags().String(flagGitRemote, "master", "git remote to use for continuous deployment")
 	inertia.AddCommand(init)
 }

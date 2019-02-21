@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -55,6 +56,7 @@ inertia gcloud status      # check on status of Inertia daemon
 	remote.attachSetCmd()
 	remote.attachListCmd()
 	remote.attachRemoveCmd()
+	remote.attachUpgradeCmd()
 
 	// add to parent
 	inertia.AddCommand(remote.Command)
@@ -195,6 +197,55 @@ func (root *RemoteCmd) attachShowCmd() {
 		},
 	}
 	root.AddCommand(show)
+}
+
+func (root *RemoteCmd) attachUpgradeCmd() {
+	const flagVersion = "version"
+	const flagRemotes = "remotes"
+	var upgrade = &cobra.Command{
+		Use:   "upgrade",
+		Short: "Upgrade your Inertia configuration version to match the CLI",
+		Long:  `Upgrade your Inertia configuration version to match the CLI and saves it to inertia.toml`,
+		Run: func(cmd *cobra.Command, args []string) {
+			// Ensure project initialized.
+			config, err := local.GetInertiaConfig()
+			if err != nil {
+				output.Fatal(err)
+			}
+
+			var version = root.Version
+			if v, _ := cmd.Flags().GetString(flagVersion); v != "" {
+				version = v
+			}
+
+			var remotes, _ = cmd.Flags().GetStringArray(flagRemotes)
+			if len(remotes) == 0 {
+				fmt.Printf("Setting Inertia config to version '%s' for all remotes", version)
+				for n, r := range config.Remotes {
+					r.Version = version
+					if err := local.SaveRemote(n, &r); err != nil {
+						output.Fatalf("could not update remote '%s': %s", n, err.Error())
+					}
+				}
+			} else {
+				fmt.Printf("Setting Inertia config to version '%s' for remotes %s",
+					version, strings.Join(remotes, ", "))
+				for _, n := range remotes {
+					if r, ok := config.Remotes[n]; ok {
+						r.Version = version
+						if err := local.SaveRemote(n, &r); err != nil {
+							output.Fatalf("could not update remote '%s': %s", n, err.Error())
+						}
+					} else {
+						output.Fatalf("could not find remote '%s'", n)
+					}
+				}
+			}
+		},
+	}
+	upgrade.Flags().String(flagVersion, root.Version, "specify Inertia daemon version to set")
+	upgrade.Flags().StringArrayP(flagRemotes, "r", nil, "specify which remotes to modify (default: all)")
+	root.AddCommand(upgrade)
 }
 
 func (root *RemoteCmd) attachSetCmd() {

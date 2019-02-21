@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	configcmd "github.com/ubclaunchpad/inertia/cmd/config"
 	"github.com/ubclaunchpad/inertia/cmd/core"
+	projectcmd "github.com/ubclaunchpad/inertia/cmd/project"
 	provisioncmd "github.com/ubclaunchpad/inertia/cmd/provision"
 	remotecmd "github.com/ubclaunchpad/inertia/cmd/remote"
 	remotescmd "github.com/ubclaunchpad/inertia/cmd/remotes"
@@ -58,7 +58,7 @@ Issue tracker: https://github.com/ubclaunchpad/inertia/issues`,
 
 	// attach children to root 'inertia' command
 	attachInitCmd(root)
-	configcmd.AttachConfigCmd(root)
+	projectcmd.AttachProjectCmd(root)
 	remotecmd.AttachRemoteCmd(root)
 	provisioncmd.AttachProvisionCmd(root)
 	remotescmd.AttachRemotesCmds(root)

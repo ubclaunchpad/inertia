@@ -34,12 +34,13 @@ type Build struct {
 }
 
 // NewProject sets up Inertia configuration with given properties
-func NewProject(name string) *Project {
+func NewProject(name, host string) *Project {
 	if name == "" {
 		name = "inertia-deployment"
 	}
 	return &Project{
 		Name:     name,
+		URL:      host,
 		Profiles: make(map[string]Profile),
 	}
 }
