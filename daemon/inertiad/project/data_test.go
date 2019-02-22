@@ -65,36 +65,36 @@ func TestDataManager_EnvVariableOperations(t *testing.T) {
 	}
 }
 
-func TestDataManager_builtContainerOperations(t *testing.T) {
-	type args struct {
-		commitHash string
-		date       string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"valid build", args{"hash", "2:20pm"}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			dir := "./test_config"
-			err := os.Mkdir(dir, os.ModePerm)
-			assert.Nil(t, err)
-			defer os.RemoveAll(dir)
+// func TestDataManager_builtContainerOperations(t *testing.T) {
+// 	type args struct {
+// 		commitHash string
+// 		date       string
+// 	}
+// 	tests := []struct {
+// 		name    string
+// 		args    args
+// 		wantErr bool
+// 	}{
+// 		{"valid build", args{"hash", "2:20pm"}, false},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			dir := "./test_config"
+// 			err := os.Mkdir(dir, os.ModePerm)
+// 			assert.Nil(t, err)
+// 			defer os.RemoveAll(dir)
 
-			// // Instantiate
-			// c, err := NewDataManager(path.Join(dir, "deployment.db"), path.Join(dir, "key"))
-			// assert.Nil(t, err)
+// 			// // Instantiate
+// 			// c, err := NewDataManager(path.Join(dir, "deployment.db"), path.Join(dir, "key"))
+// 			// assert.Nil(t, err)
 
-			// // Add
-			// err = c.AddBuiltContainer(tt.args.commitHash, tt.args.date)
-			// assert.Equal(t, tt.wantErr, (err != nil))
+// 			// // Add
+// 			// err = c.AddBuiltContainer(tt.args.commitHash, tt.args.date)
+// 			// assert.Equal(t, tt.wantErr, (err != nil))
 
-		})
-	}
-}
+// 		})
+// 	}
+// }
 
 func TestDataManager_destroy(t *testing.T) {
 	dir := "./test_config"
