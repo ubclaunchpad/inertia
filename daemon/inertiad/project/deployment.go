@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -189,10 +188,6 @@ func (d *Deployment) Deploy(
 		return func() error { return nil }, err
 	}
 
-	// Update db with newly built container
-	head, err := d.repo.Head()
-	d.dataManager.AddBuiltContainer(head.Hash().String(), time.Now().String())
-
 	// Deploy
 	return func() error {
 		d.active = true
@@ -317,6 +312,32 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [remote] reset'")
 	}
 	return nil
+}
+
+// UpdateContainerHistory will update container bucket with recent build's
+// metadata
+func (d *Deployment) UpdateContainerHistory(cli *docker.Client) error {
+	// Retrieve container ID for recently deployed project
+	ctx := context.Background()
+	var containerID string
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, container := range containers {
+		if container.Names[0] == d.project {
+			containerID = container.ID
+		}
+	}
+	// Retrieve project hash
+	head, err := d.repo.Head()
+	if err != nil {
+		return err
+	}
+	// Update db with newly built container metadata
+	d.dataManager.AddBuiltContainer(head.Hash().String(), containerID)
+
+	return err
 }
 
 // GetDataManager returns the class managing deployment data

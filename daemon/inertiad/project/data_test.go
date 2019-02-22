@@ -84,33 +84,14 @@ func TestDataManager_builtContainerOperations(t *testing.T) {
 			assert.Nil(t, err)
 			defer os.RemoveAll(dir)
 
-			// Instantiate
-			c, err := NewDataManager(path.Join(dir, "deployment.db"), path.Join(dir, "key"))
-			assert.Nil(t, err)
-
-			// Add
-			err = c.AddBuiltContainer(tt.args.commitHash, tt.args.date)
-			assert.Equal(t, tt.wantErr, (err != nil))
-
-			// // Retrieve
-			// vars, err := c.GetEnvVariables(tt.decrypt)
+			// // Instantiate
+			// c, err := NewDataManager(path.Join(dir, "deployment.db"), path.Join(dir, "key"))
 			// assert.Nil(t, err)
-			// if tt.wantErr {
-			// 	assert.Zero(t, len(vars))
-			// } else {
-			// 	if len(vars) == 0 {
-			// 		assert.Fail(t, "Expected vars, found none")
-			// 	} else {
-			// 		assert.Equal(t, tt.args.name+"=[ENCRYPTED]", vars[0])
-			// 	}
-			// }
 
-			// // Remove
-			// err = c.RemoveEnvVariables(tt.args.name)
-			// assert.Nil(t, err)
-			// vars, err = c.GetEnvVariables(false)
-			// assert.Nil(t, err)
-			// assert.Equal(t, 0, len(vars))
+			// // Add
+			// err = c.AddBuiltContainer(tt.args.commitHash, tt.args.date)
+			// assert.Equal(t, tt.wantErr, (err != nil))
+
 		})
 	}
 }

@@ -139,13 +139,11 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 	return envs, err
 }
 
-// AddBuiltContainer adds a new environment variable that will be applied
-// to all project containers
-func (c *DeploymentDataManager) AddBuiltContainer(commitHash, containerID string) error {
-
+// AddBuiltContainer stores and tracks metadata from successful builds
+func (c *DeploymentDataManager) AddBuiltContainer(commitHash string, containerID string) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		containers := tx.Bucket(builtContainersBucket)
-		return containers.Put([]byte(commitHash), []byte(containerID))
+		containersBucket := tx.Bucket(builtContainersBucket)
+		return containersBucket.Put([]byte(commitHash), []byte(containerID))
 	})
 }
 

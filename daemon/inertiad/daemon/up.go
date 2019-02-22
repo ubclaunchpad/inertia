@@ -94,5 +94,7 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.deployment.UpdateContainerHistory(s.docker)
+
 	logger.WriteSuccess("Project startup initiated!", http.StatusCreated)
 }
