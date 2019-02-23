@@ -19,7 +19,7 @@ func newIntegrationClient() *client.Client {
 	remote := &cfg.Remote{
 		IP: "127.0.0.1",
 		SSH: &cfg.SSH{
-			PEM:     "../test/keys/id_rsa",
+			PEM:     "../../test/keys/id_rsa",
 			User:    "root",
 			SSHPort: "69",
 		},
@@ -39,7 +39,7 @@ func TestBootstrap_Integration(t *testing.T) {
 	}
 
 	var c = newIntegrationClient()
-	assert.NoError(t, SetUpRemote(os.Stdout, "", "", c))
+	assert.NoError(t, SetUpRemote(os.Stdout, "test", "", c))
 
 	// Daemon setup takes a bit of time - do a crude wait
 	time.Sleep(3 * time.Second)
