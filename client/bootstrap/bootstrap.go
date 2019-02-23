@@ -42,7 +42,8 @@ func SetUpRemote(out io.Writer, name, gitURL string, c *client.Client) error {
 	fmt.Fprintf(out, `Inertia has been set up and daemon is running on remote!
 
 You may have to wait briefly for Inertia to set up some dependencies.
-Use 'inertia %s logs' to check on the daemon's setup progress.`, name)
+Use 'inertia %s logs' to check on the daemon's setup progress.
+`, name)
 
 	// pretty divider
 	fmt.Fprint(out, "=============================\n\n")
