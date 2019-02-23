@@ -128,7 +128,7 @@ Run 'inertia [remote] init' to gather this information.`,
 	inertia.AddCommand(host.Command)
 }
 
-func (root *HostCmd) getRemote() *cfg.Remote { return root.getRemote() }
+func (root *HostCmd) getRemote() *cfg.Remote { return root.client.Remote }
 
 func (root *HostCmd) attachUpCmd() {
 	const (
