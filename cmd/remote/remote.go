@@ -185,11 +185,12 @@ func (root *RemoteCmd) attachListCmd() {
 		Long:  `Lists all currently configured remotes.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var verbose, _ = cmd.Flags().GetBool(flagVerbose)
-			for name, remote := range root.config.Remotes {
+			for _, remote := range root.config.Remotes {
 				if verbose {
+					fmt.Printf("remote '%s'\n", remote.Name)
 					fmt.Println(output.FormatRemoteDetails(*remote))
 				} else {
-					fmt.Println(name)
+					fmt.Println(remote.Name)
 				}
 			}
 		},

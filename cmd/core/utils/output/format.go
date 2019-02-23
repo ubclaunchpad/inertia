@@ -52,27 +52,18 @@ func FormatStatus(s *api.DeploymentStatus) string {
 // FormatRemoteDetails prints the given remote configuration
 func FormatRemoteDetails(remote cfg.Remote) string {
 	var remoteString string
-	remoteString += fmt.Sprintf(" - IP Address:        %s\n", remote.IP)
-	remoteString += "\nSSH Configuration\n"
-	if remote.SSH != nil {
-		remoteString += fmt.Sprintf(" - VPS User:          %s\n", remote.SSH.User)
-		remoteString += fmt.Sprintf(" - PEM File Location: %s\n", remote.SSH.PEM)
-	} else {
-		remoteString += " - VPS User:\n - PEM File Location:\n"
-	}
-	remoteString += "\nDaemon Configuration\n"
+	remoteString += fmt.Sprintf("* IP:                   %s\n", remote.IP)
 	if remote.Daemon != nil {
-		remoteString += fmt.Sprintf(" - Daemon Port:       %s\n", remote.Daemon.Port)
-		remoteString += fmt.Sprintf(" - Verify SSL:        %v\n", remote.Daemon.VerifySSL)
-	} else {
-		remoteString += " - Daemon Port:\n - Verify SSL:\n"
+		remoteString += fmt.Sprintf("* Daemon.Port:          %s\n", remote.Daemon.Port)
+		remoteString += fmt.Sprintf("* Daemon.Authenticated: %v\n", remote.Daemon.Token != "")
+		remoteString += fmt.Sprintf("* Daemon.VerifySSL:     %v\n", remote.Daemon.VerifySSL)
 	}
-	remoteString += "\nProject Configuration\n"
+	if remote.SSH != nil {
+		remoteString += fmt.Sprintf("* SSH.User:             %s\n", remote.SSH.User)
+		remoteString += fmt.Sprintf("* SSH.PemFile:          %s\n", remote.SSH.PEM)
+	}
 	if remote.Profiles != nil {
-		remoteString += fmt.Sprintf(" - Profiles: %+v\n", remote.Profiles)
-	} else {
-		remoteString += " - Profiles:"
+		remoteString += fmt.Sprintf("* Profiles: %v", remote.Profiles)
 	}
-	remoteString += fmt.Sprintf("\nRun 'inertia %s status' for more details.", remote.Name)
 	return remoteString
 }
