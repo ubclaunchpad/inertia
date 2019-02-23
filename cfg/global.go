@@ -4,8 +4,10 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg/internal/identity"
 )
 
-// Inertia denotes all your configured remotes (global)
+// Inertia denotes global Inertia configuration
 type Inertia struct {
+	// Remotes tracks globally configured remotes. It is a list instead of a map
+	// to better align with TOML best practices
 	Remotes []*Remote `toml:"remote"`
 }
 

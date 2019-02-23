@@ -11,6 +11,8 @@ type Project struct {
 	Name string `toml:"name"`
 	URL  string `toml:"url"`
 
+	// Profiles tracks configured project profiles. It is a list instead of a map
+	// to better align with TOML best practices
 	Profiles []*Profile `toml:"profile"`
 }
 
