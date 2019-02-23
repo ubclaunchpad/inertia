@@ -49,11 +49,8 @@ Provide profile values via the available flags.`,
 		Args:    cobra.ExactArgs(1),
 		Example: "inertia project profile set my_profile --build.type dockerfile --build.file Dockerfile.dev",
 		Run: func(cmd *cobra.Command, args []string) {
-			config, err := local.GetProject(p.root.projectConfigPath)
-			if err != nil {
-				output.Fatal(err)
-			}
 			var (
+				err       error
 				branch, _ = cmd.Flags().GetString(flagBranch)
 				bTypeS, _ = cmd.Flags().GetString(flagBuildType)
 				bPath, _  = cmd.Flags().GetString(flagBuildFilePath)
@@ -71,7 +68,7 @@ Provide profile values via the available flags.`,
 				output.Fatal(err)
 			}
 
-			config.SetProfile(cfg.Profile{
+			p.root.config.SetProfile(cfg.Profile{
 				Name:   args[0],
 				Branch: branch,
 				Build: &cfg.Build{
@@ -80,7 +77,7 @@ Provide profile values via the available flags.`,
 				},
 			})
 
-			if err := local.Write(p.root.projectConfigPath, config); err != nil {
+			if err := local.Write(p.root.projectConfigPath, p.root.config); err != nil {
 				output.Fatal(err)
 			}
 			fmt.Printf("profile '%s' successfully updated", args[0])
@@ -105,11 +102,7 @@ remote.
 By default, the profile called 'default' will be used.`,
 		Args: cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			config, err := local.GetProject(p.root.projectConfigPath)
-			if err != nil {
-				output.Fatal(err)
-			}
-			if _, ok := config.GetProfile(args[0]); !ok {
+			if _, ok := p.root.config.GetProfile(args[0]); !ok {
 				output.Fatalf("profile '%s' does not exist", args[0])
 			}
 			cfg, err := local.GetInertiaConfig()
@@ -120,7 +113,7 @@ By default, the profile called 'default' will be used.`,
 			if !ok {
 				output.Fatalf("remote '%s' does not exist", args[1])
 			}
-			r.ApplyProfile(config.Name, args[0])
+			r.ApplyProfile(p.root.config.Name, args[0])
 			if err := local.SaveRemote(r); err != nil {
 				output.Fatal(err)
 			}
