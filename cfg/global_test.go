@@ -22,10 +22,7 @@ var exampleRemote = &Remote{
 }
 
 func TestNewInertiaConfig(t *testing.T) {
-	var c = NewInertiaConfig()
-	if c == nil {
-		t.Error("unexpected nil val")
-	}
+	assert.NotNil(t, NewInertiaConfig())
 }
 
 func TestInertia_GetRemote(t *testing.T) {

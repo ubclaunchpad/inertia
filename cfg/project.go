@@ -65,6 +65,9 @@ func (p *Project) GetProfile(name string) (*Profile, bool) {
 
 // SetProfile assigns a profile to project configuration
 func (p *Project) SetProfile(profile Profile) {
+	if profile.Name == "" {
+		return
+	}
 	if profile.Build == nil {
 		profile.Build = &Build{}
 	}
