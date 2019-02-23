@@ -18,9 +18,9 @@ type Remote struct {
 
 // SSH denotes SSH options for accessing a remote
 type SSH struct {
-	User    string `toml:"user"`
-	PEM     string `toml:"pemfile"`
-	SSHPort string `toml:"ssh-port"`
+	User         string `toml:"user"`
+	IdentityFile string `toml:"identityfile"`
+	SSHPort      string `toml:"ssh-port"`
 }
 
 // Daemon contains parameters for the Daemon

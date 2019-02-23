@@ -27,8 +27,13 @@ type SSHRunner struct {
 	ip      string
 	sshPort string
 
-	pemPath       string
-	pemPassphrase string
+	ident identity
+}
+
+// Identity denotes SSH identity options
+type identity struct {
+	filePath   string
+	passphrase string
 }
 
 // SSHOptions denotes options for the SSH runner
@@ -43,9 +48,10 @@ func NewSSHRunner(ip string, cfg *cfg.SSH, opts SSHOptions) *SSHRunner {
 			ip:      ip,
 			user:    cfg.User,
 			sshPort: cfg.SSHPort,
-
-			pemPath:       cfg.PEM,
-			pemPassphrase: opts.KeyPassphrase,
+			ident: identity{
+				filePath:   cfg.IdentityFile,
+				passphrase: opts.KeyPassphrase,
+			},
 		}
 	}
 	return nil
@@ -53,7 +59,7 @@ func NewSSHRunner(ip string, cfg *cfg.SSH, opts SSHOptions) *SSHRunner {
 
 // Run runs a command remotely.
 func (r *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Buffer, err error) {
-	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
+	session, err := getSSHSession(r.ident.filePath, r.ip, r.sshPort, r.user, r.ident.passphrase)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -72,7 +78,7 @@ func (r *SSHRunner) Run(cmd string) (cmdout *bytes.Buffer, cmderr *bytes.Buffer,
 // RunStream remotely executes given command, streaming its output
 // and opening up an optionally interactive session
 func (r *SSHRunner) RunStream(cmd string, interactive bool) error {
-	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
+	session, err := getSSHSession(r.ident.filePath, r.ip, r.sshPort, r.user, r.ident.passphrase)
 	if err != nil {
 		return err
 	}
@@ -95,7 +101,7 @@ func (r *SSHRunner) RunSession(commands ...string) error {
 		target = fmt.Sprintf("%s@%s", r.user, r.ip)
 		args   = append([]string{
 			"-p", r.sshPort,
-			"-i", r.pemPath,
+			"-i", r.ident.filePath,
 			target},
 			commands...)
 		cmd = exec.Command("ssh", args...)
@@ -118,7 +124,7 @@ func (r *SSHRunner) CopyFile(file io.Reader, remotePath string, permissions stri
 	// Set up
 	filename := filepath.Base(remotePath)
 	directory := filepath.Dir(remotePath)
-	session, err := getSSHSession(r.pemPath, r.ip, r.sshPort, r.user, r.pemPassphrase)
+	session, err := getSSHSession(r.ident.filePath, r.ip, r.sshPort, r.user, r.ident.passphrase)
 	if err != nil {
 		return err
 	}

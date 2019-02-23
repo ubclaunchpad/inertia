@@ -21,11 +21,6 @@ import (
 	"github.com/ubclaunchpad/inertia/local"
 )
 
-const (
-	// EnvSSHPassphrase is the key used to fetch PEM key passphrases
-	EnvSSHPassphrase = "PEM_PASSPHRASE"
-)
-
 // AttachRemotesCmds reads configuration to attach a child command for each
 // configured remote in the configuration
 func AttachRemotesCmds(root *core.Cmd) {
@@ -75,7 +70,7 @@ func AttachRemoteHostCmd(
 		project: opts.ProjectCfg,
 		client: client.NewClient(opts.RemoteCfg, client.Options{
 			SSH: runner.SSHOptions{
-				KeyPassphrase: os.Getenv(EnvSSHPassphrase),
+				KeyPassphrase: os.Getenv(local.EnvSSHPassphrase),
 			},
 			Out: os.Stdout,
 		}),
@@ -98,7 +93,7 @@ Requires:
 
 Continuous deployment requires the daemon's webhook address to be registered in your remote repository.
 
-If the SSH key for your remote requires a passphrase, it can be provided via 'PEM_PASSPHRASE'.
+If the SSH key for your remote requires a passphrase, it can be provided via 'IDENTITY_PASSPHRASE'.
 
 Run 'inertia [remote] init' to gather this information.`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {

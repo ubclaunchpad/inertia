@@ -12,7 +12,7 @@ Requires:
 
 Continuous deployment requires the daemon's webhook address to be registered in your remote repository.
 
-If the SSH key for your remote requires a passphrase, it can be provided via 'PEM_PASSPHRASE'.
+If the SSH key for your remote requires a passphrase, it can be provided via 'IDENTITY_PASSPHRASE'.
 
 Run 'inertia [remote] init' to gather this information.
 

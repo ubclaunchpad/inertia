@@ -296,9 +296,9 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		Name: opts.Name,
 		IP:   *instance.PublicDnsName,
 		SSH: &cfg.SSH{
-			User:    p.user,
-			PEM:     keyPath,
-			SSHPort: "22",
+			User:         p.user,
+			IdentityFile: keyPath,
+			SSHPort:      "22",
 		},
 		Daemon: &cfg.Daemon{
 			Port:          strconv.FormatInt(opts.DaemonPort, 10),

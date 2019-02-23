@@ -51,8 +51,8 @@ func TestFormatRemoteDetails(t *testing.T) {
 	var output = FormatRemoteDetails(cfg.Remote{
 		Name: "bob",
 		SSH: &cfg.SSH{
-			User: "tree",
-			PEM:  "/wow/amaze",
+			User:         "tree",
+			IdentityFile: "/wow/amaze",
 		},
 	})
 	assert.Contains(t, output, "tree")

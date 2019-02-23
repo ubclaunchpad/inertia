@@ -5,7 +5,7 @@ Add a reference to a remote VPS instance
 ### Synopsis
 
 Adds a reference to a remote VPS instance. Requires information about the VPS
-including IP address, user and a PEM file. The provided name will be used in other
+including IP address, user and a identity file. The provided name will be used in other
 Inertia commands.
 
 ```

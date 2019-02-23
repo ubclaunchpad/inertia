@@ -87,7 +87,7 @@ func newDocgenCmd(root *core.Cmd) *cobra.Command {
 				ioutil.WriteFile(filepath.Join(out, "README.md"), []byte(readme), os.ModePerm)
 			}
 
-			fmt.Printf("%s documentation generated in %s", format, out)
+			fmt.Printf("%s documentation generated in %s\n", format, out)
 		},
 	}
 	docs.Flags().StringP(flagOutput, "o", "./docs/cli", "output file path")

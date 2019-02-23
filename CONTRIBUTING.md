@@ -259,7 +259,7 @@ $> git clone https://github.com/$AWESOME_YOU/inertia-deploy-test.git
 $> cd inertia-deploy-test
 $> inertia init
 $> inertia remote add local --ssh.port 69
-# - PEM file: $INERTIA_PATH/test/keys/id_rsa
+# - identity file: $INERTIA_PATH/test/keys/id_rsa
 # - Address:  127.0.0.1 
 # - User:     root
 $> inertia local init

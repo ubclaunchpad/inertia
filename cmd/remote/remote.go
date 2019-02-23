@@ -80,7 +80,7 @@ func (root *RemoteCmd) attachAddCmd() {
 		Use:   "add [remote]",
 		Short: "Add a reference to a remote VPS instance",
 		Long: `Adds a reference to a remote VPS instance. Requires information about the VPS
-including IP address, user and a PEM file. The provided name will be used in other
+including IP address, user and a identity file. The provided name will be used in other
 Inertia commands.`,
 		Example: "inertia remote add staging --daemon.gen-secret --ip 1.2.3.4",
 		Args:    cobra.ExactArgs(1),
@@ -112,7 +112,7 @@ Inertia commands.`,
 
 			if keyPath == "" {
 				if resp, err := input.Promptf(
-					"Enter location of PEM file (leave blank to use '%s'):", defaultKey,
+					"Enter location of identity file (leave blank to use '%s'):", defaultKey,
 				); err == nil && resp != "" {
 					keyPath = resp
 				} else {
@@ -149,9 +149,9 @@ Inertia commands.`,
 				Version: root.Version,
 				IP:      addr,
 				SSH: &cfg.SSH{
-					User:    user,
-					PEM:     keyPath,
-					SSHPort: sshPort,
+					User:         user,
+					IdentityFile: keyPath,
+					SSHPort:      sshPort,
 				},
 				Daemon: &cfg.Daemon{
 					Port:          port,

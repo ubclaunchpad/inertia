@@ -40,8 +40,8 @@ func newMockClient(ts *httptest.Server) *Client {
 		Remote: &cfg.Remote{
 			IP: url,
 			SSH: &cfg.SSH{
-				User: "",
-				PEM:  "",
+				User:         "",
+				IdentityFile: "",
 			},
 			Daemon: &cfg.Daemon{
 				Port:          port,
@@ -59,9 +59,9 @@ func newMockSSHClient(m *mocks.FakeSSHSession) *Client {
 			Version: "test",
 			IP:      "127.0.0.1",
 			SSH: &cfg.SSH{
-				PEM:     "../test/keys/id_rsa",
-				User:    "root",
-				SSHPort: "69",
+				IdentityFile: "../test/keys/id_rsa",
+				User:         "root",
+				SSHPort:      "69",
 			},
 			Daemon: &cfg.Daemon{
 				Port: "4303",

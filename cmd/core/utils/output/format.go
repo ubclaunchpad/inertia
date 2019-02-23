@@ -60,7 +60,7 @@ func FormatRemoteDetails(remote cfg.Remote) string {
 	}
 	if remote.SSH != nil {
 		remoteString += fmt.Sprintf("* SSH.User:             %s\n", remote.SSH.User)
-		remoteString += fmt.Sprintf("* SSH.PemFile:          %s\n", remote.SSH.PEM)
+		remoteString += fmt.Sprintf("* SSH.IdentityFile:     %s\n", remote.SSH.IdentityFile)
 	}
 	if remote.Profiles != nil {
 		remoteString += fmt.Sprintf("* Profiles: %v", remote.Profiles)
