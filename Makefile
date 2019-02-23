@@ -146,26 +146,33 @@ test-integration-fast:
 ##  * DOCUMENTATION
 ##    ‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-## docs: build all documentation
+DOCS_DIR=docs
+
+## docs: build all documentation, used for latest release documentation
 .PHONY: docs
 docs: docs-usage docs-cli docs-api
+
+## docs-tip: build tip documentation (docs/tip), used for the bleeding edge documentation
+.PHONY: docs-tip
+docs-tip:
+	make docs DOCS_DIR=docs/tip
 
 ## docs-usage: set up doc builder and build usage guide website
 .PHONY: docs
 docs-usage:
-	sh .scripts/build_docs.sh
+	sh .scripts/build_docs.sh $(DOCS_DIR)
 
 ## docs-cli: build CLI reference pages
 .PHONY: docs-cli
 docs-cli: docgen
 	@echo [INFO] Generating CLI documentation
-	@./inertia-docgen -o ./docs/cli
+	@./inertia-docgen -o $(DOCS_DIR)/cli
 
 ## docs-api: build API reference from Swagger definitions in /docs_src/api
 .PHONY: docs-api
 docs-api: 
 	@echo [INFO] Generating API documentation
-	@redoc-cli bundle ./docs_src/api/swagger.yml -o ./docs/api/index.html
+	@redoc-cli bundle ./docs_src/api/swagger.yml -o $(DOCS_DIR)/api/index.html
 
 ## run-docs-usage: run doc server from ./docs_src for the usage guide website only
 .PHONY: run-docs-usage
