@@ -6,7 +6,7 @@ import (
 
 // Inertia denotes all your configured remotes (global)
 type Inertia struct {
-	Remotes []*Remote `toml:"remotes"`
+	Remotes []*Remote `toml:"remote"`
 }
 
 // NewInertiaConfig instantiates a new Inertia configuration

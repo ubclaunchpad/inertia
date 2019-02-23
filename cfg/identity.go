@@ -23,7 +23,7 @@ import (
 func ident(vals interface{}) []identity.Identifier {
 	var ids []identity.Identifier
 	switch impl := vals.(type) {
-	case []*Project:
+	case []*Profile:
 		ids = make([]identity.Identifier, len(impl))
 		for i, v := range impl {
 			ids[i] = v

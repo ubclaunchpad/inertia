@@ -9,7 +9,7 @@ type Project struct {
 	Name string `toml:"name"`
 	URL  string `toml:"url"`
 
-	Profiles []*Profile `toml:"profiles"`
+	Profiles []*Profile `toml:"profile"`
 }
 
 // Profile denotes a deployment configuration
