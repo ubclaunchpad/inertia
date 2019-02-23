@@ -29,6 +29,8 @@ func AttachProfileCmd(root *ProjectCmd) {
 	}
 	prof.attachSetCmd()
 	prof.attachApplyCmd()
+	prof.attachListCmd()
+	prof.attachShowCmd()
 
 	root.AddCommand(prof.Command)
 }
@@ -46,6 +48,7 @@ func (p *ProfileCmd) attachSetCmd() {
 a new one is created, otherwise the existing one is overwritten.
 
 Provide profile values via the available flags.`,
+		Aliases: []string{"new", "add"},
 		Args:    cobra.ExactArgs(1),
 		Example: "inertia project profile set my_profile --build.type dockerfile --build.file Dockerfile.dev",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -121,4 +124,45 @@ By default, the profile called 'default' will be used.`,
 		},
 	}
 	p.AddCommand(apply)
+}
+
+func (p *ProfileCmd) attachListCmd() {
+	var ls = &cobra.Command{
+		Use:   "ls",
+		Short: "List configured project profiles",
+		Long: `List configured profiles for this project. To add new ones, use
+'inertia project profile set'.`,
+		Args: cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			if p.root.config.Profiles == nil {
+				p.root.config.Profiles = make([]*cfg.Profile, 0)
+				local.Write(p.root.projectConfigPath, p.root.config)
+			}
+			for _, pf := range p.root.config.Profiles {
+				println(pf.Name)
+			}
+		},
+	}
+	p.AddCommand(ls)
+}
+
+func (p *ProfileCmd) attachShowCmd() {
+	var show = &cobra.Command{
+		Use:   "show",
+		Short: "Output profile configuration",
+		Long: `Prints the requested profile configuration. To add new ones, use
+'inertia project profile set'.`,
+		Args: cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			pf, ok := p.root.config.GetProfile(args[0])
+			if !ok {
+				output.Fatalf("profile '%s' not found", args[0])
+			}
+			fmt.Printf(`* Branch:              %s
+* Build.Type:          %s
+* Build.BuildFilePath: %s
+`, pf.Branch, pf.Build.Type, pf.Build.BuildFilePath)
+		},
+	}
+	p.AddCommand(show)
 }

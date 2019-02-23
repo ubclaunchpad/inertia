@@ -73,7 +73,11 @@ func (p *Project) GetProfile(name string) (*Profile, bool) {
 	if !ok {
 		return nil, false
 	}
-	return v.(*Profile), ok
+	var pf = v.(*Profile)
+	if pf.Build == nil {
+		pf.Build = &Build{}
+	}
+	return pf, ok
 }
 
 // SetProfile assigns a profile to project configuration
