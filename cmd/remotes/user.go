@@ -25,9 +25,10 @@ type UserCmd struct {
 func AttachUserCmd(host *HostCmd) {
 	var user = &UserCmd{
 		Command: &cobra.Command{
-			Use:   "user",
-			Short: "Configure user access to Inertia Web",
-			Long:  `Configure user access to the Inertia Web application.`,
+			Use:     "user",
+			Short:   "Configure user access to Inertia Web",
+			Long:    `Configure user access to the Inertia Web application.`,
+			Aliases: []string{"u"},
 		},
 		host: host,
 	}

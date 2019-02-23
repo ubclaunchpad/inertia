@@ -23,9 +23,10 @@ type UserTotpCmd struct {
 func AttachTotpCmd(root *UserCmd) {
 	var totp = &UserTotpCmd{
 		Command: &cobra.Command{
-			Use:   "totp",
-			Short: "Manage TOTP settings for a user",
-			Long:  "Manage TOTP settings for a registered user on your Inertia daemon",
+			Use:     "totp",
+			Short:   "Manage 2FA TOTP settings for users",
+			Long:    "Manage 2FA TOTP settings for registered users on your Inertia daemon",
+			Aliases: []string{"2fa"},
 		},
 		host: root.host,
 	}
