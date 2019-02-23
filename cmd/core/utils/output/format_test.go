@@ -55,9 +55,8 @@ func TestFormatRemoteDetails(t *testing.T) {
 			PEM:  "/wow/amaze",
 		},
 	})
-	assert.Contains(t, output, "bob")
 	assert.Contains(t, output, "tree")
 	assert.Contains(t, output, "/wow/amaze")
-	output = FormatRemoteDetails(cfg.Remote{Name: "bob"})
-	assert.Contains(t, output, "bob")
+	output = FormatRemoteDetails(cfg.Remote{Name: "bob", IP: "0.0.0.0"})
+	assert.Contains(t, output, "0.0.0.0")
 }

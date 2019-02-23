@@ -3,7 +3,6 @@ package git
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,7 +30,6 @@ func TestGetRepoCurrentBranch(t *testing.T) {
 func TestIsRepo(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
-	assert.NotNil(t, IsRepo(cwd))
-	inertia, _ := filepath.Split(cwd)
-	assert.Nil(t, IsRepo(inertia))
+	assert.Error(t, IsRepo(cwd))
+	assert.NoError(t, IsRepo("../../"))
 }
