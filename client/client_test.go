@@ -55,9 +55,9 @@ func newMockClient(ts *httptest.Server) *Client {
 
 func newMockSSHClient(m *mocks.FakeSSHSession) *Client {
 	return &Client{
-		version: "test",
 		Remote: &cfg.Remote{
-			IP: "127.0.0.1",
+			Version: "test",
+			IP:      "127.0.0.1",
 			SSH: &cfg.SSH{
 				PEM:     "../test/keys/id_rsa",
 				User:    "root",

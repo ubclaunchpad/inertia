@@ -22,8 +22,7 @@ import (
 
 // Client manages a deployment
 type Client struct {
-	version string
-	out     io.Writer
+	out io.Writer
 
 	Remote *cfg.Remote
 

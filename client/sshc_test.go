@@ -23,7 +23,9 @@ func TestInstallDocker(t *testing.T) {
 
 	// Make sure the right command is run.
 	assert.NoError(t, sshc.InstallDocker())
-	assert.Equal(t, string(script), session.RunArgsForCall(0))
+	call, interact := session.RunStreamArgsForCall(0)
+	assert.False(t, interact)
+	assert.Equal(t, string(script), call)
 }
 
 func TestDaemonUp(t *testing.T) {
@@ -41,7 +43,9 @@ func TestDaemonUp(t *testing.T) {
 
 	// Make sure the right command is run.
 	assert.NoError(t, sshc.DaemonUp())
-	assert.Equal(t, actualCommand, session.RunArgsForCall(0))
+	call, interact := session.RunStreamArgsForCall(0)
+	assert.False(t, interact)
+	assert.Equal(t, actualCommand, call)
 }
 
 func TestDaemonDown(t *testing.T) {
