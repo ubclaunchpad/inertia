@@ -36,3 +36,19 @@ func ident(vals interface{}) []identity.Identifier {
 	}
 	return ids
 }
+
+func asProfiles(vals []identity.Identifier) []*Profile {
+	var l = make([]*Profile, len(vals))
+	for i, v := range vals {
+		l[i] = v.(*Profile)
+	}
+	return l
+}
+
+func asRemotes(vals []identity.Identifier) []*Remote {
+	var l = make([]*Remote, len(vals))
+	for i, v := range vals {
+		l[i] = v.(*Remote)
+	}
+	return l
+}

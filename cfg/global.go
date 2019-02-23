@@ -18,19 +18,36 @@ func NewInertiaConfig() *Inertia {
 
 // GetRemote retrieves a remote by name
 func (i *Inertia) GetRemote(name string) (*Remote, bool) {
-	r, ok := identity.Find(name, ident(i.Remotes))
+	if name == "" {
+		return nil, false
+	}
+	v, ok := identity.Get(name, ident(i.Remotes))
 	if !ok {
 		return nil, false
 	}
-	return r.(*Remote), ok
+	return v.(*Remote), ok
 }
 
 // SetRemote adds or updates a remote to configuration
 func (i *Inertia) SetRemote(remote Remote) {
-	identity.Set(&remote, ident(i.Remotes))
+	if remote.Name == "" {
+		return
+	}
+	if remote.Daemon == nil {
+		remote.Daemon = &Daemon{}
+	}
+	var ids = ident(i.Remotes)
+	identity.Set(&remote, &ids)
+	i.Remotes = asRemotes(ids)
 }
 
 // RemoveRemote removes remote with given name
 func (i *Inertia) RemoveRemote(name string) bool {
-	return identity.Remove(name, ident(i.Remotes))
+	if name == "" {
+		return false
+	}
+	var ids = ident(i.Remotes)
+	ok := identity.Remove(name, &ids)
+	i.Remotes = asRemotes(ids)
+	return ok
 }

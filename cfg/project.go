@@ -51,17 +51,16 @@ func NewProject(name, host string) *Project {
 	}
 }
 
-// Identifier implements identity.Identifier
-func (p *Project) Identifier() string { return p.Name }
-
 // GetProfile retrieves the named profile
 func (p *Project) GetProfile(name string) (*Profile, bool) {
-	for _, p := range p.Profiles {
-		if p.Name == name {
-			return p, true
-		}
+	if name == "" {
+		return nil, false
 	}
-	return nil, false
+	v, ok := identity.Get(name, ident(p.Profiles))
+	if !ok {
+		return nil, false
+	}
+	return v.(*Profile), ok
 }
 
 // SetProfile assigns a profile to project configuration
@@ -69,10 +68,15 @@ func (p *Project) SetProfile(profile Profile) {
 	if profile.Build == nil {
 		profile.Build = &Build{}
 	}
-	identity.Set(&profile, ident(p.Profiles))
+	var ids = ident(p.Profiles)
+	identity.Set(&profile, &ids)
+	p.Profiles = asProfiles(ids)
 }
 
 // RemoveProfile removes a configured profile
 func (p *Project) RemoveProfile(name string) bool {
-	return identity.Remove(name, ident(p.Profiles))
+	var ids = ident(p.Profiles)
+	ok := identity.Remove(name, &ids)
+	p.Profiles = asProfiles(ids)
+	return ok
 }
