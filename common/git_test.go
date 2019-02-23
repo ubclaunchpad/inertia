@@ -67,4 +67,7 @@ func TestExtractRepository(t *testing.T) {
 
 	repoNameWithMixed := ExtractRepository("git@github.com:ubclaunchpad/inertia-deploy.test.git")
 	assert.Equal(t, "ubclaunchpad/inertia-deploy.test", repoNameWithMixed)
+
+	defaultRepoName := ExtractRepository("")
+	assert.Equal(t, "${repository}", defaultRepoName)
 }

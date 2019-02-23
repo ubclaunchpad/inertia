@@ -14,8 +14,8 @@ func TestGetAPIPrivateKey(t *testing.T) {
 }
 
 func TestGetGithubKey(t *testing.T) {
-	pemFile, err := os.Open(TestInertiaKeyPath)
+	identityFile, err := os.Open(TestInertiaKeyPath)
 	assert.NoError(t, err)
-	_, err = GetGithubKey(pemFile)
+	_, err = GetGithubKey(identityFile)
 	assert.NoError(t, err)
 }

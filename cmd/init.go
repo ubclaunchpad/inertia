@@ -1,68 +1,136 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
-	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
-	"github.com/ubclaunchpad/inertia/cmd/inpututil"
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
+	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/cmd/core"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
+	"github.com/ubclaunchpad/inertia/local/git"
 )
 
-func attachInitCmd(inertia *inertiacmd.Cmd) {
-	const flagVersion = "version"
+func attachInitCmd(inertia *core.Cmd) {
+	const (
+		flagGitRemote = "git.remote"
+		flagGlobal    = "global"
+	)
 	var init = &cobra.Command{
 		Use:   "init",
 		Short: "Initialize an Inertia project in this repository",
-		Long: `Initializes an Inertia project in this GitHub repository.
-		There must be a local git repository in order for initialization
-		to succeed.`,
+		Long: `Initializes an Inertia project in this GitHub repository. You can
+provide an argument as the name of your project, otherwise the name of your
+current directory will be used.
+
+There must be a local git repository in order for initialization
+to succeed, unless you use the '--global' flag to initialize only
+the Inertia global configuration.
+
+See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
+		Example: "inertia init my_awesome_project",
+		Args:    cobra.RangeArgs(0, 1),
 		Run: func(cmd *cobra.Command, args []string) {
-			var version = inertia.Version
-			if givenVersion, _ := cmd.Flags().GetString(flagVersion); givenVersion != "" {
-				version = givenVersion
+			if global, _ := cmd.Flags().GetBool(flagGlobal); global {
+				if _, err := local.Init(); err != nil {
+					output.Fatal(err)
+				}
+				fmt.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
+				return
+			}
+
+			// Check for global inertia configuration
+			if _, err := local.GetInertiaConfig(); err != nil {
+				resp, err := input.Promptf("could not find global inertia configuration in %s (%s) - would you like to initialize it?",
+					local.InertiaDir(), err.Error())
+				if err != nil {
+					output.Fatal(err)
+				}
+				if resp == "y" || resp == "yes" {
+					if _, err := local.Init(); err != nil {
+						output.Fatal(err)
+					}
+					fmt.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
+				} else {
+					output.Fatal("aborting: global inertia configuration is required to set up Inertia")
+				}
+			}
+
+			// Set project name
+			var project string
+			if len(args) == 1 {
+				project = args[0]
+			} else {
+				cwd, _ := os.Getwd()
+				project = filepath.Base(cwd)
+			}
+
+			// Check for repo
+			if err := git.IsRepo("."); err != nil {
+				output.Fatalf("could not find git repository: %s", err.Error())
+			}
+
+			// Get host URL
+			var gitRemote, _ = cmd.Flags().GetString(flagGitRemote)
+			host, err := git.GetRepoRemote(gitRemote)
+			if err != nil {
+				output.Fatalf("could not get git remote '%s': %s", gitRemote, err.Error())
+			}
+
+			// Prompt for branch to deploy
+			branch, err := git.GetRepoCurrentBranch()
+			if err != nil {
+				output.Fatal(err)
+			}
+			if resp, err := input.Promptf("Enter the branch you would like to deploy (leave blank for '%s'):",
+				branch); err == nil {
+				branch = resp
 			}
 
 			// Determine best build type for project
-			var buildType string
-			var buildFilePath string
-			cwd, err := os.Getwd()
-			if err != nil {
-				printutil.Fatal(err)
-			}
-			// docker-compose projects will usually have Dockerfiles,
-			// so check for that first, then check for Dockerfile
-			if common.CheckForDockerCompose(cwd) {
+			var (
+				buildType     cfg.BuildType
+				buildFilePath string
+			)
+
+			// docker-compose projects will usually have Dockerfiles, so check for
+			// docker-compose.yml first, then check for Dockerfile
+			if common.CheckForDockerCompose(".") {
 				println("docker-compose project detected")
-				buildType = "docker-compose"
+				buildType = cfg.DockerCompose
 				buildFilePath = "docker-compose.yml"
-			} else if common.CheckForDockerfile(cwd) {
+			} else if common.CheckForDockerfile(".") {
 				println("Dockerfile project detected")
-				buildType = "dockerfile"
+				buildType = cfg.Dockerfile
 				buildFilePath = "Dockerfile"
 			} else {
 				println("No build file detected")
-				buildType, buildFilePath, err = inpututil.AddProjectWalkthrough(os.Stdin)
+				var err error
+				buildType, buildFilePath, err = input.AddProjectWalkthrough()
 				if err != nil {
-					printutil.Fatal(err)
+					output.Fatal(err)
 				}
 			}
 
 			// Hello world config file!
-			err = local.InitializeInertiaProject(inertia.ConfigPath, version, buildType, buildFilePath)
-			if err != nil {
-				printutil.Fatal(err)
+			if err := local.InitProject(inertia.ProjectConfigPath, project, host, cfg.Profile{
+				Branch: branch,
+				Build: &cfg.Build{
+					Type:          buildType,
+					BuildFilePath: buildFilePath,
+				},
+			}); err != nil {
+				output.Fatal(err)
 			}
-			println("An inertia.toml configuration file has been created to store")
-			println("Inertia configuration. It is recommended that you DO NOT commit")
-			println("this file in source control since it will be used to store")
-			println("sensitive information.")
-			println("\nYou can now use 'inertia remote add' to connect your remote")
-			println("VPS instance.")
+			println("An inertia.toml configuration file has been created to store project settings!")
+			println("\nYou can now use 'inertia remote add' to set up your remote VPS instance.")
 		},
 	}
-	init.Flags().String(flagVersion, "", "specify Inertia daemon version to use")
+	init.Flags().String(flagGitRemote, "origin", "git remote to use for continuous deployment")
+	init.Flags().BoolP(flagGlobal, "g", false, "just initialize global inertia configuration")
 	inertia.AddCommand(init)
 }

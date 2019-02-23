@@ -39,6 +39,9 @@ func ExtractRepository(URL string) string {
 	if err != nil {
 		return "$YOUR_REPOSITORY"
 	}
-	r := re.Split(strings.TrimSuffix(URL, ".git"), -1)
-	return strings.Join(r[len(r)-2:], "/")
+	var parts = re.Split(strings.TrimSuffix(URL, ".git"), -1)
+	if len(parts) < 2 {
+		return "${repository}"
+	}
+	return strings.Join(parts[len(parts)-2:], "/")
 }

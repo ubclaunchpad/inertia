@@ -8,7 +8,7 @@ import (
 
 const (
 	// EnvSSHPassphrase is the key used to fetch PEM key passphrases
-	EnvSSHPassphrase = "PEM_PASSPHRASE"
+	EnvSSHPassphrase = "IDENTITY_PASSPHRASE"
 )
 
 // GetHomePath returns the homepath based on the operating system used
