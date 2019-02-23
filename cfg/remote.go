@@ -48,6 +48,18 @@ func (r *Remote) GetProfile(project string) string {
 	return profile
 }
 
+// ApplyProfile associates the given profile name with the given project and
+// saves it in Profiles
+func (r *Remote) ApplyProfile(project, profile string) {
+	if r.Profiles == nil {
+		r.Profiles = make(map[string]string)
+	}
+	if profile == "" {
+		profile = "default"
+	}
+	r.Profiles[project] = profile
+}
+
 // SSHHost creates the user@ip string for executing SSH commands
 func (r *Remote) SSHHost() (string, error) {
 	if r.SSH == nil {
