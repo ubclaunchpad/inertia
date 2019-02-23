@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd/core"
@@ -12,14 +14,27 @@ import (
 )
 
 func attachInitCmd(inertia *core.Cmd) {
-	const flagGitRemote = "git.remote"
+	const (
+		flagGitRemote = "git.remote"
+		flagGlobal    = "global"
+	)
 	var init = &cobra.Command{
 		Use:   "init",
 		Short: "Initialize an Inertia project in this repository",
 		Long: `Initializes an Inertia project in this GitHub repository.
-		There must be a local git repository in order for initialization
-		to succeed.`,
+
+There must be a local git repository in order for initialization
+to succeed, unless you use the '--global' flag to initialize only
+the Inertia global configuration.`,
 		Run: func(cmd *cobra.Command, args []string) {
+			if global, _ := cmd.Flags().GetBool(flagGlobal); global {
+				if _, err := local.Init(); err != nil {
+					output.Fatal(err)
+				}
+				fmt.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
+				return
+			}
+
 			// Check for global inertia configuration
 			if _, err := local.GetInertiaConfig(); err != nil {
 				resp, err := input.Promptf("could not find global inertia configuration in %s (%s) - would you like to initialize it?",
@@ -31,8 +46,9 @@ func attachInitCmd(inertia *core.Cmd) {
 					if _, err := local.Init(); err != nil {
 						output.Fatal(err)
 					}
+					fmt.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
 				} else {
-					output.Fatal("global inertia configuration is required to set up Inertia")
+					output.Fatal("aborting: global inertia configuration is required to set up Inertia")
 				}
 			}
 
@@ -98,5 +114,6 @@ func attachInitCmd(inertia *core.Cmd) {
 		},
 	}
 	init.Flags().String(flagGitRemote, "origin", "git remote to use for continuous deployment")
+	init.Flags().BoolP(flagGlobal, "g", false, "just initialize global inertia configuration")
 	inertia.AddCommand(init)
 }
