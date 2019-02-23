@@ -36,7 +36,7 @@ For documentation regarding the daemon API, refer to the [API Reference](https:/
 )
 
 func main() {
-	var root = cmd.NewInertiaCmd(Version)
+	var root = cmd.NewInertiaCmd(Version, "~/.inertia/inertia.global")
 	if err := newDocgenCmd(root).Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)

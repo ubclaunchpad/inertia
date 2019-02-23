@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -20,7 +21,7 @@ func getVersion(version string) string {
 }
 
 // NewInertiaCmd is a new Inertia command
-func NewInertiaCmd(version string) *core.Cmd {
+func NewInertiaCmd(version, inertiaConfigPath string) *core.Cmd {
 	cobra.EnableCommandSorting = false
 
 	// instantiate top-level command
@@ -29,7 +30,7 @@ func NewInertiaCmd(version string) *core.Cmd {
 		Use:     "inertia",
 		Version: getVersion(version),
 		Short:   "Effortless, self-hosted continuous deployment for small teams and projects",
-		Long: `Inertia is an effortless, self-hosted continuous deployment platform.
+		Long: fmt.Sprintf(`Inertia is an effortless, self-hosted continuous deployment platform.
 
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continuously update the production server
@@ -39,9 +40,11 @@ Once you have set up a remote with 'inertia remote add [remote]', use
 'inertia [remote] --help' to see what you can do with your remote. To list
 available remotes, use 'inertia remote ls'.
 
+Global inertia configuration is stored in '%s'.
+
 * Repository:    https://github.com/ubclaunchpad/inertia/
 * Issue tracker: https://github.com/ubclaunchpad/inertia/issues
-* Documentation: https://inertia.ubclaunchpad.com`,
+* Documentation: https://inertia.ubclaunchpad.com`, inertiaConfigPath),
 		DisableAutoGenTag: true,
 	}
 
