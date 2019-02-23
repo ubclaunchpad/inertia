@@ -24,16 +24,21 @@ func TestWrite(t *testing.T) {
 	}{
 		{"nothing to write to", args{"", nil, nil}, true},
 		{"ok: write to path", args{"./test-config.toml", &cfg.Inertia{
-			Remotes: make(map[string]cfg.Remote),
+			Remotes: []*cfg.Remote{
+				&cfg.Remote{Profiles: map[string]string{
+					"asdf": "asdf",
+					"oipo": "oiup",
+				}},
+			},
 		}, nil}, false},
 		{"ok: write to writers", args{"", &cfg.Inertia{
-			Remotes: make(map[string]cfg.Remote),
+			Remotes: make([]*cfg.Remote, 0),
 		}, []io.Writer{os.Stdout}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.args.path != "" {
-				defer os.RemoveAll(tt.args.path)
+				//defer os.RemoveAll(tt.args.path)
 			}
 			var err = Write(tt.args.path, tt.args.data, tt.args.writers...)
 			assert.Equalf(t, (err != nil), tt.wantErr, "got '%v'", err)

@@ -11,9 +11,7 @@ import (
 func Init() (*cfg.Inertia, error) {
 	var inertiaPath = InertiaDir()
 	os.MkdirAll(inertiaPath, 0400)
-	var inertia = &cfg.Inertia{
-		Remotes: make(map[string]cfg.Remote),
-	}
+	var inertia = cfg.NewInertiaConfig()
 	return inertia, Write(InertiaConfigPath(), inertia)
 }
 
@@ -25,7 +23,8 @@ func InitProject(path, name, host string, defaultProfile cfg.Profile) error {
 	}
 
 	var project = cfg.NewProject(name, host)
-	project.SetProfile("default", defaultProfile)
+	defaultProfile.Name = "default"
+	project.SetProfile(defaultProfile)
 
 	return Write(path, project)
 }

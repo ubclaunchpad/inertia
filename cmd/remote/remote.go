@@ -144,7 +144,8 @@ Inertia commands.`,
 				}
 			}
 
-			if err := local.SaveRemote(args[0], &cfg.Remote{
+			if err := local.SaveRemote(&cfg.Remote{
+				Name:    args[0],
 				Version: root.Version,
 				IP:      addr,
 				SSH: &cfg.SSH{
@@ -186,7 +187,7 @@ func (root *RemoteCmd) attachListCmd() {
 			var verbose, _ = cmd.Flags().GetBool(flagVerbose)
 			for name, remote := range root.config.Remotes {
 				if verbose {
-					fmt.Println(output.FormatRemoteDetails(name, remote))
+					fmt.Println(output.FormatRemoteDetails(*remote))
 				} else {
 					fmt.Println(name)
 				}
@@ -205,7 +206,7 @@ func (root *RemoteCmd) attachRemoveCmd() {
 		Example: "inertia remote rm staging",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := local.SaveRemote(args[0], nil); err != nil {
+			if err := local.SaveRemote(nil); err != nil {
 				output.Fatal(err.Error())
 			} else {
 				fmt.Printf("remote '%s' removed\n", args[0])
@@ -225,7 +226,7 @@ func (root *RemoteCmd) attachShowCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			remote, found := root.config.GetRemote(args[0])
 			if found {
-				fmt.Println(output.FormatRemoteDetails(args[0], *remote))
+				fmt.Println(output.FormatRemoteDetails(*remote))
 			} else {
 				println("no remote '" + args[0] + "' currently configured")
 			}
@@ -257,21 +258,21 @@ func (root *RemoteCmd) attachUpgradeCmd() {
 			var remotes, _ = cmd.Flags().GetStringArray(flagRemotes)
 			if len(remotes) == 0 {
 				fmt.Printf("updating configuration to version '%s' for all remotes", version)
-				for n, r := range config.Remotes {
+				for _, r := range config.Remotes {
 					r.Version = version
-					if err := local.SaveRemote(n, &r); err != nil {
-						output.Fatalf("could not update remote '%s': %s", n, err.Error())
+					if err := local.SaveRemote(r); err != nil {
+						output.Fatalf("could not update remote '%s': %s", r.Name, err.Error())
 					} else {
-						fmt.Printf("remote '%s' updated\n", n)
+						fmt.Printf("remote '%s' updated\n", r.Name)
 					}
 				}
 			} else {
 				fmt.Printf("setting configuration to version '%s' for remotes %s\n",
 					version, strings.Join(remotes, ", "))
 				for _, n := range remotes {
-					if r, ok := config.Remotes[n]; ok {
+					if r, ok := config.GetRemote(n); ok {
 						r.Version = version
-						if err := local.SaveRemote(n, &r); err != nil {
+						if err := local.SaveRemote(r); err != nil {
 							output.Fatalf("could not update remote '%s': %s", n, err.Error())
 						} else {
 							fmt.Printf("remote '%s' updated\n", n)
@@ -298,7 +299,9 @@ func (root *RemoteCmd) attachSetCmd() {
 			remote, found := root.config.GetRemote(args[0])
 			if found {
 				if err := cfg.SetProperty(args[1], args[2], remote); err == nil {
-					local.SaveRemote(args[0], remote)
+					if err := local.SaveRemote(remote); err != nil {
+						output.Fatal(err.Error())
+					}
 					println("remote '" + args[0] + "' has been updated")
 				} else {
 					output.Fatalf("could not update remote '%s': %s", args[0], err.Error())

@@ -8,11 +8,11 @@ import (
 
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/client/bootstrap"
 	"github.com/ubclaunchpad/inertia/client/runner"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
-	"github.com/ubclaunchpad/inertia/cmd/remotes/bootstrap"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 	"github.com/ubclaunchpad/inertia/provision"
@@ -186,7 +186,7 @@ This ensures that your project ports are properly exposed and externally accessi
 			}
 
 			// Save new remote to configuration
-			local.SaveRemote(args[0], remote)
+			local.SaveRemote(remote)
 
 			// Create inertia client
 			inertia := client.NewClient(remote, client.Options{
@@ -195,12 +195,14 @@ This ensures that your project ports are properly exposed and externally accessi
 
 			// Bootstrap remote
 			fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.Remote.IP)
-			if err := bootstrap.SetUpRemote(args[0], root.project.URL, inertia); err != nil {
+			if err := bootstrap.SetUpRemote(os.Stdout, args[0], root.project.URL, inertia); err != nil {
 				output.Fatal(err.Error())
 			}
 
 			// Save updated config
-			local.SaveRemote(args[0], remote)
+			if err := local.SaveRemote(remote); err != nil {
+				output.Fatal(err.Error())
+			}
 		},
 	}
 	provEC2.Flags().StringP(flagType, "t",

@@ -171,7 +171,7 @@ func (root *UserCmd) attachLoginCmd() {
 			}
 
 			root.host.client.Remote.Daemon.Token = string(token)
-			if err = local.SaveRemote(root.host.remote, root.host.client.Remote); err != nil {
+			if err = local.SaveRemote(root.host.getRemote()); err != nil {
 				output.Fatal(err)
 			}
 

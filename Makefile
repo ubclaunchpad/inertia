@@ -202,6 +202,8 @@ docker-deps:
 ## mocks: generate Go mocks
 .PHONY: mocks
 mocks:
+	counterfeiter -o ./client/runner/mocks/session.go \
+		./client/runner/ssh.go SSHSession
 	counterfeiter -o ./daemon/inertiad/project/mocks/deployer.go \
 		./daemon/inertiad/project/deployment.go Deployer
 	counterfeiter -o ./daemon/inertiad/build/mocks/builder.go \

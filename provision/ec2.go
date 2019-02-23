@@ -293,7 +293,8 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 
 	// Return remote configuration
 	return &cfg.Remote{
-		IP: *instance.PublicDnsName,
+		Name: opts.Name,
+		IP:   *instance.PublicDnsName,
 		SSH: &cfg.SSH{
 			User:    p.user,
 			PEM:     keyPath,

@@ -1,40 +1,36 @@
 package cfg
 
+import (
+	"github.com/ubclaunchpad/inertia/cfg/internal/identity"
+)
+
 // Inertia denotes all your configured remotes (global)
 type Inertia struct {
-	Remotes map[string]Remote `toml:"remotes"`
+	Remotes []*Remote `toml:"remotes"`
 }
 
+// NewInertiaConfig instantiates a new Inertia configuration
 func NewInertiaConfig() *Inertia {
 	return &Inertia{
-		Remotes: make(map[string]Remote),
+		Remotes: make([]*Remote, 0),
 	}
 }
 
 // GetRemote retrieves a remote by name
 func (i *Inertia) GetRemote(name string) (*Remote, bool) {
-	var remote Remote
-	var ok bool
-	if remote, ok = i.Remotes[name]; !ok {
+	r, ok := identity.Find(name, ident(i.Remotes))
+	if !ok {
 		return nil, false
 	}
-	return &remote, true
+	return r.(*Remote), ok
 }
 
-// AddRemote adds a remote to configuration
-func (i *Inertia) AddRemote(name string, remote Remote) bool {
-	if _, ok := i.Remotes[name]; ok {
-		return false
-	}
-	i.Remotes[name] = remote
-	return true
+// SetRemote adds or updates a remote to configuration
+func (i *Inertia) SetRemote(remote Remote) {
+	identity.Set(&remote, ident(i.Remotes))
 }
 
 // RemoveRemote removes remote with given name
 func (i *Inertia) RemoveRemote(name string) bool {
-	if _, ok := i.Remotes[name]; !ok {
-		return false
-	}
-	delete(i.Remotes, name)
-	return true
+	return identity.Remove(name, ident(i.Remotes))
 }

@@ -14,6 +14,8 @@ import (
 
 const inertiaGlobalName = "inertia.global"
 
+// InertiaDir gets the path to the directory where global Inertia configuration
+// is stored
 func InertiaDir() string {
 	if os.Getenv("INERTIA_PATH") != "" {
 		return os.Getenv("INERTIA_PATH")
@@ -25,8 +27,10 @@ func InertiaDir() string {
 	return filepath.Join(home, ".inertia")
 }
 
+// InertiaConfigPath gets the path to global Inertia configuration
 func InertiaConfigPath() string { return filepath.Join(InertiaDir(), inertiaGlobalName) }
 
+// GetInertiaConfig retrieves global Inertia configuration
 func GetInertiaConfig() (*cfg.Inertia, error) {
 	raw, err := ioutil.ReadFile(InertiaConfigPath())
 	if err != nil {
@@ -44,24 +48,29 @@ func GetInertiaConfig() (*cfg.Inertia, error) {
 }
 
 // SaveRemote adds or updates the given remote in the global Inertia configuration
-// file. If remote is nil, the named remote is deleted instead.
-func SaveRemote(name string, remote *cfg.Remote) error {
+// file.
+func SaveRemote(remote *cfg.Remote) error {
 	inertia, err := GetInertiaConfig()
 	if err != nil {
 		return err
 	}
-	if remote == nil {
-		if !inertia.RemoveRemote(name) {
-			return fmt.Errorf("failed to remove remote '%s'", name)
-		}
-	} else {
-		if !inertia.AddRemote(name, *remote) {
-			inertia.Remotes[name] = *remote
-		}
-	}
+	inertia.SetRemote(*remote)
 	return Write(InertiaConfigPath(), inertia)
 }
 
+// RemoveRemote deletes the named remote from the global Inertia configuration file.
+func RemoveRemote(name string) error {
+	inertia, err := GetInertiaConfig()
+	if err != nil {
+		return err
+	}
+	if !inertia.RemoveRemote(name) {
+		return fmt.Errorf("failed to remove remote '%s'", name)
+	}
+	return nil
+}
+
+// GetProject retrieves the Inertia project configuration at the given path
 func GetProject(path string) (*cfg.Project, error) {
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -78,6 +87,7 @@ func GetProject(path string) (*cfg.Project, error) {
 	return &project, nil
 }
 
+// Write saves the given data to the given path and/or writers
 func Write(path string, data interface{}, writers ...io.Writer) error {
 	if len(writers) == 0 && path == "" {
 		return errors.New("nothing to write to")

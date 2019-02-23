@@ -11,14 +11,14 @@ import (
 	"github.com/ubclaunchpad/inertia/client/runner"
 )
 
+// SSHClient implements Inertia's SSH commands
 type SSHClient struct {
 	remote *cfg.Remote
 	ssh    runner.SSHSession
 }
 
-func (s *SSHClient) GetRunner() runner.SSHSession {
-	return s.ssh
-}
+// GetRunner returns the SSH client's underlying session
+func (s *SSHClient) GetRunner() runner.SSHSession { return s.ssh }
 
 // DaemonUp brings the daemon up on the remote instance.
 func (s *SSHClient) DaemonUp() error {
@@ -46,7 +46,7 @@ func (s *SSHClient) DaemonDown() error {
 	return nil
 }
 
-// installDocker installs docker on a remote vps.
+// InstallDocker installs docker on a remote vps.
 func (s *SSHClient) InstallDocker() error {
 	installDockerSh, err := internal.ReadFile("client/scripts/docker.sh")
 	if err != nil {
@@ -62,8 +62,8 @@ func (s *SSHClient) InstallDocker() error {
 	return nil
 }
 
-// keyGen creates a public-private key-pair on the remote vps and returns the
-// public key.
+// GenerateKeys creates a public-private key-pair on the remote vps and returns
+// the public key.
 func (s *SSHClient) GenerateKeys() (*bytes.Buffer, error) {
 	if s.ssh == nil {
 		return nil, errors.New("client not configured for SSH access")

@@ -25,12 +25,12 @@ type Client struct {
 	version string
 	out     io.Writer
 
-	remoteName string
-	Remote     *cfg.Remote
+	Remote *cfg.Remote
 
 	ssh runner.SSHSession
 }
 
+// Options denotes configuration options for a Client
 type Options struct {
 	SSH runner.SSHOptions
 	Out io.Writer
@@ -135,7 +135,7 @@ func (c *Client) Logs(container string, entries int) (*http.Response, error) {
 
 // LogsWebSocket opens a websocket connection to given container's logs
 func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, error) {
-	addr, err := c.Remote.GetDaemonAddr()
+	addr, err := c.Remote.DaemonAddr()
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (c *Client) post(endpoint string, requestBody interface{}) (*http.Response,
 
 func (c *Client) buildRequest(method string, endpoint string, payload io.Reader) (*http.Request, error) {
 	// Assemble URL
-	addr, err := c.Remote.GetDaemonAddr()
+	addr, err := c.Remote.DaemonAddr()
 	if err != nil {
 		return nil, err
 	}

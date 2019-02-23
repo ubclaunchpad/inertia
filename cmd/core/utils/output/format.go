@@ -50,7 +50,7 @@ func FormatStatus(s *api.DeploymentStatus) string {
 }
 
 // FormatRemoteDetails prints the given remote configuration
-func FormatRemoteDetails(name string, remote cfg.Remote) string {
+func FormatRemoteDetails(remote cfg.Remote) string {
 	var remoteString string
 	remoteString += fmt.Sprintf(" - IP Address:        %s\n", remote.IP)
 	remoteString += "\nSSH Configuration\n"
@@ -73,6 +73,6 @@ func FormatRemoteDetails(name string, remote cfg.Remote) string {
 	} else {
 		remoteString += " - Profiles:"
 	}
-	remoteString += fmt.Sprintf("\nRun 'inertia %s status' for more details.", name)
+	remoteString += fmt.Sprintf("\nRun 'inertia %s status' for more details.", remote.Name)
 	return remoteString
 }

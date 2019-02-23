@@ -14,10 +14,10 @@ import (
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/client/bootstrap"
 	"github.com/ubclaunchpad/inertia/client/runner"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
-	"github.com/ubclaunchpad/inertia/cmd/remotes/bootstrap"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
@@ -37,10 +37,9 @@ func AttachRemotesCmds(root *core.Cmd) {
 	if err != nil {
 		return
 	}
-	for n, r := range cfg.Remotes {
-		AttachHostCmd(root, CmdOptions{
-			RemoteName: n,
-			RemoteCfg:  &r,
+	for _, r := range cfg.Remotes {
+		AttachRemoteHostCmd(root, CmdOptions{
+			RemoteCfg:  r,
 			ProjectCfg: project,
 		})
 	}
@@ -57,7 +56,6 @@ type HostCmd struct {
 
 // CmdOptions denotes options for individual host subcommands
 type CmdOptions struct {
-	RemoteName string
 	RemoteCfg  *cfg.Remote
 	ProjectCfg *cfg.Project
 }
@@ -66,15 +64,14 @@ const (
 	flagShort = "short"
 )
 
-// AttachHostCmd attaches a subcommand for a configured remote host to the
+// AttachRemoteHostCmd attaches a subcommand for a configured remote host to the
 // given parent
-func AttachHostCmd(
+func AttachRemoteHostCmd(
 	inertia *core.Cmd,
 	opts CmdOptions,
 	hidden ...bool,
 ) {
 	var host = &HostCmd{
-		remote:  opts.RemoteName,
 		project: opts.ProjectCfg,
 		client: client.NewClient(opts.RemoteCfg, client.Options{
 			SSH: runner.SSHOptions{
@@ -84,7 +81,7 @@ func AttachHostCmd(
 		}),
 	}
 	host.Command = &cobra.Command{
-		Use: opts.RemoteName + " [command]",
+		Use: opts.RemoteCfg.Name + " [command]",
 		Hidden: func() bool {
 			// hide command by default
 			if len(hidden) > 0 {
@@ -92,7 +89,7 @@ func AttachHostCmd(
 			}
 			return true
 		}(),
-		Short: "Configure deployment to " + opts.RemoteName,
+		Short: "Configure deployment to " + opts.RemoteCfg.Name,
 		Long: `Manages deployment on specified remote.
 
 Requires:
@@ -149,12 +146,15 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			// Get flags
 			var short, _ = cmd.Flags().GetBool(flagShort)
 			var project = "" // TODO
-			var profile = root.getRemote().GetProfile(project)
+			profile, found := root.project.GetProfile(root.getRemote().GetProfile(project))
+			if !found {
+				output.Fatalf("could not find profile '%s'", root.getRemote().GetProfile(project))
+			}
 
 			resp, err := root.client.Up(
 				project,
 				root.project.URL,
-				root.project.Profiles[profile],
+				*profile,
 				!short)
 			if err != nil {
 				output.Fatal(err)
@@ -243,7 +243,7 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 
 			switch resp.StatusCode {
 			case http.StatusOK:
-				host, err := root.getRemote().GetDaemonAddr()
+				host, err := root.getRemote().DaemonAddr()
 				if err != nil {
 					output.Fatal(err)
 				}
@@ -448,12 +448,12 @@ Upon successful setup, you will be provided with:
 The deploy key is required for the daemon to access your repository, and the
 webhook URL enables continuous deployment as your repository is updated.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := bootstrap.SetUpRemote(root.remote, root.project.URL, root.client); err != nil {
+			if err := bootstrap.SetUpRemote(os.Stdout, root.remote, root.project.URL, root.client); err != nil {
 				output.Fatal(err.Error())
 			}
 
 			// write back to configuration
-			if err := local.SaveRemote(root.remote, root.getRemote()); err != nil {
+			if err := local.SaveRemote(root.getRemote()); err != nil {
 				output.Fatal(err)
 			}
 		},

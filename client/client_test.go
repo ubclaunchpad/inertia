@@ -2,7 +2,6 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -13,8 +12,10 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
+
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/client/runner/mocks"
 )
 
 var (
@@ -35,158 +36,40 @@ func newMockClient(ts *httptest.Server) *Client {
 		port = "8080"
 	}
 
-	mockRemote := &cfg.RemoteVPS{
-		User: "",
-		IP:   url,
-		PEM:  "",
-		Daemon: &cfg.DaemonConfig{
-			Port:          port,
-			WebHookSecret: "arjan",
-			Token:         fakeAuth,
-		},
-	}
-
 	return &Client{
-		RemoteVPS: mockRemote,
-		out:       os.Stdout,
-		project:   "test_project",
+		Remote: &cfg.Remote{
+			IP: url,
+			SSH: &cfg.SSH{
+				User: "",
+				PEM:  "",
+			},
+			Daemon: &cfg.Daemon{
+				Port:          port,
+				WebHookSecret: "arjan",
+				Token:         fakeAuth,
+			},
+		},
+		out: os.Stdout,
 	}
 }
 
-func newMockSSHClient(mockRunner *mockSSHRunner) *Client {
-	remote := &cfg.RemoteVPS{
-		IP:      "127.0.0.1",
-		PEM:     "../test/keys/id_rsa",
-		User:    "root",
-		SSHPort: "69",
-		Daemon: &cfg.DaemonConfig{
-			Port: "4303",
-		},
-	}
-	mockRunner.r = remote
+func newMockSSHClient(m *mocks.FakeSSHSession) *Client {
 	return &Client{
-		version:   "test",
-		RemoteVPS: remote,
-		out:       os.Stdout,
-		SSH:       mockRunner,
-	}
-}
-
-func TestGetNewClient(t *testing.T) {
-	config := &cfg.Config{
-		Version: "test",
-		Project: "robert-writes-bad-code",
-		Remotes: make(map[string]*cfg.RemoteVPS),
-	}
-	testRemote := &cfg.RemoteVPS{
-		Name:    "test",
-		IP:      "12343",
-		User:    "bobheadxi",
-		PEM:     "/some/pem/file",
-		SSHPort: "22",
-		Daemon: &cfg.DaemonConfig{
-			Port: "8080",
+		version: "test",
+		Remote: &cfg.Remote{
+			IP: "127.0.0.1",
+			SSH: &cfg.SSH{
+				PEM:     "../test/keys/id_rsa",
+				User:    "root",
+				SSHPort: "69",
+			},
+			Daemon: &cfg.Daemon{
+				Port: "4303",
+			},
 		},
+		out: os.Stdout,
+		ssh: m,
 	}
-	config.AddRemote(testRemote)
-
-	_, found := NewClient("tst", "", config)
-	assert.False(t, found)
-
-	cli, found := NewClient("test", "", config)
-	assert.True(t, found)
-	assert.Equal(t, "/some/pem/file", cli.RemoteVPS.PEM)
-	assert.Equal(t, "test", cli.version)
-	assert.Equal(t, "robert-writes-bad-code", cli.project)
-	assert.False(t, cli.verifySSL)
-}
-
-func TestInstallDocker(t *testing.T) {
-	session := &mockSSHRunner{}
-	client := newMockSSHClient(session)
-	script, err := ioutil.ReadFile("scripts/docker.sh")
-	assert.NoError(t, err)
-
-	// Make sure the right command is run.
-	err = client.installDocker(session)
-	assert.NoError(t, err)
-	assert.Equal(t, string(script), session.Calls[0])
-}
-
-func TestDaemonUp(t *testing.T) {
-	session := &mockSSHRunner{}
-	client := newMockSSHClient(session)
-	client.version = "latest"
-	client.IP = "0.0.0.0"
-	client.Daemon.Port = "4303"
-	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
-	assert.NoError(t, err)
-	actualCommand := fmt.Sprintf(string(script), "latest", "4303", "0.0.0.0")
-
-	// Make sure the right command is run.
-	err = client.DaemonUp("latest")
-	assert.NoError(t, err)
-	println(actualCommand)
-	assert.Equal(t, actualCommand, session.Calls[0])
-}
-
-func TestDaemonDown(t *testing.T) {
-	session := &mockSSHRunner{}
-	client := newMockSSHClient(session)
-	client.version = "latest"
-	client.IP = "0.0.0.0"
-	client.Daemon.Port = "4303"
-	script, err := ioutil.ReadFile("scripts/daemon-down.sh")
-	assert.Nil(t, err)
-	actualCommand := fmt.Sprintf(string(script))
-
-	// Make sure the right command is run.
-	err = client.DaemonDown()
-	assert.Nil(t, err)
-	println(actualCommand)
-	assert.Equal(t, actualCommand, session.Calls[0])
-}
-
-func TestKeyGen(t *testing.T) {
-	session := &mockSSHRunner{}
-	remote := newMockSSHClient(session)
-	script, err := ioutil.ReadFile("scripts/token.sh")
-	assert.NoError(t, err)
-	tokenScript := fmt.Sprintf(string(script), "test")
-
-	// Make sure the right command is run.
-	_, err = remote.getDaemonAPIToken(session, "test")
-	assert.NoError(t, err)
-	assert.Equal(t, session.Calls[0], tokenScript)
-}
-
-func TestBootstrap(t *testing.T) {
-	session := &mockSSHRunner{}
-	client := newMockSSHClient(session)
-	assert.False(t, client.verifySSL)
-
-	dockerScript, err := ioutil.ReadFile("scripts/docker.sh")
-	assert.NoError(t, err)
-
-	keyScript, err := ioutil.ReadFile("scripts/keygen.sh")
-	assert.NoError(t, err)
-
-	script, err := ioutil.ReadFile("scripts/token.sh")
-	assert.NoError(t, err)
-	tokenScript := fmt.Sprintf(string(script), "test")
-
-	script, err = ioutil.ReadFile("scripts/daemon-up.sh")
-	assert.NoError(t, err)
-	daemonScript := fmt.Sprintf(string(script), "test", "4303", "127.0.0.1")
-
-	err = client.BootstrapRemote("ubclaunchpad/inertia")
-	assert.NoError(t, err)
-
-	// Make sure all commands are formatted correctly
-	assert.Equal(t, string(dockerScript), session.Calls[0])
-	assert.Equal(t, string(keyScript), session.Calls[1])
-	assert.Equal(t, daemonScript, session.Calls[2])
-	assert.Equal(t, tokenScript, session.Calls[3])
 }
 
 func TestUp(t *testing.T) {
@@ -217,9 +100,13 @@ func TestUp(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	d := newMockClient(testServer)
-	assert.False(t, d.verifySSL)
-	resp, err := d.Up("myremote.git", "docker-compose", false)
+	var d = newMockClient(testServer)
+	assert.False(t, d.Remote.Daemon.VerifySSL)
+	resp, err := d.Up("test_project", "myremote.git", cfg.Profile{
+		Build: &cfg.Build{
+			Type: cfg.DockerCompose,
+		},
+	}, false)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
@@ -621,25 +508,4 @@ func TestDisableTotp(t *testing.T) {
 	resp, err := d.DisableTotp()
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestSetSSLVerification(t *testing.T) {
-	testServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-
-		// Check request method
-		assert.Equal(t, "POST", req.Method)
-
-		// Check correct endpoint called
-		endpoint := req.URL.Path
-		assert.Equal(t, "/user/totp/disable", endpoint)
-
-		// Check auth
-		assert.Equal(t, "Bearer "+fakeAuth, req.Header.Get("Authorization"))
-	}))
-	defer testServer.Close()
-
-	d := newMockClient(testServer)
-	d.SetSSLVerification(true)
-	assert.Equal(t, d.verifySSL, true)
 }

@@ -4,6 +4,18 @@ import (
 	"errors"
 )
 
+// Remote contains parameters for the VPS
+type Remote struct {
+	Version string `toml:"version"`
+	Name    string `toml:"name"`
+
+	IP     string  `toml:"ip"`
+	SSH    *SSH    `toml:"ssh"`
+	Daemon *Daemon `toml:"daemon"`
+
+	Profiles map[string]string `toml:"profiles"`
+}
+
 // SSH denotes SSH options for accessing a remote
 type SSH struct {
 	User    string `toml:"user"`
@@ -19,17 +31,11 @@ type Daemon struct {
 	VerifySSL     bool   `toml:"verify-ssl"`
 }
 
-// Remote contains parameters for the VPS
-type Remote struct {
-	Version string `toml:"version"`
+// Identifier implements identity.Identifier
+func (r *Remote) Identifier() string { return r.Name }
 
-	IP     string  `toml:"ip"`
-	SSH    *SSH    `toml:"ssh"`
-	Daemon *Daemon `toml:"daemon"`
-
-	Profiles map[string]string `toml:"profiles"`
-}
-
+// GetProfile retrieves the configured profile for the named project. If no
+// profile is found, `default` is returned
 func (r *Remote) GetProfile(project string) string {
 	if r.Profiles == nil {
 		r.Profiles = make(map[string]string)
@@ -42,16 +48,16 @@ func (r *Remote) GetProfile(project string) string {
 	return profile
 }
 
-// GetSSHHost creates the user@ip string for executing SSH commands
-func (r *Remote) GetSSHHost() (string, error) {
+// SSHHost creates the user@ip string for executing SSH commands
+func (r *Remote) SSHHost() (string, error) {
 	if r.SSH == nil {
 		return "", errors.New("SSH configuration not set for remote")
 	}
 	return r.SSH.User + "@" + r.IP, nil
 }
 
-// GetDaemonAddr creates the IP:Port string for making requests to the Daemon
-func (r *Remote) GetDaemonAddr() (string, error) {
+// DaemonAddr creates the IP:Port string for making requests to the Daemon
+func (r *Remote) DaemonAddr() (string, error) {
 	if r.Daemon == nil {
 		return "", errors.New("Daemon configuration not set for remote")
 	}
