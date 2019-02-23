@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cfg"
@@ -21,11 +23,17 @@ func attachInitCmd(inertia *core.Cmd) {
 	var init = &cobra.Command{
 		Use:   "init",
 		Short: "Initialize an Inertia project in this repository",
-		Long: `Initializes an Inertia project in this GitHub repository.
+		Long: `Initializes an Inertia project in this GitHub repository. You can
+provide an argument as the name of your project, otherwise the name of your
+current directory will be used.
 
 There must be a local git repository in order for initialization
 to succeed, unless you use the '--global' flag to initialize only
-the Inertia global configuration.`,
+the Inertia global configuration.
+
+See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
+		Example: "inertia init my_awesome_project",
+		Args:    cobra.RangeArgs(0, 1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if global, _ := cmd.Flags().GetBool(flagGlobal); global {
 				if _, err := local.Init(); err != nil {
@@ -50,6 +58,15 @@ the Inertia global configuration.`,
 				} else {
 					output.Fatal("aborting: global inertia configuration is required to set up Inertia")
 				}
+			}
+
+			// Set project name
+			var project string
+			if len(args) == 1 {
+				project = args[0]
+			} else {
+				cwd, _ := os.Getwd()
+				project = filepath.Base(cwd)
 			}
 
 			// Check for repo
@@ -100,7 +117,7 @@ the Inertia global configuration.`,
 			}
 
 			// Hello world config file!
-			if err := local.InitProject(inertia.ProjectConfigPath, "TODO", host, cfg.Profile{
+			if err := local.InitProject(inertia.ProjectConfigPath, project, host, cfg.Profile{
 				Branch: branch,
 				Build: &cfg.Build{
 					Type:          buildType,
