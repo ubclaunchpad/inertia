@@ -31,6 +31,7 @@ type SSHRunner struct {
 	pemPassphrase string
 }
 
+// SSHOptions denotes options for the SSH runner
 type SSHOptions struct {
 	KeyPassphrase string
 }
