@@ -136,23 +136,28 @@ Run 'inertia [remote] init' to gather this information.`,
 func (root *HostCmd) getRemote() *cfg.Remote { return root.getRemote() }
 
 func (root *HostCmd) attachUpCmd() {
+	const (
+		flagProfile = "profile"
+	)
 	var up = &cobra.Command{
 		Use:   "up",
 		Short: "Bring project online on remote",
-		Long: `Builds and deploy your project on your remote.
+		Long: `Builds and deploy your project on your remote using your project's
+default profile, or a profile you have applied using 'inertia project profile apply'.
 
-This requires an Inertia daemon to be active on your remote - do this by running 'inertia [remote] init'`,
+This requires an Inertia daemon to be active on your remote - do this by running
+'inertia [remote] init'.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Get flags
 			var short, _ = cmd.Flags().GetBool(flagShort)
-			var project = "" // TODO
-			profile, found := root.project.GetProfile(root.getRemote().GetProfile(project))
+			var profileName = root.getRemote().GetProfile(root.project.Name)
+			profile, found := root.project.GetProfile(profileName)
 			if !found {
-				output.Fatalf("could not find profile '%s'", root.getRemote().GetProfile(project))
+				output.Fatalf("could not find profile '%s'", profileName)
 			}
 
 			resp, err := root.client.Up(
-				project,
+				root.project.Name,
 				root.project.URL,
 				*profile,
 				!short)
@@ -189,6 +194,7 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			}
 		},
 	}
+	up.Flags().StringP(flagProfile, "p", "", "specify a profile to deploy")
 	root.AddCommand(up)
 }
 
