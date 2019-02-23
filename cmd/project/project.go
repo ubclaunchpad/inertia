@@ -2,10 +2,12 @@ package projectcmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd/core"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"github.com/ubclaunchpad/inertia/local"
 )
@@ -40,8 +42,9 @@ For configuring remote settings, use 'inertia remote'.`,
 			}
 		},
 	}
-	project.attachSetCmd()
 	AttachProfileCmd(project)
+	project.attachSetCmd()
+	project.attachResetCmd()
 
 	inertia.AddCommand(project.Command)
 }
@@ -64,4 +67,28 @@ func (root *ProjectCmd) attachSetCmd() {
 		},
 	}
 	root.AddCommand(set)
+}
+
+func (root *ProjectCmd) attachResetCmd() {
+	var reset = &cobra.Command{
+		Use:   "reset",
+		Short: "Remove project configuration",
+		Long: `Removes your project configuration by deleting the configuration file.
+	This is irreversible.`,
+		Args: cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			resp, err := input.Prompt("would you like to reset your project configuration?")
+			if err != nil {
+				output.Fatal(err)
+			}
+			if resp == "y" || resp == "yes" {
+				if err := os.Remove(root.projectConfigPath); err != nil {
+					output.Fatal(err)
+				}
+			} else {
+				output.Fatal("aborting")
+			}
+		},
+	}
+	root.AddCommand(reset)
 }
