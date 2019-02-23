@@ -143,14 +143,16 @@ default profile, or a profile you have applied using 'inertia project profile ap
 This requires an Inertia daemon to be active on your remote - do this by running
 'inertia [remote] init'.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			// Get flags
+			// Get flags and profile
 			var short, _ = cmd.Flags().GetBool(flagShort)
 			var profileName = root.getRemote().GetProfile(root.project.Name)
 			profile, found := root.project.GetProfile(profileName)
 			if !found {
 				output.Fatalf("could not find profile '%s'", profileName)
 			}
+			fmt.Printf("deploying project '%s' using profile '%s'\n", root.project.Name, profileName)
 
+			// Make up request
 			resp, err := root.client.Up(
 				root.project.Name,
 				root.project.URL,
