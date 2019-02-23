@@ -50,13 +50,9 @@ func AddProjectWalkthrough() (
 	if _, err = fmt.Fscanln(os.Stdin, &response); err != nil {
 		return "", "", errInvalidBuildType
 	}
-	switch response {
-	case string(cfg.DockerCompose):
-		buildType = cfg.DockerCompose
-	case string(cfg.Dockerfile):
-		buildType = cfg.Dockerfile
-	default:
-		return "", "", fmt.Errorf("invalid build type '%s'", response)
+	buildType, err = cfg.AsBuildType(response)
+	if err != nil {
+		return "", "", err
 	}
 
 	buildFilePath, err = Prompt("Please enter the path to your build configuration file:")

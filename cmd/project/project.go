@@ -16,7 +16,7 @@ type ProjectCmd struct {
 
 // AttachProjectCmd attaches the 'config' subcommands to the given parent
 func AttachProjectCmd(inertia *core.Cmd) {
-	var project = ProjectCmd{
+	var project = &ProjectCmd{
 		Command: &cobra.Command{
 			Use:   "project [command]",
 			Short: "Update and configure Inertia project settings",
@@ -27,6 +27,8 @@ For configuring remote settings, use 'inertia remote'.`,
 		projectConfigPath: inertia.ProjectConfigPath,
 	}
 	project.attachSetCmd()
+	AttachProfileCmd(project)
+
 	inertia.AddCommand(project.Command)
 }
 

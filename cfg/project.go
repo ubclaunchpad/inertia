@@ -1,6 +1,8 @@
 package cfg
 
 import (
+	"fmt"
+
 	"github.com/ubclaunchpad/inertia/cfg/internal/identity"
 )
 
@@ -32,6 +34,17 @@ const (
 	// DockerCompose is used for docker-compose configurations
 	DockerCompose BuildType = "docker-compose"
 )
+
+// AsBuildType casts given string as a BuildType, or returns an error
+func AsBuildType(s string) (BuildType, error) {
+	switch s {
+	case string(DockerCompose):
+		return DockerCompose, nil
+	case string(Dockerfile):
+		return Dockerfile, nil
+	}
+	return "", fmt.Errorf("type '%s' is not a valid build type", s)
+}
 
 // Build denotes build configuration
 type Build struct {
