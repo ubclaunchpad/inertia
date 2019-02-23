@@ -127,9 +127,7 @@ func TestInertia_RemoveRemote(t *testing.T) {
 			var i = &Inertia{
 				Remotes: tt.fields.Remotes,
 			}
-			if got := i.RemoveRemote(tt.args.name); got != tt.want {
-				t.Errorf("Inertia.RemoveRemote() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, i.RemoveRemote(tt.args.name))
 			r, found := i.GetRemote(tt.args.name)
 			assert.False(t, found)
 			assert.Nil(t, r)

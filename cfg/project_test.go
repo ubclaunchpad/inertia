@@ -122,9 +122,7 @@ func TestProject_RemoveProfile(t *testing.T) {
 			var p = &Project{
 				Profiles: tt.fields.Profiles,
 			}
-			if got := p.RemoveProfile(tt.args.name); got != tt.want {
-				t.Errorf("Inertia.RemoveRemote() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, p.RemoveProfile(tt.args.name))
 			profile, found := p.GetProfile(tt.args.name)
 			assert.False(t, found)
 			assert.Nil(t, profile)
