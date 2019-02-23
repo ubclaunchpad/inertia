@@ -25,7 +25,7 @@ func TestWrite(t *testing.T) {
 		{"nothing to write to", args{"", nil, nil}, true},
 		{"ok: write to path", args{"./test-config.toml", &cfg.Inertia{
 			Remotes: []*cfg.Remote{
-				&cfg.Remote{
+				{
 					Name: "dev",
 					IP:   "0.0.0.0",
 					SSH: &cfg.SSH{
@@ -38,7 +38,7 @@ func TestWrite(t *testing.T) {
 						"asdf": "asdf",
 						"oipo": "oiup",
 					}},
-				&cfg.Remote{
+				{
 					Name: "staging",
 					IP:   "0.0.0.0",
 					SSH: &cfg.SSH{
@@ -56,14 +56,14 @@ func TestWrite(t *testing.T) {
 		{"ok: write to path", args{"./test-config.2.toml", &cfg.Project{
 			Name: "test",
 			Profiles: []*cfg.Profile{
-				&cfg.Profile{
+				{
 					Name: "dev",
 					Build: &cfg.Build{
 						Type:          cfg.Dockerfile,
 						BuildFilePath: "Dockerfile.dev",
 					},
 				},
-				&cfg.Profile{
+				{
 					Name: "staging",
 					Build: &cfg.Build{
 						Type:          cfg.Dockerfile,
