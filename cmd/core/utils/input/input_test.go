@@ -4,62 +4,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/cfg"
 )
 
-func TestRemoteAddWalkthrough(t *testing.T) {
-	config := cfg.NewConfig("", "", "", "")
-	in, err := ioutil.TempFile("", "")
-	assert.NoError(t, err)
-	defer in.Close()
-
-	fmt.Fprintln(in, "pemfile")
-	fmt.Fprintln(in, "user")
-	fmt.Fprintln(in, "0.0.0.0")
-	fmt.Fprintln(in, "master")
-
-	_, err = in.Seek(0, io.SeekStart)
-	assert.NoError(t, err)
-
-	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
-	r, found := config.GetRemote("inertia-rocks")
-	assert.True(t, found)
-	assert.Equal(t, "pemfile", r.PEM)
-	assert.Equal(t, "user", r.User)
-	assert.Equal(t, "0.0.0.0", r.IP)
-	assert.NoError(t, err)
-}
-
-func TestRemoteAddWalkthroughFailure(t *testing.T) {
-	config := cfg.NewConfig("", "", "", "")
-	in, err := ioutil.TempFile("", "")
-	assert.NoError(t, err)
-	defer in.Close()
-
-	fmt.Fprintln(in, "pemfile")
-	fmt.Fprintln(in, "")
-
-	_, err = in.Seek(0, io.SeekStart)
-	assert.NoError(t, err)
-
-	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
-	assert.Equal(t, errInvalidUser, err)
-
-	in.WriteAt([]byte("pemfile\nuser\n\n"), 0)
-	_, err = in.Seek(0, io.SeekStart)
-	assert.NoError(t, err)
-
-	err = AddRemoteWalkthrough(in, config, "inertia-rocks", "8080", "22", "dev")
-	assert.Equal(t, errInvalidAddress, err)
-}
-
 func Test_addProjectWalkthrough(t *testing.T) {
 	tests := []struct {
 		name              string
-		wantBuildType     string
+		wantBuildType     cfg.BuildType
 		wantBuildFilePath string
 		wantErr           bool
 	}{
@@ -79,7 +34,10 @@ func Test_addProjectWalkthrough(t *testing.T) {
 			_, err = in.Seek(0, io.SeekStart)
 			assert.NoError(t, err)
 
-			gotBuildType, gotBuildFilePath, err := AddProjectWalkthrough(in)
+			var old = os.Stdin
+			os.Stdin = in
+			defer func() { os.Stdin = old }()
+			gotBuildType, gotBuildFilePath, err := AddProjectWalkthrough()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("addProjectWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -119,7 +77,10 @@ func Test_enterEC2CredentialsWalkthrough(t *testing.T) {
 			_, err = in.Seek(0, io.SeekStart)
 			assert.NoError(t, err)
 
-			gotID, gotKey, err := EnterEC2CredentialsWalkthrough(in)
+			var old = os.Stdin
+			os.Stdin = in
+			defer func() { os.Stdin = old }()
+			gotID, gotKey, err := EnterEC2CredentialsWalkthrough()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("enterEC2CredentialsWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -160,8 +121,11 @@ func Test_chooseFromListWalkthrough(t *testing.T) {
 		_, err = in.Seek(0, io.SeekStart)
 		assert.NoError(t, err)
 
+		var old = os.Stdin
+		os.Stdin = in
+		defer func() { os.Stdin = old }()
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ChooseFromListWalkthrough(in, tt.args.optionName, tt.args.options)
+			got, err := ChooseFromListWalkthrough(tt.args.optionName, tt.args.options)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("chooseFromListWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
 				return

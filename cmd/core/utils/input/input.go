@@ -17,6 +17,7 @@ var (
 	errInvalidBuildFilePath = errors.New("invalid buildfile path")
 )
 
+// Prompt prints the given query and reads the response
 func Prompt(query string) (string, error) {
 	println(query)
 	var response string
@@ -26,6 +27,7 @@ func Prompt(query string) (string, error) {
 	return response, nil
 }
 
+// Promptf prints the given query and reads the response
 func Promptf(query string, args ...interface{}) (string, error) {
 	fmt.Printf(query+"\n", args...)
 	var response string
