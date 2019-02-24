@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	errSessionNotFound    = errors.New("session not found")
 	errUserNotFound       = errors.New("user not found")
 	errBackupCodeNotFound = errors.New("backup code not found")
 	errMissingCredentials = errors.New("no credentials provided")
@@ -108,9 +107,13 @@ func (m *userManager) AddUser(username, password string, admin bool) error {
 
 // RemoveUser removes user with given username and ends related sessions
 func (m *userManager) RemoveUser(username string) error {
+	var u = []byte(username)
 	return m.db.Update(func(tx *bolt.Tx) error {
 		users := tx.Bucket(m.usersBucket)
-		return users.Delete([]byte(username))
+		if users.Get(u) == nil {
+			return errUserNotFound
+		}
+		return users.Delete(u)
 	})
 }
 

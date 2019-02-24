@@ -9,16 +9,16 @@ import (
 
 func TestGenerateMasterToken(t *testing.T) {
 	token, err := GenerateMasterToken(TestPrivateKey)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, TestMasterToken, token)
 
 	otherToken, err := GenerateMasterToken([]byte("another_sekrit_key"))
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEqual(t, token, otherToken)
 
 	// Verify validity
 	readClaims, err := ValidateToken(token, GetFakeAPIKey)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, readClaims.Valid())
 }
 
@@ -60,10 +60,10 @@ func TestTokenClaims_GenerateToken(t *testing.T) {
 	expires := time.Now().AddDate(0, 1, 0)
 	claims := &TokenClaims{"1234", "robert", true, expires}
 	token, err := claims.GenerateToken(TestPrivateKey)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Try decoding token
 	readClaims, err := ValidateToken(token, GetFakeAPIKey)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, claims.User, readClaims.User)
 }

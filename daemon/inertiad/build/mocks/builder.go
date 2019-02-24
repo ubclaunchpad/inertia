@@ -2,11 +2,11 @@
 package mocks
 
 import (
-	io "io"
-	sync "sync"
+	"io"
+	"sync"
 
-	client "github.com/docker/docker/client"
-	build "github.com/ubclaunchpad/inertia/daemon/inertiad/build"
+	"github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 )
 
 type FakeContainerBuilder struct {

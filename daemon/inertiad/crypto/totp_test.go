@@ -10,7 +10,7 @@ import (
 
 func TestGeneration(t *testing.T) {
 	key, err := GenerateSecretKey("TestAccountName")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// string form of secret
 	secret := key.Secret()
@@ -18,13 +18,13 @@ func TestGeneration(t *testing.T) {
 
 	// img form of secret
 	_, err = key.Image(400, 400)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestVerification(t *testing.T) {
 
 	key, err := GenerateSecretKey("TestAccountName")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	currentTime := time.Now()
 
 	verificationTests := []struct {
@@ -52,7 +52,7 @@ func TestVerification(t *testing.T) {
 	for _, test := range verificationTests {
 		t.Run(test.name, func(t *testing.T) {
 			code, err := totp.GenerateCode(key.Secret(), test.in)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, ValidatePasscode(code, key.Secret()), test.out)
 		})
 

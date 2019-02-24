@@ -25,7 +25,7 @@ jobs:
       install:
         - go get github.com/golang/dep/cmd/dep
         - dep ensure -v           # cache vendor
-        - make testdaemon-image   # cache images
+        - make daemon             # cache daemon image
         - make web-deps           # cache node_modules
 
     ############################
@@ -82,7 +82,7 @@ jobs:
       install: true
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_KEY 
-        - make daemon RELEASE=latest
+        - make daemon-release RELEASE=latest
 
     ############################
     #  Build git tag (stable)  #

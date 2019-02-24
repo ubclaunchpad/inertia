@@ -68,7 +68,7 @@ func Test_webhookHandler(t *testing.T) {
 			assert.Equal(t, recorder.Code, tt.wantCode)
 
 			b, err := ioutil.ReadAll(recorder.Body)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			assert.Contains(t, string(b), tt.wantErr)
 		})
 	}

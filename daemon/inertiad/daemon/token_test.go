@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ubclaunchpad/inertia/api"
 )
 
 func TestTokenHandler(t *testing.T) {
@@ -20,13 +21,15 @@ func TestTokenHandler(t *testing.T) {
 
 	// Assemble request
 	req, err := http.NewRequest(http.MethodGet, "/token", nil)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Record responses
 	recorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(tokenHandler)
-
 	handler.ServeHTTP(recorder, req)
-	assert.Equal(t, generatedTestToken, recorder.Body.String())
+
+	var token string
+	api.Unmarshal(recorder.Body, api.KV{Key: "token", Value: &token})
+	assert.Equal(t, generatedTestToken, token)
 	assert.Equal(t, http.StatusOK, recorder.Code)
 }

@@ -3,24 +3,25 @@ package daemon
 import (
 	"net/http"
 
+	"github.com/go-chi/render"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
 // tokenHandler generates a new token
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	keyBytes, err := crypto.GetAPIPrivateKey(nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		render.Render(w, r, res.ErrInternalServer("failed to get signing key", err))
 		return
 	}
 
 	token, err := crypto.GenerateMasterToken(keyBytes.([]byte))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		render.Render(w, r, res.ErrInternalServer("failed to generate token", err))
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(token))
+	render.Render(w, r, res.MsgOK("token generated",
+		"token", token))
 }

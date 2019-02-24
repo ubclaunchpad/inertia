@@ -17,7 +17,7 @@ func TestContainerLogs(t *testing.T) {
 	}
 
 	cli, err := NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	type args struct {
@@ -54,7 +54,7 @@ func TestStreamContainerLogs(t *testing.T) {
 	}
 
 	cli, err := NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	// todo: flesh this out a bit more
@@ -70,16 +70,16 @@ func TestGetActiveContainers(t *testing.T) {
 	}
 
 	cli, err := NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	_, err = GetActiveContainers(cli)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestPrune(t *testing.T) {
 	cli, err := NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	Prune(cli)
@@ -91,7 +91,7 @@ func TestPruneAll(t *testing.T) {
 	}
 
 	cli, err := NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	PruneAll(cli, "docker/compose")
@@ -99,7 +99,7 @@ func TestPruneAll(t *testing.T) {
 	// Exceptions should still be present
 	found := false
 	list, err := cli.ImageList(context.Background(), types.ImageListOptions{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	for _, i := range list {
 		if strings.Contains(i.RepoTags[0], "docker/compose") {
 			found = true

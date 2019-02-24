@@ -8,6 +8,6 @@ import (
 
 func TestNewDockerClient(t *testing.T) {
 	c, err := NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, c)
 }

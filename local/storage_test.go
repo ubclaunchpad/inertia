@@ -1,6 +1,7 @@
 package local
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -10,58 +11,80 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg"
 )
 
-func TestInitializeInertiaProjetFail(t *testing.T) {
-	err := InitializeInertiaProject("inertia.toml", "", "", "")
-	assert.NotNil(t, err)
-}
-
-func TestGetConfigFail(t *testing.T) {
-	_, _, err := GetProjectConfigFromDisk("inertia.toml")
-	assert.NotNil(t, err)
-}
-
-func TestConfigCreateAndWriteAndRead(t *testing.T) {
-	err := createConfigFile("inertia.toml", "test", "dockerfile", "")
-	assert.Nil(t, err)
-
-	// Already exists
-	err = createConfigFile("inertia.toml", "test", "dockerfile", "")
-	assert.NotNil(t, err)
-
-	// Get config and add remotes
-	config, configPath, err := GetProjectConfigFromDisk("inertia.toml")
-	assert.Nil(t, err)
-	defer os.Remove(configPath)
-	config.AddRemote(&cfg.RemoteVPS{
-		Name:    "test",
-		IP:      "1234",
-		User:    "bobheadxi",
-		PEM:     "/some/pem/file",
-		SSHPort: "22",
-		Daemon: &cfg.DaemonConfig{
-			Port: "8080",
-		},
-	})
-	config.AddRemote(&cfg.RemoteVPS{
-		Name:    "test2",
-		IP:      "12343",
-		User:    "bobheadxi234",
-		PEM:     "/some/pem/file234",
-		SSHPort: "222",
-		Daemon: &cfg.DaemonConfig{
-			Port: "80801",
-		},
-	})
-
-	// Test config creation
-	err = config.Write(configPath)
-	assert.Nil(t, err)
-
-	// Test config read
-	readConfig, _, err := GetProjectConfigFromDisk("inertia.toml")
-	assert.Nil(t, err)
-	assert.Equal(t, config.Remotes["test"], readConfig.Remotes["test"])
-	assert.Equal(t, config.Remotes["test2"], readConfig.Remotes["test2"])
+func TestWrite(t *testing.T) {
+	type args struct {
+		path    string
+		data    interface{}
+		writers []io.Writer
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"nothing to write to", args{"", nil, nil}, true},
+		{"ok: write to path", args{"./test-config.toml", &cfg.Inertia{
+			Remotes: []*cfg.Remote{
+				{
+					Name: "dev",
+					IP:   "0.0.0.0",
+					SSH: &cfg.SSH{
+						User: "bob",
+					},
+					Daemon: &cfg.Daemon{
+						Port: "4043",
+					},
+					Profiles: map[string]string{
+						"asdf": "asdf",
+						"oipo": "oiup",
+					}},
+				{
+					Name: "staging",
+					IP:   "0.0.0.0",
+					SSH: &cfg.SSH{
+						User: "bob",
+					},
+					Daemon: &cfg.Daemon{
+						Port: "4043",
+					},
+					Profiles: map[string]string{
+						"fdsa":  "fdsaf",
+						"wqrte": "erterh",
+					}},
+			},
+		}, nil}, false},
+		{"ok: write to path", args{"./test-config.2.toml", &cfg.Project{
+			Name: "test",
+			Profiles: []*cfg.Profile{
+				{
+					Name: "dev",
+					Build: &cfg.Build{
+						Type:          cfg.Dockerfile,
+						BuildFilePath: "Dockerfile.dev",
+					},
+				},
+				{
+					Name: "staging",
+					Build: &cfg.Build{
+						Type:          cfg.Dockerfile,
+						BuildFilePath: "Dockerfile.staging",
+					},
+				},
+			},
+		}, nil}, false},
+		{"ok: write to writers", args{"", &cfg.Inertia{
+			Remotes: make([]*cfg.Remote, 0),
+		}, []io.Writer{os.Stdout}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.path != "" {
+				defer os.RemoveAll(tt.args.path)
+			}
+			var err = Write(tt.args.path, tt.args.data, tt.args.writers...)
+			assert.Equalf(t, (err != nil), tt.wantErr, "got '%v'", err)
+		})
+	}
 }
 
 func TestSaveKey(t *testing.T) {
@@ -97,14 +120,14 @@ lq07qdr3cY+O1F4otlDitNuhLE88dtGJM5lEyumokiH1yXwhbBtZ4w==
 
 	// Write
 	err := SaveKey(keyMaterial, testKeyPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Read
 	bytes, err := ioutil.ReadFile(testKeyPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, keyMaterial, string(bytes))
 
 	// Test config remove
 	err = os.Remove(testKeyPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }

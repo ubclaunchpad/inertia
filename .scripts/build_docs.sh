@@ -65,4 +65,10 @@ bundle install
 # Execute build
 echo "[INFO] Building documentation"
 rm -rf docs
-bundle exec middleman build --clean --build-dir=../../docs
+bundle exec middleman build --clean --build-dir=../build
+
+echo "[INFO] Moving build to $1"
+cp -R ../build/. ../../"$1"
+
+# Done!
+echo "[INFO] Done!"

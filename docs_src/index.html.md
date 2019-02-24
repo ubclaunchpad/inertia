@@ -58,6 +58,8 @@ started to address these problems.
 
 This site primarily documents how to set up and use Inertia - to learn more
 about the project, check out our [GitHub repository](https://github.com/ubclaunchpad/inertia)!
+A complete command reference for the Inertia CLI is also available [here](/cli).
+If you're interested in building on Inertia, check out the [API reference](/api).
 
 <aside class="notice">
 This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
@@ -66,11 +68,16 @@ please feel free to
 </aside>
 
 # Getting Started
-
 > MacOS users can install the CLI using [Homebrew](https://brew.sh):
 
 ```shell
 brew install ubclaunchpad/tap/inertia
+```
+
+> Node.js users can install the CLI using [npm](https://www.npmjs.com/get-npm): 
+
+```shell
+npm install -g inertia-cli
 ```
 
 > Windows users can install the CLI using [Scoop](http://scoop.sh):
@@ -87,7 +94,7 @@ go get -u github.com/ubclaunchpad/inertia
 ```
 
 The Inertia command line interface (CLI) can be installed from a few package
-managers such as Homebrew and Scoop. For other platforms, you can 
+managers such as npm, Homebrew and Scoop. For other platforms, you can 
 [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases).
 
 You can also build Inertia from source, though this requires Golang to be
@@ -258,8 +265,8 @@ a regular basis is strongly encouraged by AWS anyway).
 
 ```shell
 # set credentials in environment
-export AWS_ACCESS_KEY_ID=${access_key_id}
-export AWS_ACCESS_KEY=${secret_access_key}
+export AWS_ACCESS_KEY=${access_key_id}
+export AWS_SECRET_KEY=${secret_access_key}
 inertia provision ec2 my_remote \
   --from-env \
   --ports 8080
@@ -545,6 +552,9 @@ TODO
 This section details various advanced usage tips. If you can't find what you're
 looking for here, try using the `--help` flag on relevant commands - Inertia
 will display help text and all the different options available to you.
+
+A complete command reference for the Inertia CLI is also available [here](/cli).
+To interact with the daemon API directly, refer to the [API reference](/api).
 
 ## Troubleshooting
 

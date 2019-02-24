@@ -24,7 +24,7 @@ func TestDownHandlerNoDeployment(t *testing.T) {
 
 	// Assmble request
 	req, err := http.NewRequest("POST", "/down", nil)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Record responses
 	recorder := httptest.NewRecorder()

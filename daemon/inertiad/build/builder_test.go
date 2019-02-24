@@ -71,7 +71,7 @@ func TestBuilder_Build(t *testing.T) {
 
 	// Setup
 	cli, err := containers.NewDockerClient()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer cli.Close()
 
 	// Run cases
@@ -106,11 +106,11 @@ func TestBuilder_Build(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.expectedErrMsg)
 				return
 			}
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			// Run containers
 			err = deploy()
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			// Arbitrary wait for containers to start
 			time.Sleep(10 * time.Second)
@@ -120,7 +120,7 @@ func TestBuilder_Build(t *testing.T) {
 				context.Background(),
 				types.ContainerListOptions{},
 			)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			foundP := false
 			for _, c := range containers {
 				if strings.Contains(c.Names[0], testProjectName) {
@@ -137,7 +137,7 @@ func TestBuilder_Build(t *testing.T) {
 					context.Background(),
 					types.ContainerListOptions{},
 				)
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 				for _, c := range containers {
 					if strings.Contains(c.Names[0], testProjectName) {
 						foundP = true
@@ -148,7 +148,7 @@ func TestBuilder_Build(t *testing.T) {
 
 			// clean up
 			err = killTestContainers(cli, nil)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			cli.ContainersPrune(context.Background(), filters.Args{})
 			time.Sleep(5 * time.Second)
 		})
