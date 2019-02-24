@@ -38,7 +38,7 @@ Example:
 			conf.ProjectDirectory,
 			projectDatabasePath,
 			projectDatabaseKeypath,
-			build.NewBuilder(*conf, containers.StopActiveContainers))
+			build.NewBuilder(*conf, containers.StopActiveContainers),
 		if err != nil {
 			println(err.Error())
 			return

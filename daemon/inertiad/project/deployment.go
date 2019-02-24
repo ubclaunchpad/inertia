@@ -19,6 +19,7 @@ import (
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/git"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/notifier"
 	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
@@ -182,10 +183,27 @@ func (d *Deployment) Deploy(
 		fmt.Fprintln(out, "Continuing...")
 	}
 
+	// Send build start slack notification
+	notification := notifier.NewNotifier()
+	notifyErr := notification.Notify("Build started")
+	if notifyErr != nil {
+		return func() error { return nil }, notifyErr
+	}
+
 	// Build project
 	deploy, err := d.builder.Build(strings.ToLower(d.buildType), *conf, cli, out)
 	if err != nil {
+		notifyErr = notification.Notify("Build error")
+		if notifyErr != nil {
+			fmt.Println(out, notifyErr)
+		}
 		return func() error { return nil }, err
+	}
+
+	// Send build complete slack notification
+	notifyErr = notification.Notify("Build completed")
+	if notifyErr != nil {
+		return func() error { return nil }, notifyErr
 	}
 
 	// Deploy

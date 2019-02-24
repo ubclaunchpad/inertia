@@ -118,7 +118,8 @@ func TestGetStatusIntegration(t *testing.T) {
 		builder:   fakeBuilder,
 	}
 	status, err := deployment.GetStatus(cli)
-	assert.NoError(t, err)
+
+	assert.Nil(t, err)
 	assert.False(t, status.BuildContainerActive)
 	assert.Equal(t, "test", status.BuildType)
 }
