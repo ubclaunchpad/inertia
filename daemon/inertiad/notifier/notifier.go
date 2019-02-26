@@ -35,7 +35,7 @@ func (n *SlackNotifier) Notify(text string) error {
 
 	bytesRepresentation, err := json.Marshal(message)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to encode request: %s", err.Error())
 	}
 
 	resp, err := http.Post(n.hookURL, "application/json", bytes.NewBuffer(bytesRepresentation))
