@@ -61,6 +61,10 @@ about the project, check out our [GitHub repository](https://github.com/ubclaunc
 A complete command reference for the Inertia CLI is also available [here](/cli).
 If you're interested in building on Inertia, check out the [API reference](/api).
 
+If you're looking for the latest pre-release documentation, check out the
+[*preview* versions of our documentation](https://inertia.ubclaunchpad.com/tip).
+Note that `/tip` documentation includes unreleased features and changes.
+
 <aside class="notice">
 This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
 please feel free to
@@ -154,7 +158,9 @@ inertia project set ${parameter} ${new_value}
 > Profiles can be updated or created using the `inertia project profile` commands:
 
 ```shell
-inertia project profile set new_profile --build.type dockerfile --build.file Dockerfile.dev
+inertia project profile set new_profile \
+  --build.type dockerfile \
+  --build.file Dockerfile.dev
 ```
 
 Your Inertia configuration is stored in `inertia.toml` by default. There are
@@ -198,6 +204,7 @@ up a VPS for Inertia.
 
 ```shell
 inertia remote add ${remote_name}
+inertia remote ls
 ```
 
 To use an existing remote, you'll need its address and a PEM key that can be
@@ -205,10 +212,12 @@ used to access it. Inertia will also need a few ports exposed, namely one for
 the Inertia daemon (port `4303` by default) and whatever ports you need for your
 deployed project.
 
+Configured remotes are stored globally in `~/.inertia/inertia.global`.
+
 <aside class="notice">
 If you use a non-standard SSH port (i.e. not port <code>22</code>) or want to
 use a different port for the Inertia daemon, use the <code>--ssh.port ${port}</code>
-and <code>--port ${port}</code> flags respectively when adding your remote.
+and <code>--daemon.port ${port}</code> flags respectively when adding your remote.
 </aside>
 
 ## Provisioning a Remote
@@ -318,7 +327,14 @@ your remote, and spin up the Inertia daemon!
 
 ## Remote Configuration
 
-> An example `inertia.global`:
+> List and show your configured remotes:
+
+```sh
+inertia remote ls
+inertia remote show ${remote_name}
+```
+
+> An example `~/.inertia/inertia.global`:
 
 ```toml
 # ... other stuff
@@ -357,8 +373,8 @@ inertia remote set my_remote ssh.user me
 inertia remote show my_remote
 ```
 
-Once you've added a remote, remote-specific settings are available under the
-`[remote]` section of your Inertia configuration. 
+Once you've added a remote, remote-specific settings are available in
+`~/.inertia/inertia.global`.
 
 <aside class="notice">
 For the most part, unless you filled in something incorrectly while adding a
@@ -375,9 +391,9 @@ Parameter               | Description
 `ssh.identityfile`      | The key to use when executing SSH commands on your remote instance.
 `sssh.ssh-port`         | The SSH port on your remote instance - you usually don't need to change this.
 `daemon.port`           | The port that the Inertia daemon is using - you can usually leave this as is.
-`daemon.token`          | This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later.
-`daemon.webhook-secret` | This is used to verify that incoming webhooks are authenticate - you'll need this later!
-`daemon.verify-ssl`     | Toggle whether or not to verify SSL communications for the daemon's API - off by default.
+`daemon.token`          | This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later. You can also [log in as a user](#logging-in) to get a token.
+`daemon.webhook-secret` | This is used to verify that incoming webhooks are authenticate - [you'll need this later](#configuring-your-repository)!
+`daemon.verify-ssl`     | Toggle whether or not to verify SSL communications for the daemon's API - [false by default](#custom-ssl-certificate).
 
 ### Profiles
 
@@ -386,10 +402,12 @@ inertia project profile apply ${profile_name} ${remote_name}
 inertia ${remote_name} up
 ```
 
-See the [Project Configuration](#project-configuration) section for how to set
-up profiles. The `profiles` section under the remote configuration defines
+The `profiles` section under the remote configuration defines
 default profiles to use when deploying a project. If none is configured, Inertia
 looks for a profile named `default`.
+
+See the [Project Configuration](#project-configuration) section for how to set
+up profiles for your project.
 
 ## Initializing the Inertia Daemon
 

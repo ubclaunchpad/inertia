@@ -367,6 +367,10 @@ about the project, check out our <a href="https://github.com/ubclaunchpad/inerti
 A complete command reference for the Inertia CLI is also available <a href="/cli">here</a>.
 If you&#39;re interested in building on Inertia, check out the <a href="/api">API reference</a>.</p>
 
+<p>If you&#39;re looking for the latest pre-release documentation, check out the
+<a href="https://inertia.ubclaunchpad.com/tip"><em>preview</em> versions of our documentation</a>.
+Note that <code>/tip</code> documentation includes unreleased features and changes.</p>
+
 <aside class="notice">
 This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
 please feel free to
@@ -448,7 +452,9 @@ configuration set up for running your app.
 <blockquote>
 <p>Profiles can be updated or created using the <code>inertia project profile</code> commands:</p>
 </blockquote>
-<pre class="highlight shell tab-shell"><code>inertia project profile <span class="nb">set </span>new_profile --build.type dockerfile --build.file Dockerfile.dev
+<pre class="highlight shell tab-shell"><code>inertia project profile <span class="nb">set </span>new_profile <span class="se">\</span>
+  --build.type dockerfile <span class="se">\</span>
+  --build.file Dockerfile.dev
 </code></pre>
 <p>Your Inertia configuration is stored in <code>inertia.toml</code> by default. There are
 a few project-wide settings stored here:</p>
@@ -515,16 +521,19 @@ and the IP address of your remote. These parameters will be used to execute
 SSH commands that set up Inertia on your VPS.</p>
 </blockquote>
 <pre class="highlight shell tab-shell"><code>inertia remote add <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+inertia remote ls
 </code></pre>
 <p>To use an existing remote, you&#39;ll need its address and a PEM key that can be
 used to access it. Inertia will also need a few ports exposed, namely one for
 the Inertia daemon (port <code>4303</code> by default) and whatever ports you need for your
 deployed project.</p>
 
+<p>Configured remotes are stored globally in <code>~/.inertia/inertia.global</code>.</p>
+
 <aside class="notice">
 If you use a non-standard SSH port (i.e. not port <code>22</code>) or want to
 use a different port for the Inertia daemon, use the <code>--ssh.port ${port}</code>
-and <code>--port ${port}</code> flags respectively when adding your remote.
+and <code>--daemon.port ${port}</code> flags respectively when adding your remote.
 </aside>
 <h2 id='provisioning-a-remote'>Provisioning a Remote</h2>
 <aside class="notice">
@@ -631,7 +640,13 @@ access to the remote, set up network rules, install Inertia&#39;s prerequisites 
 your remote, and spin up the Inertia daemon!</p>
 <h2 id='remote-configuration'>Remote Configuration</h2>
 <blockquote>
-<p>An example <code>inertia.global</code>:</p>
+<p>List and show your configured remotes:</p>
+</blockquote>
+<pre class="highlight sh tab-shell"><code>inertia remote ls
+inertia remote show <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+</code></pre>
+<blockquote>
+<p>An example <code>~/.inertia/inertia.global</code>:</p>
 </blockquote>
 <pre class="highlight toml tab-toml"><code><span class="c"># ... other stuff</span>
 
@@ -666,8 +681,8 @@ to <code>me</code> and print out the new settings:</p>
 <pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set </span>my_remote ssh.user me
 inertia remote show my_remote
 </code></pre>
-<p>Once you&#39;ve added a remote, remote-specific settings are available under the
-<code>[remote]</code> section of your Inertia configuration. </p>
+<p>Once you&#39;ve added a remote, remote-specific settings are available in
+<code>~/.inertia/inertia.global</code>.</p>
 
 <aside class="notice">
 For the most part, unless you filled in something incorrectly while adding a
@@ -711,24 +726,26 @@ settings.
 </tr>
 <tr>
 <td><code>daemon.token</code></td>
-<td>This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later.</td>
+<td>This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later. You can also <a href="#logging-in">log in as a user</a> to get a token.</td>
 </tr>
 <tr>
 <td><code>daemon.webhook-secret</code></td>
-<td>This is used to verify that incoming webhooks are authenticate - you&#39;ll need this later!</td>
+<td>This is used to verify that incoming webhooks are authenticate - <a href="#configuring-your-repository">you&#39;ll need this later</a>!</td>
 </tr>
 <tr>
 <td><code>daemon.verify-ssl</code></td>
-<td>Toggle whether or not to verify SSL communications for the daemon&#39;s API - off by default.</td>
+<td>Toggle whether or not to verify SSL communications for the daemon&#39;s API - <a href="#custom-ssl-certificate">false by default</a>.</td>
 </tr>
 </tbody></table>
 <h3 id='profiles'>Profiles</h3><pre class="highlight shell tab-shell"><code>inertia project profile apply <span class="k">${</span><span class="nv">profile_name</span><span class="k">}</span> <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
 inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> up
 </code></pre>
-<p>See the <a href="#project-configuration">Project Configuration</a> section for how to set
-up profiles. The <code>profiles</code> section under the remote configuration defines
+<p>The <code>profiles</code> section under the remote configuration defines
 default profiles to use when deploying a project. If none is configured, Inertia
 looks for a profile named <code>default</code>.</p>
+
+<p>See the <a href="#project-configuration">Project Configuration</a> section for how to set
+up profiles for your project.</p>
 <h2 id='initializing-the-inertia-daemon'>Initializing the Inertia Daemon</h2>
 <aside class="notice">
 If you used <code>inertia provision</code> to set up your remote, you can skip
