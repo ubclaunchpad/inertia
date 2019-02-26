@@ -120,7 +120,7 @@ By default, the profile called 'default' will be used.`,
 			if err := local.SaveRemote(r); err != nil {
 				output.Fatal(err)
 			}
-			fmt.Printf("profile '%s' successfully applied to rmeote '%s'", args[0], args[1])
+			fmt.Printf("profile '%s' successfully applied to remote '%s'", args[0], args[1])
 		},
 	}
 	p.AddCommand(apply)

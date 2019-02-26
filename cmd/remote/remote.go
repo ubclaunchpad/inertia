@@ -205,12 +205,15 @@ func (root *RemoteCmd) attachRemoveCmd() {
 		Short:   "Remove a configured remote",
 		Long:    `Remove a remote from Inertia's configuration file.`,
 		Example: "inertia remote rm staging",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := local.SaveRemote(nil); err != nil {
-				output.Fatal(err.Error())
-			} else {
-				fmt.Printf("remote '%s' removed\n", args[0])
+			fmt.Printf("removing remotes %s\n", strings.Join(args, ", "))
+			for _, r := range args {
+				if err := local.RemoveRemote(r); err != nil {
+					output.Fatal(err.Error())
+				} else {
+					fmt.Printf("remote '%s' removed\n", r)
+				}
 			}
 		},
 	}
@@ -237,29 +240,32 @@ func (root *RemoteCmd) attachShowCmd() {
 }
 
 func (root *RemoteCmd) attachUpgradeCmd() {
-	const flagVersion = "version"
-	const flagRemotes = "remotes"
+	const (
+		flagVersion = "version"
+		flagAll     = "all"
+	)
 	var upgrade = &cobra.Command{
 		Use:     "upgrade",
 		Short:   "Upgrade your remote configuration version to match the CLI",
 		Long:    `Upgrade your remote configuration version to match the CLI and save it to global settings.`,
-		Example: "inertia remote upgrade -r dev -r staging",
+		Example: "inertia remote upgrade dev staging",
 		Run: func(cmd *cobra.Command, args []string) {
-			// Ensure project initialized.
-			config, err := local.GetInertiaConfig()
-			if err != nil {
-				output.Fatal(err)
-			}
-
 			var version = root.Version
 			if v, _ := cmd.Flags().GetString(flagVersion); v != "" {
 				version = v
 			}
 
-			var remotes, _ = cmd.Flags().GetStringArray(flagRemotes)
-			if len(remotes) == 0 {
-				fmt.Printf("updating configuration to version '%s' for all remotes", version)
-				for _, r := range config.Remotes {
+			var all, _ = cmd.Flags().GetBool(flagAll)
+			if (len(args) == 0) && !all {
+				cmd.Help()
+				println()
+				output.Fatal("you must provide remotes or use the '--all' flag")
+			}
+
+			var remotes = args
+			if all {
+				fmt.Printf("updating configuration to version '%s' for all remotes\n", version)
+				for _, r := range root.config.Remotes {
 					r.Version = version
 					if err := local.SaveRemote(r); err != nil {
 						output.Fatalf("could not update remote '%s': %s", r.Name, err.Error())
@@ -271,7 +277,7 @@ func (root *RemoteCmd) attachUpgradeCmd() {
 				fmt.Printf("setting configuration to version '%s' for remotes %s\n",
 					version, strings.Join(remotes, ", "))
 				for _, n := range remotes {
-					if r, ok := config.GetRemote(n); ok {
+					if r, ok := root.config.GetRemote(n); ok {
 						r.Version = version
 						if err := local.SaveRemote(r); err != nil {
 							output.Fatalf("could not update remote '%s': %s", n, err.Error())
@@ -285,8 +291,8 @@ func (root *RemoteCmd) attachUpgradeCmd() {
 			}
 		},
 	}
+	upgrade.Flags().Bool(flagAll, false, "upgrade all remotes")
 	upgrade.Flags().String(flagVersion, root.Version, "specify Inertia daemon version to set")
-	upgrade.Flags().StringArrayP(flagRemotes, "r", nil, "specify which remotes to modify (default: all)")
 	root.AddCommand(upgrade)
 }
 

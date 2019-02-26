@@ -53,6 +53,7 @@ func FormatStatus(s *api.DeploymentStatus) string {
 func FormatRemoteDetails(remote cfg.Remote) string {
 	var remoteString string
 	remoteString += fmt.Sprintf("* IP:                   %s\n", remote.IP)
+	remoteString += fmt.Sprintf("* Version:              %s\n", remote.Version)
 	if remote.Daemon != nil {
 		remoteString += fmt.Sprintf("* Daemon.Port:          %s\n", remote.Daemon.Port)
 		remoteString += fmt.Sprintf("* Daemon.Authenticated: %v\n", remote.Daemon.Token != "")
@@ -63,7 +64,7 @@ func FormatRemoteDetails(remote cfg.Remote) string {
 		remoteString += fmt.Sprintf("* SSH.IdentityFile:     %s\n", remote.SSH.IdentityFile)
 	}
 	if remote.Profiles != nil {
-		remoteString += fmt.Sprintf("* Profiles: %v", remote.Profiles)
+		remoteString += fmt.Sprintf("* Profiles:             %v", remote.Profiles)
 	}
 	return remoteString
 }
