@@ -389,7 +389,7 @@ Parameter               | Description
 `ip`                    | This is the address of your remote instance. It's how other users will access your deployed project as well!
 `ssh.user`              | The user to use to execute commands as on your remote instance.
 `ssh.identityfile`      | The key to use when executing SSH commands on your remote instance.
-`sssh.ssh-port`         | The SSH port on your remote instance - you usually don't need to change this.
+`ssh.ssh-port`          | The SSH port on your remote instance - you usually don't need to change this.
 `daemon.port`           | The port that the Inertia daemon is using - you can usually leave this as is.
 `daemon.token`          | This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later. You can also [log in as a user](#logging-in) to get a token.
 `daemon.webhook-secret` | This is used to verify that incoming webhooks are authenticate - [you'll need this later](#configuring-your-repository)!
