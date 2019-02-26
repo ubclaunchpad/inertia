@@ -15,5 +15,6 @@ func Fatal(args ...interface{}) {
 // Fatalf is a wrapper around fmt.Printf that exits with status 1
 func Fatalf(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
+	println()
 	os.Exit(1)
 }

@@ -32,7 +32,19 @@ func AttachRemotesCmds(root *core.Cmd) {
 	if err != nil {
 		return
 	}
+	var remotes = make(map[string]bool)
 	for _, r := range cfg.Remotes {
+		if _, ok := remotes[r.Name]; ok {
+			output.Fatalf("you have configured multiple remotes named '%s' - please rename one in %s",
+				r.Name, local.InertiaConfigPath())
+		}
+		for _, child := range root.Commands() {
+			if child.Name() == r.Name {
+				output.Fatalf("you have configured a remote named '%s', which is an Inertia command - please rename it in %s",
+					r.Name, local.InertiaConfigPath())
+			}
+		}
+		remotes[r.Name] = true
 		AttachRemoteHostCmd(root, CmdOptions{
 			RemoteCfg:  r,
 			ProjectCfg: project,
