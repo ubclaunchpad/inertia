@@ -65,8 +65,10 @@ Global inertia configuration is stored in '%s'.
 	projectcmd.AttachProjectCmd(root)
 	remotecmd.AttachRemoteCmd(root)
 	provisioncmd.AttachProvisionCmd(root)
-	remotescmd.AttachRemotesCmds(root)
 	attachContribPlugins(root)
+
+	// attach configured remotes last
+	remotescmd.AttachRemotesCmds(root)
 
 	return root
 }
