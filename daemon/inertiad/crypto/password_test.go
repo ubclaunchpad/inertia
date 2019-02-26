@@ -33,14 +33,14 @@ func TestIsCredentialFormatError(t *testing.T) {
 func TestHashPassword(t *testing.T) {
 	unhashed := "amazing"
 	hashed, err := HashPassword(unhashed)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEqual(t, unhashed, hashed)
 }
 
 func TestCorrectPassword(t *testing.T) {
 	unhashed := "amazing"
 	hashed, err := HashPassword(unhashed)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEqual(t, unhashed, hashed)
 
 	correct := CorrectPassword(hashed, unhashed)
@@ -52,10 +52,10 @@ func TestCorrectPassword(t *testing.T) {
 
 func TestValidateCredentialValues(t *testing.T) {
 	err := ValidateCredentialValues("finasdfsdfe", "okaasdfasdy")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = ValidateCredentialValues("0123456789a", "0123456789")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = ValidateCredentialValues("ohnoitsme", "ohnoitsme")
 	assert.Equal(t, errSameUsernamePassword, err)

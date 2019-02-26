@@ -5,11 +5,14 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
-	inertiacmd "github.com/ubclaunchpad/inertia/cmd/cmd"
-	"github.com/ubclaunchpad/inertia/cmd/inpututil"
-	"github.com/ubclaunchpad/inertia/cmd/printutil"
+	"github.com/ubclaunchpad/inertia/client/bootstrap"
+	"github.com/ubclaunchpad/inertia/client/runner"
+	"github.com/ubclaunchpad/inertia/cmd/core"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 	"github.com/ubclaunchpad/inertia/provision"
@@ -18,7 +21,8 @@ import (
 // ProvisionCmd is the parent class for the 'inertia provision' subcommands
 type ProvisionCmd struct {
 	*cobra.Command
-	config  *cfg.Config
+	config  *cfg.Inertia
+	project *cfg.Project
 	cfgPath string
 }
 
@@ -28,22 +32,23 @@ const (
 )
 
 // AttachProvisionCmd attaches the 'provision' subcommands to the given parent
-func AttachProvisionCmd(inertia *inertiacmd.Cmd) {
+func AttachProvisionCmd(inertia *core.Cmd) {
 	var prov = &ProvisionCmd{}
 	prov.Command = &cobra.Command{
 		Use:   "provision",
 		Short: "Provision a new remote host to deploy your project on",
 		Long:  `Provisions a new remote host set up for continuous deployment with Inertia.`,
 		PersistentPreRun: func(*cobra.Command, []string) {
-			// Ensure project initialized, load config
 			var err error
-			prov.config, prov.cfgPath, err = local.GetProjectConfigFromDisk(inertia.ConfigPath)
+			prov.config, err = local.GetInertiaConfig()
 			if err != nil {
-				printutil.Fatalf("failed to read config at '%s': %s", prov.cfgPath, err.Error())
+				output.Fatalf(err.Error())
 			}
-			if prov.config == nil {
-				printutil.Fatalf("failed to read config at '%s'", prov.cfgPath)
+			prov.project, err = local.GetProject(inertia.ProjectConfigPath)
+			if err != nil {
+				output.Fatalf(err.Error())
 			}
+			prov.cfgPath = inertia.ProjectConfigPath
 		},
 	}
 	prov.PersistentFlags().StringP(flagDaemonPort, "d", "4303", "daemon port")
@@ -82,22 +87,26 @@ This ensures that your project ports are properly exposed and externally accessi
 		Run: func(cmd *cobra.Command, args []string) {
 			var config = root.config
 			if _, found := config.GetRemote(args[0]); found {
-				printutil.Fatal("remote with name already exists")
+				output.Fatal("remote with name already exists")
 			}
 
-			// Load flags for credentials
-			var fromEnv, _ = cmd.Flags().GetBool(flagFromEnv)
-			var withProfile, _ = cmd.Flags().GetBool(flagFromProfile)
-
 			// Load flags for setup configuration
-			var user, _ = cmd.Flags().GetString(flagUser)
-			var instanceType, _ = cmd.Flags().GetString(flagType)
-			var stringProjectPorts, _ = cmd.Flags().GetStringArray(flagPorts)
+			var (
+				user, _               = cmd.Flags().GetString(flagUser)
+				instanceType, _       = cmd.Flags().GetString(flagType)
+				stringProjectPorts, _ = cmd.Flags().GetStringArray(flagPorts)
+			)
 			if stringProjectPorts == nil || len(stringProjectPorts) == 0 {
 				fmt.Print("[WARNING] no project ports provided - this means that no ports" +
 					"will be exposed on your ec2 host. Use the '--ports' flag to set" +
-					"ports that you want to be accessible.")
+					"ports that you want to be accessible.\n")
 			}
+
+			// Load flags for credentials
+			var (
+				fromEnv, _     = cmd.Flags().GetBool(flagFromEnv)
+				withProfile, _ = cmd.Flags().GetBool(flagFromProfile)
+			)
 
 			// Create VPS instance
 			var prov *provision.EC2Provisioner
@@ -105,7 +114,7 @@ This ensures that your project ports are properly exposed and externally accessi
 			if fromEnv {
 				prov, err = provision.NewEC2ProvisionerFromEnv(user, os.Stdout)
 				if err != nil {
-					printutil.Fatal(err)
+					output.Fatal(err)
 				}
 			} else if withProfile {
 				var profileUser, _ = cmd.Flags().GetString(flagProfileUser)
@@ -113,16 +122,16 @@ This ensures that your project ports are properly exposed and externally accessi
 				prov, err = provision.NewEC2ProvisionerFromProfile(
 					user, profileUser, profilePath, os.Stdout)
 				if err != nil {
-					printutil.Fatal(err)
+					output.Fatal(err)
 				}
 			} else {
-				keyID, key, err := inpututil.EnterEC2CredentialsWalkthrough(os.Stdin)
+				keyID, key, err := input.EnterEC2CredentialsWalkthrough()
 				if err != nil {
-					printutil.Fatal(err)
+					output.Fatal(err)
 				}
 				prov, err = provision.NewEC2Provisioner(user, keyID, key, os.Stdout)
 				if err != nil {
-					printutil.Fatal(err)
+					output.Fatal(err)
 				}
 			}
 
@@ -131,21 +140,20 @@ This ensures that your project ports are properly exposed and externally accessi
 
 			// Prompt for region
 			println("See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions for a list of available regions.")
-			print("Please enter a region: ")
-			var region string
-			if _, err = fmt.Fscanln(os.Stdin, &region); err != nil {
-				printutil.Fatal(err)
+			region, err := input.Prompt("Please enter a region: ")
+			if err != nil {
+				output.Fatal(err)
 			}
 
 			// List image options and prompt for input
 			fmt.Printf("Loading images for region '%s'...\n", region)
 			images, err := prov.ListImageOptions(region)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
-			image, err := inpututil.ChooseFromListWalkthrough(os.Stdin, "image", images)
+			image, err := input.ChooseFromListWalkthrough("image", images)
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			// Gather input
@@ -165,7 +173,7 @@ This ensures that your project ports are properly exposed and externally accessi
 			var portDaemon, _ = common.ParseInt64(port)
 			remote, err := prov.CreateInstance(provision.EC2CreateInstanceOptions{
 				Name:        args[0],
-				ProjectName: config.Project,
+				ProjectName: root.project.Name,
 				Ports:       ports,
 				DaemonPort:  portDaemon,
 
@@ -174,31 +182,27 @@ This ensures that your project ports are properly exposed and externally accessi
 				Region:       region,
 			})
 			if err != nil {
-				printutil.Fatal(err)
+				output.Fatal(err)
 			}
 
 			// Save new remote to configuration
-			remote.Branch, err = local.GetRepoCurrentBranch()
-			if err != nil {
-				printutil.Fatal(err)
-			}
-			config.AddRemote(remote)
-			config.Write(root.cfgPath)
+			local.SaveRemote(remote)
 
 			// Create inertia client
-			inertia, found := client.NewClient(args[0], os.Getenv(local.EnvSSHPassphrase), config, os.Stdout)
-			if !found {
-				printutil.Fatal("vps setup did not complete properly")
-			}
+			inertia := client.NewClient(remote, client.Options{
+				SSH: runner.SSHOptions{KeyPassphrase: os.Getenv(local.EnvSSHPassphrase)},
+			})
 
 			// Bootstrap remote
-			fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.RemoteVPS.IP)
-			if err = inertia.BootstrapRemote(config.Project); err != nil {
-				printutil.Fatal(err)
+			fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.Remote.IP)
+			if err := bootstrap.SetUpRemote(os.Stdout, args[0], root.project.URL, inertia); err != nil {
+				output.Fatal(err.Error())
 			}
 
 			// Save updated config
-			config.Write(root.cfgPath)
+			if err := local.SaveRemote(remote); err != nil {
+				output.Fatal(err.Error())
+			}
 		},
 	}
 	provEC2.Flags().StringP(flagType, "t",

@@ -23,10 +23,10 @@ func TestCloneIntegration(t *testing.T) {
 		Branch:    "dev",
 	}, os.Stdout)
 	defer os.RemoveAll(dir)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	head, err := repo.Head()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "dev", head.Name().Short())
 }
 
@@ -40,11 +40,11 @@ func TestUpdateRepositoryIntegration(t *testing.T) {
 		URL: inertiaDeployTest,
 	})
 	defer os.RemoveAll(dir)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Try switching branches
 	err = UpdateRepository(repo, RepoOptions{Branch: "master"}, os.Stdout)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	err = UpdateRepository(repo, RepoOptions{Branch: "dev"}, os.Stdout)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }

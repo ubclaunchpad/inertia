@@ -2,12 +2,12 @@
 package mocks
 
 import (
-	io "io"
-	sync "sync"
+	"io"
+	"sync"
 
-	client "github.com/docker/docker/client"
-	api "github.com/ubclaunchpad/inertia/api"
-	project "github.com/ubclaunchpad/inertia/daemon/inertiad/project"
+	"github.com/docker/docker/client"
+	"github.com/ubclaunchpad/inertia/api"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/project"
 )
 
 type FakeDeployer struct {
