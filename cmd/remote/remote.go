@@ -1,7 +1,6 @@
 package remotecmd
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -85,8 +84,13 @@ Inertia commands.`,
 		Example: "inertia remote add staging --daemon.gen-secret --ip 1.2.3.4",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			for _, child := range root.Parent().Commands() {
+				if child.Name() == args[0] {
+					output.Fatalf("'%s' is the name of an Inertia command - please choose something else", args[0])
+				}
+			}
 			if _, found := root.config.GetRemote(args[0]); found {
-				output.Fatal(errors.New("remote " + args[0] + " already exists"))
+				output.Fatalf("remote '%s' already exists", args[0])
 			}
 			homeEnvVar, err := local.GetHomePath()
 			if err != nil {
