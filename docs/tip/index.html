@@ -236,7 +236,7 @@
                     <a href="#provisioning-a-remote" class="toc-h2 toc-link" data-title="Provisioning a Remote">Provisioning a Remote</a>
                   </li>
                   <li>
-                    <a href="#deployment-configuration" class="toc-h2 toc-link" data-title="Deployment Configuration">Deployment Configuration</a>
+                    <a href="#remote-configuration" class="toc-h2 toc-link" data-title="Remote Configuration">Remote Configuration</a>
                   </li>
                   <li>
                     <a href="#initializing-the-inertia-daemon" class="toc-h2 toc-link" data-title="Initializing the Inertia Daemon">Initializing the Inertia Daemon</a>
@@ -367,6 +367,10 @@ about the project, check out our <a href="https://github.com/ubclaunchpad/inerti
 A complete command reference for the Inertia CLI is also available <a href="/cli">here</a>.
 If you&#39;re interested in building on Inertia, check out the <a href="/api">API reference</a>.</p>
 
+<p>If you&#39;re looking for the latest pre-release documentation, check out the
+<a href="https://inertia.ubclaunchpad.com/tip"><em>preview</em> versions of our documentation</a>.
+Note that <code>/tip</code> documentation includes unreleased features and changes.</p>
+
 <aside class="notice">
 This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
 please feel free to
@@ -417,32 +421,40 @@ inertia init
 must be a git repository, and run <code>inertia init</code> to set up configuration. If
 Inertia cannot detect your project type, it will prompt for more information.</p>
 
+<p>If you haven&#39;t yet, Inertia will also instantiate a global configuration file
+for you. To create this file separately, run <code>inertia init --global</code>.</p>
+
 <aside class="notice">
 To use your project with Inertia, you must have some kind of
 <a href='https://docs.docker.com/engine/reference/builder/'>Docker</a> or
 <a href='https://docs.docker.com/compose/overview/'>docker-compose</a>
 configuration set up for running your app.
 </aside>
-
-<aside class="warning">
-<b>Do not commit the generated Inertia configuration file</b> - add it to your
-<code>.gitignore</code>!
-</aside>
 <h2 id='project-configuration'>Project Configuration</h2>
 <blockquote>
 <p>An example <code>inertia.toml</code>:</p>
 </blockquote>
-<pre class="highlight toml tab-toml"><code><span class="py">version</span> <span class="p">=</span> <span class="s">"canary"</span>
-<span class="py">project-name</span> <span class="p">=</span> <span class="s">"my_project"</span>
-<span class="py">build-type</span> <span class="p">=</span> <span class="s">"dockerfile"</span>
-<span class="py">build-file-path</span> <span class="p">=</span> <span class="s">"dockerfiles/Dockerfile.web"</span>
+<pre class="highlight toml tab-toml"><code><span class="py">name</span> <span class="p">=</span> <span class="s">"my_project"</span>
+<span class="py">url</span> <span class="p">=</span> <span class="s">"git@github.com:ubclaunchpad/my_project.git"</span>
 
-<span class="c"># ... other stuff</span>
+<span class="nn">[[profile]]</span>
+  <span class="py">name</span> <span class="p">=</span> <span class="s">"default"</span>
+  <span class="py">branch</span> <span class="p">=</span> <span class="s">"master"</span>
+  <span class="nn">[profile.build]</span>
+    <span class="py">type</span> <span class="p">=</span> <span class="s">"dockerfile"</span>
+    <span class="py">buildfile</span> <span class="p">=</span> <span class="s">"Dockerfile"</span>
 </code></pre>
 <blockquote>
 <p>To change a setting, you can edit the configuration file directly, or run:</p>
 </blockquote>
-<pre class="highlight shell tab-shell"><code>inertia config <span class="nb">set</span> <span class="k">${</span><span class="nv">parameter</span><span class="k">}</span> <span class="k">${</span><span class="nv">new_value</span><span class="k">}</span>
+<pre class="highlight shell tab-shell"><code>inertia project <span class="nb">set</span> <span class="k">${</span><span class="nv">parameter</span><span class="k">}</span> <span class="k">${</span><span class="nv">new_value</span><span class="k">}</span>
+</code></pre>
+<blockquote>
+<p>Profiles can be updated or created using the <code>inertia project profile</code> commands:</p>
+</blockquote>
+<pre class="highlight shell tab-shell"><code>inertia project profile <span class="nb">set </span>new_profile <span class="se">\</span>
+  --build.type dockerfile <span class="se">\</span>
+  --build.file Dockerfile.dev
 </code></pre>
 <p>Your Inertia configuration is stored in <code>inertia.toml</code> by default. There are
 a few project-wide settings stored here:</p>
@@ -454,19 +466,40 @@ a few project-wide settings stored here:</p>
 </tr>
 </thead><tbody>
 <tr>
-<td><code>version</code></td>
-<td>This should match the version of your Inertia CLI, which you can see by running <code>inertia --version</code>. It is used to determine which version of the <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/">Inertia daemon</a> to use.</td>
-</tr>
-<tr>
-<td><code>project-name</code></td>
+<td><code>name</code></td>
 <td>The name of the project you are deploying.</td>
 </tr>
 <tr>
-<td><code>build-type</code></td>
+<td><code>url</code></td>
+<td>Your project source, typically your Git repository.</td>
+</tr>
+</tbody></table>
+
+<p>A <code>profile</code> configures how to run your project, and you can set multiple profiles
+to declare different &#39;modes&#39; of deploying your project (for example, to differentiate
+between a <code>staging</code> and <code>dev</code> deployment). A <code>profile</code> contains the following
+fields:</p>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>name</code></td>
+<td>The name of your profile - must be unique.</td>
+</tr>
+<tr>
+<td><code>branch</code></td>
+<td>The git branch of your project to continuously deploy.</td>
+</tr>
+<tr>
+<td><code>build.type</code></td>
 <td>This should be either <code>dockerfile</code> or <code>docker-compose</code>, depending on which you are using.</td>
 </tr>
 <tr>
-<td><code>build-file-path</code></td>
+<td><code>build.buildfile</code></td>
 <td>Path to your build configuration file, such as <code>Dockerfile</code> or <code>docker-compose.yml</code>, relative to the root of your project.</td>
 </tr>
 </tbody></table>
@@ -488,16 +521,19 @@ and the IP address of your remote. These parameters will be used to execute
 SSH commands that set up Inertia on your VPS.</p>
 </blockquote>
 <pre class="highlight shell tab-shell"><code>inertia remote add <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+inertia remote ls
 </code></pre>
 <p>To use an existing remote, you&#39;ll need its address and a PEM key that can be
 used to access it. Inertia will also need a few ports exposed, namely one for
 the Inertia daemon (port <code>4303</code> by default) and whatever ports you need for your
 deployed project.</p>
 
+<p>Configured remotes are stored globally in <code>~/.inertia/inertia.global</code>.</p>
+
 <aside class="notice">
 If you use a non-standard SSH port (i.e. not port <code>22</code>) or want to
 use a different port for the Inertia daemon, use the <code>--ssh.port ${port}</code>
-and <code>--port ${port}</code> flags respectively when adding your remote.
+and <code>--daemon.port ${port}</code> flags respectively when adding your remote.
 </aside>
 <h2 id='provisioning-a-remote'>Provisioning a Remote</h2>
 <aside class="notice">
@@ -602,23 +638,36 @@ should just choose one of the images that Inertia lists as options.</p>
 <p>Inertia will then create an EC2 instance, generate a key pair to give you SSH
 access to the remote, set up network rules, install Inertia&#39;s prerequisites on
 your remote, and spin up the Inertia daemon!</p>
-<h2 id='deployment-configuration'>Deployment Configuration</h2>
+<h2 id='remote-configuration'>Remote Configuration</h2>
 <blockquote>
-<p>An example <code>inertia.toml</code>:</p>
+<p>List and show your configured remotes:</p>
+</blockquote>
+<pre class="highlight sh tab-shell"><code>inertia remote ls
+inertia remote show <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+</code></pre>
+<blockquote>
+<p>An example <code>~/.inertia/inertia.global</code>:</p>
 </blockquote>
 <pre class="highlight toml tab-toml"><code><span class="c"># ... other stuff</span>
 
-<span class="nn">[remotes]</span>
-  <span class="nn">[remotes.my_remote]</span>
-    <span class="py">IP</span> <span class="p">=</span> <span class="s">"ec2-203-0-113-25.compute-1.amazonaws.com"</span>
+<span class="nn">[[remote]]</span>
+  <span class="py">version</span> <span class="p">=</span> <span class="s">"latest"</span>
+  <span class="py">name</span> <span class="p">=</span> <span class="s">"staging"</span>
+  <span class="py">ip</span> <span class="p">=</span> <span class="s">"123.456.789.123"</span>
+  <span class="nn">[remote.ssh]</span>
     <span class="py">user</span> <span class="p">=</span> <span class="s">"root"</span>
-    <span class="py">pemfile</span> <span class="p">=</span> <span class="s">"/Users/robertlin/.ssh/id_rsa"</span>
-    <span class="py">branch</span> <span class="p">=</span> <span class="s">"master"</span>
+    <span class="py">identityfile</span> <span class="p">=</span> <span class="s">"~/.ssh/id_rsa"</span>
     <span class="py">ssh-port</span> <span class="p">=</span> <span class="s">"22"</span>
-    <span class="nn">[remotes.my_remote.daemon]</span>
-      <span class="py">port</span> <span class="p">=</span> <span class="s">"4303"</span>
-      <span class="py">token</span> <span class="p">=</span> <span class="s">""</span>
-      <span class="py">webhook-secret</span> <span class="p">=</span> <span class="s">"abcdefg"</span>
+  <span class="nn">[remote.daemon]</span>
+    <span class="py">port</span> <span class="p">=</span> <span class="s">"4303"</span>
+    <span class="py">token</span> <span class="p">=</span> <span class="s">"weRO5gfUoXFQuBnLuJewGvBehf7A4yVUHxKSF0f3FFc"</span>
+    <span class="py">webhook-secret</span> <span class="p">=</span> <span class="s">"ubclaunchpad"</span>
+    <span class="py">verify-ssl</span> <span class="p">=</span> <span class="kc">false</span>
+  <span class="nn">[remote.profiles]</span>
+    <span class="py">"my_project"</span> <span class="p">=</span> <span class="s">"default"</span>
+
+<span class="nn">[[remote]]</span>
+  <span class="c"># ... another remote</span>
 </code></pre>
 <blockquote>
 <p>To change a setting, you can edit the configuration file directly, or run:</p>
@@ -626,14 +675,14 @@ your remote, and spin up the Inertia daemon!</p>
 <pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set</span> <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> <span class="k">${</span><span class="nv">parameter</span><span class="k">}</span> <span class="k">${</span><span class="nv">new_value</span><span class="k">}</span>
 </code></pre>
 <blockquote>
-<p>For example, the following will change the <code>branch</code> deployed on <code>my_remote</code>
-to <code>dev</code> and print out the new settings:</p>
+<p>For example, the following will change the SSH user for accessing <code>my_remote</code>
+to <code>me</code> and print out the new settings:</p>
 </blockquote>
-<pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set </span>my_remote branch dev
+<pre class="highlight shell tab-shell"><code>inertia remote <span class="nb">set </span>my_remote ssh.user me
 inertia remote show my_remote
 </code></pre>
-<p>Once you&#39;ve added a remote, remote-specific settings are available under the
-<code>[remote]</code> section of your Inertia configuration. </p>
+<p>Once you&#39;ve added a remote, remote-specific settings are available in
+<code>~/.inertia/inertia.global</code>.</p>
 
 <aside class="notice">
 For the most part, unless you filled in something incorrectly while adding a
@@ -648,49 +697,55 @@ settings.
 </tr>
 </thead><tbody>
 <tr>
-<td><code>IP</code></td>
+<td><code>version</code></td>
+<td>This should match the version of your Inertia CLI, which you can see by running <code>inertia --version</code>. It is used to determine which version of the <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/">Inertia daemon</a> to use.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>The name of your remote instance - must be unique.</td>
+</tr>
+<tr>
+<td><code>ip</code></td>
 <td>This is the address of your remote instance. It&#39;s how other users will access your deployed project as well!</td>
 </tr>
 <tr>
-<td><code>user</code></td>
+<td><code>ssh.user</code></td>
 <td>The user to use to execute commands as on your remote instance.</td>
 </tr>
 <tr>
-<td><code>pemfile</code></td>
+<td><code>ssh.identityfile</code></td>
 <td>The key to use when executing SSH commands on your remote instance.</td>
 </tr>
 <tr>
-<td><code>branch</code></td>
-<td>The git branch of your project that you want to deploy.</td>
-</tr>
-<tr>
-<td><code>ssh-port</code></td>
+<td><code>ssh.ssh-port</code></td>
 <td>The SSH port on your remote instance - you usually don&#39;t need to change this.</td>
 </tr>
-</tbody></table>
-
-<p>Under <code>remotes.${remote_name}.daemon</code> there are some additional settings for the
-Inertia daemon:</p>
-
-<table><thead>
 <tr>
-<th>Parameter</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><code>port</code></td>
+<td><code>daemon.port</code></td>
 <td>The port that the Inertia daemon is using - you can usually leave this as is.</td>
 </tr>
 <tr>
-<td><code>token</code></td>
-<td>This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later.</td>
+<td><code>daemon.token</code></td>
+<td>This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later. You can also <a href="#logging-in">log in as a user</a> to get a token.</td>
 </tr>
 <tr>
-<td><code>webhook-secret</code></td>
-<td>This is used to verify that incoming webhooks are authenticate - you&#39;ll need this later!</td>
+<td><code>daemon.webhook-secret</code></td>
+<td>This is used to verify that incoming webhooks are authenticate - <a href="#configuring-your-repository">you&#39;ll need this later</a>!</td>
+</tr>
+<tr>
+<td><code>daemon.verify-ssl</code></td>
+<td>Toggle whether or not to verify SSL communications for the daemon&#39;s API - <a href="#custom-ssl-certificate">false by default</a>.</td>
 </tr>
 </tbody></table>
+<h3 id='profiles'>Profiles</h3><pre class="highlight shell tab-shell"><code>inertia project profile apply <span class="k">${</span><span class="nv">profile_name</span><span class="k">}</span> <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
+inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> up
+</code></pre>
+<p>The <code>profiles</code> section under the remote configuration defines
+default profiles to use when deploying a project. If none is configured, Inertia
+looks for a profile named <code>default</code>.</p>
+
+<p>See the <a href="#project-configuration">Project Configuration</a> section for how to set
+up profiles for your project.</p>
 <h2 id='initializing-the-inertia-daemon'>Initializing the Inertia Daemon</h2>
 <aside class="notice">
 If you used <code>inertia provision</code> to set up your remote, you can skip
