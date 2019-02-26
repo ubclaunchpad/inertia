@@ -119,6 +119,9 @@ To set up Inertia, you must first navigate to your project directory, which
 must be a git repository, and run `inertia init` to set up configuration. If
 Inertia cannot detect your project type, it will prompt for more information.
 
+If you haven't yet, Inertia will also instantiate a global configuration file
+for you. To create this file separately, run `inertia init --global`.
+
 <aside class="notice">
 To use your project with Inertia, you must have some kind of
 <a href='https://docs.docker.com/engine/reference/builder/'>Docker</a> or
@@ -126,39 +129,53 @@ To use your project with Inertia, you must have some kind of
 configuration set up for running your app.
 </aside>
 
-<aside class="warning">
-<b>Do not commit the generated Inertia configuration file</b> - add it to your
-<code>.gitignore</code>!
-</aside>
-
 ## Project Configuration
 
 > An example `inertia.toml`:
 
 ```toml
-version = "canary"
-project-name = "my_project"
-build-type = "dockerfile"
-build-file-path = "dockerfiles/Dockerfile.web"
+name = "my_project"
+url = "git@github.com:ubclaunchpad/my_project.git"
 
-# ... other stuff
+[[profile]]
+  name = "default"
+  branch = "master"
+  [profile.build]
+    type = "dockerfile"
+    buildfile = "Dockerfile"
 ```
 
 > To change a setting, you can edit the configuration file directly, or run:
 
 ```shell
-inertia config set ${parameter} ${new_value}
+inertia project set ${parameter} ${new_value}
+```
+
+> Profiles can be updated or created using the `inertia project profile` commands:
+
+```shell
+inertia project profile set new_profile --build.type dockerfile --build.file Dockerfile.dev
 ```
 
 Your Inertia configuration is stored in `inertia.toml` by default. There are
 a few project-wide settings stored here:
 
+Parameter | Description
+--------- | -----------
+`name`    | The name of the project you are deploying.
+`url`     | Your project source, typically your Git repository.
+
+A `profile` configures how to run your project, and you can set multiple profiles
+to declare different 'modes' of deploying your project (for example, to differentiate
+between a `staging` and `dev` deployment). A `profile` contains the following
+fields:
+
 Parameter         | Description
 ----------------- | -----------
-`version`         | This should match the version of your Inertia CLI, which you can see by running `inertia --version`. It is used to determine which version of the [Inertia daemon](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/) to use.
-`project-name`    | The name of the project you are deploying.
-`build-type`      | This should be either `dockerfile` or `docker-compose`, depending on which you are using.
-`build-file-path` | Path to your build configuration file, such as `Dockerfile` or `docker-compose.yml`, relative to the root of your project.
+`name`            | The name of your profile - must be unique.
+`branch`          | The git branch of your project to continuously deploy.
+`build.type`      | This should be either `dockerfile` or `docker-compose`, depending on which you are using.
+`build.buildfile` | Path to your build configuration file, such as `Dockerfile` or `docker-compose.yml`, relative to the root of your project.
 
 # Deploying Your Project
 
@@ -299,24 +316,31 @@ Inertia will then create an EC2 instance, generate a key pair to give you SSH
 access to the remote, set up network rules, install Inertia's prerequisites on
 your remote, and spin up the Inertia daemon!
 
-## Deployment Configuration
+## Remote Configuration
 
-> An example `inertia.toml`:
+> An example `inertia.global`:
 
 ```toml
 # ... other stuff
 
-[remotes]
-  [remotes.my_remote]
-    IP = "ec2-203-0-113-25.compute-1.amazonaws.com"
+[[remote]]
+  version = "latest"
+  name = "staging"
+  ip = "123.456.789.123"
+  [remote.ssh]
     user = "root"
-    pemfile = "/Users/robertlin/.ssh/id_rsa"
-    branch = "master"
+    identityfile = "~/.ssh/id_rsa"
     ssh-port = "22"
-    [remotes.my_remote.daemon]
-      port = "4303"
-      token = ""
-      webhook-secret = "abcdefg"
+  [remote.daemon]
+    port = "4303"
+    token = "weRO5gfUoXFQuBnLuJewGvBehf7A4yVUHxKSF0f3FFc"
+    webhook-secret = "ubclaunchpad"
+    verify-ssl = false
+  [remote.profiles]
+    "my_project" = "default"
+
+[[remote]]
+  # ... another remote
 ```
 
 > To change a setting, you can edit the configuration file directly, or run:
@@ -325,11 +349,11 @@ your remote, and spin up the Inertia daemon!
 inertia remote set ${remote_name} ${parameter} ${new_value}
 ```
 
-> For example, the following will change the `branch` deployed on `my_remote`
-> to `dev` and print out the new settings:
+> For example, the following will change the SSH user for accessing `my_remote`
+> to `me` and print out the new settings:
 
 ```shell
-inertia remote set my_remote branch dev
+inertia remote set my_remote ssh.user me
 inertia remote show my_remote
 ```
 
@@ -342,22 +366,30 @@ remote or provisioning an instance, you won't need to change any of these
 settings.
 </aside>
 
-Parameter  | Description
----------- | -----------
-`IP`       | This is the address of your remote instance. It's how other users will access your deployed project as well!
-`user`     | The user to use to execute commands as on your remote instance.
-`pemfile`  | The key to use when executing SSH commands on your remote instance.
-`branch`   | The git branch of your project that you want to deploy.
-`ssh-port` | The SSH port on your remote instance - you usually don't need to change this.
+Parameter               | Description
+----------------------- | -----------
+`version`               | This should match the version of your Inertia CLI, which you can see by running `inertia --version`. It is used to determine which version of the [Inertia daemon](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/) to use.
+`name`                  | The name of your remote instance - must be unique.
+`ip`                    | This is the address of your remote instance. It's how other users will access your deployed project as well!
+`ssh.user`              | The user to use to execute commands as on your remote instance.
+`ssh.identityfile`      | The key to use when executing SSH commands on your remote instance.
+`sssh.ssh-port`         | The SSH port on your remote instance - you usually don't need to change this.
+`daemon.port`           | The port that the Inertia daemon is using - you can usually leave this as is.
+`daemon.token`          | This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later.
+`daemon.webhook-secret` | This is used to verify that incoming webhooks are authenticate - you'll need this later!
+`daemon.verify-ssl`     | Toggle whether or not to verify SSL communications for the daemon's API - off by default.
 
-Under `remotes.${remote_name}.daemon` there are some additional settings for the
-Inertia daemon:
+### Profiles
 
-Parameter        | Description
----------------- | -----------
-`port`           | The port that the Inertia daemon is using - you can usually leave this as is.
-`token`          | This is the token used to authenticate against your remote, and will be populated when you initialize the Inertia daemon later.
-`webhook-secret` | This is used to verify that incoming webhooks are authenticate - you'll need this later!
+```shell
+inertia project profile apply ${profile_name} ${remote_name}
+inertia ${remote_name} up
+```
+
+See the [Project Configuration](#project-configuration) section for how to set
+up profiles. The `profiles` section under the remote configuration defines
+default profiles to use when deploying a project. If none is configured, Inertia
+looks for a profile named `default`.
 
 ## Initializing the Inertia Daemon
 
