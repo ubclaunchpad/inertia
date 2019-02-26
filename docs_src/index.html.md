@@ -591,8 +591,7 @@ inertia --version # verify installation
 > To update configuration and daemon to match CLI version:
 
 ```shell
-inertia config upgrade
-inertia ${remote_name} upgrade
+inertia ${remote_name} upgrade --all
 ```
 
 TODO
