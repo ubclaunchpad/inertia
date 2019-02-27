@@ -262,7 +262,7 @@ func TestClient_LogsWithOutput(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
 			time.Sleep(1 * time.Second)
-			assert.Equal(t, "hello world", buf.String())
+			assert.Contains(t, buf.String(), "hello world")
 			t.Log("message received!")
 			cancel()
 		}()
