@@ -13,6 +13,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/websocket"
 
@@ -24,7 +25,9 @@ import (
 
 // Client manages a deployment
 type Client struct {
-	out   io.Writer
+	om  sync.Mutex
+	out io.Writer
+
 	ssh   runner.SSHSession
 	debug bool
 
@@ -450,6 +453,8 @@ func (c *Client) unmarshal(r io.Reader, kvs ...api.KV) (*api.BaseResponse, error
 // debugf logs to the client's output if debug is enabled
 func (c *Client) debugf(format string, args ...interface{}) {
 	if c.debug {
+		c.om.Lock()
 		fmt.Fprintf(c.out, "DEBUG: "+format+"\n", args...)
+		c.om.Unlock()
 	}
 }

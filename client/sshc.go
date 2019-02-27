@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/ubclaunchpad/inertia/cfg"
 	internal "github.com/ubclaunchpad/inertia/client/internal"
@@ -14,11 +15,12 @@ import (
 
 // SSHClient implements Inertia's SSH commands
 type SSHClient struct {
-	remote *cfg.Remote
-	ssh    runner.SSHSession
-
+	om    sync.Mutex
 	out   io.Writer
 	debug bool
+
+	remote *cfg.Remote
+	ssh    runner.SSHSession
 }
 
 // GetRunner returns the SSH client's underlying session
@@ -130,7 +132,9 @@ func (s *SSHClient) UninstallInertia() error {
 // debugf logs to the client's output if debug is enabled
 func (s *SSHClient) debugf(format string, args ...interface{}) {
 	if s.debug {
+		s.om.Lock()
 		fmt.Fprintf(s.out, "DEBUG: "+format+"\n", args...)
+		s.om.Unlock()
 	}
 }
 
