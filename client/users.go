@@ -20,9 +20,7 @@ type UserClient struct {
 }
 
 // NewUserClient instantiates a new client for user management functions
-func NewUserClient(c *Client) *UserClient {
-	return &UserClient{c}
-}
+func NewUserClient(c *Client) *UserClient { return &UserClient{c} }
 
 // AuthenticateRequest denotes options for authenticating with the Inertia daemon
 type AuthenticateRequest struct {

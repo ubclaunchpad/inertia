@@ -69,6 +69,8 @@ func (c *Client) GetSSHClient() (*SSHClient, error) {
 	return &SSHClient{
 		ssh:    c.ssh,
 		remote: c.Remote,
+		debug:  c.debug,
+		out:    c.out,
 	}, nil
 }
 

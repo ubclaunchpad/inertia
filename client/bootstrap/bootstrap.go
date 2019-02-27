@@ -53,7 +53,7 @@ Use 'inertia %s logs' to check on the daemon's setup progress.
 
 	// Output deploy key to user
 	fmt.Fprintf(out, ">> GitHub Deploy Key (add to https://www.github.com/%s/settings/keys/new):\n", repo)
-	fmt.Fprint(out, pub.String()+"\n")
+	fmt.Fprint(out, pub+"\n")
 
 	// Output Webhook url to user
 	var addr, _ = c.Remote.DaemonAddr()

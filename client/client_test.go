@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
-	"github.com/ubclaunchpad/inertia/client/runner/mocks"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
@@ -56,27 +55,6 @@ func newMockClient(t *testing.T, ts *httptest.Server) *Client {
 				Port:          port,
 				WebHookSecret: "arjan",
 				Token:         fakeAuth,
-			},
-		},
-	}
-}
-
-func newMockSSHClient(t *testing.T, m *mocks.FakeSSHSession) *Client {
-	return &Client{
-		ssh:   m,
-		out:   &testWriter{t},
-		debug: true,
-
-		Remote: &cfg.Remote{
-			Version: "test",
-			IP:      "127.0.0.1",
-			SSH: &cfg.SSH{
-				IdentityFile: "../test/keys/id_rsa",
-				User:         "root",
-				SSHPort:      "69",
-			},
-			Daemon: &cfg.Daemon{
-				Port: "4303",
 			},
 		},
 	}
