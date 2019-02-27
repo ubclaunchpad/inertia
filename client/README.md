@@ -8,20 +8,39 @@ This package contains Inertia's clientside interface to remote Inertia daemons. 
 package main
 
 import (
-    "github.com/ubclaunchpad/inertia/cfg"
-    "github.com/ubclaunchpad/inertia/client"
+	"context"
+
+	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/client/bootstrap"
 )
 
 func main() {
-    // Set up Inertia configuration
-    config := cfg.NewConfig("0.3.0", "inertia-deploy-test", /* ... */)
+	// set up a client to your remote
+	var inertia = client.NewClient(
+		&cfg.Remote{
+			Version: "v0.5.2",
+			Name:    "gcloud",
+			IP:      "my.host.addr",
+			/* ... */
+		},
+		client.Options{ /* ... */ })
 
-    // Add your remote
-    config.AddRemote(&cfg.RemoteVPS{Name: "gcloud", /* ... */ })
+	// bootstrap your remote
+	bootstrap.Bootstrap(inertia, bootstrap.Options{ /* ... */ })
 
-    // Set up client, remote, and deploy your project
-    cli, _ := client.NewClient("gcloud", config)
-    cli.BootstrapRemote()
-    cli.Up("git@github.com:ubclaunchpad/inertia.git", "", false)
+	// deploy your project!
+	inertia.Up(context.Background(), client.UpRequest{
+		Project: "my-project",
+		URL:     "git@github.com:me/project.git",
+		Profile: cfg.Profile{
+			Name:   "default",
+			Branch: "master",
+			Build: &cfg.Build{
+				Type:          cfg.DockerCompose,
+				BuildFilePath: "Dockerfile",
+			},
+		},
+	})
 }
 ```

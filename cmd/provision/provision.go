@@ -189,13 +189,17 @@ This ensures that your project ports are properly exposed and externally accessi
 			local.SaveRemote(remote)
 
 			// Create inertia client
-			inertia := client.NewClient(remote, client.Options{
+			var inertia = client.NewClient(remote, client.Options{
 				SSH: runner.SSHOptions{KeyPassphrase: os.Getenv(local.EnvSSHPassphrase)},
 			})
 
 			// Bootstrap remote
 			fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.Remote.IP)
-			if err := bootstrap.SetUpRemote(os.Stdout, args[0], root.project.URL, inertia); err != nil {
+			var repo = common.ExtractRepository(common.GetSSHRemoteURL(root.project.URL))
+			if err := bootstrap.Bootstrap(inertia, bootstrap.Options{
+				RepoName: repo,
+				Out:      os.Stdout,
+			}); err != nil {
 				output.Fatal(err.Error())
 			}
 
