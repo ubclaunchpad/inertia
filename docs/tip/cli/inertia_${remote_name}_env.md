@@ -23,6 +23,7 @@ as follows:
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
 ```
 

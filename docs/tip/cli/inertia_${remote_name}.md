@@ -19,6 +19,7 @@ Run 'inertia [remote] init' to gather this information.
 ### Options
 
 ```
+      --debug   enable debug output from Inertia client
   -h, --help    help for ${remote_name}
   -s, --short   don't stream output from command
 ```
