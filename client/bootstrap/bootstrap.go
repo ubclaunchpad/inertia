@@ -8,8 +8,20 @@ import (
 	"github.com/ubclaunchpad/inertia/common"
 )
 
-// SetUpRemote bootstraps the given remote
-func SetUpRemote(out io.Writer, name, gitURL string, c *client.Client) error {
+// Options denotes configuration for the bootstrapping process.
+// RepoName is optional, and only used for generating printed links.
+// Out is where output will be written.
+type Options struct {
+	RepoName string
+	Out      io.Writer
+}
+
+// Bootstrap bootstraps the given remote
+func Bootstrap(c *client.Client, opts Options) error {
+	var out = opts.Out
+	if out == nil {
+		out = &common.DevNull{}
+	}
 	sshc, err := c.GetSSHClient()
 	if err != nil {
 		return err
@@ -43,16 +55,14 @@ func SetUpRemote(out io.Writer, name, gitURL string, c *client.Client) error {
 
 You may have to wait briefly for Inertia to set up some dependencies.
 Use 'inertia %s logs' to check on the daemon's setup progress.
-`, name)
+`, c.Remote.Name)
 
 	// pretty divider
 	fmt.Fprint(out, "=============================\n\n")
 
-	// get repo name for pretty printing
-	var repo = common.ExtractRepository(common.GetSSHRemoteURL(gitURL))
-
 	// Output deploy key to user
-	fmt.Fprintf(out, ">> GitHub Deploy Key (add to https://www.github.com/%s/settings/keys/new):\n", repo)
+	fmt.Fprintf(out, ">> GitHub Deploy Key (add to https://www.github.com/%s/settings/keys/new):\n",
+		c.Remote.Name)
 	fmt.Fprint(out, pub+"\n")
 
 	// Output Webhook url to user
@@ -63,13 +73,13 @@ Address:  https://%s/webhook
 Secret:   %s
 Note that by default, you will have to disable SSL verification in your webhook
 settings - Inertia uses self-signed certificates that GitHub won't be able to
-verify.`, repo, addr, c.Remote.Daemon.WebHookSecret)
+verify.`, opts.RepoName, addr, c.Remote.Daemon.WebHookSecret)
 
 	fmt.Fprintf(out, `
 Inertia daemon successfully deployed! Add your webhook url and deploy key to
 your repository to enable continuous deployment.
 
 Then run 'inertia %s up' to deploy your application.
-`, name)
+`, c.Remote.Name)
 	return nil
 }

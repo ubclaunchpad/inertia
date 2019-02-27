@@ -16,6 +16,7 @@ import (
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
@@ -380,7 +381,11 @@ Upon successful setup, you will be provided with:
 The deploy key is required for the daemon to access your repository, and the
 webhook URL enables continuous deployment as your repository is updated.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := bootstrap.SetUpRemote(os.Stdout, root.remote, root.project.URL, root.client); err != nil {
+			var repo = common.ExtractRepository(common.GetSSHRemoteURL(root.project.URL))
+			if err := bootstrap.Bootstrap(root.client, bootstrap.Options{
+				RepoName: repo,
+				Out:      os.Stdout,
+			}); err != nil {
 				output.Fatal(err.Error())
 			}
 

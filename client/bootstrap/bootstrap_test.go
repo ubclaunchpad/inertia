@@ -41,7 +41,7 @@ func TestBootstrap_Integration(t *testing.T) {
 	}
 
 	var c = newIntegrationClient()
-	assert.NoError(t, SetUpRemote(os.Stdout, "test-remote", "", c))
+	assert.NoError(t, Bootstrap(c, Options{Out: os.Stdout}))
 
 	// Daemon setup takes a bit of time - do a crude wait
 	time.Sleep(3 * time.Second)
