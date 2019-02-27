@@ -10,6 +10,12 @@ Shows details about the given remote.
 inertia remote show [remote] [flags]
 ```
 
+### Examples
+
+```
+inertia remote show staging
+```
+
 ### Options
 
 ```

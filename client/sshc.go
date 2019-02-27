@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
+	"sync"
 
 	"github.com/ubclaunchpad/inertia/cfg"
 	internal "github.com/ubclaunchpad/inertia/client/internal"
@@ -13,6 +15,10 @@ import (
 
 // SSHClient implements Inertia's SSH commands
 type SSHClient struct {
+	om    sync.Mutex
+	out   io.Writer
+	debug bool
+
 	remote *cfg.Remote
 	ssh    runner.SSHSession
 }
@@ -38,9 +44,11 @@ func (s *SSHClient) DaemonDown() error {
 		return err
 	}
 
-	_, stderr, err := s.ssh.Run(string(scriptBytes))
+	stdout, stderr, err := s.ssh.Run(string(scriptBytes))
+	s.debugStdout("daemon-down.sh", stdout)
+	s.debugStderr("daemon-down.sh", stderr)
 	if err != nil {
-		return fmt.Errorf("daemon shutdown failed: %s: %s", err.Error(), stderr.String())
+		return fmt.Errorf("daemon shutdown failed: %s", err.Error())
 	}
 
 	return nil
@@ -64,23 +72,25 @@ func (s *SSHClient) InstallDocker() error {
 
 // GenerateKeys creates a public-private key-pair on the remote vps and returns
 // the public key.
-func (s *SSHClient) GenerateKeys() (*bytes.Buffer, error) {
+func (s *SSHClient) GenerateKeys() (string, error) {
 	if s.ssh == nil {
-		return nil, errors.New("client not configured for SSH access")
+		return "", errors.New("client not configured for SSH access")
 	}
 
 	scriptBytes, err := internal.ReadFile("client/scripts/keygen.sh")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Create deploy key.
-	result, stderr, err := s.ssh.Run(string(scriptBytes))
+	stdout, stderr, err := s.ssh.Run(string(scriptBytes))
+	s.debugStdout("keygen.sh", stdout)
+	s.debugStderr("keygen.sh", stderr)
 	if err != nil {
-		return nil, fmt.Errorf("key generation failed: %s: %s", err.Error(), stderr.String())
+		return "", fmt.Errorf("key generation failed: %s", err.Error())
 	}
 
-	return result, nil
+	return stdout.String(), nil
 }
 
 // AssignAPIToken generates an API token and assigns it to client.Remote
@@ -91,8 +101,10 @@ func (s *SSHClient) AssignAPIToken() error {
 	}
 	daemonCmdStr := fmt.Sprintf(string(scriptBytes), s.remote.Version)
 	stdout, stderr, err := s.ssh.Run(daemonCmdStr)
+	s.debugStdout("token.sh", stdout)
+	s.debugStderr("token.sh", stderr)
 	if err != nil {
-		return fmt.Errorf("api token generation failed: %s: %s", err.Error(), stderr.String())
+		return fmt.Errorf("api token generation failed: %s", err.Error())
 	}
 
 	// There may be a newline, remove it.
@@ -107,10 +119,33 @@ func (s *SSHClient) UninstallInertia() error {
 		return err
 	}
 
-	_, stderr, err := s.ssh.Run(string(scriptBytes))
+	stdout, stderr, err := s.ssh.Run(string(scriptBytes))
+	s.debugStdout("inertia-down.sh", stdout)
+	s.debugStderr("inertia-down.sh", stderr)
 	if err != nil {
-		return fmt.Errorf("Inertia down failed: %s: %s", err.Error(), stderr.String())
+		return fmt.Errorf("inertia shutdown failed: %s", err.Error())
 	}
 
 	return nil
+}
+
+// debugf logs to the client's output if debug is enabled
+func (s *SSHClient) debugf(format string, args ...interface{}) {
+	if s.debug {
+		s.om.Lock()
+		fmt.Fprintf(s.out, "DEBUG: "+format+"\n", args...)
+		s.om.Unlock()
+	}
+}
+
+func (s *SSHClient) debugStderr(script string, out *bytes.Buffer) {
+	if out != nil && out.Len() > 0 {
+		s.debugf("%s stderr:\n>>>\n%s\n<<<", script, out.String())
+	}
+}
+
+func (s *SSHClient) debugStdout(script string, out *bytes.Buffer) {
+	if out != nil && out.Len() > 0 {
+		s.debugf("%s stdout:\n>>>\n%s\n<<<", script, out.String())
+	}
 }

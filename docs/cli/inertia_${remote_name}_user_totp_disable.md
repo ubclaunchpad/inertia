@@ -20,11 +20,11 @@ inertia ${remote_name} user totp disable [user] [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+  -d, --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
-      --verify-ssl      verify SSL communications - requires a signed SSL certificate
 ```
 
 ### SEE ALSO
 
-* [inertia ${remote_name} user totp](inertia_${remote_name}_user_totp.md)	 - Manage TOTP settings for a user
+* [inertia ${remote_name} user totp](inertia_${remote_name}_user_totp.md)	 - Manage 2FA TOTP settings for users
 

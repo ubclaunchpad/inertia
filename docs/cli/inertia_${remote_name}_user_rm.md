@@ -23,8 +23,8 @@ inertia ${remote_name} user rm [user] [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+  -d, --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
-      --verify-ssl      verify SSL communications - requires a signed SSL certificate
 ```
 
 ### SEE ALSO

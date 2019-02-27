@@ -16,8 +16,8 @@ Configure user access to the Inertia Web application.
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+  -d, --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
-      --verify-ssl      verify SSL communications - requires a signed SSL certificate
 ```
 
 ### SEE ALSO
@@ -28,5 +28,5 @@ Configure user access to the Inertia Web application.
 * [inertia ${remote_name} user ls](inertia_${remote_name}_user_ls.md)	 - List all users registered on your remote.
 * [inertia ${remote_name} user reset](inertia_${remote_name}_user_reset.md)	 - Reset user database on your remote
 * [inertia ${remote_name} user rm](inertia_${remote_name}_user_rm.md)	 - Remove a user
-* [inertia ${remote_name} user totp](inertia_${remote_name}_user_totp.md)	 - Manage TOTP settings for a user
+* [inertia ${remote_name} user totp](inertia_${remote_name}_user_totp.md)	 - Manage 2FA TOTP settings for users
 

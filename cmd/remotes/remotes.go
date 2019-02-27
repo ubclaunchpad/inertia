@@ -1,22 +1,20 @@
 package remotescmd
 
 import (
-	"bufio"
+	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/client/bootstrap"
 	"github.com/ubclaunchpad/inertia/client/runner"
 	"github.com/ubclaunchpad/inertia/cmd/core"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"github.com/ubclaunchpad/inertia/local"
 )
@@ -59,6 +57,7 @@ type HostCmd struct {
 	project *cfg.Project
 
 	client *client.Client
+	ctx    context.Context
 }
 
 // CmdOptions denotes options for individual host subcommands
@@ -69,6 +68,7 @@ type CmdOptions struct {
 
 const (
 	flagShort = "short"
+	flagDebug = "debug"
 )
 
 // AttachRemoteHostCmd attaches a subcommand for a configured remote host to the
@@ -78,6 +78,8 @@ func AttachRemoteHostCmd(
 	opts CmdOptions,
 	hidden ...bool,
 ) {
+	ctx, cancel := context.WithCancel(context.Background())
+	input.CatchSigterm(cancel)
 	var host = &HostCmd{
 		project: opts.ProjectCfg,
 		client: client.NewClient(opts.RemoteCfg, client.Options{
@@ -86,6 +88,7 @@ func AttachRemoteHostCmd(
 			},
 			Out: os.Stdout,
 		}),
+		ctx: ctx,
 	}
 	host.Command = &cobra.Command{
 		Use: opts.RemoteCfg.Name + " [command]",
@@ -116,10 +119,14 @@ Run 'inertia [remote] init' to gather this information.`,
 				fmt.Printf("[WARNING] Remote configuration version '%s' does not match your Inertia CLI version '%s'\n",
 					host.getRemote().Version, inertia.Version)
 			}
+			var debug, _ = cmd.Flags().GetBool(flagDebug)
+			host.client.WithDebug(debug)
 		},
 	}
 	host.PersistentFlags().BoolP(flagShort, "s", false,
 		"don't stream output from command")
+	host.PersistentFlags().Bool(flagDebug, false,
+		"enable debug output from Inertia client")
 
 	// attach children
 	host.attachInitCmd()
@@ -165,41 +172,22 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			fmt.Printf("deploying project '%s' using profile '%s'\n", root.project.Name, profileName)
 
 			// Make up request
-			resp, err := root.client.Up(
-				root.project.Name,
-				root.project.URL,
-				*profile,
-				!short)
+			var req = client.UpRequest{
+				Project: root.project.Name,
+				URL:     root.project.URL,
+				Profile: *profile}
+
+			var err error
+			if short {
+				err = root.client.Up(root.ctx, req)
+			} else {
+				err = root.client.UpWithOutput(root.ctx, req)
+			}
 			if err != nil {
 				output.Fatal(err)
 			}
-			defer resp.Body.Close()
-
-			if short {
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					output.Fatal(err)
-				}
-				switch resp.StatusCode {
-				case http.StatusCreated:
-					fmt.Printf("(Status code %d) Project build started!\n", resp.StatusCode)
-				case http.StatusUnauthorized:
-					fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
-				case http.StatusPreconditionFailed:
-					fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, body)
-				default:
-					fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-						resp.StatusCode, body)
-				}
-			} else {
-				reader := bufio.NewReader(resp.Body)
-				for {
-					line, err := reader.ReadBytes('\n')
-					if err != nil {
-						break
-					}
-					fmt.Print(string(line))
-				}
+			if !short {
+				println("project deployment successfully started!")
 			}
 		},
 	}
@@ -215,28 +203,10 @@ func (root *HostCmd) attachDownCmd() {
 	
 Requires project to be online - do this by running 'inertia [remote] up`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.client.Down()
-			if err != nil {
+			if err := root.client.Down(root.ctx); err != nil {
 				output.Fatal(err)
 			}
-
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				output.Fatal(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("(Status code %d) Project down\n", resp.StatusCode)
-			case http.StatusPreconditionFailed:
-				fmt.Printf("(Status code %d) No containers are currently active\n", resp.StatusCode)
-			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-					resp.StatusCode, body)
-			}
+			println("project successfully shut down")
 		},
 	}
 	root.AddCommand(down)
@@ -250,41 +220,18 @@ func (root *HostCmd) attachStatusCmd() {
 
 Requires the Inertia daemon to be active on your remote - do this by running 'inertia [remote] up'`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.client.Status()
+			status, err := root.client.Status(root.ctx)
 			if err != nil {
 				output.Fatal(err)
 			}
-			defer resp.Body.Close()
 
-			switch resp.StatusCode {
-			case http.StatusOK:
-				host, err := root.getRemote().DaemonAddr()
-				if err != nil {
-					output.Fatal(err)
-				}
-				fmt.Printf("(Status code %d) Daemon at remote '%s' online at %s\n",
-					resp.StatusCode, root.remote, host)
-				var status = &api.DeploymentStatus{}
-				if _, err := api.Unmarshal(resp.Body, api.KV{
-					Key: "status", Value: status,
-				}); err != nil {
-					output.Fatal(err)
-				}
-				println(output.FormatStatus(status))
-			case http.StatusUnauthorized:
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					output.Fatal(err)
-				}
-				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-			default:
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					output.Fatal(err)
-				}
-				fmt.Printf("(Status code %d) %s\n",
-					resp.StatusCode, body)
+			host, err := root.getRemote().DaemonAddr()
+			if err != nil {
+				output.Fatal(err)
 			}
+			fmt.Printf("daemon on remote '%s' is online at %s\n",
+				root.remote, host)
+			println(output.FormatStatus(status))
 		},
 	}
 	root.AddCommand(stat)
@@ -310,45 +257,21 @@ Use 'inertia [remote] status' to see which containers are active.`,
 				container = args[0]
 			}
 
+			var req = client.LogsRequest{
+				Container: container,
+				Entries:   entries}
+
 			if short {
 				// if short, just grab the last x log entries
-				resp, err := root.client.Logs(container, entries)
+				logs, err := root.client.Logs(root.ctx, req)
 				if err != nil {
 					output.Fatal(err)
 				}
-				defer resp.Body.Close()
-
-				var logs []string
-				b, err := api.Unmarshal(resp.Body, api.KV{Key: "logs", Value: &logs})
-				if err != nil {
-					output.Fatal(err)
-				}
-
-				switch resp.StatusCode {
-				case http.StatusOK:
-					fmt.Printf("(Status code %d) Logs: \n%s\n", resp.StatusCode, strings.Join(logs, "\n"))
-				case http.StatusUnauthorized:
-					fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, b.Message)
-				case http.StatusPreconditionFailed:
-					fmt.Printf("(Status code %d) Problem with deployment setup:\n%s\n", resp.StatusCode, b.Message)
-				default:
-					fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-						resp.StatusCode, b.Message)
-				}
+				println(strings.Join(logs, "\n"))
 			} else {
 				// if not short, open a websocket to stream logs
-				socket, err := root.client.LogsWebSocket(container, entries)
-				if err != nil {
+				if err := root.client.LogsWithOutput(root.ctx, req); err != nil {
 					output.Fatal(err)
-				}
-				defer socket.Close()
-
-				for {
-					_, line, err := socket.ReadMessage()
-					if err != nil {
-						output.Fatal(err)
-					}
-					fmt.Print(string(line))
 				}
 			}
 		},
@@ -363,16 +286,10 @@ func (root *HostCmd) attachPruneCmd() {
 		Short: "Prune Docker assets and images on your remote",
 		Long:  `Prunes Docker assets and images from your remote to free up storage space.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.client.Prune()
-			if err != nil {
+			if err := root.client.Prune(root.ctx); err != nil {
 				output.Fatal(err)
 			}
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				output.Fatal(err)
-			}
-			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+			fmt.Printf("docker assets have been pruned")
 		},
 	}
 	root.AddCommand(prune)
@@ -485,25 +402,10 @@ func (root *HostCmd) newResetCmd() {
 On this remote, this kills all active containers and clears the project directory,
 allowing you to assign a different Inertia project to this remote.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.client.Reset()
-			if err != nil {
+			if err := root.client.Reset(root.ctx); err != nil {
 				output.Fatal(err)
 			}
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				output.Fatal(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
-			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-					resp.StatusCode, body)
-			}
+			fmt.Printf("project on remote '%s' successfully reset\n", root.remote)
 		},
 	}
 	root.AddCommand(reset)
@@ -519,8 +421,7 @@ directory (~/inertia) from your remote host.`,
 			println("WARNING: This will stop down your project and remove the Inertia daemon.")
 			println("This is irreversible. Continue? (y/n)")
 			var response string
-			_, err := fmt.Scanln(&response)
-			if err != nil || response != "y" {
+			if _, err := fmt.Scanln(&response); err != nil || response != "y" {
 				output.Fatal("aborting")
 			}
 
@@ -531,7 +432,7 @@ directory (~/inertia) from your remote host.`,
 
 			// Daemon down
 			println("Stopping project...")
-			if _, err = root.client.Down(); err != nil {
+			if err = root.client.Down(root.ctx); err != nil {
 				output.Fatal(err)
 			}
 			println("Stopping daemon...")
@@ -554,27 +455,11 @@ func (root *HostCmd) attachTokenCmd() {
 		Short: "Generate tokens associated with permission levels for admin to share.",
 		Long:  `Generate tokens associated with permission levels for team leads to share`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.client.Token()
+			token, err := root.client.Token(root.ctx)
 			if err != nil {
 				output.Fatal(err)
 			}
-			defer resp.Body.Close()
-
-			var token string
-			b, err := api.Unmarshal(resp.Body, api.KV{Key: "token", Value: &token})
-			if err != nil {
-				output.Fatal(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("New token: %s\n", token)
-			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, b.Message)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-					resp.StatusCode, b.Message)
-			}
+			println(token)
 		},
 	}
 	root.AddCommand(token)

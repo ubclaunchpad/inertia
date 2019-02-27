@@ -10,6 +10,12 @@ Remove a remote from Inertia's configuration file.
 inertia remote rm [remote] [flags]
 ```
 
+### Examples
+
+```
+inertia remote rm staging
+```
+
 ### Options
 
 ```
