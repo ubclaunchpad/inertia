@@ -9,9 +9,9 @@ import (
 	"github.com/ubclaunchpad/inertia/client/runner/mocks"
 )
 
-func TestInstallDocker(t *testing.T) {
+func TestSSHClient_InstallDocker(t *testing.T) {
 	var session = &mocks.FakeSSHSession{}
-	var client = newMockSSHClient(session)
+	var client = newMockSSHClient(t, session)
 
 	// Get original script for comparison
 	script, err := ioutil.ReadFile("scripts/docker.sh")
@@ -28,9 +28,9 @@ func TestInstallDocker(t *testing.T) {
 	assert.Equal(t, string(script), call)
 }
 
-func TestDaemonUp(t *testing.T) {
+func TestSSHClient_DaemonUp(t *testing.T) {
 	var session = &mocks.FakeSSHSession{}
-	var client = newMockSSHClient(session)
+	var client = newMockSSHClient(t, session)
 
 	// Get original script for comparison
 	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
@@ -48,9 +48,9 @@ func TestDaemonUp(t *testing.T) {
 	assert.Equal(t, actualCommand, call)
 }
 
-func TestDaemonDown(t *testing.T) {
+func TestSSHClient_DaemonDown(t *testing.T) {
 	var session = &mocks.FakeSSHSession{}
-	var client = newMockSSHClient(session)
+	var client = newMockSSHClient(t, session)
 
 	// Get original script for comparison
 	script, err := ioutil.ReadFile("scripts/daemon-down.sh")
@@ -65,9 +65,9 @@ func TestDaemonDown(t *testing.T) {
 	assert.Equal(t, string(script), session.RunArgsForCall(0))
 }
 
-func TestKeyGen(t *testing.T) {
+func TestSSHClient_KeyGen(t *testing.T) {
 	var session = &mocks.FakeSSHSession{}
-	var client = newMockSSHClient(session)
+	var client = newMockSSHClient(t, session)
 
 	// Get original script for comparison
 	script, err := ioutil.ReadFile("scripts/token.sh")

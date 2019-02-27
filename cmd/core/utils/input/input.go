@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/ubclaunchpad/inertia/cfg"
 )
@@ -16,6 +18,17 @@ var (
 	errInvalidBuildType     = errors.New("invalid build type")
 	errInvalidBuildFilePath = errors.New("invalid buildfile path")
 )
+
+// CatchSigterm listens in the background for some kind of interrupt and calls
+// the given cancelFunc as necessary
+func CatchSigterm(cancelFunc func()) {
+	var signals = make(chan os.Signal)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	go func() {
+		<-signals
+		cancelFunc()
+	}()
+}
 
 // Prompt prints the given query and reads the response
 func Prompt(query string) (string, error) {

@@ -1,15 +1,15 @@
 package remotescmd
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"syscall"
 
 	qr "github.com/Baozisoftware/qrcode-terminal-go"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/ubclaunchpad/inertia/api"
+	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 )
 
@@ -39,6 +39,11 @@ func AttachTotpCmd(root *UserCmd) {
 	root.AddCommand(totp.Command)
 }
 
+// context returns the root host command's context
+func (root *UserTotpCmd) context() context.Context { return root.host.ctx }
+
+func (root *UserTotpCmd) getUserClient() *client.UserClient { return root.host.client.GetUserClient() }
+
 func (root *UserTotpCmd) attachEnableCmd() {
 	var enable = &cobra.Command{
 		Use:   "enable [user]",
@@ -55,29 +60,17 @@ func (root *UserTotpCmd) attachEnableCmd() {
 			}
 
 			// Endpoint handles user authentication before enabling Totp
-			resp, err := root.host.client.EnableTotp(username, string(pwBytes))
-			if err != nil {
-				output.Fatal(err)
-			}
-			if resp.StatusCode != http.StatusOK {
-				fmt.Printf("(Status code %d) Error Enabling Totp.", resp.StatusCode)
-				return
-			}
-			defer resp.Body.Close()
-
-			var totpInfo api.TotpResponse
-			b, err := api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: &totpInfo})
+			totpInfo, err := root.getUserClient().EnableTotp(root.context(), username, string(pwBytes))
 			if err != nil {
 				output.Fatal(err)
 			}
 
 			// Display QR code so users can easily add their keys to their
 			// authenticator apps
+			println("2FA has been enabled!")
+
 			qr.New().Get(fmt.Sprintf("otpauth://totp/%s?secret=%s&issuer=Inertia",
 				username, totpInfo.TotpSecret)).Print()
-
-			fmt.Printf("\n\n(Status code %d) %s\n",
-				resp.StatusCode, b.Message)
 			fmt.Print("Scan the QR code above to " +
 				"add your Inertia account to your authenticator app.\n\n")
 			fmt.Printf("Your secret key is: %s\n", totpInfo.TotpSecret)
@@ -103,20 +96,10 @@ func (root *UserTotpCmd) attachDisableCmd() {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			// Endpoint handles user authentication before disabling Totp
-			resp, err := root.host.client.DisableTotp()
-			if err != nil {
+			if err := root.getUserClient().DisableTotp(root.context()); err != nil {
 				output.Fatal(err)
 			}
-
-			fmt.Printf("(Status code %d) ", resp.StatusCode)
-			if resp.StatusCode == http.StatusUnauthorized {
-				fmt.Println("Please try logging in again before " +
-					"disabling two-factor authentication.")
-			} else if resp.StatusCode != http.StatusOK {
-				fmt.Println("Error Disabling Totp.")
-			} else {
-				fmt.Println("Totp successfully disabled.")
-			}
+			println("2FA successfully disabled")
 		},
 	}
 	root.AddCommand(disable)

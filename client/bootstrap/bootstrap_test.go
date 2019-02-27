@@ -3,7 +3,7 @@
 package bootstrap
 
 import (
-	"net/http"
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -28,8 +28,9 @@ func newIntegrationClient() *client.Client {
 		},
 	}
 	return client.NewClient(remote, client.Options{
-		SSH: runner.SSHOptions{},
-		Out: os.Stdout,
+		SSH:   runner.SSHOptions{},
+		Out:   os.Stdout,
+		Debug: true,
 	})
 }
 
@@ -45,7 +46,7 @@ func TestBootstrap_Integration(t *testing.T) {
 	time.Sleep(3 * time.Second)
 
 	// Check if daemon is online following bootstrap
-	resp, err := c.Status()
+	status, err := c.Status(context.Background())
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "test", status.InertiaVersion)
 }
