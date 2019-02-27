@@ -69,6 +69,7 @@ verify.`, repo, addr, c.Remote.Daemon.WebHookSecret)
 Inertia daemon successfully deployed! Add your webhook url and deploy key to
 your repository to enable continuous deployment.
 
-Then run 'inertia %s up' to deploy your application.`, name)
+Then run 'inertia %s up' to deploy your application.
+`, name)
 	return nil
 }
