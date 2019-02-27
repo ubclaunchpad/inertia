@@ -86,7 +86,9 @@ func TestNewClient(t *testing.T) {
 	var c = NewClient(&cfg.Remote{}, Options{})
 	assert.NotNil(t, c)
 	c.WithDebug(false)
+	assert.False(t, c.debug)
 	c.WithWriter(os.Stdout)
+	assert.Equal(t, os.Stdout, c.out)
 }
 
 func TestClient_Up(t *testing.T) {

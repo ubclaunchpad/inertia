@@ -60,7 +60,7 @@ func NewClient(remote *cfg.Remote, opts Options) *Client {
 func (c *Client) WithWriter(out io.Writer) { c.out = out }
 
 // WithDebug sets the client's debug mode
-func (c *Client) WithDebug(debug bool) { c.debug = true }
+func (c *Client) WithDebug(debug bool) { c.debug = debug }
 
 // GetSSHClient instantiates an SSH client for Inertia-related commands
 func (c *Client) GetSSHClient() (*SSHClient, error) {
