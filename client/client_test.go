@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -103,6 +104,35 @@ func TestClient_Up(t *testing.T) {
 			Type: cfg.DockerCompose,
 		},
 	}}))
+}
+
+func TestClient_UpWithOutput(t *testing.T) {
+	testServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "hello")
+		time.Sleep(10 * time.Millisecond)
+		fmt.Fprintln(w, "world")
+		time.Sleep(10 * time.Millisecond)
+		fmt.Fprintln(w, "chicken rice")
+		time.Sleep(10 * time.Millisecond)
+	}))
+	defer testServer.Close()
+
+	var d = newMockClient(t, testServer)
+	var buf = &bytes.Buffer{}
+	d.out = buf
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		// wait before closing the connection to make sure messages arrive
+		time.Sleep(1 * time.Second)
+		cancel()
+	}()
+	assert.NoError(t, d.UpWithOutput(ctx, UpRequest{"test_project", "myremote.git", cfg.Profile{
+		Build: &cfg.Build{
+			Type: cfg.DockerCompose,
+		},
+	}}))
+	assert.Contains(t, buf.String(), "hello\nworld")
+	assert.Contains(t, buf.String(), "chicken rice")
 }
 
 func TestClient_Prune(t *testing.T) {
@@ -261,12 +291,12 @@ func TestClient_LogsWithOutput(t *testing.T) {
 		d.out = buf
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
+			// wait before closing the connection to make sure message arrives
 			time.Sleep(1 * time.Second)
-			assert.Contains(t, buf.String(), "hello world")
-			t.Log("message received!")
 			cancel()
 		}()
 		assert.NoError(t, d.LogsWithOutput(ctx, LogsRequest{"docker-compose", 10}))
+		assert.Contains(t, buf.String(), "hello world")
 	})
 
 	t.Run("daemon offline", func(t *testing.T) {

@@ -132,17 +132,30 @@ func (c *Client) UpWithOutput(ctx context.Context, req UpRequest) error {
 	}
 	defer resp.Body.Close()
 
-	var reader = bufio.NewReader(resp.Body)
+	// read until error
+	var scan = bufio.NewScanner(resp.Body)
+	var errC = make(chan error, 1)
+	go func() {
+		for scan.Scan() {
+			c.om.Lock()
+			fmt.Fprintln(c.out, scan.Text())
+			c.om.Unlock()
+		}
+		if err := scan.Err(); err != nil {
+			errC <- fmt.Errorf("error occured while reading output: %s", err.Error())
+			return
+		}
+	}()
+
+	// block until done
 	for {
 		select {
 		case <-ctx.Done():
+			c.debugf("context cancelled, closing connection")
 			return nil
-		default:
-			line, err := reader.ReadBytes('\n')
-			if err != nil {
-				return fmt.Errorf("error occured while reading output: %s", err.Error())
-			}
-			fmt.Fprint(c.out, string(line))
+		case err := <-errC:
+			c.debugf("error received: %s", err.Error())
+			return err
 		}
 	}
 }
@@ -310,8 +323,11 @@ func (c *Client) LogsWithOutput(ctx context.Context, req LogsRequest) error {
 			_, line, err := socket.ReadMessage()
 			if err != nil {
 				errC <- fmt.Errorf("error occured while reading from socket: %s", err.Error())
+				return
 			}
+			c.om.Lock()
 			fmt.Fprint(c.out, string(line))
+			c.om.Unlock()
 		}
 	}()
 
