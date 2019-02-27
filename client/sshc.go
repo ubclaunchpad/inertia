@@ -45,8 +45,8 @@ func (s *SSHClient) DaemonDown() error {
 	}
 
 	stdout, stderr, err := s.ssh.Run(string(scriptBytes))
-	s.debugStdout("token.sh", stdout)
-	s.debugStderr("token.sh", stderr)
+	s.debugStdout("daemon-down.sh", stdout)
+	s.debugStderr("daemon-down.sh", stderr)
 	if err != nil {
 		return fmt.Errorf("daemon shutdown failed: %s", err.Error())
 	}
@@ -84,8 +84,8 @@ func (s *SSHClient) GenerateKeys() (string, error) {
 
 	// Create deploy key.
 	stdout, stderr, err := s.ssh.Run(string(scriptBytes))
-	s.debugStdout("token.sh", stdout)
-	s.debugStderr("token.sh", stderr)
+	s.debugStdout("keygen.sh", stdout)
+	s.debugStderr("keygen.sh", stderr)
 	if err != nil {
 		return "", fmt.Errorf("key generation failed: %s", err.Error())
 	}
