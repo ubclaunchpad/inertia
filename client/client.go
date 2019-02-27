@@ -19,7 +19,6 @@ import (
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/client/runner"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"github.com/ubclaunchpad/inertia/common"
 )
 
@@ -245,14 +244,16 @@ func (c *Client) Logs(ctx context.Context, req LogsRequest) ([]string, error) {
 
 	resp, err := c.get(ctx, "/logs", reqContent)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to make request: %s", err.Error())
 	}
+
 	var logs = make([]string, 0)
 	b, err := c.unmarshal(resp.Body, api.KV{Key: "logs", Value: &logs})
 	resp.Body.Close()
 	if err != nil {
-		output.Fatal(err)
+		return nil, fmt.Errorf("failed to read response: %s", err.Error())
 	}
+
 	return logs, b.Error()
 }
 
@@ -284,15 +285,18 @@ func (c *Client) LogsWithOutput(ctx context.Context, req LogsRequest) error {
 	header.Set("Authorization", "Bearer "+c.Remote.Daemon.Token)
 
 	// set up websocket connection
+	c.debugf("request constructed: %s (authorized: %v, verified: %v)",
+		url.String(), c.Remote.Daemon.Token != "", c.Remote.Daemon.VerifySSL)
 	socket, resp, err := buildWebSocketDialer(c.Remote.Daemon.VerifySSL).
 		DialContext(ctx, url.String(), header)
 	if err == websocket.ErrBadHandshake {
 		return fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to connect to daemon at %s: %s", url.Host, err.Error())
+		return fmt.Errorf("failed to connect to daemon: %s", err.Error())
 	}
 	defer socket.Close()
+	c.debugf("websocket connection established")
 
 	// read from socket until error
 	var errC = make(chan error, 1)
@@ -310,8 +314,10 @@ func (c *Client) LogsWithOutput(ctx context.Context, req LogsRequest) error {
 	for {
 		select {
 		case <-ctx.Done():
+			c.debugf("context cancelled, closing connection")
 			return nil
 		case err := <-errC:
+			c.debugf("error received: %s", err.Error())
 			return err
 		}
 	}
