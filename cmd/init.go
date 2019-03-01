@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -9,7 +8,7 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 	"github.com/ubclaunchpad/inertia/local/git"
@@ -37,9 +36,9 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if global, _ := cmd.Flags().GetBool(flagGlobal); global {
 				if _, err := local.Init(); err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
-				fmt.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
+				out.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
 				return
 			}
 
@@ -48,15 +47,15 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 				resp, err := input.Promptf("could not find global inertia configuration in %s (%s) - would you like to initialize it?",
 					local.InertiaDir(), err.Error())
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 				if resp == "y" || resp == "yes" {
 					if _, err := local.Init(); err != nil {
-						output.Fatal(err)
+						out.Fatal(err)
 					}
-					fmt.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
+					out.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
 				} else {
-					output.Fatal("aborting: global inertia configuration is required to set up Inertia")
+					out.Fatal("aborting: global inertia configuration is required to set up Inertia")
 				}
 			}
 
@@ -71,20 +70,20 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 
 			// Check for repo
 			if err := git.IsRepo("."); err != nil {
-				output.Fatalf("could not find git repository: %s", err.Error())
+				out.Fatalf("could not find git repository: %s", err.Error())
 			}
 
 			// Get host URL
 			var gitRemote, _ = cmd.Flags().GetString(flagGitRemote)
 			host, err := git.GetRepoRemote(gitRemote)
 			if err != nil {
-				output.Fatalf("could not get git remote '%s': %s", gitRemote, err.Error())
+				out.Fatalf("could not get git remote '%s': %s", gitRemote, err.Error())
 			}
 
 			// Prompt for branch to deploy
 			branch, err := git.GetRepoCurrentBranch()
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 			if resp, err := input.Promptf("Enter the branch you would like to deploy (leave blank for '%s'):",
 				branch); err == nil {
@@ -100,19 +99,19 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 			// docker-compose projects will usually have Dockerfiles, so check for
 			// docker-compose.yml first, then check for Dockerfile
 			if common.CheckForDockerCompose(".") {
-				println("docker-compose project detected")
+				out.Println("docker-compose project detected")
 				buildType = cfg.DockerCompose
 				buildFilePath = "docker-compose.yml"
 			} else if common.CheckForDockerfile(".") {
-				println("Dockerfile project detected")
+				out.Println("Dockerfile project detected")
 				buildType = cfg.Dockerfile
 				buildFilePath = "Dockerfile"
 			} else {
-				println("No build file detected")
+				out.Println("No build file detected")
 				var err error
 				buildType, buildFilePath, err = input.AddProjectWalkthrough()
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			}
 
@@ -124,10 +123,10 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 					BuildFilePath: buildFilePath,
 				},
 			}); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("An inertia.toml configuration file has been created to store project settings!")
-			println("\nYou can now use 'inertia remote add' to set up your remote VPS instance.")
+			out.Println("An inertia.toml configuration file has been created to store project settings!")
+			out.Println("\nYou can now use 'inertia remote add' to set up your remote VPS instance.")
 		},
 	}
 	init.Flags().String(flagGitRemote, "origin", "git remote to use for continuous deployment")

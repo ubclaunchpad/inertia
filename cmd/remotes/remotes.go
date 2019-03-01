@@ -15,7 +15,7 @@ import (
 	"github.com/ubclaunchpad/inertia/client/runner"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
@@ -34,12 +34,12 @@ func AttachRemotesCmds(root *core.Cmd) {
 	var remotes = make(map[string]bool)
 	for _, r := range cfg.Remotes {
 		if _, ok := remotes[r.Name]; ok {
-			output.Fatalf("you have configured multiple remotes named '%s' - please rename one in %s",
+			out.Fatalf("you have configured multiple remotes named '%s' - please rename one in %s",
 				r.Name, local.InertiaConfigPath())
 		}
 		for _, child := range root.Commands() {
 			if child.Name() == r.Name {
-				output.Fatalf("you have configured a remote named '%s', which is an Inertia command - please rename it in %s",
+				out.Fatalf("you have configured a remote named '%s', which is an Inertia command - please rename it in %s",
 					r.Name, local.InertiaConfigPath())
 			}
 		}
@@ -114,10 +114,10 @@ If the SSH key for your remote requires a passphrase, it can be provided via 'ID
 Run 'inertia [remote] init' to gather this information.`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if host.client == nil || host.project == nil {
-				output.Fatal("failed to read configuration")
+				out.Fatal("failed to read configuration")
 			}
 			if host.getRemote().Version != inertia.Version {
-				fmt.Printf("[WARNING] Remote configuration version '%s' does not match your Inertia CLI version '%s'\n",
+				out.Printf("[WARNING] Remote configuration version '%s' does not match your Inertia CLI version '%s'\n",
 					host.getRemote().Version, inertia.Version)
 			}
 			var debug, _ = cmd.Flags().GetBool(flagDebug)
@@ -125,9 +125,9 @@ Run 'inertia [remote] init' to gather this information.`,
 		},
 	}
 	host.PersistentFlags().BoolP(flagShort, "s", false,
-		"don't stream output from command")
+		"don't stream out from command")
 	host.PersistentFlags().Bool(flagDebug, false,
-		"enable debug output from Inertia client")
+		"enable debug out from Inertia client")
 
 	// attach children
 	host.attachInitCmd()
@@ -168,9 +168,9 @@ This requires an Inertia daemon to be active on your remote - do this by running
 			var profileName = root.getRemote().GetProfile(root.project.Name)
 			profile, found := root.project.GetProfile(profileName)
 			if !found {
-				output.Fatalf("could not find profile '%s'", profileName)
+				out.Fatalf("could not find profile '%s'", profileName)
 			}
-			fmt.Printf("deploying project '%s' using profile '%s'\n", root.project.Name, profileName)
+			out.Printf("deploying project '%s' using profile '%s'\n", root.project.Name, profileName)
 
 			// Make up request
 			var req = client.UpRequest{
@@ -185,10 +185,10 @@ This requires an Inertia daemon to be active on your remote - do this by running
 				err = root.client.UpWithOutput(root.ctx, req)
 			}
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 			if !short {
-				println("project deployment successfully started!")
+				out.Println("project deployment successfully started!")
 			}
 		},
 	}
@@ -205,9 +205,9 @@ func (root *HostCmd) attachDownCmd() {
 Requires project to be online - do this by running 'inertia [remote] up`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := root.client.Down(root.ctx); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("project successfully shut down")
+			out.Println("project successfully shut down")
 		},
 	}
 	root.AddCommand(down)
@@ -223,16 +223,16 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 		Run: func(cmd *cobra.Command, args []string) {
 			status, err := root.client.Status(root.ctx)
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			host, err := root.getRemote().DaemonAddr()
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			fmt.Printf("daemon on remote '%s' is online at %s\n",
+			out.Printf("daemon on remote '%s' is online at %s\n",
 				root.remote, host)
-			println(output.FormatStatus(status))
+			out.Println(out.FormatStatus(status))
 		},
 	}
 	root.AddCommand(stat)
@@ -266,13 +266,13 @@ Use 'inertia [remote] status' to see which containers are active.`,
 				// if short, just grab the last x log entries
 				logs, err := root.client.Logs(root.ctx, req)
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
-				println(strings.Join(logs, "\n"))
+				out.Println(strings.Join(logs, "\n"))
 			} else {
 				// if not short, open a websocket to stream logs
 				if err := root.client.LogsWithOutput(root.ctx, req); err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			}
 		},
@@ -288,9 +288,9 @@ func (root *HostCmd) attachPruneCmd() {
 		Long:  `Prunes Docker assets and images from your remote to free up storage space.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := root.client.Prune(root.ctx); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			fmt.Printf("docker assets have been pruned")
+			out.Printf("docker assets have been pruned")
 		},
 	}
 	root.AddCommand(prune)
@@ -304,10 +304,10 @@ func (root *HostCmd) attachSSHCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			sshc, err := root.client.GetSSHClient()
 			if err != nil {
-				output.Fatal(err.Error())
+				out.Fatal(err.Error())
 			}
 			if err := sshc.GetRunner().RunSession(args...); err != nil {
-				output.Fatal(err.Error())
+				out.Fatal(err.Error())
 			}
 		},
 	}
@@ -332,11 +332,11 @@ func (root *HostCmd) attachSendFileCmd() {
 			// Open file with given name
 			cwd, err := os.Getwd()
 			if err != nil {
-				output.Fatal(err.Error())
+				out.Fatal(err.Error())
 			}
 			f, err := os.Open(path.Join(cwd, args[0]))
 			if err != nil {
-				output.Fatal(err.Error())
+				out.Fatal(err.Error())
 			}
 
 			// Get flag for destination
@@ -352,13 +352,13 @@ func (root *HostCmd) attachSendFileCmd() {
 			// Initiate copy
 			sshc, err := root.client.GetSSHClient()
 			if err != nil {
-				output.Fatal(err.Error())
+				out.Fatal(err.Error())
 			}
 			if err = sshc.GetRunner().CopyFile(f, remotePath, permissions); err != nil {
-				output.Fatal(err.Error())
+				out.Fatal(err.Error())
 			}
 
-			fmt.Println("File", args[0], "has been copied to", remotePath, "on remote", root.remote)
+			out.Println("File", args[0], "has been copied to", remotePath, "on remote", root.remote)
 		},
 	}
 	sendFile.Flags().StringP(flagDest, "d", "", "path relative from project root to send file to")
@@ -386,12 +386,12 @@ webhook URL enables continuous deployment as your repository is updated.`,
 				RepoName: repo,
 				Out:      os.Stdout,
 			}); err != nil {
-				output.Fatal(err.Error())
+				out.Fatal(err.Error())
 			}
 
 			// write back to configuration
 			if err := local.SaveRemote(root.getRemote()); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 		},
 	}
@@ -408,9 +408,9 @@ On this remote, this kills all active containers and clears the project director
 allowing you to assign a different Inertia project to this remote.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := root.client.Reset(root.ctx); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			fmt.Printf("project on remote '%s' successfully reset\n", root.remote)
+			out.Printf("project on remote '%s' successfully reset\n", root.remote)
 		},
 	}
 	root.AddCommand(reset)
@@ -423,32 +423,32 @@ func (root *HostCmd) attachUninstallCmd() {
 		Long: `Shuts down and removes the Inertia daemon, and removes the Inertia
 directory (~/inertia) from your remote host.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			println("WARNING: This will stop down your project and remove the Inertia daemon.")
-			println("This is irreversible. Continue? (y/n)")
+			out.Println("WARNING: This will stop down your project and remove the Inertia daemon.")
+			out.Println("This is irreversible. Continue? (y/n)")
 			var response string
 			if _, err := fmt.Scanln(&response); err != nil || response != "y" {
-				output.Fatal("aborting")
+				out.Fatal("aborting")
 			}
 
 			sshc, err := root.client.GetSSHClient()
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			// Daemon down
-			println("Stopping project...")
+			out.Println("Stopping project...")
 			if err = root.client.Down(root.ctx); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("Stopping daemon...")
+			out.Println("Stopping daemon...")
 			if err = sshc.DaemonDown(); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("Removing Inertia directories...")
+			out.Println("Removing Inertia directories...")
 			if err = sshc.UninstallInertia(); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("Uninstallation completed.")
+			out.Println("Uninstallation completed.")
 		},
 	}
 	root.AddCommand(uninstall)
@@ -462,9 +462,9 @@ func (root *HostCmd) attachTokenCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			token, err := root.client.Token(root.ctx)
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println(token)
+			out.Println(token)
 		},
 	}
 	root.AddCommand(token)
@@ -479,12 +479,12 @@ func (root *HostCmd) attachUpgradeCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			sshc, err := root.client.GetSSHClient()
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
-			println("Shutting down daemon...")
+			out.Println("Shutting down daemon...")
 			if err = sshc.DaemonDown(); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			var version = root.getRemote().Version
@@ -492,9 +492,9 @@ func (root *HostCmd) attachUpgradeCmd() {
 				version = v
 			}
 
-			fmt.Printf("Starting up the Inertia daemon (version %s)\n", version)
+			out.Printf("Starting up the Inertia daemon (version %s)\n", version)
 			if err := sshc.DaemonUp(); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 		},
 	}

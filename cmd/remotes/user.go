@@ -2,16 +2,15 @@ package remotescmd
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"syscall"
 
-	"github.com/ubclaunchpad/inertia/client"
-	"github.com/ubclaunchpad/inertia/local"
-
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"golang.org/x/crypto/ssh/terminal"
+
+	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
+	"github.com/ubclaunchpad/inertia/local"
 )
 
 // UserCmd is the parent class for the 'user' subcommands
@@ -63,17 +62,17 @@ from the Inertia CLI (using 'inertia [remote] user login').
 Use the --admin flag to create an admin user.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print("Enter a password for user: ")
+			out.Print("Enter a password for user: ")
 			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
-				output.Fatal("Invalid password")
+				out.Fatal("Invalid password")
 			}
 			var password = strings.TrimSpace(string(bytePassword))
-			fmt.Print("\n")
+			out.Print("\n")
 
 			var admin, _ = cmd.Flags().GetBool(flagAdmin)
 			if err := root.getUserClient().AddUser(root.context(), args[0], password, admin); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 		},
 	}
@@ -92,9 +91,9 @@ remotely.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := root.getUserClient().RemoveUser(root.context(), args[0]); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("user has been removed")
+			out.Println("user has been removed")
 		},
 	}
 	root.AddCommand(remove)
@@ -108,11 +107,11 @@ func (root *UserCmd) attachLoginCmd() {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var username = args[0]
-			fmt.Print("Password: ")
+			out.Print("Password: ")
 			pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
-			fmt.Println()
+			out.Println()
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			var totp, _ = cmd.Flags().GetString("totp")
@@ -123,30 +122,30 @@ func (root *UserCmd) attachLoginCmd() {
 			}
 			token, err := root.getUserClient().Authenticate(root.context(), req)
 			if err != nil && err != client.ErrNeedTotp {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			if err == client.ErrNeedTotp {
 				// a TOTP is required
-				fmt.Print("Authentication code (or backup code): ")
+				out.Print("Authentication code (or backup code): ")
 				totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
-				fmt.Println()
+				out.Println()
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 				req.TOTP = string(totpBytes)
 				token, err = root.getUserClient().Authenticate(root.context(), req)
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			}
 
 			root.host.getRemote().Daemon.Token = token
 			if err = local.SaveRemote(root.host.getRemote()); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
-			fmt.Println("you have been logged in successfully, and a token has been saved")
+			out.Println("you have been logged in successfully, and a token has been saved")
 		},
 	}
 	login.Flags().String("totp", "", "auth code or backup code for 2FA")
@@ -162,9 +161,9 @@ will no longer be able to log in and view or configure the deployment
 remotely.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := root.getUserClient().ResetUsers(root.context()); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("all users removed")
+			out.Println("all users removed")
 		},
 	}
 	root.AddCommand(reset)
@@ -178,9 +177,9 @@ func (root *UserCmd) attachListCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			users, err := root.getUserClient().ListUsers(root.context())
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println(strings.Join(users, "\n"))
+			out.Println(strings.Join(users, "\n"))
 		},
 	}
 	root.AddCommand(list)

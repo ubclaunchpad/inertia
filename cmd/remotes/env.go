@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 )
 
 // EnvCmd is the parent class for the 'env' subcommands
@@ -61,9 +61,9 @@ variables are applied to all deployed containers.`,
 				encrypt,
 				false,
 			); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("env value successfully updated")
+			out.Println("env value successfully updated")
 		},
 	}
 	set.Flags().BoolP(flagEncrypt, "e", false, "encrypt variable when stored")
@@ -85,9 +85,9 @@ and persistent environment storage.`,
 				false,
 				true,
 			); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			println("env value successfully removed")
+			out.Println("env value successfully removed")
 		},
 	}
 	root.AddCommand(remove)
@@ -102,13 +102,13 @@ variables are not be decrypted.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			variables, err := root.host.client.ListEnv(root.Context())
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			if len(variables) == 0 {
-				println("no variables configured on remote")
+				out.Println("no variables configured on remote")
 			} else {
-				println(strings.Join(variables, "\n"))
+				out.Println(strings.Join(variables, "\n"))
 			}
 		},
 	}

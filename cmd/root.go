@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/ubclaunchpad/inertia/cmd/core"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 	projectcmd "github.com/ubclaunchpad/inertia/cmd/project"
 	provisioncmd "github.com/ubclaunchpad/inertia/cmd/provision"
 	remotecmd "github.com/ubclaunchpad/inertia/cmd/remote"
@@ -30,7 +30,7 @@ func NewInertiaCmd(version, inertiaConfigPath string) *core.Cmd {
 		Use:     "inertia",
 		Version: getVersion(version),
 		Short:   "Effortless, self-hosted continuous deployment for small teams and projects",
-		Long: fmt.Sprintf(`Inertia is an effortless, self-hosted continuous deployment platform.
+		Long: out.Sprintf(`%s
 
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continuously update the production server
@@ -42,9 +42,11 @@ available remotes, use 'inertia remote ls'.
 
 Global inertia configuration is stored in '%s'.
 
-* Repository:    https://github.com/ubclaunchpad/inertia/
-* Issue tracker: https://github.com/ubclaunchpad/inertia/issues
-* Documentation: https://inertia.ubclaunchpad.com`, inertiaConfigPath),
+:computer: Repository:    https://github.com/ubclaunchpad/inertia/
+:ticket: Issue tracker: https://github.com/ubclaunchpad/inertia/issues
+:books: Documentation: https://inertia.ubclaunchpad.com`,
+			out.C("Inertia is an effortless, self-hosted continuous deployment platform :rocket:", out.CY, out.BO),
+			inertiaConfigPath),
 		DisableAutoGenTag: true,
 	}
 

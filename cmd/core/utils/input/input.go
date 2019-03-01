@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 )
 
 var (
@@ -32,7 +33,7 @@ func CatchSigterm(cancelFunc func()) {
 
 // Prompt prints the given query and reads the response
 func Prompt(query string) (string, error) {
-	println(query)
+	out.Println(query)
 	var response string
 	if _, err := fmt.Fscanln(os.Stdin, &response); err != nil {
 		return "", err
@@ -42,7 +43,7 @@ func Prompt(query string) (string, error) {
 
 // Promptf prints the given query and reads the response
 func Promptf(query string, args ...interface{}) (string, error) {
-	fmt.Printf(query+"\n", args...)
+	out.Printf(query+"\n", args...)
 	var response string
 	if _, err := fmt.Fscanln(os.Stdin, &response); err != nil {
 		return "", err
@@ -55,9 +56,9 @@ func Promptf(query string, args ...interface{}) (string, error) {
 func AddProjectWalkthrough() (
 	buildType cfg.BuildType, buildFilePath string, err error,
 ) {
-	println("Please enter the build type of your project - this could be one of:")
-	println("  - docker-compose")
-	println("  - dockerfile")
+	out.Println("Please enter the build type of your project - this could be one of:")
+	out.Println("  - docker-compose")
+	out.Println("  - dockerfile")
 
 	var response string
 	if _, err = fmt.Fscanln(os.Stdin, &response); err != nil {
@@ -78,7 +79,7 @@ func AddProjectWalkthrough() (
 // EnterEC2CredentialsWalkthrough prints promts to stdout and reads input from
 // given reader
 func EnterEC2CredentialsWalkthrough() (id, key string, err error) {
-	print(`To get your credentials:
+	out.Print(`To get your credentials:
 	1. Open the IAM console (https://console.aws.amazon.com/iam/home?#home).
 	2. In the navigation pane of the console, choose Users. You may have to create a user.
 	3. Choose your IAM user name (not the check box).
@@ -91,14 +92,14 @@ func EnterEC2CredentialsWalkthrough() (id, key string, err error) {
 
 	var response string
 
-	print("\nKey ID:       ")
+	out.Print("\nKey ID:       ")
 	_, err = fmt.Fscanln(os.Stdin, &response)
 	if err != nil {
 		return
 	}
 	id = response
 
-	print("\nAccess Key:   ")
+	out.Print("\nAccess Key:   ")
 	_, err = fmt.Fscanln(os.Stdin, &response)
 	if err != nil {
 		return
@@ -110,11 +111,11 @@ func EnterEC2CredentialsWalkthrough() (id, key string, err error) {
 // ChooseFromListWalkthrough prints given options and reads in a choice from
 // the given reader
 func ChooseFromListWalkthrough(optionName string, options []string) (string, error) {
-	fmt.Printf("Available %ss:\n", optionName)
+	out.Printf("Available %ss:\n", optionName)
 	for _, o := range options {
-		println("  > " + o)
+		out.Println("  > " + o)
 	}
-	fmt.Printf("Please enter your desired %s: ", optionName)
+	out.Printf("Please enter your desired %s: ", optionName)
 
 	var response string
 	_, err := fmt.Fscanln(os.Stdin, &response)
