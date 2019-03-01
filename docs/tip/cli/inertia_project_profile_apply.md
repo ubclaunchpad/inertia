@@ -24,6 +24,7 @@ inertia project profile apply [profile] [remote] [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --simple          disable colour output
 ```
 
 ### SEE ALSO

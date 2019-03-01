@@ -1,6 +1,6 @@
 ## inertia project profile show
 
-Output profile configuration
+out profile configuration
 
 ### Synopsis
 
@@ -21,6 +21,7 @@ inertia project profile show [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --simple          disable colour output
 ```
 
 ### SEE ALSO

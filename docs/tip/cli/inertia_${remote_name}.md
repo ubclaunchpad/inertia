@@ -19,15 +19,16 @@ Run 'inertia [remote] init' to gather this information.
 ### Options
 
 ```
-      --debug   enable debug output from Inertia client
+      --debug   enable debug out from Inertia client
   -h, --help    help for ${remote_name}
-  -s, --short   don't stream output from command
+  -s, --short   don't stream out from command
 ```
 
 ### Options inherited from parent commands
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --simple          disable colour output
 ```
 
 ### SEE ALSO

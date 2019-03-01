@@ -21,8 +21,9 @@ inertia ${remote_name} uninstall [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-  -s, --short           don't stream output from command
-      --verify-ssl      verify SSL communications - requires a signed SSL certificate
+      --debug           enable debug out from Inertia client
+  -s, --short           don't stream out from command
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

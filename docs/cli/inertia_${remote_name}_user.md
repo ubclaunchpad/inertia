@@ -16,8 +16,9 @@ Configure user access to the Inertia Web application.
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-  -d, --debug           enable debug output from Inertia client
-  -s, --short           don't stream output from command
+      --debug           enable debug out from Inertia client
+  -s, --short           don't stream out from command
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

@@ -16,8 +16,9 @@ Manage 2FA TOTP settings for registered users on your Inertia daemon
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-      --debug           enable debug output from Inertia client
-  -s, --short           don't stream output from command
+      --debug           enable debug out from Inertia client
+  -s, --short           don't stream out from command
+      --simple          disable colour output
 ```
 
 ### SEE ALSO

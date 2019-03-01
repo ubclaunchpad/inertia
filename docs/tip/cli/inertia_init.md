@@ -36,6 +36,7 @@ inertia init my_awesome_project
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --simple          disable colour output
 ```
 
 ### SEE ALSO
