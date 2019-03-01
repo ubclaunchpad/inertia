@@ -27,10 +27,31 @@ func NewInertiaCmd(version, inertiaConfigPath string) *core.Cmd {
 	// instantiate top-level command
 	var root = &core.Cmd{}
 	root.Command = &cobra.Command{
-		Use:     "inertia",
-		Version: getVersion(version),
-		Short:   "Effortless, self-hosted continuous deployment for small teams and projects",
-		Long: out.Sprintf(`%s
+		Use:               "inertia",
+		Version:           getVersion(version),
+		Short:             "Effortless, self-hosted continuous deployment for small teams and projects",
+		DisableAutoGenTag: true,
+	}
+
+	// persistent flags across all children
+	root.PersistentFlags().StringVar(&root.ProjectConfigPath, "config", "inertia.toml", "specify relative path to Inertia configuration")
+	root.PersistentFlags().Bool("simple", false, "disable colour and emoji output")
+	// hack in flag parsing - this must be done because we need to initialize the
+	// host commands properly when Cobra first constructs the command tree, which
+	// occurs before the built-in flag parser
+	for i, arg := range os.Args {
+		if arg == "--config" {
+			root.ProjectConfigPath = os.Args[i+1]
+			break
+		}
+		if arg == "--simple" {
+			os.Setenv(out.EnvColorToggle, "false")
+			os.Setenv(out.EnvEmojiToggle, "false")
+		}
+	}
+
+	// generate rendered output *after* setting --simple if required
+	root.Command.Long = out.Sprintf(`%s
 
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continuously update the production server
@@ -45,22 +66,8 @@ Global inertia configuration is stored in '%s'.
 :computer: Repository:    https://github.com/ubclaunchpad/inertia/
 :ticket: Issue tracker: https://github.com/ubclaunchpad/inertia/issues
 :books: Documentation: https://inertia.ubclaunchpad.com`,
-			out.C("Inertia is an effortless, self-hosted continuous deployment platform :rocket:", out.CY, out.BO),
-			inertiaConfigPath),
-		DisableAutoGenTag: true,
-	}
-
-	// persistent flags across all children
-	root.PersistentFlags().StringVar(&root.ProjectConfigPath, "config", "inertia.toml", "specify relative path to Inertia configuration")
-	// hack in flag parsing - this must be done because we need to initialize the
-	// host commands properly when Cobra first constructs the command tree, which
-	// occurs before the built-in flag parser
-	for i, arg := range os.Args {
-		if arg == "--config" {
-			root.ProjectConfigPath = os.Args[i+1]
-			break
-		}
-	}
+		out.C("Inertia is an effortless, self-hosted continuous deployment platform :rocket:", out.CY, out.BO),
+		inertiaConfigPath)
 
 	// attach children to root 'inertia' command
 	attachInitCmd(root)

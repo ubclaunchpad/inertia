@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd"
-
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 	remotescmd "github.com/ubclaunchpad/inertia/cmd/remotes"
@@ -36,6 +36,7 @@ For documentation regarding the daemon API, refer to the [API Reference](https:/
 )
 
 func main() {
+	os.Setenv(out.EnvColorToggle, "false")
 	var root = cmd.NewInertiaCmd(Version, "~/.inertia/inertia.global")
 	if err := newDocgenCmd(root).Execute(); err != nil {
 		fmt.Println(err)

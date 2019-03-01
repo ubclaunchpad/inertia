@@ -3,21 +3,64 @@ package out
 import (
 	// use bobheadxi/emoji until https://github.com/kyokomi/emoji/pull/32 gets
 	// merged, for Stringer compatibility for the Colour class
+
+	"fmt"
+	"os"
+
 	"github.com/bobheadxi/emoji"
 	"github.com/fatih/color"
 )
 
+const (
+	// EnvEmojiToggle is the environment variable used to disable or enable emoji
+	EnvEmojiToggle = "INERTIA_EMOJI"
+	// EnvColorToggle is the environment variable used to disable or enable colors
+	EnvColorToggle = "INERTIA_COLOR"
+)
+
+// WithColor checks if colouring should be enabled
+func WithColor() bool {
+	var toggle = os.Getenv(EnvColorToggle)
+	return toggle == "" || toggle == "true" || toggle == "on"
+}
+
+// WithEmoji checks if emoji should be enabled
+func WithEmoji() bool {
+	var toggle = os.Getenv(EnvEmojiToggle)
+	return toggle == "" || toggle == "true" || toggle == "on"
+}
+
 // Sprintf wraps formatters
-func Sprintf(format string, args ...interface{}) string { return emoji.Sprintf(format, args...) }
+func Sprintf(format string, args ...interface{}) string {
+	if WithEmoji() {
+		return emoji.Sprintf(format, args...)
+	}
+	return fmt.Sprintf(format, args...)
+}
 
 // Printf wraps formatters
-func Printf(format string, args ...interface{}) { emoji.Printf(format, args...) }
+func Printf(format string, args ...interface{}) {
+	if WithEmoji() {
+		emoji.Printf(format, args...)
+	}
+	fmt.Printf(format, args...)
+}
 
 // Println wraps formatters
-func Println(args ...interface{}) { emoji.Println(args...) }
+func Println(args ...interface{}) {
+	if WithEmoji() {
+		emoji.Println(args...)
+	}
+	fmt.Println(args...)
+}
 
 // Print wraps formatters
-func Print(args ...interface{}) { emoji.Print(args...) }
+func Print(args ...interface{}) {
+	if WithEmoji() {
+		emoji.Print(args...)
+	}
+	fmt.Print(args...)
+}
 
 // ColorTraits denotes colour customizations
 type ColorTraits color.Attribute
@@ -66,6 +109,11 @@ func (c *Color) With(args ...interface{}) *Color {
 
 // String lets us provide a custom stringifier
 func (c Color) String() string {
+	if WithColor() {
+		c.C.EnableColor()
+	} else {
+		c.C.DisableColor()
+	}
 	if len(c.args) > 0 {
 		return c.C.Sprintf(c.S, c.args...)
 	}
