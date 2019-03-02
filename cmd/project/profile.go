@@ -39,16 +39,16 @@ func (p *ProfileCmd) attachSetCmd() {
 		flagBuildType     = "build.type"
 		flagBuildFilePath = "build.file"
 	)
-	var set = &cobra.Command{
-		Use:   "set [profile]",
+	var configure = &cobra.Command{
+		Use:   "configure [profile]",
 		Short: "Configure project profiles",
 		Long: `Configures project profiles - if the given profile does not exist,
 a new one is created, otherwise the existing one is overwritten.
 
 Provide profile values via the available flags.`,
-		Aliases: []string{"new", "add"},
+		Aliases: []string{"add", "set"},
 		Args:    cobra.ExactArgs(1),
-		Example: "inertia project profile set my_profile --build.type dockerfile --build.file Dockerfile.dev",
+		Example: "inertia project profile configure my_profile --build.type dockerfile --build.file Dockerfile.dev",
 		Run: func(cmd *cobra.Command, args []string) {
 			var (
 				err       error
@@ -81,15 +81,15 @@ Provide profile values via the available flags.`,
 			if err := local.Write(p.root.projectConfigPath, p.root.config); err != nil {
 				out.Fatal(err)
 			}
-			out.Printf("profile '%s' successfully updated", args[0])
+			out.Printf("profile '%s' successfully updated\n", args[0])
 		},
 	}
-	set.Flags().String(flagBranch, "", "branch for profile (default: current branch)")
-	set.Flags().String(flagBuildType, "", "build type for profile")
-	set.MarkFlagRequired(flagBuildType)
-	set.Flags().String(flagBuildFilePath, "", "relative path to build config file (e.g. 'Dockerfile')")
-	set.MarkFlagRequired(flagBuildFilePath)
-	p.AddCommand(set)
+	configure.Flags().String(flagBranch, "", "branch for profile (default: current branch)")
+	configure.Flags().String(flagBuildType, "", "build type for profile")
+	configure.MarkFlagRequired(flagBuildType)
+	configure.Flags().String(flagBuildFilePath, "", "relative path to build config file (e.g. 'Dockerfile')")
+	configure.MarkFlagRequired(flagBuildFilePath)
+	p.AddCommand(configure)
 }
 
 func (p *ProfileCmd) attachApplyCmd() {
@@ -130,7 +130,7 @@ func (p *ProfileCmd) attachListCmd() {
 		Use:   "ls",
 		Short: "List configured project profiles",
 		Long: `List configured profiles for this project. To add new ones, use
-'inertia project profile set'.`,
+'inertia project profile configure'.`,
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			if p.root.config.Profiles == nil {
@@ -159,7 +159,7 @@ func (p *ProfileCmd) attachShowCmd() {
 		Use:   "show",
 		Short: "out profile configuration",
 		Long: `Prints the requested profile configuration. To add new ones, use
-'inertia project profile set'.`,
+'inertia project profile configure'.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			pf, ok := p.root.config.GetProfile(args[0])
