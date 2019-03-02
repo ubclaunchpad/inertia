@@ -59,6 +59,15 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 				}
 			}
 
+			// check for local config
+			if _, err := local.GetProject(inertia.ProjectConfigPath); err == nil {
+				out.Fatalf("aborting: inertia configuration already exists at %s",
+					inertia.ProjectConfigPath)
+			}
+
+			// set up coloured writer
+			var highlight = out.NewColorer(out.CY)
+
 			// Set project name
 			var project string
 			if len(args) == 1 {
@@ -67,6 +76,7 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 				cwd, _ := os.Getwd()
 				project = filepath.Base(cwd)
 			}
+			out.Printf("initializing project '%s'\n", project)
 
 			// Check for repo
 			if err := git.IsRepo("."); err != nil {
@@ -85,8 +95,12 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 			if err != nil {
 				out.Fatal(err)
 			}
-			if resp, err := input.Promptf("Enter the branch you would like to deploy (leave blank for '%s'):",
-				branch); err == nil {
+			if resp, err := input.Promptf(
+				":evergreen_tree: %s",
+				highlight.Sf(
+					"Enter the branch you would like to deploy (leave blank for '%s'):",
+					branch,
+				)); err == nil {
 				branch = resp
 			}
 
@@ -98,24 +112,27 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 
 			// docker-compose projects will usually have Dockerfiles, so check for
 			// docker-compose.yml first, then check for Dockerfile
+			out.Println("detecting project type...")
 			if common.CheckForDockerCompose(".") {
-				out.Println("docker-compose project detected")
+				out.Println("docker-compose project detected :whale:")
 				buildType = cfg.DockerCompose
 				buildFilePath = "docker-compose.yml"
 			} else if common.CheckForDockerfile(".") {
-				out.Println("Dockerfile project detected")
+				out.Println("Dockerfile project detected :whale:")
 				buildType = cfg.Dockerfile
 				buildFilePath = "Dockerfile"
 			} else {
-				out.Println("No build file detected")
+				out.Println(":question: no build file detected")
 				var err error
 				buildType, buildFilePath, err = input.AddProjectWalkthrough()
 				if err != nil {
 					out.Fatal(err)
 				}
 			}
+			out.Printf(":hammer: %s\n", highlight.Sf("Profile created with %s configuration.", buildType))
 
 			// Hello world config file!
+			out.Printf("Initializing configuration file at %s...\n", inertia.ProjectConfigPath)
 			if err := local.InitProject(inertia.ProjectConfigPath, project, host, cfg.Profile{
 				Branch: branch,
 				Build: &cfg.Build{
@@ -125,8 +142,10 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 			}); err != nil {
 				out.Fatal(err)
 			}
-			out.Println("An inertia.toml configuration file has been created to store project settings!")
-			out.Println("\nYou can now use 'inertia remote add' to set up your remote VPS instance.")
+
+			out.Printf(":books: %s\n",
+				highlight.S("An inertia.toml configuration file has been created to store project settings!"))
+			out.Println("You can now use 'inertia remote add' to set up your remote VPS instance.")
 		},
 	}
 	init.Flags().String(flagGitRemote, "origin", "git remote to use for continuous deployment")
