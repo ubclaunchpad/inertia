@@ -42,24 +42,27 @@ func Sprintf(format string, args ...interface{}) string {
 func Printf(format string, args ...interface{}) {
 	if WithEmoji() {
 		emoji.Printf(format, args...)
+	} else {
+		fmt.Printf(format, args...)
 	}
-	fmt.Printf(format, args...)
 }
 
 // Println wraps formatters
 func Println(args ...interface{}) {
 	if WithEmoji() {
 		emoji.Println(args...)
+	} else {
+		fmt.Println(args...)
 	}
-	fmt.Println(args...)
 }
 
 // Print wraps formatters
 func Print(args ...interface{}) {
 	if WithEmoji() {
 		emoji.Print(args...)
+	} else {
+		fmt.Print(args...)
 	}
-	fmt.Print(args...)
 }
 
 // ColorTraits denotes colour customizations
