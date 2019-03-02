@@ -62,18 +62,26 @@ from the Inertia CLI (using 'inertia [remote] user login').
 Use the --admin flag to create an admin user.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			out.Print("Enter a password for user: ")
+			out.Print(out.C(":key: Enter a password for user: ", out.CY))
 			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+			out.Print("\n")
 			if err != nil {
 				out.Fatal("Invalid password")
 			}
 			var password = strings.TrimSpace(string(bytePassword))
-			out.Print("\n")
-
+			if password == "" {
+				out.Fatal("Invalid password")
+			}
 			var admin, _ = cmd.Flags().GetBool(flagAdmin)
+			if admin {
+				out.Printf("creating user '%s' as an administrator...\n", args[0])
+			} else {
+				out.Printf("creating user '%s'...\n", args[0])
+			}
 			if err := root.getUserClient().AddUser(root.context(), args[0], password, admin); err != nil {
 				out.Fatal(err)
 			}
+			out.Println("user has been created")
 		},
 	}
 	add.Flags().Bool(flagAdmin, false, "create a user with administrator permissions")
