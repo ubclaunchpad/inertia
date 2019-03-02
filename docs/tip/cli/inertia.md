@@ -4,28 +4,28 @@ Effortless, self-hosted continuous deployment for small teams and projects
 
 ### Synopsis
 
-[36;1mInertia is an effortless, self-hosted continuous deployment platform 🚀 [0m
+Inertia is an effortless, self-hosted continuous deployment platform :rocket:
 
-	Initialization involves preparing a server to run an application, then
-	activating a daemon which will continuously update the production server
-	with new releases as they become available in the project's repository.
-	
-	Once you have set up a remote with 'inertia remote add [remote]', use 
-	'inertia [remote] --help' to see what you can do with your remote. To list
-	available remotes, use 'inertia remote ls'.
-	
-	Global inertia configuration is stored in '~/.inertia/inertia.global'.
-	
-	💻  Repository:    https://github.com/ubclaunchpad/inertia/
-	🎫  Issue tracker: https://github.com/ubclaunchpad/inertia/issues
-	📚  Documentation: https://inertia.ubclaunchpad.com
+Initialization involves preparing a server to run an application, then
+activating a daemon which will continuously update the production server
+with new releases as they become available in the project's repository.
+
+Once you have set up a remote with 'inertia remote add [remote]', use 
+'inertia [remote] --help' to see what you can do with your remote. To list
+available remotes, use 'inertia remote ls'.
+
+Global inertia configuration is stored in '~/.inertia/inertia.global'.
+
+💻  Repository:    https://github.com/ubclaunchpad/inertia/
+🎫  Issue tracker: https://github.com/ubclaunchpad/inertia/issues
+📚  Documentation: https://inertia.ubclaunchpad.com
 
 ### Options
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
   -h, --help            help for inertia
-      --simple          disable colour output
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

@@ -5,7 +5,7 @@ List configured project profiles
 ### Synopsis
 
 List configured profiles for this project. To add new ones, use
-'inertia project profile set'.
+'inertia project profile configure'.
 
 ```
 inertia project profile ls [flags]

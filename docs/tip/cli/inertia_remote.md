@@ -26,7 +26,7 @@ inertia gcloud status      # check on status of Inertia daemon
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-      --simple          disable colour output
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

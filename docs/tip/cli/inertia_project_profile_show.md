@@ -5,7 +5,7 @@ out profile configuration
 ### Synopsis
 
 Prints the requested profile configuration. To add new ones, use
-'inertia project profile set'.
+'inertia project profile configure'.
 
 ```
 inertia project profile show [flags]
@@ -21,7 +21,7 @@ inertia project profile show [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-      --simple          disable colour output
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO
