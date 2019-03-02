@@ -1,4 +1,4 @@
-package output
+package out
 
 import (
 	"fmt"
@@ -52,19 +52,20 @@ func FormatStatus(s *api.DeploymentStatus) string {
 // FormatRemoteDetails prints the given remote configuration
 func FormatRemoteDetails(remote cfg.Remote) string {
 	var remoteString string
-	remoteString += fmt.Sprintf("* IP:                   %s\n", remote.IP)
-	remoteString += fmt.Sprintf("* Version:              %s\n", remote.Version)
+	remoteString += fmt.Sprintf(":globe_with_meridians: IP:                   %s\n", remote.IP)
+	remoteString += fmt.Sprintf(":airplane: Version:              %s\n", remote.Version)
 	if remote.Daemon != nil {
-		remoteString += fmt.Sprintf("* Daemon.Port:          %s\n", remote.Daemon.Port)
-		remoteString += fmt.Sprintf("* Daemon.Authenticated: %v\n", remote.Daemon.Token != "")
-		remoteString += fmt.Sprintf("* Daemon.VerifySSL:     %v\n", remote.Daemon.VerifySSL)
+		remoteString += fmt.Sprintf(":passport_control: Daemon.Port:          %s\n", remote.Daemon.Port)
+		remoteString += fmt.Sprintf(":lock: Daemon.Authenticated: %v\n", remote.Daemon.Token != "")
+		remoteString += fmt.Sprintf(":mag: Daemon.VerifySSL:     %v\n", remote.Daemon.VerifySSL)
 	}
 	if remote.SSH != nil {
-		remoteString += fmt.Sprintf("* SSH.User:             %s\n", remote.SSH.User)
-		remoteString += fmt.Sprintf("* SSH.IdentityFile:     %s\n", remote.SSH.IdentityFile)
+		remoteString += fmt.Sprintf(":ghost: SSH.User:             %s\n", remote.SSH.User)
+		remoteString += fmt.Sprintf(":key: SSH.IdentityFile:     %s\n", remote.SSH.IdentityFile)
+		remoteString += fmt.Sprintf(":customs: SSH.Port:             %s\n", remote.SSH.SSHPort)
 	}
 	if remote.Profiles != nil {
-		remoteString += fmt.Sprintf("* Profiles:             %v", remote.Profiles)
+		remoteString += fmt.Sprintf(":open_file_folder: Profiles:             %v", remote.Profiles)
 	}
 	return remoteString
 }

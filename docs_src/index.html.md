@@ -158,7 +158,7 @@ inertia project set ${parameter} ${new_value}
 > Profiles can be updated or created using the `inertia project profile` commands:
 
 ```shell
-inertia project profile set new_profile \
+inertia project profile configure new_profile \
   --build.type dockerfile \
   --build.file Dockerfile.dev
 ```

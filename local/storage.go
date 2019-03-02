@@ -35,7 +35,7 @@ func GetInertiaConfig() (*cfg.Inertia, error) {
 	raw, err := ioutil.ReadFile(InertiaConfigPath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.New("config file doesn't exist - try running inertia config init")
+			return nil, errors.New("config file doesn't exist")
 		}
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func RemoveRemote(name string) error {
 	if !inertia.RemoveRemote(name) {
 		return fmt.Errorf("failed to remove remote '%s'", name)
 	}
-	return nil
+	return Write(InertiaConfigPath(), inertia)
 }
 
 // GetProject retrieves the Inertia project configuration at the given path

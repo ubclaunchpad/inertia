@@ -1,14 +1,13 @@
 package projectcmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 	"github.com/ubclaunchpad/inertia/local"
 )
 
@@ -36,9 +35,9 @@ For configuring remote settings, use 'inertia remote'.`,
 			var err error
 			project.config, err = local.GetProject(project.projectConfigPath)
 			if err != nil {
-				fmt.Printf("could not find project configuration at '%s': %s",
+				out.Printf("could not find project configuration at '%s': %s",
 					project.projectConfigPath, err.Error())
-				output.Fatal("try instantiating a new project using 'inertia init'")
+				out.Fatal("try instantiating a new project using 'inertia init'")
 			}
 		},
 	}
@@ -58,11 +57,11 @@ func (root *ProjectCmd) attachSetCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cfg.SetProperty(args[0], args[1], root.config); err != nil {
 				if err := local.Write(root.projectConfigPath, root.config); err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
-				println("configuration setting '" + args[0] + "' has been updated")
+				out.Println("configuration setting '" + args[0] + "' has been updated")
 			} else {
-				println("configuration setting '" + args[0] + "' not found")
+				out.Println("configuration setting '" + args[0] + "' not found")
 			}
 		},
 	}
@@ -79,14 +78,14 @@ func (root *ProjectCmd) attachResetCmd() {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := input.Prompt("would you like to reset your project configuration?")
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 			if resp == "y" || resp == "yes" {
 				if err := os.Remove(root.projectConfigPath); err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			} else {
-				output.Fatal("aborting")
+				out.Fatal("aborting")
 			}
 		},
 	}

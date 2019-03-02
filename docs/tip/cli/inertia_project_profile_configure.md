@@ -1,4 +1,4 @@
-## inertia project profile set
+## inertia project profile configure
 
 Configure project profiles
 
@@ -10,13 +10,13 @@ a new one is created, otherwise the existing one is overwritten.
 Provide profile values via the available flags.
 
 ```
-inertia project profile set [profile] [flags]
+inertia project profile configure [profile] [flags]
 ```
 
 ### Examples
 
 ```
-inertia project profile set my_profile --build.type dockerfile --build.file Dockerfile.dev
+inertia project profile configure my_profile --build.type dockerfile --build.file Dockerfile.dev
 ```
 
 ### Options
@@ -25,14 +25,14 @@ inertia project profile set my_profile --build.type dockerfile --build.file Dock
       --branch string       branch for profile (default: current branch)
       --build.file string   relative path to build config file (e.g. 'Dockerfile')
       --build.type string   build type for profile
-  -h, --help                help for set
+  -h, --help                help for configure
 ```
 
 ### Options inherited from parent commands
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-      --simple          disable colour output
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

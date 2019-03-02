@@ -1,4 +1,4 @@
-package output
+package out
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestFormatStatus(t *testing.T) {
-	output := FormatStatus(&api.DeploymentStatus{
+	out := FormatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "call",
 		CommitHash:           "me",
@@ -17,12 +17,12 @@ func TestFormatStatus(t *testing.T) {
 		BuildContainerActive: true,
 		Containers:           []string{"wow"},
 	})
-	assert.Contains(t, output, "inertia daemon 9000")
-	assert.Contains(t, output, "Active containers")
+	assert.Contains(t, out, "inertia daemon 9000")
+	assert.Contains(t, out, "Active containers")
 }
 
 func TestFormatStatusBuildActive(t *testing.T) {
-	output := FormatStatus(&api.DeploymentStatus{
+	out := FormatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "call",
 		CommitHash:           "me",
@@ -30,12 +30,12 @@ func TestFormatStatusBuildActive(t *testing.T) {
 		BuildContainerActive: true,
 		Containers:           make([]string, 0),
 	})
-	assert.Contains(t, output, "inertia daemon 9000")
-	assert.Contains(t, output, msgBuildInProgress)
+	assert.Contains(t, out, "inertia daemon 9000")
+	assert.Contains(t, out, msgBuildInProgress)
 }
 
 func TestFormatStatusNoDeployment(t *testing.T) {
-	output := FormatStatus(&api.DeploymentStatus{
+	out := FormatStatus(&api.DeploymentStatus{
 		InertiaVersion:       "9000",
 		Branch:               "",
 		CommitHash:           "",
@@ -43,20 +43,20 @@ func TestFormatStatusNoDeployment(t *testing.T) {
 		BuildContainerActive: false,
 		Containers:           make([]string, 0),
 	})
-	assert.Contains(t, output, "inertia daemon 9000")
-	assert.Contains(t, output, msgNoDeployment)
+	assert.Contains(t, out, "inertia daemon 9000")
+	assert.Contains(t, out, msgNoDeployment)
 }
 
 func TestFormatRemoteDetails(t *testing.T) {
-	var output = FormatRemoteDetails(cfg.Remote{
+	var out = FormatRemoteDetails(cfg.Remote{
 		Name: "bob",
 		SSH: &cfg.SSH{
 			User:         "tree",
 			IdentityFile: "/wow/amaze",
 		},
 	})
-	assert.Contains(t, output, "tree")
-	assert.Contains(t, output, "/wow/amaze")
-	output = FormatRemoteDetails(cfg.Remote{Name: "bob", IP: "0.0.0.0"})
-	assert.Contains(t, output, "0.0.0.0")
+	assert.Contains(t, out, "tree")
+	assert.Contains(t, out, "/wow/amaze")
+	out = FormatRemoteDetails(cfg.Remote{Name: "bob", IP: "0.0.0.0"})
+	assert.Contains(t, out, "0.0.0.0")
 }
