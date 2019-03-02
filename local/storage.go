@@ -35,7 +35,7 @@ func GetInertiaConfig() (*cfg.Inertia, error) {
 	raw, err := ioutil.ReadFile(InertiaConfigPath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.New("config file doesn't exist - try running inertia config init")
+			return nil, errors.New("config file doesn't exist")
 		}
 		return nil, err
 	}

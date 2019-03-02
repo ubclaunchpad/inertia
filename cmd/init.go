@@ -42,10 +42,14 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 				return
 			}
 
+			// set up coloured writer
+			var highlight = out.NewColorer(out.CY)
+
 			// Check for global inertia configuration
 			if _, err := local.GetInertiaConfig(); err != nil {
-				resp, err := input.Promptf("could not find global inertia configuration in %s (%s) - would you like to initialize it?",
-					local.InertiaDir(), err.Error())
+				resp, err := input.Prompt(
+					highlight.Sf(":question: Could not find global inertia configuration in %s (%s) - would you like to initialize it?",
+						local.InertiaDir(), err.Error()))
 				if err != nil {
 					out.Fatal(err)
 				}
@@ -53,7 +57,7 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 					if _, err := local.Init(); err != nil {
 						out.Fatal(err)
 					}
-					out.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
+					out.Printf("global Inertia configuration intialized at %s\n", local.InertiaConfigPath())
 				} else {
 					out.Fatal("aborting: global inertia configuration is required to set up Inertia")
 				}
@@ -64,9 +68,6 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 				out.Fatalf("aborting: inertia configuration already exists at %s",
 					inertia.ProjectConfigPath)
 			}
-
-			// set up coloured writer
-			var highlight = out.NewColorer(out.CY)
 
 			// Set project name
 			var project string
