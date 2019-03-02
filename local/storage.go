@@ -67,7 +67,7 @@ func RemoveRemote(name string) error {
 	if !inertia.RemoveRemote(name) {
 		return fmt.Errorf("failed to remove remote '%s'", name)
 	}
-	return nil
+	return Write(InertiaConfigPath(), inertia)
 }
 
 // GetProject retrieves the Inertia project configuration at the given path

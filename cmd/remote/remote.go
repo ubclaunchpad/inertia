@@ -83,13 +83,13 @@ Inertia commands.`,
 		Example: "inertia remote add staging --daemon.gen-secret --ip 1.2.3.4",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			if _, found := root.config.GetRemote(args[0]); found {
+				out.Fatalf("remote '%s' already exists", args[0])
+			}
 			for _, child := range root.Parent().Commands() {
 				if child.Name() == args[0] {
 					out.Fatalf("'%s' is the name of an Inertia command - please choose something else", args[0])
 				}
-			}
-			if _, found := root.config.GetRemote(args[0]); found {
-				out.Fatalf("remote '%s' already exists", args[0])
 			}
 			homeEnvVar, err := local.GetHomePath()
 			if err != nil {
@@ -106,16 +106,21 @@ Inertia commands.`,
 				user, _    = cmd.Flags().GetString(flagSSHUser)
 			)
 
+			out.Printf("creating new remote '%s'\n", args[0])
+			var highlight = out.NewColorer(out.CY)
 			if addr == "" {
-				addr, err = input.Prompt("Enter IP address of remote:")
+				addr, err = input.Prompt(highlight.S(":globe_with_meridians: Enter IP address of remote:"))
 				if err != nil {
 					out.Fatal(err)
+				}
+				if addr == "" {
+					out.Fatal("invalid IP address provided")
 				}
 			}
 
 			if keyPath == "" {
-				if resp, err := input.Promptf(
-					"Enter location of identity file (leave blank to use '%s'):", defaultKey,
+				if resp, err := input.Prompt(
+					highlight.Sf(":key: Enter path to identity file (leave blank to use '%s'):", defaultKey),
 				); err == nil && resp != "" {
 					keyPath = resp
 				} else {
@@ -123,30 +128,36 @@ Inertia commands.`,
 				}
 			}
 			if user == "" {
-				user, err = input.Prompt("Enter user:")
+				user, err = input.Prompt(highlight.Sf(":dancer: Enter user for the identity file:"))
 				if err != nil {
 					out.Fatal(err)
+				}
+				if user == "" {
+					out.Fatal("invalid user provided")
 				}
 			}
 
 			var webhookSecret string
 			if !genWebhookSecret {
-				secret, err := input.Prompt("Enter webhook secret (leave blank to generate one):")
+				secret, err := input.Prompt(highlight.Sf(":secret: Enter a webhook secret (leave blank to generate one):"))
 				if err == nil && secret != "" {
 					webhookSecret = secret
 				} else {
+					out.Println("generating a webhook secret...")
 					webhookSecret, err = common.GenerateRandomString()
 					if err != nil {
 						out.Fatal(err)
 					}
 				}
 			} else {
+				out.Println("generating a webhook secret...")
 				webhookSecret, err = common.GenerateRandomString()
 				if err != nil {
 					out.Fatal(err)
 				}
 			}
 
+			out.Println("saving new remote...")
 			if err := local.SaveRemote(&cfg.Remote{
 				Name:    args[0],
 				Version: root.Version,
@@ -164,11 +175,9 @@ Inertia commands.`,
 			}); err != nil {
 				out.Fatal(err)
 			}
-
-			out.Printf(`
-Remote '%s' has been added!
-You can now run 'inertia %s init' to set this remote up for continuous deployment.
-`, args[0], args[0])
+			out.Printf(highlight.Sf(":boat: Remote '%s' has been added!\n", args[0]))
+			out.Printf("You can now run 'inertia %s init' to set this remote up for continuous deployment.\n",
+				args[0])
 		},
 	}
 	addRemote.Flags().String(flagIP, "", "IP address of remote")

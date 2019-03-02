@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/ubclaunchpad/inertia/cfg"
@@ -13,6 +14,7 @@ import (
 
 var (
 	errInvalidInput = errors.New("invalid input")
+	errEmptyInput   = errors.New("empty input")
 
 	errInvalidUser          = errors.New("invalid user")
 	errInvalidAddress       = errors.New("invalid IP address")
@@ -36,6 +38,9 @@ func Prompt(query ...interface{}) (string, error) {
 	out.Println(query...)
 	var response string
 	if _, err := fmt.Fscanln(os.Stdin, &response); err != nil {
+		if strings.Contains(err.Error(), "unexpected newline") {
+			return "", nil
+		}
 		return "", err
 	}
 	return response, nil
