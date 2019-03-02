@@ -26,7 +26,7 @@
   version = "v0.4.12"
 
 [[projects]]
-  digest = "1:5587b23bb43ab016a2999fbd41f89d960190064b0b49d8146e1e0f21942cec62"
+  digest = "1:5d083e7e0ee95ec9ddabb3cf3f028fc5344a84bf17189d522ad50ab3de9fde20"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -62,16 +62,16 @@
     "service/sts",
   ]
   pruneopts = "NUT"
-  revision = "3248e106c35aafb9b982f5d086f0150faf24ee4e"
-  version = "v1.17.6"
+  revision = "f2bb620afb315242706942e6ca4c7d26ee5ed627"
+  version = "v1.17.9"
 
 [[projects]]
-  digest = "1:d80983f72b52b2801805cf00400fe9aa0024e8167b1eac21e95175a1a8a06a49"
+  digest = "1:059a2b78634d380e57ecea2cb780b17d506b7f4ca872e2f44849709903bedec5"
   name = "github.com/bobheadxi/emoji"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "eba9a9d7bfd64dcfe6e90fb3d53b2f3357a015c3"
-  version = "v2.1.0"
+  revision = "cbb51e81aa7115c66cf47164ba810f44baa29067"
+  version = "v2.2.0"
 
 [[projects]]
   digest = "1:90f59f03e8a0c973faff6d6122a4000efaee118907b5c695cc7615d2d8240538"
@@ -122,7 +122,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a8450024ae144691ff6449a6b673673a823864974032649eeac27b2ff18e2af4"
+  digest = "1:caae129d50a708961ada0620f4206700f89e95bf6a856acd1d4472e5cda406d2"
   name = "github.com/docker/docker"
   packages = [
     "api",
@@ -145,7 +145,7 @@
     "errdefs",
   ]
   pruneopts = "NUT"
-  revision = "501cb131a7b79682de2cdb83d86e20975f38702d"
+  revision = "8aca18d631f3f72d4c6e3dc01b6e5d468ad941b8"
 
 [[projects]]
   digest = "1:2a47f7eb1a2c30428d1ee6808cb66d4deb17e68a3e55d696f03c8068552ba5e8"
@@ -183,12 +183,12 @@
   version = "v1.12.0"
 
 [[projects]]
-  digest = "1:b0d5e98ac0f0a509eb320f542e748582d637aae09e74538212e9712d1e71064b"
+  digest = "1:ade392a843b2035effb4b4a2efa2c3bab3eb29b992e98bacf9c898b0ecb54e45"
   name = "github.com/fatih/color"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "570b54cabe6b8eb0bc2dfce68d964677d63b5260"
-  version = "v1.5.0"
+  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
+  version = "v1.7.0"
 
 [[projects]]
   digest = "1:e314993806c7b43f0d7c0abaedde500aa4de3010407a62a282e30748bac8df0b"
@@ -265,12 +265,20 @@
   version = "0.5"
 
 [[projects]]
-  digest = "1:9785a54031460a402fab4e4bbb3124c8dd9e9f7b1982109fef605cb91632d480"
+  digest = "1:d80983f72b52b2801805cf00400fe9aa0024e8167b1eac21e95175a1a8a06a49"
+  name = "github.com/kyokomi/emoji"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "eba9a9d7bfd64dcfe6e90fb3d53b2f3357a015c3"
+  version = "v2.1.0"
+
+[[projects]]
+  digest = "1:08c231ec84231a7e23d67e4b58f975e1423695a32467a362ee55a803f9de8061"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "3a70a971f94a22f2fa562ffcc7a0eb45f5daf045"
-  version = "v0.1.1"
+  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
+  version = "v0.0.9"
 
 [[projects]]
   digest = "1:f4109742a922eca7b7a6a1f97f93cc5834e21a5f13a1e0c1cead73815ab75548"
@@ -429,7 +437,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8a74d3f3824e72a6a4e34a3538b146843d7431344217773c87e80e1deee9f075"
+  digest = "1:8b2b697fbfad07c27589900b3c69f8adf1ed66c2cdeead12737b47397001d918"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
@@ -454,11 +462,11 @@
     "ssh/terminal",
   ]
   pruneopts = "NUT"
-  revision = "7f87c0fbb88b590338857bcb720678c2583d4dea"
+  revision = "8dd112bcdc25174059e45e07517d9fc663123347"
 
 [[projects]]
   branch = "master"
-  digest = "1:69e9bee7ded37dc4b61cb2a7772c6114b9dd75bf8aeef91af8a1b44c4e6d7566"
+  digest = "1:d7ea482cb78cde0967cb04c09b69803684be577f16c2b806ad6db0e6209a043e"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -468,18 +476,19 @@
     "webdav/internal/xml",
   ]
   pruneopts = "NUT"
-  revision = "312bce6e941fc7e152b630a8643ea239afc12ddd"
+  revision = "16b79f2e4e95ea23b2bf9903c9809ff7b013ce85"
 
 [[projects]]
   branch = "master"
-  digest = "1:5a319b3daa32a7134d8797d73c7ad887282e57bdd8791043ec540e5c17360f5e"
+  digest = "1:06016ff94d4b63a5d59477d44567a8baab8d9f0b1f7c7e226fc5870cffdf2d07"
   name = "golang.org/x/sys"
   packages = [
+    "cpu",
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "775f8194d0f9e65c46913c7be783d3d95a29333c"
+  revision = "b6889370fb1098ed892bd3400d189bb6a3355813"
 
 [[projects]]
   digest = "1:1cf1388ec8c73b7ecc711d9f279ab631ea0a6964d1ccc32809a6be90c33fa2a0"
@@ -584,6 +593,7 @@
     "github.com/go-chi/cors",
     "github.com/go-chi/render",
     "github.com/gorilla/websocket",
+    "github.com/kyokomi/emoji",
     "github.com/pquerna/otp",
     "github.com/pquerna/otp/totp",
     "github.com/spf13/cobra",
