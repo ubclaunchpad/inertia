@@ -20,9 +20,8 @@ inertia ${remote_name} prune [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-      --debug           enable debug out from Inertia client
-  -s, --short           don't stream out from command
-      --simple          disable colour and emoji output
+  -s, --short           don't stream output from command
+      --verify-ssl      verify SSL communications - requires a signed SSL certificate
 ```
 
 ### SEE ALSO

@@ -21,8 +21,8 @@ inertia ${remote_name} env ls [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-      --debug           enable debug out from Inertia client
-  -s, --short           don't stream out from command
+      --debug           enable debug output from Inertia client
+  -s, --short           don't stream output from command
       --simple          disable colour and emoji output
 ```
 

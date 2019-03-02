@@ -4,7 +4,7 @@ Effortless, self-hosted continuous deployment for small teams and projects
 
 ### Synopsis
 
-Inertia is an effortless, self-hosted continuous deployment platform :rocket:
+Inertia is an effortless, self-hosted continuous deployment platform 🚀 
 
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continuously update the production server

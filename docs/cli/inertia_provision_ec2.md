@@ -37,7 +37,6 @@ inertia provision ec2 [name] [flags]
       --config string        specify relative path to Inertia configuration (default "inertia.toml")
   -d, --daemon.port string   daemon port (default "4303")
   -p, --ports stringArray    ports your project uses
-      --simple               disable colour and emoji output
 ```
 
 ### SEE ALSO

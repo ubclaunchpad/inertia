@@ -5,7 +5,7 @@ List configured project profiles
 ### Synopsis
 
 List configured profiles for this project. To add new ones, use
-'inertia project profile configure'.
+'inertia project profile set'.
 
 ```
 inertia project profile ls [flags]
@@ -21,7 +21,6 @@ inertia project profile ls [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
-      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO
