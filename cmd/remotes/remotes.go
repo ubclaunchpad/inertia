@@ -125,9 +125,9 @@ Run 'inertia [remote] init' to gather this information.`,
 		},
 	}
 	host.PersistentFlags().BoolP(flagShort, "s", false,
-		"don't stream out from command")
+		"don't stream output from command")
 	host.PersistentFlags().Bool(flagDebug, false,
-		"enable debug out from Inertia client")
+		"enable debug output from Inertia client")
 
 	// attach children
 	host.attachInitCmd()
