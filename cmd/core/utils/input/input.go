@@ -32,8 +32,8 @@ func CatchSigterm(cancelFunc func()) {
 }
 
 // Prompt prints the given query and reads the response
-func Prompt(query string) (string, error) {
-	out.Println(query)
+func Prompt(query ...interface{}) (string, error) {
+	out.Println(query...)
 	var response string
 	if _, err := fmt.Fscanln(os.Stdin, &response); err != nil {
 		return "", err
@@ -56,7 +56,7 @@ func Promptf(query string, args ...interface{}) (string, error) {
 func AddProjectWalkthrough() (
 	buildType cfg.BuildType, buildFilePath string, err error,
 ) {
-	out.Println("Please enter the build type of your project - this could be one of:")
+	out.Println(out.C("Please enter the path to your build configuration file:", out.CY))
 	out.Println("  - docker-compose")
 	out.Println("  - dockerfile")
 
@@ -69,7 +69,9 @@ func AddProjectWalkthrough() (
 		return "", "", err
 	}
 
-	buildFilePath, err = Prompt("Please enter the path to your build configuration file:")
+	buildFilePath, err = Prompt(
+		out.C("Please enter the path to your build configuration file:", out.CY).String(),
+	)
 	if err != nil {
 		return "", "", errInvalidBuildFilePath
 	}

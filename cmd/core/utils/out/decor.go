@@ -84,41 +84,56 @@ const (
 	UL ColorTraits = ColorTraits(color.Underline)
 )
 
-// Color converts a given string to the given colour
-type Color struct {
-	C *color.Color
-	S string
+// Colorer wraps fatih/color.Color
+type Colorer struct{ c *color.Color }
+
+// NewColorer instantiates a new Colorer
+func NewColorer(traits ...ColorTraits) *Colorer {
+	var attrs = make([]color.Attribute, len(traits))
+	for i, t := range traits {
+		attrs[i] = color.Attribute(t)
+	}
+	var c = color.New(attrs...)
+	if WithColor() {
+		c.EnableColor()
+	} else {
+		c.DisableColor()
+	}
+	return &Colorer{c}
+}
+
+// S is a shortcut for Sprint
+func (c *Colorer) S(args ...interface{}) string { return c.c.Sprint(args...) }
+
+// Sf is a shortcut for Sprintf
+func (c *Colorer) Sf(f string, args ...interface{}) string { return c.c.Sprintf(f, args...) }
+
+// Colored converts a given string to the given colour
+type Colored struct {
+	c *Colorer
+	s string
 
 	args []interface{}
 }
 
 // C creates a new colourable
-func C(msg string, traits ...ColorTraits) *Color {
-	var attrs = make([]color.Attribute, len(traits))
-	for i, t := range traits {
-		attrs[i] = color.Attribute(t)
-	}
-	return &Color{
-		C: color.New(attrs...),
-		S: msg,
+func C(msg string, traits ...ColorTraits) *Colored {
+	return &Colored{
+		c: NewColorer(traits...),
+		s: msg,
 	}
 }
 
 // With indicates that the C should Printf with given args
-func (c *Color) With(args ...interface{}) *Color {
+func (c *Colored) With(args ...interface{}) *Colored {
 	c.args = args
 	return c
 }
 
 // String lets us provide a custom stringifier
-func (c Color) String() string {
-	if WithColor() {
-		c.C.EnableColor()
-	} else {
-		c.C.DisableColor()
-	}
+func (c Colored) String() string {
 	if len(c.args) > 0 {
-		return c.C.Sprintf(c.S, c.args...)
+		return c.c.c.Sprintf(c.s, c.args...)
 	}
-	return c.C.Sprint(c.S)
+	return c.c.c.Sprint(c.s)
 }
