@@ -77,7 +77,7 @@ func AddProjectWalkthrough() (
 	buildFilePath, err = Prompt(
 		out.C("Please enter the path to your build configuration file:", out.CY).String(),
 	)
-	if err != nil {
+	if err != nil || buildFilePath == "" {
 		return "", "", errInvalidBuildFilePath
 	}
 	return
