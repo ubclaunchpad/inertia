@@ -125,6 +125,7 @@ By default, the profile called 'default' will be used.`,
 }
 
 func (p *ProfileCmd) attachListCmd() {
+	var verbose bool
 	var ls = &cobra.Command{
 		Use:   "ls",
 		Short: "List configured project profiles",
@@ -137,10 +138,19 @@ func (p *ProfileCmd) attachListCmd() {
 				local.Write(p.root.projectConfigPath, p.root.config)
 			}
 			for _, pf := range p.root.config.Profiles {
-				out.Println(pf.Name)
+				if verbose {
+					out.Print(out.C("profile '%s'\n", out.BO, out.CY).With(pf.Name))
+					out.Printf(`:christmas_tree: Branch:              %s
+:hammer: Build.Type:          %s
+:ledger: Build.BuildFile:     %s
+`, pf.Branch, pf.Build.Type, pf.Build.BuildFilePath)
+				} else {
+					out.Println(pf.Name)
+				}
 			}
 		},
 	}
+	ls.Flags().BoolVarP(&verbose, "verbose", "v", false, "print profile details")
 	p.AddCommand(ls)
 }
 
@@ -156,9 +166,10 @@ func (p *ProfileCmd) attachShowCmd() {
 			if !ok {
 				out.Fatalf("profile '%s' not found", args[0])
 			}
-			out.Printf(`* Branch:              %s
-* Build.Type:          %s
-* Build.BuildFilePath: %s
+			out.Print(out.C("profile '%s'\n", out.BO, out.CY).With(args[0]))
+			out.Printf(`:christmas_tree: Branch:              %s
+:hammer: Build.Type:          %s
+:ledger: Build.BuildFile:     %s
 `, pf.Branch, pf.Build.Type, pf.Build.BuildFilePath)
 		},
 	}
