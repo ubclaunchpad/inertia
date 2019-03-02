@@ -129,7 +129,7 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 					out.Fatal(err)
 				}
 			}
-			out.Printf(":hammer: %s\n", highlight.Sf("Profile created with %s configuration.", buildType))
+			out.Println(highlight.Sf(":hammer: Profile created with %s configuration.", buildType))
 
 			// Hello world config file!
 			out.Printf("Initializing configuration file at %s...\n", inertia.ProjectConfigPath)
@@ -143,8 +143,7 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 				out.Fatal(err)
 			}
 
-			out.Printf(":books: %s\n",
-				highlight.S("An inertia.toml configuration file has been created to store project settings!"))
+			out.Println(highlight.S(":books: An inertia.toml configuration file has been created to store project settings!"))
 			out.Println("You can now use 'inertia remote add' to set up your remote VPS instance.")
 		},
 	}
