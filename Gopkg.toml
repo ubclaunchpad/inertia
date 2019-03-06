@@ -38,3 +38,7 @@
 [[constraint]]
   name = "github.com/docker/docker"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/kyokomi/emoji"
+  branch = "master"
