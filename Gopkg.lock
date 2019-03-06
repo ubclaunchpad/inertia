@@ -66,14 +66,6 @@
   version = "v1.17.9"
 
 [[projects]]
-  digest = "1:059a2b78634d380e57ecea2cb780b17d506b7f4ca872e2f44849709903bedec5"
-  name = "github.com/bobheadxi/emoji"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "cbb51e81aa7115c66cf47164ba810f44baa29067"
-  version = "v2.2.0"
-
-[[projects]]
   digest = "1:90f59f03e8a0c973faff6d6122a4000efaee118907b5c695cc7615d2d8240538"
   name = "github.com/boombuler/barcode"
   packages = [
@@ -265,12 +257,12 @@
   version = "0.5"
 
 [[projects]]
-  digest = "1:d80983f72b52b2801805cf00400fe9aa0024e8167b1eac21e95175a1a8a06a49"
+  branch = "master"
+  digest = "1:059a2b78634d380e57ecea2cb780b17d506b7f4ca872e2f44849709903bedec5"
   name = "github.com/kyokomi/emoji"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "eba9a9d7bfd64dcfe6e90fb3d53b2f3357a015c3"
-  version = "v2.1.0"
+  revision = "51762253ec2b5dafce2d33adfb0d49121924ee58"
 
 [[projects]]
   digest = "1:08c231ec84231a7e23d67e4b58f975e1423695a32467a362ee55a803f9de8061"
@@ -580,7 +572,6 @@
     "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/ec2",
-    "github.com/bobheadxi/emoji",
     "github.com/dgrijalva/jwt-go",
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",

@@ -1,14 +1,11 @@
 package out
 
 import (
-	// use bobheadxi/emoji until https://github.com/kyokomi/emoji/pull/32 gets
-	// merged, for Stringer compatibility for the Colour class
-
 	"fmt"
 	"os"
 
-	"github.com/bobheadxi/emoji"
 	"github.com/fatih/color"
+	"github.com/kyokomi/emoji"
 )
 
 const (
