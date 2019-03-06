@@ -141,22 +141,44 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 }
 
 // AddProjectBuildData stores and tracks metadata from successful builds
+// TODO: definitely need to add more context to errors
 func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata DeploymentMetadata) error {
+	// encode metadata so it can be stored as byte array
+	encodedMdata, err := json.Marshal(mdata)
+	if err != nil {
+		return err
+	}
 	return c.db.Update(func(tx *bolt.Tx) error {
 		deployedProjectsBucket := tx.Bucket(deployedProjectsBucket)
-		// if project bkt doesnt exist create new bkt, otherwise update existing bucket
+		// if bkt with project name doesnt exist create new bkt, otherwise update existing bucket
 		if projectBkt := deployedProjectsBucket.Bucket([]byte(projectName)); projectBkt == nil {
-			projectBkt, err := tx.CreateBucket([]byte(projectName))
+			projectBkt, err := deployedProjectsBucket.CreateBucket([]byte(projectName))
 			if err != nil {
 				return err
 			}
 
-			encoded, err := json.Marshal(mdata)
-			if err != nil {
+			if err := projectBkt.Put([]byte(time.Now().String()), encodedMdata); err != nil {
 				return err
 			}
-			projectBkt.Put([]byte(time.Now().String()), encoded)
+		} else {
+			if err := c.UpdateProjectBuildData(projectName, encodedMdata); err != nil {
+				return err
+			}
 		}
+		return nil
+	})
+}
+
+// UpdateProjectBuildData updates existing project bkt with recent build's metadata
+func (c *DeploymentDataManager) UpdateProjectBuildData(projectName string, mdata []byte) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		deployedProjectsBucket := tx.Bucket(deployedProjectsBucket)
+		projectBkt := deployedProjectsBucket.Bucket([]byte(projectName))
+
+		if err := projectBkt.Put([]byte(time.Now().String()), mdata); err != nil {
+			return err
+		}
+
 		return nil
 	})
 }
