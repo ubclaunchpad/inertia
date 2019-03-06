@@ -36,6 +36,8 @@ type Deployer interface {
 	GetBranch() string
 	CompareRemotes(string) error
 
+	UpdateContainerHistory(cli *docker.Client) error
+
 	GetDataManager() (*DeploymentDataManager, bool)
 
 	Watch(*docker.Client) (<-chan string, <-chan error)
@@ -68,6 +70,15 @@ type DeploymentConfig struct {
 	RemoteURL     string
 	Branch        string
 	PemFilePath   string
+}
+
+// DeploymentMetadata is used to store metadata relevant
+// to the most recent deployment
+type DeploymentMetadata struct {
+	Hash            string
+	ContainerID     string
+	ContainerStatus string
+	StartedAt       string
 }
 
 // NewDeployment creates a new deployment
@@ -317,25 +328,49 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 // UpdateContainerHistory will update container bucket with recent build's
 // metadata
 func (d *Deployment) UpdateContainerHistory(cli *docker.Client) error {
-	// Retrieve container ID for recently deployed project
+
+	// Get project hash
+	head, err := d.repo.Head()
+	if err != nil {
+		return err
+	}
+	// Retrieve container for recently deployed project
 	ctx := context.Background()
-	var containerID string
+	var recentlyBuiltContainer types.Container
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
 		return err
 	}
 	for _, container := range containers {
 		if container.Names[0] == d.project {
-			containerID = container.ID
+			recentlyBuiltContainer = container
 		}
 	}
-	// Retrieve project hash
-	head, err := d.repo.Head()
-	if err != nil {
-		return err
+
+	// Get container metadata
+	var containerID string
+	if recentlyBuiltContainer.ID != "" {
+		containerID = recentlyBuiltContainer.ID
 	}
+	containerJSON, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return err // TODO: Add more context to error
+	}
+	containerState := containerJSON.ContainerJSONBase.State // similar to running "docker inspect {container}"
+	var containerStatus, containerStartedAtTime string
+	if containerState != nil {
+		containerStatus = containerState.Status
+		containerStartedAtTime = containerState.StartedAt
+	}
+
+	metadata := DeploymentMetadata{
+		Hash:            head.Hash().String(),
+		ContainerID:     containerID,
+		ContainerStatus: containerStatus,
+		StartedAt:       containerStartedAtTime}
+
 	// Update db with newly built container metadata
-	d.dataManager.AddBuiltContainer(head.Hash().String(), containerID)
+	d.dataManager.AddProjectBuildData(d.project, metadata)
 
 	return err
 }

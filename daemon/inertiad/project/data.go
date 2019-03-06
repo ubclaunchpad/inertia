@@ -139,11 +139,11 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 	return envs, err
 }
 
-// AddBuiltContainer stores and tracks metadata from successful builds
-func (c *DeploymentDataManager) AddBuiltContainer(commitHash string, containerID string) error {
+// AddProjectBuildData stores and tracks metadata from successful builds
+func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata DeploymentMetadata) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		containersBucket := tx.Bucket(builtContainersBucket)
-		return containersBucket.Put([]byte(commitHash), []byte(containerID))
+		// containersBucket := tx.Bucket(builtContainersBucket)
+		return nil
 	})
 }
 
