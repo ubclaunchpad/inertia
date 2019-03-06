@@ -349,7 +349,7 @@ func (d *Deployment) UpdateContainerHistory(cli *docker.Client) error {
 
 	// Get container metadata
 	var containerID string
-	if recentlyBuiltContainer.ID != "" {
+	if len(recentlyBuiltContainer.ID) > 0 {
 		containerID = recentlyBuiltContainer.ID
 	}
 	containerJSON, err := cli.ContainerInspect(ctx, containerID)

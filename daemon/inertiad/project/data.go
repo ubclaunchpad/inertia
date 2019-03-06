@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	bolt "go.etcd.io/bbolt"
@@ -14,8 +15,8 @@ import (
 
 var (
 	// database buckets
-	envVariableBucket     = []byte("envVariables")
-	builtContainersBucket = []byte("builtContainers")
+	envVariableBucket      = []byte("envVariables")
+	deployedProjectsBucket = []byte("deployedProjects")
 )
 
 // DeploymentDataManager stores persistent deployment configuration
@@ -51,7 +52,7 @@ func NewDataManager(dbPath string, keyPath string) (*DeploymentDataManager, erro
 	}
 	if err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(envVariableBucket)
-		_, err = tx.CreateBucketIfNotExists(builtContainersBucket)
+		_, err = tx.CreateBucketIfNotExists(deployedProjectsBucket)
 		return err
 	}); err != nil {
 		return nil, fmt.Errorf("failed to instantiate database: %s", err.Error())
@@ -142,7 +143,20 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 // AddProjectBuildData stores and tracks metadata from successful builds
 func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata DeploymentMetadata) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		// containersBucket := tx.Bucket(builtContainersBucket)
+		deployedProjectsBucket := tx.Bucket(deployedProjectsBucket)
+		// if project bkt doesnt exist create new bkt, otherwise update existing bucket
+		if projectBkt := deployedProjectsBucket.Bucket([]byte(projectName)); projectBkt == nil {
+			projectBkt, err := tx.CreateBucket([]byte(projectName))
+			if err != nil {
+				return err
+			}
+
+			encoded, err := json.Marshal(mdata)
+			if err != nil {
+				return err
+			}
+			projectBkt.Put([]byte(time.Now().String()), encoded)
+		}
 		return nil
 	})
 }
