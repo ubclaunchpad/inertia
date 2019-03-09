@@ -195,7 +195,7 @@ func (d *Deployment) Deploy(
 	if err != nil {
 		notifyErr = notification.Notify("Build error")
 		if notifyErr != nil {
-			fmt.Println(out, notifyErr)
+			fmt.Fprintln(out, notifyErr)
 		}
 		return func() error { return nil }, err
 	}
