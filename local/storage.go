@@ -20,7 +20,7 @@ func InertiaDir() string {
 	if os.Getenv("INERTIA_PATH") != "" {
 		return os.Getenv("INERTIA_PATH")
 	}
-	home, err := GetHomePath()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "/.inertia"
 	}
