@@ -1,6 +1,7 @@
 package remotecmd
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -91,7 +92,7 @@ Inertia commands.`,
 					out.Fatalf("'%s' is the name of an Inertia command - please choose something else", args[0])
 				}
 			}
-			homeEnvVar, err := local.GetHomePath()
+			homeEnvVar, err := os.UserHomeDir()
 			if err != nil {
 				out.Fatal(err)
 			}

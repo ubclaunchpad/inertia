@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -52,6 +54,10 @@ func NewEC2ProvisionerFromEnv(user string, out ...io.Writer) (*EC2Provisioner, e
 // credentials for user (optional) from given profile file
 func NewEC2ProvisionerFromProfile(user, profile, path string, out ...io.Writer) (*EC2Provisioner, error) {
 	prov := &EC2Provisioner{}
+	if strings.HasPrefix(path, "~") {
+		home, _ := os.UserHomeDir()
+		path = filepath.Join(home, strings.TrimPrefix(path, "~"))
+	}
 	return prov, prov.init(user, credentials.NewSharedCredentials(path, profile), out)
 }
 
@@ -155,7 +161,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 		return nil, err
 	}
 
-	homeDir, err := local.GetHomePath()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
