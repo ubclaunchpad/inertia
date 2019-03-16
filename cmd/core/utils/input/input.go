@@ -122,7 +122,7 @@ func ChooseFromListWalkthrough(optionName string, options []string) (string, err
 	for _, o := range options {
 		out.Println("  > " + o)
 	}
-	out.Printf("Please enter your desired %s: ", optionName)
+	out.Print(out.C("Please enter your desired %s: ", out.CY).With(optionName))
 
 	var response string
 	_, err := fmt.Fscanln(os.Stdin, &response)
