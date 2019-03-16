@@ -2,6 +2,7 @@ package out
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/fatih/color"
@@ -33,6 +34,15 @@ func Sprintf(format string, args ...interface{}) string {
 		return emoji.Sprintf(format, args...)
 	}
 	return fmt.Sprintf(format, args...)
+}
+
+// Fprintf wraps formatters
+func Fprintf(out io.Writer, format string, args ...interface{}) {
+	if WithEmoji() {
+		emoji.Fprintf(out, format, args...)
+	} else {
+		fmt.Fprintf(out, format, args...)
+	}
 }
 
 // Printf wraps formatters
