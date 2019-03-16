@@ -108,7 +108,7 @@ func Write(path string, data interface{}, writers ...io.Writer) error {
 
 		// Overwrite file if file exists
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			ioutil.WriteFile(path, []byte(""), 0644)
+			ioutil.WriteFile(path, []byte(""), os.ModePerm)
 		} else if err != nil {
 			return err
 		}
