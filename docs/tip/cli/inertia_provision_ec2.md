@@ -25,7 +25,7 @@ inertia provision ec2 [name] [flags]
       --from-env              load ec2 credentials from environment - requires AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY to be set
       --from-profile          load ec2 credentials from profile
   -h, --help                  help for ec2
-      --profile.path string   path to aws profile credentials file (default "/Users/robertlin/.aws/credentials")
+      --profile.path string   path to aws profile credentials file (default "~/.aws/credentials")
       --profile.user string   user profile for aws credentials file (default "default")
   -t, --type string           ec2 instance type to instantiate (default "t2.micro")
   -u, --user string           ec2 instance user to execute commands as (default "ec2-user")
