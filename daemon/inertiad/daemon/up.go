@@ -76,8 +76,9 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Change deployment parameters if necessary
 	s.deployment.SetConfig(project.DeploymentConfig{
-		ProjectName: upReq.Project,
-		Branch:      gitOpts.Branch,
+		ProjectName:     upReq.Project,
+		Branch:          gitOpts.Branch,
+		DontKillOnDeath: upReq.DontKillOnDeath,
 	})
 
 	// Deploy project
