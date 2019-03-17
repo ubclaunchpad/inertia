@@ -96,10 +96,11 @@ This ensures that your project ports are properly exposed and externally accessi
 				stringProjectPorts, _ = cmd.Flags().GetStringArray(flagPorts)
 			)
 			if stringProjectPorts == nil || len(stringProjectPorts) == 0 {
-				out.Print("[WARNING] no project ports provided - this means that no ports" +
-					"will be exposed on your ec2 host. Use the '--ports' flag to set" +
-					"ports that you want to be accessible.\n")
+				out.Print(out.C("[WARNING] no project ports provided - this means that no ports"+
+					"will be exposed on your ec2 host. Use the '--ports' flag to set"+
+					"ports that you want to be accessible.\n", out.RD))
 			}
+			var highlight = out.NewColorer(out.CY)
 
 			// Load flags for credentials
 			var (
@@ -139,7 +140,7 @@ This ensures that your project ports are properly exposed and externally accessi
 
 			// Prompt for region
 			out.Println("See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions for a list of available regions.")
-			region, err := input.Prompt("Please enter a region: ")
+			region, err := input.Prompt(highlight.S("Please enter a region: "))
 			if err != nil {
 				out.Fatal(err)
 			}
@@ -183,6 +184,7 @@ This ensures that your project ports are properly exposed and externally accessi
 			if err != nil {
 				out.Fatal(err)
 			}
+			out.Println(highlight.Sf("Instance provisioned for remote '%s'!", args[0]))
 
 			// Save new remote to configuration
 			local.SaveRemote(remote)
@@ -193,7 +195,7 @@ This ensures that your project ports are properly exposed and externally accessi
 			})
 
 			// Bootstrap remote
-			out.Printf("Initializing Inertia daemon at %s...\n", inertia.Remote.IP)
+			out.Println(highlight.Sf("Initializing Inertia daemon at %s...", inertia.Remote.IP))
 			var repo = common.ExtractRepository(common.GetSSHRemoteURL(root.project.URL))
 			if err := bootstrap.Bootstrap(inertia, bootstrap.Options{
 				RepoName: repo,
@@ -203,6 +205,7 @@ This ensures that your project ports are properly exposed and externally accessi
 			}
 
 			// Save updated config
+			out.Println(highlight.S("Saving remote..."))
 			if err := local.SaveRemote(remote); err != nil {
 				out.Fatal(err.Error())
 			}

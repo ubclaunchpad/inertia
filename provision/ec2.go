@@ -16,7 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+
 	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 )
@@ -146,9 +148,12 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	// Set requested region
 	p.WithRegion(opts.Region)
 
+	// set highlighter
+	var highlight = out.NewColorer(out.CY)
+
 	// Generate authentication
 	var keyName = fmt.Sprintf("%s_%s_inertia_key_%d", opts.Name, p.user, time.Now().UnixNano())
-	fmt.Printf("Generating key pair %s...\n", keyName)
+	out.Fprintf(p.out, highlight.Sf(":key: Generating key pair '%s'...\n", keyName))
 	keyResp, err := p.client.CreateKeyPair(&ec2.CreateKeyPairInput{
 		KeyName: aws.String(keyName),
 	})
@@ -162,17 +167,17 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	}
 
 	// Save key
-	keyPath := filepath.Join(homeDir, ".ssh", *keyResp.KeyName)
-	fmt.Printf("Saving key to %s...\n", keyPath)
+	var keyPath = filepath.Join(homeDir, ".ssh", *keyResp.KeyName)
+	out.Fprintf(p.out, highlight.Sf(":inbox_tray: Saving key to '%s'...\n", keyPath))
 	if err = local.SaveKey(*keyResp.KeyMaterial, keyPath); err != nil {
 		return nil, err
 	}
 
 	// Create security group for network configuration
+	var secGroup = fmt.Sprintf("%s-%d", opts.Name, time.Now().UnixNano())
+	out.Fprintf(p.out, highlight.Sf(":circus_tent: Creating security group '%s'...\n", secGroup))
 	group, err := p.client.CreateSecurityGroup(&ec2.CreateSecurityGroupInput{
-		GroupName: aws.String(
-			fmt.Sprintf("%s-%d", opts.Name, time.Now().UnixNano()),
-		),
+		GroupName: aws.String(secGroup),
 		Description: aws.String(
 			fmt.Sprintf("Rules for project %s on %s", opts.ProjectName, opts.Name),
 		),
@@ -182,11 +187,13 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	}
 
 	// Set rules for ports
+	out.Fprintf(p.out, highlight.Sf(":electric_plug: Exposing ports '%s'...\n", secGroup))
 	if err = p.exposePorts(*group.GroupId, opts.DaemonPort, opts.Ports); err != nil {
 		return nil, err
 	}
 
 	// Start up instance
+	out.Fprintf(p.out, highlight.Sf(":boat: Requesting instance '%s'...\n", secGroup))
 	runResp, err := p.client.RunInstances(&ec2.RunInstancesInput{
 		ImageId:      aws.String(opts.ImageID),
 		InstanceType: aws.String(opts.InstanceType),
@@ -205,15 +212,16 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	if runResp.Instances == nil || len(runResp.Instances) == 0 {
 		return nil, errors.New("Unable to start instances: " + runResp.String())
 	}
+	out.Fprintf(p.out, highlight.Sf("A %s instance has been provisioned", opts.InstanceType))
 
 	// Loop until intance is running
-	fmt.Fprintln(p.out, "Checking status of requested instance...")
 	var instance ec2.Instance
 	for {
 		// Wait briefly between checks
 		time.Sleep(3 * time.Second)
 
 		// Request instance status
+		out.Fprintf(p.out, "Checking status of the requested instance...\n")
 		result, err := p.client.DescribeInstances(&ec2.DescribeInstancesInput{
 			InstanceIds: []*string{runResp.Instances[0].InstanceId},
 		})
@@ -259,6 +267,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	}
 
 	// Set tags
+	out.Fprintf(p.out, "Setting tags on instance...\n")
 	if _, err = p.client.CreateTags(&ec2.CreateTagsInput{
 		Resources: []*string{instance.InstanceId},
 		Tags: []*ec2.Tag{
@@ -288,6 +297,7 @@ func (p *EC2Provisioner) CreateInstance(opts EC2CreateInstanceOptions) (*cfg.Rem
 	}
 
 	// Generate webhook secret
+	out.Fprintf(p.out, "Generating a webhook secret...\n")
 	webhookSecret, err := common.GenerateRandomString()
 	if err != nil {
 		fmt.Fprintln(p.out, err.Error())
