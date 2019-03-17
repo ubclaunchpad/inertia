@@ -46,10 +46,11 @@ type Deployment struct {
 	active    bool
 	directory string
 
-	project       string
-	branch        string
-	buildType     string
-	buildFilePath string
+	project         string
+	branch          string
+	buildType       string
+	buildFilePath   string
+	dontKillOnDeath bool
 
 	builder build.ContainerBuilder
 
@@ -62,12 +63,13 @@ type Deployment struct {
 
 // DeploymentConfig is used to configure Deployment
 type DeploymentConfig struct {
-	ProjectName   string
-	BuildType     string
-	BuildFilePath string
-	RemoteURL     string
-	Branch        string
-	PemFilePath   string
+	ProjectName     string
+	BuildType       string
+	BuildFilePath   string
+	RemoteURL       string
+	Branch          string
+	PemFilePath     string
+	DontKillOnDeath bool
 }
 
 // NewDeployment creates a new deployment
@@ -137,6 +139,7 @@ func (d *Deployment) SetConfig(cfg DeploymentConfig) {
 	if cfg.BuildFilePath != "" {
 		d.buildFilePath = cfg.BuildFilePath
 	}
+	d.dontKillOnDeath = cfg.DontKillOnDeath
 }
 
 // DeployOptions is used to configure how the deployment handles the deploy
@@ -376,12 +379,16 @@ func (d *Deployment) Watch(client *docker.Client) (<-chan string, <-chan error) 
 				}
 
 				if d.active {
-					// Shut down all containers if one stops while project is active
-					d.active = false
-					logsCh <- "container stoppage was unexpected, project is active"
-					err := containers.StopActiveContainers(client, os.Stdout)
-					if err != nil {
-						logsCh <- ("error shutting down other active containers: " + err.Error())
+					if !d.dontKillOnDeath {
+						// Shut down all containers if one stops while project is active
+						d.active = false
+						logsCh <- "container stoppage was unexpected, project is active"
+						err := containers.StopActiveContainers(client, os.Stdout)
+						if err != nil {
+							logsCh <- ("error shutting down other active containers: " + err.Error())
+						}
+					} else {
+						logsCh <- "ignoring container stoppage because dontKillOnDeath is set to true"
 					}
 				}
 			}

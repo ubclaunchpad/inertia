@@ -225,9 +225,14 @@ func (c *Client) getDaemonAPIToken(session SSHSession, daemonVersion string) (st
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response, error) {
+func (c *Client) Up(gitRemoteURL, buildType string, stream bool, dontKillOnDeath ...bool) (*http.Response, error) {
 	if buildType == "" {
 		buildType = c.buildType
+	}
+
+	var dkod bool
+	if len(dontKillOnDeath) > 0 {
+		dkod = dontKillOnDeath[0]
 	}
 
 	return c.post("/up", &api.UpRequest{
@@ -240,6 +245,7 @@ func (c *Client) Up(gitRemoteURL, buildType string, stream bool) (*http.Response
 			RemoteURL: common.GetSSHRemoteURL(gitRemoteURL),
 			Branch:    c.Branch,
 		},
+		DontKillOnDeath: dkod,
 	})
 }
 
