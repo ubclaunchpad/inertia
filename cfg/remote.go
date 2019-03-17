@@ -9,7 +9,7 @@ type RemoteVPS struct {
 	Branch          string        `toml:"branch"`
 	SSHPort         string        `toml:"ssh-port"`
 	Daemon          *DaemonConfig `toml:"daemon"`
-	DontKillOnDeath *bool         `toml:"dont-kill-on-death"`
+	DontKillOnDeath *bool         `toml:"no-kill-on-death"`
 }
 
 // DaemonConfig contains parameters for the Daemon
