@@ -137,7 +137,7 @@ This requires an Inertia daemon to be active on your remote - do this by running
 
 			var dkod bool
 			if root.client.RemoteVPS.DontKillOnDeath != nil {
-				dkod = *root.client.RemoteVPS.DontKillOnDeath == "true"
+				dkod = *root.client.RemoteVPS.DontKillOnDeath
 			}
 
 			resp, err := root.client.Up(url, buildType, !short, dkod)
