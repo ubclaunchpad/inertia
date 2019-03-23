@@ -204,7 +204,8 @@ In additional to the Slate usage guide, we also have a
 To build and deploy all the documentation locally:
 
 ```bash
-$> make docs
+$> make docs-tip       # generate tip documentation - only run `make docs` on
+                       # releases, since that's what people see by default
 $> make run-docs-usage # visit http://localhost:4567/
 $> make run-docs-api   # visit http://localhost:8080
 ```
@@ -258,10 +259,10 @@ You will need a GitHub repository you own, since you need permission to add depl
 $> git clone https://github.com/$AWESOME_YOU/inertia-deploy-test.git
 $> cd inertia-deploy-test
 $> inertia init
-$> inertia remote add local --ssh.port 69
-# - identity file: $INERTIA_PATH/test/keys/id_rsa
-# - Address:  127.0.0.1 
-# - User:     root
+$> inertia remote add local --ip 127.0.0.1 --ssh.port 69 --ssh.user root --daemon.gen-secret
+# when prompted, give the identity file in this repository:
+#   /path/to/inertia/test/keys/id_rsa
+# (replace `/path/to/inertia` with the actual path to your copy of Inertia)
 $> inertia local init
 # Make sure to read through the output for this step to work - notably, you'll
 # need to add the SSH deploy key to your test repository

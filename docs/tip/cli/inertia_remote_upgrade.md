@@ -13,21 +13,22 @@ inertia remote upgrade [flags]
 ### Examples
 
 ```
-inertia remote upgrade -r dev -r staging
+inertia remote upgrade dev staging
 ```
 
 ### Options
 
 ```
-  -h, --help                  help for upgrade
-  -r, --remotes stringArray   specify which remotes to modify (default: all)
-      --version string        specify Inertia daemon version to set (default "v0.5.2-53-gbdd12ad")
+      --all              upgrade all remotes
+  -h, --help             help for upgrade
+      --version string   specify Inertia daemon version to set (default "v0.5.2-28-g4d124ef")
 ```
 
 ### Options inherited from parent commands
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

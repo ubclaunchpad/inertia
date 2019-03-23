@@ -1,7 +1,9 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +13,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/websocket"
 
@@ -22,17 +25,20 @@ import (
 
 // Client manages a deployment
 type Client struct {
+	om  sync.Mutex
 	out io.Writer
 
-	Remote *cfg.Remote
+	ssh   runner.SSHSession
+	debug bool
 
-	ssh runner.SSHSession
+	Remote *cfg.Remote
 }
 
 // Options denotes configuration options for a Client
 type Options struct {
-	SSH runner.SSHOptions
-	Out io.Writer
+	SSH   runner.SSHOptions
+	Out   io.Writer
+	Debug bool
 }
 
 // NewClient sets up a client to communicate to the daemon at the given remote
@@ -52,6 +58,12 @@ func NewClient(remote *cfg.Remote, opts Options) *Client {
 	}
 }
 
+// WithWriter sets the given io.Writer as the client's default output
+func (c *Client) WithWriter(out io.Writer) { c.out = out }
+
+// WithDebug sets the client's debug mode
+func (c *Client) WithDebug(debug bool) { c.debug = debug }
+
 // GetSSHClient instantiates an SSH client for Inertia-related commands
 func (c *Client) GetSSHClient() (*SSHClient, error) {
 	if c.ssh == nil {
@@ -60,97 +72,229 @@ func (c *Client) GetSSHClient() (*SSHClient, error) {
 	return &SSHClient{
 		ssh:    c.ssh,
 		remote: c.Remote,
+		debug:  c.debug,
+		out:    c.out,
 	}, nil
+}
+
+// GetUserClient instantiates an API client for Inertia user management commands
+func (c *Client) GetUserClient() *UserClient {
+	return NewUserClient(c)
+}
+
+// UpRequest declares parameters for project deployment
+type UpRequest struct {
+	Project string
+	URL     string
+	Profile cfg.Profile
 }
 
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
-func (c *Client) Up(project, url string, profile cfg.Profile, stream bool) (*http.Response, error) {
-	return c.post("/up", &api.UpRequest{
-		Stream:        stream,
-		Project:       project,
+func (c *Client) Up(ctx context.Context, req UpRequest) error {
+	resp, err := c.post(ctx, "/up", &api.UpRequest{
+		Stream:        false,
+		Project:       req.Project,
 		WebHookSecret: c.Remote.Daemon.WebHookSecret,
-
-		BuildType:     string(profile.Build.Type),
-		BuildFilePath: profile.Build.BuildFilePath,
+		BuildType:     string(req.Profile.Build.Type),
+		BuildFilePath: req.Profile.Build.BuildFilePath,
 		GitOptions: api.GitOptions{
-			RemoteURL: common.GetSSHRemoteURL(url),
-			Branch:    profile.Branch,
+			RemoteURL: common.GetSSHRemoteURL(req.URL),
+			Branch:    req.Profile.Branch,
 		},
 	})
+	if err != nil {
+		return fmt.Errorf("failed to make request: %s", err.Error())
+	}
+	base, err := c.unmarshal(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return fmt.Errorf("failed to read response: %s", err.Error())
+	}
+	return base.Error()
 }
 
-// LogIn gets an access token for the user with the given credentials. Use ""
-// for totp if none is required.
-func (c *Client) LogIn(user, password, totp string) (*http.Response, error) {
-	return c.post("/user/login", &api.UserRequest{
-		Username: user,
-		Password: password,
-		Totp:     totp,
+// UpWithOutput blocks and streams 'up' output to the client's io.Writer
+func (c *Client) UpWithOutput(ctx context.Context, req UpRequest) error {
+	resp, err := c.post(ctx, "/up", &api.UpRequest{
+		Stream:        true,
+		Project:       req.Project,
+		WebHookSecret: c.Remote.Daemon.WebHookSecret,
+		BuildType:     string(req.Profile.Build.Type),
+		BuildFilePath: req.Profile.Build.BuildFilePath,
+		GitOptions: api.GitOptions{
+			RemoteURL: common.GetSSHRemoteURL(req.URL),
+			Branch:    req.Profile.Branch,
+		},
 	})
+	if err != nil {
+		return fmt.Errorf("failed to make request: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	// read until error
+	var scan = bufio.NewScanner(resp.Body)
+	var errC = make(chan error, 1)
+	go func() {
+		for scan.Scan() {
+			c.om.Lock()
+			fmt.Fprintln(c.out, scan.Text())
+			c.om.Unlock()
+		}
+		if err := scan.Err(); err != nil {
+			errC <- fmt.Errorf("error occured while reading output: %s", err.Error())
+			return
+		}
+	}()
+
+	// block until done
+	for {
+		select {
+		case <-ctx.Done():
+			c.debugf("context cancelled, closing connection")
+			return nil
+		case err := <-errC:
+			c.debugf("error received: %s", err.Error())
+			return err
+		}
+	}
 }
 
 // Token generates token on this remote.
-func (c *Client) Token() (*http.Response, error) {
-	return c.get("/token", nil)
+func (c *Client) Token(ctx context.Context) (token string, err error) {
+	resp, err := c.get(ctx, "/token", nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to make request: %s", err.Error())
+	}
+
+	base, err := c.unmarshal(resp.Body, api.KV{Key: "token", Value: &token})
+	resp.Body.Close()
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %s", err.Error())
+	}
+
+	return token, base.Error()
 }
 
 // Prune clears Docker ReadFiles on this remote.
-func (c *Client) Prune() (*http.Response, error) {
-	return c.post("/prune", nil)
+func (c *Client) Prune(ctx context.Context) error {
+	resp, err := c.post(ctx, "/prune", nil)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %s", err.Error())
+	}
+
+	base, err := c.unmarshal(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return fmt.Errorf("failed to read response: %s", err.Error())
+	}
+
+	return base.Error()
 }
 
 // Down brings the project down on the remote VPS instance specified
 // in the configuration object.
-func (c *Client) Down() (*http.Response, error) {
-	return c.post("/down", nil)
+func (c *Client) Down(ctx context.Context) error {
+	resp, err := c.post(ctx, "/down", nil)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %s", err.Error())
+	}
+
+	base, err := c.unmarshal(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return fmt.Errorf("failed to read response: %s", err.Error())
+	}
+
+	return base.Error()
 }
 
 // Status lists the currently active containers on the remote VPS instance
-func (c *Client) Status() (*http.Response, error) {
-	resp, err := c.get("/status", nil)
+func (c *Client) Status(ctx context.Context) (*api.DeploymentStatus, error) {
+	resp, err := c.get(ctx, "/status", nil)
 	if err != nil &&
 		(strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "refused")) {
 		return nil, errors.New("daemon on remote appears offline or inaccessible")
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to make request: %s", err.Error())
 	}
-	return resp, err
+
+	var status = &api.DeploymentStatus{}
+	base, err := c.unmarshal(resp.Body, api.KV{
+		Key: "status", Value: status,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %s", err.Error())
+	}
+
+	return status, base.Error()
 }
 
 // Reset shuts down deployment and deletes the contents of the deployment's
 // project directory
-func (c *Client) Reset() (*http.Response, error) {
-	return c.post("/reset", nil)
+func (c *Client) Reset(ctx context.Context) error {
+	resp, err := c.post(ctx, "/reset", nil)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %s", err.Error())
+	}
+
+	base, err := c.unmarshal(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return fmt.Errorf("failed to read response: %s", err.Error())
+	}
+
+	return base.Error()
+}
+
+// LogsRequest denotes parameters for log querying
+type LogsRequest struct {
+	Container string
+	Entries   int
 }
 
 // Logs get logs of given container
-func (c *Client) Logs(container string, entries int) (*http.Response, error) {
-	reqContent := map[string]string{api.Container: container}
-	if entries > 0 {
-		reqContent[api.Entries] = strconv.Itoa(entries)
+func (c *Client) Logs(ctx context.Context, req LogsRequest) ([]string, error) {
+	reqContent := map[string]string{api.Container: req.Container}
+	if req.Entries > 0 {
+		reqContent[api.Entries] = strconv.Itoa(req.Entries)
 	}
 
-	return c.get("/logs", reqContent)
+	resp, err := c.get(ctx, "/logs", reqContent)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %s", err.Error())
+	}
+
+	var logs = make([]string, 0)
+	b, err := c.unmarshal(resp.Body, api.KV{Key: "logs", Value: &logs})
+	resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %s", err.Error())
+	}
+
+	return logs, b.Error()
 }
 
-// LogsWebSocket opens a websocket connection to given container's logs
-func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, error) {
+// LogsWithOutput opens a websocket connection to given container's logs and
+// streams it to the given io.Writer
+func (c *Client) LogsWithOutput(ctx context.Context, req LogsRequest) error {
 	addr, err := c.Remote.DaemonAddr()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	host, err := url.Parse(addr)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("invalid daemon address: %s", err.Error())
 	}
 
 	// Set up request
-	url := &url.URL{Scheme: "wss", Host: host.Host, Path: "/logs"}
-	params := map[string]string{
-		api.Container: container,
+	var url = &url.URL{Scheme: "wss", Host: host.Host, Path: "/logs"}
+	var params = map[string]string{
+		api.Container: req.Container,
 		api.Stream:    "true",
 	}
-	if entries > 0 {
-		params[api.Entries] = strconv.Itoa(entries)
+	if req.Entries > 0 {
+		params[api.Entries] = strconv.Itoa(req.Entries)
 	}
 	encodeQuery(url, params)
 
@@ -158,71 +302,91 @@ func (c *Client) LogsWebSocket(container string, entries int) (SocketReader, err
 	var header = http.Header{}
 	header.Set("Authorization", "Bearer "+c.Remote.Daemon.Token)
 
-	// Attempt websocket connection
+	// set up websocket connection
+	c.debugf("request constructed: %s (authorized: %v, verified: %v)",
+		url.String(), c.Remote.Daemon.Token != "", c.Remote.Daemon.VerifySSL)
 	socket, resp, err := buildWebSocketDialer(c.Remote.Daemon.VerifySSL).
-		Dial(url.String(), header)
+		DialContext(ctx, url.String(), header)
 	if err == websocket.ErrBadHandshake {
-		return nil, fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
+		return fmt.Errorf("websocket handshake failed with status %d", resp.StatusCode)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to daemon at %s: %s", url.Host, err.Error())
+		return fmt.Errorf("failed to connect to daemon: %s", err.Error())
 	}
-	return socket, nil
+	defer socket.Close()
+	c.debugf("websocket connection established")
+
+	// read from socket until error
+	var errC = make(chan error, 1)
+	go func() {
+		for {
+			_, line, err := socket.ReadMessage()
+			if err != nil {
+				errC <- fmt.Errorf("error occured while reading from socket: %s", err.Error())
+				return
+			}
+			c.om.Lock()
+			fmt.Fprint(c.out, string(line))
+			c.om.Unlock()
+		}
+	}()
+
+	// block until done
+	for {
+		select {
+		case <-ctx.Done():
+			c.debugf("context cancelled, closing connection")
+			return nil
+		case err := <-errC:
+			c.debugf("error received: %s", err.Error())
+			return err
+		}
+	}
 }
 
 // UpdateEnv updates environment variable
-func (c *Client) UpdateEnv(name, value string, encrypt, remove bool) (*http.Response, error) {
-	return c.post("/env", api.EnvRequest{
+func (c *Client) UpdateEnv(ctx context.Context, name, value string, encrypt, remove bool) error {
+	resp, err := c.post(ctx, "/env", api.EnvRequest{
 		Name: name, Value: value, Encrypt: encrypt, Remove: remove,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to make request: %s", err.Error())
+	}
+
+	base, err := c.unmarshal(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return fmt.Errorf("failed to read response: %s", err.Error())
+	}
+
+	return base.Error()
 }
 
 // ListEnv lists environment variables currently set on remote
-func (c *Client) ListEnv() (*http.Response, error) {
-	return c.get("/env", nil)
-}
+func (c *Client) ListEnv(ctx context.Context) ([]string, error) {
+	resp, err := c.get(ctx, "/env", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %s", err.Error())
+	}
 
-// AddUser adds an authorized user for access to Inertia Web
-func (c *Client) AddUser(username, password string, admin bool) (*http.Response, error) {
-	return c.post("/user/add", &api.UserRequest{
-		Username: username,
-		Password: password,
-		Admin:    admin,
-	})
-}
+	var variables = make([]string, 0)
+	base, err := c.unmarshal(resp.Body, api.KV{Key: "variables", Value: &variables})
+	resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %s", err.Error())
+	}
 
-// RemoveUser prevents a user from accessing Inertia Web
-func (c *Client) RemoveUser(username string) (*http.Response, error) {
-	return c.post("/user/remove", &api.UserRequest{Username: username})
-}
-
-// ResetUsers resets all users on the remote.
-func (c *Client) ResetUsers() (*http.Response, error) {
-	return c.post("/user/reset", nil)
-}
-
-// ListUsers lists all users on the remote.
-func (c *Client) ListUsers() (*http.Response, error) {
-	return c.get("/user/list", nil)
-}
-
-// EnableTotp enables Totp for a given user
-func (c *Client) EnableTotp(username, password string) (*http.Response, error) {
-	return c.post("/user/totp/enable", &api.UserRequest{
-		Username: username,
-		Password: password,
-	})
-}
-
-// DisableTotp disables Totp for a given user
-func (c *Client) DisableTotp() (*http.Response, error) {
-	return c.post("/user/totp/disable", nil)
+	return variables, base.Error()
 }
 
 // Sends a GET request. "queries" contains query string arguments.
-func (c *Client) get(endpoint string, queries map[string]string) (*http.Response, error) {
+func (c *Client) get(
+	ctx context.Context,
+	endpoint string,
+	queries map[string]string,
+) (*http.Response, error) {
 	// Assemble request
-	req, err := c.buildRequest("GET", endpoint, nil)
+	req, err := c.buildRequest(ctx, "GET", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +399,11 @@ func (c *Client) get(endpoint string, queries map[string]string) (*http.Response
 	return buildHTTPSClient(c.Remote.Daemon.VerifySSL).Do(req)
 }
 
-func (c *Client) post(endpoint string, requestBody interface{}) (*http.Response, error) {
+func (c *Client) post(
+	ctx context.Context,
+	endpoint string,
+	requestBody interface{},
+) (*http.Response, error) {
 	// Assemble payload
 	var payload io.Reader
 	if requestBody != nil {
@@ -249,7 +417,7 @@ func (c *Client) post(endpoint string, requestBody interface{}) (*http.Response,
 	}
 
 	// Assemble request
-	req, err := c.buildRequest("POST", endpoint, payload)
+	req, err := c.buildRequest(ctx, "POST", endpoint, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +425,12 @@ func (c *Client) post(endpoint string, requestBody interface{}) (*http.Response,
 	return buildHTTPSClient(c.Remote.Daemon.VerifySSL).Do(req)
 }
 
-func (c *Client) buildRequest(method string, endpoint string, payload io.Reader) (*http.Request, error) {
+func (c *Client) buildRequest(
+	ctx context.Context,
+	method string,
+	endpoint string,
+	payload io.Reader,
+) (*http.Request, error) {
 	// Assemble URL
 	addr, err := c.Remote.DaemonAddr()
 	if err != nil {
@@ -265,7 +438,7 @@ func (c *Client) buildRequest(method string, endpoint string, payload io.Reader)
 	}
 	url, err := url.Parse(addr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid url configuration: %s", err.Error())
 	}
 	url.Path = path.Join(url.Path, endpoint)
 
@@ -276,6 +449,28 @@ func (c *Client) buildRequest(method string, endpoint string, payload io.Reader)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.Remote.Daemon.Token)
+	req.WithContext(ctx)
+	c.debugf("request constructed: %s %s (authorized: %v, with payload: %v, verified: %v)",
+		method, req.URL.String(), c.Remote.Daemon.Token != "", payload != nil, c.Remote.Daemon.VerifySSL)
 
 	return req, nil
+}
+
+// unmarshal wraps c.unmarshal and logs responses
+func (c *Client) unmarshal(r io.Reader, kvs ...api.KV) (*api.BaseResponse, error) {
+	b, err := api.Unmarshal(r, kvs...)
+	if b != nil {
+		bytes, _ := json.MarshalIndent(b, "", "  ")
+		c.debugf("response received: %s (%s)", b.Message, string(bytes))
+	}
+	return b, err
+}
+
+// debugf logs to the client's output if debug is enabled
+func (c *Client) debugf(format string, args ...interface{}) {
+	if c.debug {
+		c.om.Lock()
+		fmt.Fprintf(c.out, "DEBUG: "+format+"\n", args...)
+		c.om.Unlock()
+	}
 }

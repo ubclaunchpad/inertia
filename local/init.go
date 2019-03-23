@@ -10,7 +10,7 @@ import (
 // Init sets up Inertia configuration
 func Init() (*cfg.Inertia, error) {
 	var inertiaPath = InertiaDir()
-	os.MkdirAll(inertiaPath, 0400)
+	os.MkdirAll(inertiaPath, os.ModePerm)
 	var inertia = cfg.NewInertiaConfig()
 	return inertia, Write(InertiaConfigPath(), inertia)
 }

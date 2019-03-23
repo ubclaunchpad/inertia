@@ -1,11 +1,9 @@
 package projectcmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cfg"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 	"github.com/ubclaunchpad/inertia/local"
 	"github.com/ubclaunchpad/inertia/local/git"
 )
@@ -41,16 +39,16 @@ func (p *ProfileCmd) attachSetCmd() {
 		flagBuildType     = "build.type"
 		flagBuildFilePath = "build.file"
 	)
-	var set = &cobra.Command{
-		Use:   "set [profile]",
+	var configure = &cobra.Command{
+		Use:   "configure [profile]",
 		Short: "Configure project profiles",
 		Long: `Configures project profiles - if the given profile does not exist,
 a new one is created, otherwise the existing one is overwritten.
 
 Provide profile values via the available flags.`,
-		Aliases: []string{"new", "add"},
+		Aliases: []string{"add", "set"},
 		Args:    cobra.ExactArgs(1),
-		Example: "inertia project profile set my_profile --build.type dockerfile --build.file Dockerfile.dev",
+		Example: "inertia project profile configure my_profile --build.type dockerfile --build.file Dockerfile.dev",
 		Run: func(cmd *cobra.Command, args []string) {
 			var (
 				err       error
@@ -62,13 +60,13 @@ Provide profile values via the available flags.`,
 			if branch == "" {
 				branch, err = git.GetRepoCurrentBranch()
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			}
 
 			bType, err := cfg.AsBuildType(bTypeS)
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			p.root.config.SetProfile(cfg.Profile{
@@ -81,17 +79,17 @@ Provide profile values via the available flags.`,
 			})
 
 			if err := local.Write(p.root.projectConfigPath, p.root.config); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			fmt.Printf("profile '%s' successfully updated", args[0])
+			out.Printf("profile '%s' successfully updated\n", args[0])
 		},
 	}
-	set.Flags().String(flagBranch, "", "branch for profile (default: current branch)")
-	set.Flags().String(flagBuildType, "", "build type for profile")
-	set.MarkFlagRequired(flagBuildType)
-	set.Flags().String(flagBuildFilePath, "", "relative path to build config file (e.g. 'Dockerfile')")
-	set.MarkFlagRequired(flagBuildFilePath)
-	p.AddCommand(set)
+	configure.Flags().String(flagBranch, "", "branch for profile (default: current branch)")
+	configure.Flags().String(flagBuildType, "", "build type for profile")
+	configure.MarkFlagRequired(flagBuildType)
+	configure.Flags().String(flagBuildFilePath, "", "relative path to build config file (e.g. 'Dockerfile')")
+	configure.MarkFlagRequired(flagBuildFilePath)
+	p.AddCommand(configure)
 }
 
 func (p *ProfileCmd) attachApplyCmd() {
@@ -106,32 +104,33 @@ By default, the profile called 'default' will be used.`,
 		Args: cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if _, ok := p.root.config.GetProfile(args[0]); !ok {
-				output.Fatalf("profile '%s' does not exist", args[0])
+				out.Fatalf("profile '%s' does not exist", args[0])
 			}
 			cfg, err := local.GetInertiaConfig()
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 			r, ok := cfg.GetRemote(args[1])
 			if !ok {
-				output.Fatalf("remote '%s' does not exist", args[1])
+				out.Fatalf("remote '%s' does not exist", args[1])
 			}
 			r.ApplyProfile(p.root.config.Name, args[0])
 			if err := local.SaveRemote(r); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			fmt.Printf("profile '%s' successfully applied to rmeote '%s'", args[0], args[1])
+			out.Printf("profile '%s' successfully applied to remote '%s'", args[0], args[1])
 		},
 	}
 	p.AddCommand(apply)
 }
 
 func (p *ProfileCmd) attachListCmd() {
+	var verbose bool
 	var ls = &cobra.Command{
 		Use:   "ls",
 		Short: "List configured project profiles",
 		Long: `List configured profiles for this project. To add new ones, use
-'inertia project profile set'.`,
+'inertia project profile configure'.`,
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			if p.root.config.Profiles == nil {
@@ -139,28 +138,38 @@ func (p *ProfileCmd) attachListCmd() {
 				local.Write(p.root.projectConfigPath, p.root.config)
 			}
 			for _, pf := range p.root.config.Profiles {
-				println(pf.Name)
+				if verbose {
+					out.Print(out.C("profile '%s'\n", out.BO, out.CY).With(pf.Name))
+					out.Printf(`:christmas_tree: Branch:              %s
+:hammer: Build.Type:          %s
+:ledger: Build.BuildFile:     %s
+`, pf.Branch, pf.Build.Type, pf.Build.BuildFilePath)
+				} else {
+					out.Println(pf.Name)
+				}
 			}
 		},
 	}
+	ls.Flags().BoolVarP(&verbose, "verbose", "v", false, "print profile details")
 	p.AddCommand(ls)
 }
 
 func (p *ProfileCmd) attachShowCmd() {
 	var show = &cobra.Command{
 		Use:   "show",
-		Short: "Output profile configuration",
+		Short: "out profile configuration",
 		Long: `Prints the requested profile configuration. To add new ones, use
-'inertia project profile set'.`,
+'inertia project profile configure'.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			pf, ok := p.root.config.GetProfile(args[0])
 			if !ok {
-				output.Fatalf("profile '%s' not found", args[0])
+				out.Fatalf("profile '%s' not found", args[0])
 			}
-			fmt.Printf(`* Branch:              %s
-* Build.Type:          %s
-* Build.BuildFilePath: %s
+			out.Print(out.C("profile '%s'\n", out.BO, out.CY).With(args[0]))
+			out.Printf(`:christmas_tree: Branch:              %s
+:hammer: Build.Type:          %s
+:ledger: Build.BuildFile:     %s
 `, pf.Branch, pf.Build.Type, pf.Build.BuildFilePath)
 		},
 	}

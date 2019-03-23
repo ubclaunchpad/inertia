@@ -4,7 +4,7 @@ Effortless, self-hosted continuous deployment for small teams and projects
 
 ### Synopsis
 
-Inertia is an effortless, self-hosted continuous deployment platform.
+Inertia is an effortless, self-hosted continuous deployment platform 🚀 
 
 Initialization involves preparing a server to run an application, then
 activating a daemon which will continuously update the production server
@@ -16,15 +16,16 @@ available remotes, use 'inertia remote ls'.
 
 Global inertia configuration is stored in '~/.inertia/inertia.global'.
 
-* Repository:    https://github.com/ubclaunchpad/inertia/
-* Issue tracker: https://github.com/ubclaunchpad/inertia/issues
-* Documentation: https://inertia.ubclaunchpad.com
+💻  Repository:    https://github.com/ubclaunchpad/inertia/
+🎫  Issue tracker: https://github.com/ubclaunchpad/inertia/issues
+📚  Documentation: https://inertia.ubclaunchpad.com
 
 ### Options
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
   -h, --help            help for inertia
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

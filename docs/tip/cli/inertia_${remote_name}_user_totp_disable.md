@@ -20,7 +20,9 @@ inertia ${remote_name} user totp disable [user] [flags]
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

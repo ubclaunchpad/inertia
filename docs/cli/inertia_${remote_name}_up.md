@@ -4,9 +4,11 @@ Bring project online on remote
 
 ### Synopsis
 
-Builds and deploy your project on your remote.
+Builds and deploy your project on your remote using your project's
+default profile, or a profile you have applied using 'inertia project profile apply'.
 
-This requires an Inertia daemon to be active on your remote - do this by running 'inertia [remote] init'
+This requires an Inertia daemon to be active on your remote - do this by running
+'inertia [remote] init'.
 
 ```
 inertia ${remote_name} up [flags]
@@ -15,16 +17,16 @@ inertia ${remote_name} up [flags]
 ### Options
 
 ```
-  -h, --help          help for up
-      --type string   override configured build method for your project
+  -h, --help             help for up
+  -p, --profile string   specify a profile to deploy
 ```
 
 ### Options inherited from parent commands
 
 ```
       --config string   specify relative path to Inertia configuration (default "inertia.toml")
+  -d, --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
-      --verify-ssl      verify SSL communications - requires a signed SSL certificate
 ```
 
 ### SEE ALSO

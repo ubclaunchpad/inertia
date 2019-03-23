@@ -36,4 +36,5 @@ inertia gcloud status      # check on status of Inertia daemon
 * [inertia remote rm](inertia_remote_rm.md)	 - Remove a configured remote
 * [inertia remote set](inertia_remote_set.md)	 - Update details about remote
 * [inertia remote show](inertia_remote_show.md)	 - Show details about a remote
+* [inertia remote upgrade](inertia_remote_upgrade.md)	 - Upgrade your remote configuration version to match the CLI
 
