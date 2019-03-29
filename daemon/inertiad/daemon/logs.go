@@ -105,7 +105,7 @@ func (s *Server) logHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(logs)
-		render.Render(w, r, res.MsgOK("configured environment variables retrieved",
+		render.Render(w, r, res.MsgOK("logs retrieved",
 			"logs", strings.Split(buf.String(), "\n")))
 	}
 }

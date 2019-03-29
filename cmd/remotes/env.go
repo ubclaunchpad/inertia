@@ -1,13 +1,11 @@
 package remotescmd
 
 import (
-	"fmt"
-	"io/ioutil"
+	"context"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/api"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 )
 
 // EnvCmd is the parent class for the 'env' subcommands
@@ -43,6 +41,9 @@ as follows:
 	host.AddCommand(env.Command)
 }
 
+// Context returns the root host command's context
+func (root *EnvCmd) Context() context.Context { return root.host.ctx }
+
 func (root *EnvCmd) attachSetCmd() {
 	const flagEncrypt = "encrypt"
 	var set = &cobra.Command{
@@ -53,16 +54,16 @@ variables are applied to all deployed containers.`,
 		Args: cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			var encrypt, _ = cmd.Flags().GetBool(flagEncrypt)
-			resp, err := root.host.client.UpdateEnv(args[0], args[1], encrypt, false)
-			if err != nil {
-				output.Fatal(err)
+			if err := root.host.client.UpdateEnv(
+				root.Context(),
+				args[0],
+				args[1],
+				encrypt,
+				false,
+			); err != nil {
+				out.Fatal(err)
 			}
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				output.Fatal(err)
-			}
-			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+			out.Println("env value successfully updated")
 		},
 	}
 	set.Flags().BoolP(flagEncrypt, "e", false, "encrypt variable when stored")
@@ -77,17 +78,16 @@ func (root *EnvCmd) attachRemoveCmd() {
 and persistent environment storage.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.host.client.UpdateEnv(args[0], "", false, true)
-			if err != nil {
-				output.Fatal(err)
+			if err := root.host.client.UpdateEnv(
+				root.Context(),
+				args[0],
+				"",
+				false,
+				true,
+			); err != nil {
+				out.Fatal(err)
 			}
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				output.Fatal(err)
-			}
-
-			fmt.Printf("(Status code %d) %s\n", resp.StatusCode, body)
+			out.Println("env value successfully removed")
 		},
 	}
 	root.AddCommand(remove)
@@ -100,21 +100,15 @@ func (root *EnvCmd) attachListCmd() {
 		Long: `Lists currently set and saved environment variables. The values of encrypted
 variables are not be decrypted.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.host.client.ListEnv()
+			variables, err := root.host.client.ListEnv(root.Context())
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			defer resp.Body.Close()
-			var variables = make([]string, 0)
-			b, err := api.Unmarshal(resp.Body, api.KV{Key: "variables", Value: &variables})
-			if err != nil {
-				output.Fatal(err)
-			}
+
 			if len(variables) == 0 {
-				fmt.Printf("(Status code %d) no variables configured", resp.StatusCode)
+				out.Println("no variables configured on remote")
 			} else {
-				fmt.Printf("(Status code %d) %s: \n%s\n",
-					resp.StatusCode, b.Message, strings.Join(variables, "\n"))
+				out.Println(strings.Join(variables, "\n"))
 			}
 		},
 	}

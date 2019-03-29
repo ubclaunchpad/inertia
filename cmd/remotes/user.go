@@ -1,18 +1,16 @@
 package remotescmd
 
 import (
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"context"
 	"strings"
 	"syscall"
 
-	"github.com/ubclaunchpad/inertia/local"
-
 	"github.com/spf13/cobra"
-	"github.com/ubclaunchpad/inertia/api"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
 	"golang.org/x/crypto/ssh/terminal"
+
+	"github.com/ubclaunchpad/inertia/client"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
+	"github.com/ubclaunchpad/inertia/local"
 )
 
 // UserCmd is the parent class for the 'user' subcommands
@@ -45,6 +43,12 @@ func AttachUserCmd(host *HostCmd) {
 	host.AddCommand(user.Command)
 }
 
+// context returns the root host command's context
+func (root *UserCmd) context() context.Context { return root.host.ctx }
+
+// getUserClient returns the root host command's user client
+func (root *UserCmd) getUserClient() *client.UserClient { return root.host.client.GetUserClient() }
+
 func (root *UserCmd) attachAddCmd() {
 	const flagAdmin = "admin"
 	var add = &cobra.Command{
@@ -58,34 +62,26 @@ from the Inertia CLI (using 'inertia [remote] user login').
 Use the --admin flag to create an admin user.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print("Enter a password for user: ")
+			out.Print(out.C(":key: Enter a password for user: ", out.CY))
 			bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+			out.Print("\n")
 			if err != nil {
-				output.Fatal("Invalid password")
+				out.Fatal("Invalid password")
 			}
 			var password = strings.TrimSpace(string(bytePassword))
-			fmt.Print("\n")
-
+			if password == "" {
+				out.Fatal("Invalid password")
+			}
 			var admin, _ = cmd.Flags().GetBool(flagAdmin)
-			resp, err := root.host.client.AddUser(args[0], password, admin)
-			if err != nil {
-				output.Fatal(err)
+			if admin {
+				out.Printf("creating user '%s' as an administrator...\n", args[0])
+			} else {
+				out.Printf("creating user '%s'...\n", args[0])
 			}
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				output.Fatal(err)
+			if err := root.getUserClient().AddUser(root.context(), args[0], password, admin); err != nil {
+				out.Fatal(err)
 			}
-
-			switch resp.StatusCode {
-			case http.StatusCreated:
-				fmt.Printf("(Status code %d) User added!\n", resp.StatusCode)
-			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-					resp.StatusCode, body)
-			}
+			out.Println("user has been created")
 		},
 	}
 	add.Flags().Bool(flagAdmin, false, "create a user with administrator permissions")
@@ -102,24 +98,10 @@ This user will no longer be able to log in and view or configure the deployment
 remotely.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.host.client.RemoveUser(args[0])
-			if err != nil {
-				output.Fatal(err)
+			if err := root.getUserClient().RemoveUser(root.context(), args[0]); err != nil {
+				out.Fatal(err)
 			}
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				output.Fatal(err)
-			}
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("(Status code %d) User removed.\n", resp.StatusCode)
-			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-					resp.StatusCode, body)
-			}
+			out.Println("user has been removed")
 		},
 	}
 	root.AddCommand(remove)
@@ -133,50 +115,45 @@ func (root *UserCmd) attachLoginCmd() {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var username = args[0]
-			fmt.Print("Password: ")
+			out.Print("Password: ")
 			pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
-			fmt.Println()
+			out.Println()
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			var totp, _ = cmd.Flags().GetString("totp")
-			resp, err := root.host.client.LogIn(username, string(pwBytes), totp)
-			if err != nil {
-				output.Fatal(err)
+			var req = client.AuthenticateRequest{
+				User:     username,
+				Password: string(pwBytes),
+				TOTP:     totp,
+			}
+			token, err := root.getUserClient().Authenticate(root.context(), req)
+			if err != nil && err != client.ErrNeedTotp {
+				out.Fatal(err)
 			}
 
-			if resp.StatusCode == http.StatusExpectationFailed {
+			if err == client.ErrNeedTotp {
 				// a TOTP is required
-				fmt.Print("Authentication code (or backup code): ")
+				out.Print("Authentication code (or backup code): ")
 				totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
-				fmt.Println()
+				out.Println()
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
-				resp, err = root.host.client.LogIn(username, string(pwBytes), string(totpBytes))
+				req.TOTP = string(totpBytes)
+				token, err = root.getUserClient().Authenticate(root.context(), req)
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			}
 
-			fmt.Printf("(Status code %d) ", resp.StatusCode)
-			if resp.StatusCode != http.StatusOK {
-				fmt.Println("Invalid credentials")
-				return
-			}
-			defer resp.Body.Close()
-			var token string
-			if api.Unmarshal(resp.Body, api.KV{Key: "token", Value: &token}); err != nil {
-				output.Fatal(err)
-			}
-
-			root.host.client.Remote.Daemon.Token = string(token)
+			root.host.getRemote().Daemon.Token = token
 			if err = local.SaveRemote(root.host.getRemote()); err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
-			fmt.Println("You have been logged in successfully.")
+			out.Println("you have been logged in successfully, and a token has been saved")
 		},
 	}
 	login.Flags().String("totp", "", "auth code or backup code for 2FA")
@@ -191,26 +168,10 @@ func (root *UserCmd) attachResetCmd() {
 will no longer be able to log in and view or configure the deployment
 remotely.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.host.client.ResetUsers()
-			if err != nil {
-				output.Fatal(err)
+			if err := root.getUserClient().ResetUsers(root.context()); err != nil {
+				out.Fatal(err)
 			}
-			defer resp.Body.Close()
-
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				output.Fatal(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("(Status code %d) All users removed.\n", resp.StatusCode)
-			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth:\n%s\n", resp.StatusCode, body)
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon:\n%s\n",
-					resp.StatusCode, body)
-			}
+			out.Println("all users removed")
 		},
 	}
 	root.AddCommand(reset)
@@ -222,28 +183,11 @@ func (root *UserCmd) attachListCmd() {
 		Short: "List all users registered on your remote.",
 		Long:  `Lists all users registered in Inertia's user database.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := root.host.client.ListUsers()
+			users, err := root.getUserClient().ListUsers(root.context())
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
-			defer resp.Body.Close()
-
-			var users = make([]string, 0)
-			b, err := api.Unmarshal(resp.Body, api.KV{Key: "users", Value: &users})
-			if err != nil {
-				output.Fatal(err)
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				fmt.Printf("(Status code %d) %s:\n%s", resp.StatusCode, b.Message,
-					strings.Join(users, "\n"))
-			case http.StatusUnauthorized:
-				fmt.Printf("(Status code %d) Bad auth: %s\n", resp.StatusCode, b.Error())
-			default:
-				fmt.Printf("(Status code %d) Unknown response from daemon: %s\n",
-					resp.StatusCode, b.Error())
-			}
+			out.Println(strings.Join(users, "\n"))
 		},
 	}
 	root.AddCommand(list)

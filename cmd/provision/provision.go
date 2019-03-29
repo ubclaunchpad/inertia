@@ -1,7 +1,6 @@
 package provisioncmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -12,7 +11,7 @@ import (
 	"github.com/ubclaunchpad/inertia/client/runner"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
-	"github.com/ubclaunchpad/inertia/cmd/core/utils/output"
+	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/local"
 	"github.com/ubclaunchpad/inertia/provision"
@@ -42,11 +41,11 @@ func AttachProvisionCmd(inertia *core.Cmd) {
 			var err error
 			prov.config, err = local.GetInertiaConfig()
 			if err != nil {
-				output.Fatalf(err.Error())
+				out.Fatalf(err.Error())
 			}
 			prov.project, err = local.GetProject(inertia.ProjectConfigPath)
 			if err != nil {
-				output.Fatalf(err.Error())
+				out.Fatalf(err.Error())
 			}
 			prov.cfgPath = inertia.ProjectConfigPath
 		},
@@ -87,7 +86,7 @@ This ensures that your project ports are properly exposed and externally accessi
 		Run: func(cmd *cobra.Command, args []string) {
 			var config = root.config
 			if _, found := config.GetRemote(args[0]); found {
-				output.Fatal("remote with name already exists")
+				out.Fatal("remote with name already exists")
 			}
 
 			// Load flags for setup configuration
@@ -97,10 +96,11 @@ This ensures that your project ports are properly exposed and externally accessi
 				stringProjectPorts, _ = cmd.Flags().GetStringArray(flagPorts)
 			)
 			if stringProjectPorts == nil || len(stringProjectPorts) == 0 {
-				fmt.Print("[WARNING] no project ports provided - this means that no ports" +
-					"will be exposed on your ec2 host. Use the '--ports' flag to set" +
-					"ports that you want to be accessible.\n")
+				out.Print(out.C("[WARNING] no project ports provided - this means that no ports"+
+					"will be exposed on your ec2 host. Use the '--ports' flag to set"+
+					"ports that you want to be accessible.\n", out.RD))
 			}
+			var highlight = out.NewColorer(out.CY)
 
 			// Load flags for credentials
 			var (
@@ -114,7 +114,7 @@ This ensures that your project ports are properly exposed and externally accessi
 			if fromEnv {
 				prov, err = provision.NewEC2ProvisionerFromEnv(user, os.Stdout)
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			} else if withProfile {
 				var profileUser, _ = cmd.Flags().GetString(flagProfileUser)
@@ -122,49 +122,49 @@ This ensures that your project ports are properly exposed and externally accessi
 				prov, err = provision.NewEC2ProvisionerFromProfile(
 					user, profileUser, profilePath, os.Stdout)
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			} else {
 				keyID, key, err := input.EnterEC2CredentialsWalkthrough()
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 				prov, err = provision.NewEC2Provisioner(user, keyID, key, os.Stdout)
 				if err != nil {
-					output.Fatal(err)
+					out.Fatal(err)
 				}
 			}
 
 			// Report connected user
-			fmt.Printf("Executing commands as user '%s'\n", prov.GetUser())
+			out.Printf("Executing commands as user '%s'\n", prov.GetUser())
 
 			// Prompt for region
-			println("See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions for a list of available regions.")
-			region, err := input.Prompt("Please enter a region: ")
+			out.Println("See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions for a list of available regions.")
+			region, err := input.Prompt(highlight.S("Please enter a region: "))
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			// List image options and prompt for input
-			fmt.Printf("Loading images for region '%s'...\n", region)
+			out.Printf("Loading images for region '%s'...\n", region)
 			images, err := prov.ListImageOptions(region)
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 			image, err := input.ChooseFromListWalkthrough("image", images)
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
 
 			// Gather input
-			fmt.Printf("Creating %s instance in %s from image %s...\n", instanceType, region, image)
+			out.Printf("Creating %s instance in %s from image %s...\n", instanceType, region, image)
 			var ports = []int64{}
 			for _, portString := range stringProjectPorts {
 				p, err := common.ParseInt64(portString)
 				if err == nil {
 					ports = append(ports, p)
 				} else {
-					fmt.Printf("invalid port %s", portString)
+					out.Printf("invalid port %s", portString)
 				}
 			}
 
@@ -182,26 +182,32 @@ This ensures that your project ports are properly exposed and externally accessi
 				Region:       region,
 			})
 			if err != nil {
-				output.Fatal(err)
+				out.Fatal(err)
 			}
+			out.Println(highlight.Sf("Instance provisioned for remote '%s'!", args[0]))
 
 			// Save new remote to configuration
 			local.SaveRemote(remote)
 
 			// Create inertia client
-			inertia := client.NewClient(remote, client.Options{
+			var inertia = client.NewClient(remote, client.Options{
 				SSH: runner.SSHOptions{KeyPassphrase: os.Getenv(local.EnvSSHPassphrase)},
 			})
 
 			// Bootstrap remote
-			fmt.Printf("Initializing Inertia daemon at %s...\n", inertia.Remote.IP)
-			if err := bootstrap.SetUpRemote(os.Stdout, args[0], root.project.URL, inertia); err != nil {
-				output.Fatal(err.Error())
+			out.Println(highlight.Sf("Initializing Inertia daemon at %s...", inertia.Remote.IP))
+			var repo = common.ExtractRepository(common.GetSSHRemoteURL(root.project.URL))
+			if err := bootstrap.Bootstrap(inertia, bootstrap.Options{
+				RepoName: repo,
+				Out:      os.Stdout,
+			}); err != nil {
+				out.Fatal(err.Error())
 			}
 
 			// Save updated config
+			out.Println(highlight.S("Saving remote..."))
 			if err := local.SaveRemote(remote); err != nil {
-				output.Fatal(err.Error())
+				out.Fatal(err.Error())
 			}
 		},
 	}

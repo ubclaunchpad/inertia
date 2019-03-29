@@ -20,7 +20,7 @@ func InertiaDir() string {
 	if os.Getenv("INERTIA_PATH") != "" {
 		return os.Getenv("INERTIA_PATH")
 	}
-	home, err := GetHomePath()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "/.inertia"
 	}
@@ -35,7 +35,7 @@ func GetInertiaConfig() (*cfg.Inertia, error) {
 	raw, err := ioutil.ReadFile(InertiaConfigPath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.New("config file doesn't exist - try running inertia config init")
+			return nil, errors.New("config file doesn't exist")
 		}
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func RemoveRemote(name string) error {
 	if !inertia.RemoveRemote(name) {
 		return fmt.Errorf("failed to remove remote '%s'", name)
 	}
-	return nil
+	return Write(InertiaConfigPath(), inertia)
 }
 
 // GetProject retrieves the Inertia project configuration at the given path
@@ -108,7 +108,7 @@ func Write(path string, data interface{}, writers ...io.Writer) error {
 
 		// Overwrite file if file exists
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			ioutil.WriteFile(path, []byte(""), 0644)
+			ioutil.WriteFile(path, []byte(""), os.ModePerm)
 		} else if err != nil {
 			return err
 		}
