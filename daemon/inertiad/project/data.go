@@ -149,10 +149,10 @@ func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata De
 		return err
 	}
 	return c.db.Update(func(tx *bolt.Tx) error {
-		deployedProjectsBucket := tx.Bucket(deployedProjectsBucket)
+		depProjectsBkt := tx.Bucket(deployedProjectsBucket)
 		// if bkt with project name doesnt exist create new bkt, otherwise update existing bucket
-		if projectBkt := deployedProjectsBucket.Bucket([]byte(projectName)); projectBkt == nil {
-			projectBkt, err := deployedProjectsBucket.CreateBucket([]byte(projectName))
+		if projectBkt := depProjectsBkt.Bucket([]byte(projectName)); projectBkt == nil {
+			projectBkt, err := depProjectsBkt.CreateBucket([]byte(projectName))
 			if err != nil {
 				return err
 			}
@@ -181,6 +181,19 @@ func (c *DeploymentDataManager) UpdateProjectBuildData(projectName string, mdata
 
 		return nil
 	})
+}
+
+// GetNumOfDeployedProjects returns number of projects currently deployed
+func (c *DeploymentDataManager) GetNumOfDeployedProjects(projectName string) (int, error) {
+	var numBkts int
+	err := c.db.View(func(tx *bolt.Tx) error {
+		deployedProjectsBucket := tx.Bucket(deployedProjectsBucket)
+		bktStats := deployedProjectsBucket.Stats()
+		numBkts = bktStats.BucketN
+		return nil
+	})
+
+	return numBkts, err
 }
 
 func (c *DeploymentDataManager) destroy() error {

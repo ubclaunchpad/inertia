@@ -69,13 +69,14 @@ func TestDataManager_ProjectBuildDataOperations(t *testing.T) {
 	type args struct {
 		projectName string
 		metadata    DeploymentMetadata
+		numProjects int
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{"valid project build", args{"projectA", DeploymentMetadata{"hash", "ID", "status", "time"}}, false},
+		{"valid project build", args{"projectB", DeploymentMetadata{"hash", "ID", "status", "time"}, 1}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -92,6 +93,11 @@ func TestDataManager_ProjectBuildDataOperations(t *testing.T) {
 			err = c.AddProjectBuildData(tt.args.projectName, tt.args.metadata)
 			assert.Equal(t, tt.wantErr, (err != nil))
 
+			// // Adding using same project name should only update existing bucket
+			// err = c.AddProjectBuildData(tt.args.projectName, tt.args.metadata)
+			// numBkts, err := c.GetNumOfDeployedProjects(tt.args.projectName)
+			// assert.Nil(t, err)
+			// assert.Equal(t, tt.args.numProjects, numBkts)
 		})
 	}
 }
