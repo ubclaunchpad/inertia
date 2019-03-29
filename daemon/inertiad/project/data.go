@@ -148,7 +148,7 @@ func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata De
 	if err != nil {
 		return err
 	}
-	return c.db.Update(func(tx *bolt.Tx) error {
+	c.db.Update(func(tx *bolt.Tx) error {
 		depProjectsBkt := tx.Bucket(deployedProjectsBucket)
 		// if bkt with project name doesnt exist create new bkt, otherwise update existing bucket
 		if projectBkt := depProjectsBkt.Bucket([]byte(projectName)); projectBkt == nil {
@@ -160,39 +160,35 @@ func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata De
 			if err := projectBkt.Put([]byte(time.Now().String()), encodedMdata); err != nil {
 				return err
 			}
-		} else {
-			if err := c.UpdateProjectBuildData(projectName, encodedMdata); err != nil {
-				return err
-			}
 		}
 		return nil
 	})
+	return c.UpdateProjectBuildData(projectName, encodedMdata)
 }
 
 // UpdateProjectBuildData updates existing project bkt with recent build's metadata
 func (c *DeploymentDataManager) UpdateProjectBuildData(projectName string, mdata []byte) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		deployedProjectsBucket := tx.Bucket(deployedProjectsBucket)
-		projectBkt := deployedProjectsBucket.Bucket([]byte(projectName))
+		depProjectBkt := tx.Bucket(deployedProjectsBucket)
+		projectBkt := depProjectBkt.Bucket([]byte(projectName))
 
 		if err := projectBkt.Put([]byte(time.Now().String()), mdata); err != nil {
 			return err
 		}
-
 		return nil
 	})
+
 }
 
 // GetNumOfDeployedProjects returns number of projects currently deployed
 func (c *DeploymentDataManager) GetNumOfDeployedProjects(projectName string) (int, error) {
 	var numBkts int
 	err := c.db.View(func(tx *bolt.Tx) error {
-		deployedProjectsBucket := tx.Bucket(deployedProjectsBucket)
-		bktStats := deployedProjectsBucket.Stats()
+		depProjectBkt := tx.Bucket(deployedProjectsBucket)
+		bktStats := depProjectBkt.Stats()
 		numBkts = bktStats.BucketN
 		return nil
 	})
-
 	return numBkts, err
 }
 

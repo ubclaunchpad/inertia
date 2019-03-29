@@ -76,7 +76,7 @@ func TestDataManager_ProjectBuildDataOperations(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"valid project build", args{"projectB", DeploymentMetadata{"hash", "ID", "status", "time"}, 1}, false},
+		{"valid project build", args{"projectA", DeploymentMetadata{"hash", "ID", "status", "time"}, 2}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -93,11 +93,17 @@ func TestDataManager_ProjectBuildDataOperations(t *testing.T) {
 			err = c.AddProjectBuildData(tt.args.projectName, tt.args.metadata)
 			assert.Equal(t, tt.wantErr, (err != nil))
 
-			// // Adding using same project name should only update existing bucket
-			// err = c.AddProjectBuildData(tt.args.projectName, tt.args.metadata)
-			// numBkts, err := c.GetNumOfDeployedProjects(tt.args.projectName)
-			// assert.Nil(t, err)
-			// assert.Equal(t, tt.args.numProjects, numBkts)
+			// Adding using same project name should only update existing bucket
+			err = c.AddProjectBuildData(tt.args.projectName, tt.args.metadata)
+			numBkts, err := c.GetNumOfDeployedProjects(tt.args.projectName)
+			assert.Nil(t, err)
+			assert.Equal(t, tt.args.numProjects, numBkts)
+
+			// Adding using diff project name should create new bucket
+			err = c.AddProjectBuildData(tt.args.projectName+"_new", tt.args.metadata)
+			numBkts, err = c.GetNumOfDeployedProjects(tt.args.projectName)
+			assert.Nil(t, err)
+			assert.Equal(t, tt.args.numProjects+1, numBkts)
 		})
 	}
 }
