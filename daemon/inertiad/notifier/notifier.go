@@ -3,6 +3,9 @@ package notifier
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -17,8 +20,13 @@ type SlackNotifier struct {
 }
 
 // NewNotifier creates a notifier with web hook url to slack channel
-func NewNotifier() *SlackNotifier {
-	url := "https://hooks.slack.com/services/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"
+func NewNotifier(webhook string) *SlackNotifier {
+	url := webhook
+
+	if webhook == "test" { // temporary for testing
+		url = "https://hooks.slack.com/services/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"
+	}
+	// os.Getenv("SLACK_URL")
 
 	n := &SlackNotifier{
 		hookURL: url,
@@ -27,13 +35,51 @@ func NewNotifier() *SlackNotifier {
 	return n
 }
 
+// Color is used to represent message color for different states (i.e success, fail)
+type Color string
+
+const (
+	// Green when build successful
+	Green Color = "good"
+	// Yellow ...
+	Yellow Color = "warning"
+	// Red when build unsuccessful
+	Red Color = "danger"
+)
+
+// NotifyOptions is used to configure formatting of notifications
+type NotifyOptions struct {
+	Color   Color
+	Warning bool
+}
+
+// MessageArray builds the json message to be posted to webhook
+type MessageArray struct {
+	Attachments []Message `json:"attachments"`
+}
+
+// Message builds the attachments content of Message
+type Message struct {
+	Text  string `json:"text"`
+	Color string `json:"color"`
+}
+
 // Notify sends the notification
-func (n *SlackNotifier) Notify(text string) error {
-	message := map[string]interface{}{
-		"text": text,
+func (n *SlackNotifier) Notify(text string, options *NotifyOptions) error {
+	// check if url is empty
+	if n.hookURL == "" {
+		return nil
 	}
 
-	bytesRepresentation, err := json.Marshal(message)
+	msg := MessageArray{
+		Attachments: []Message{
+			{
+				Text:  "*" + text + "*" + "\nCheck details <blank_url>",
+				Color: colorToString(options.Color),
+			},
+		},
+	}
+	bytesRepresentation, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("failed to encode request: %s", err.Error())
 	}
@@ -42,14 +88,17 @@ func (n *SlackNotifier) Notify(text string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	bodyString := string(body)
 
-	_ = resp //note: temporary, may need response in the future?
-	/*
-		var result map[string]interface{}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return errors.New("Http request rejected by Slack. Error: " + bodyString)
+	}
 
-		json.NewDecoder(resp.Body).Decode(&result)
+	return nil
+}
 
-		return result["data"].(string), nil
-	*/
-	return err
+func colorToString(color Color) string {
+	return string(color)
 }

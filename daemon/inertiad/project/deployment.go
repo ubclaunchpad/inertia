@@ -184,8 +184,11 @@ func (d *Deployment) Deploy(
 	}
 
 	// Send build start slack notification
-	notification := notifier.NewNotifier()
-	notifyErr := notification.Notify("Build started")
+	notification := notifier.NewNotifier("test")
+	notifyErr := notification.Notify("Build started", &notifier.NotifyOptions{
+		Color:   notifier.Green,
+		Warning: true,
+	})
 	if notifyErr != nil {
 		return func() error { return nil }, notifyErr
 	}
@@ -193,7 +196,10 @@ func (d *Deployment) Deploy(
 	// Build project
 	deploy, err := d.builder.Build(strings.ToLower(d.buildType), *conf, cli, out)
 	if err != nil {
-		notifyErr = notification.Notify("Build error")
+		notifyErr = notification.Notify("Build error", &notifier.NotifyOptions{
+			Color:   notifier.Red,
+			Warning: true,
+		})
 		if notifyErr != nil {
 			fmt.Fprintln(out, notifyErr)
 		}
@@ -201,7 +207,10 @@ func (d *Deployment) Deploy(
 	}
 
 	// Send build complete slack notification
-	notifyErr = notification.Notify("Build completed")
+	notifyErr = notification.Notify("Build completed", &notifier.NotifyOptions{
+		Color:   "good",
+		Warning: true,
+	})
 	if notifyErr != nil {
 		return func() error { return nil }, notifyErr
 	}
