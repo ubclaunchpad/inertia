@@ -147,6 +147,7 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 	return envs, err
 }
 
+// TODO: Change name, error check, only insert project mdata inside private helper 'update build'
 // AddProjectBuildData stores and tracks metadata from successful builds
 func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata DeploymentMetadata) error {
 	// encode metadata so it can be stored as byte array
@@ -154,7 +155,7 @@ func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata De
 	if err != nil {
 		return fmt.Errorf("failure encrypting metadata: %s", err.Error())
 	}
-	c.db.Update(func(tx *bolt.Tx) error {
+	err = c.db.Update(func(tx *bolt.Tx) error {
 		depProjectsBkt := tx.Bucket(deployedProjectsBucket)
 		// if bkt with project name doesnt exist create new bkt, otherwise update existing bucket
 		if projectBkt := depProjectsBkt.Bucket([]byte(projectName)); projectBkt == nil {

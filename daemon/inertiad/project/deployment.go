@@ -375,7 +375,7 @@ func (d *Deployment) UpdateContainerHistory(cli *docker.Client) error {
 		return fmt.Errorf("failure adding build metadata: %s", err.Error())
 	}
 
-	return err
+	return nil
 }
 
 // GetDataManager returns the class managing deployment data
