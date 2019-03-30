@@ -104,5 +104,4 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stream.Success(res.Msg("Project startup initiated!", http.StatusCreated))
-
 }

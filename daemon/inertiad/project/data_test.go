@@ -76,7 +76,7 @@ func TestDataManager_ProjectBuildDataOperations(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"valid project build", args{"projectA", DeploymentMetadata{"hash", "ID", "status", "time"}, 2}, false},
+		{"valid project build", args{"projectB", DeploymentMetadata{"hash", "ID", "status", "time"}, 2}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

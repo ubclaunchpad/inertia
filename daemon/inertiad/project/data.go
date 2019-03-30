@@ -52,7 +52,14 @@ func NewDataManager(dbPath string, keyPath string) (*DeploymentDataManager, erro
 	}
 	if err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(envVariableBucket)
+		if err != nil {
+			return fmt.Errorf("failed to created env variable bucket: %s", err.Error())
+		}
+
 		_, err = tx.CreateBucketIfNotExists(deployedProjectsBucket)
+		if err != nil {
+			return fmt.Errorf("failed to created deployed projects bucket: %s", err.Error())
+		}
 		return err
 	}); err != nil {
 		return nil, fmt.Errorf("failed to instantiate database: %s", err.Error())
@@ -146,7 +153,7 @@ func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata De
 	// encode metadata so it can be stored as byte array
 	encodedMdata, err := json.Marshal(mdata)
 	if err != nil {
-		return err
+		return fmt.Errorf("failure encrypting metadata: %s", err.Error())
 	}
 	c.db.Update(func(tx *bolt.Tx) error {
 		depProjectsBkt := tx.Bucket(deployedProjectsBucket)
@@ -154,26 +161,31 @@ func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata De
 		if projectBkt := depProjectsBkt.Bucket([]byte(projectName)); projectBkt == nil {
 			projectBkt, err := depProjectsBkt.CreateBucket([]byte(projectName))
 			if err != nil {
-				return err
+				return fmt.Errorf("failure creating project bkt: %s", err.Error())
 			}
 
 			if err := projectBkt.Put([]byte(time.Now().String()), encodedMdata); err != nil {
-				return err
+				return fmt.Errorf("failure inserting project metadata: %s", err.Error())
 			}
 		}
 		return nil
 	})
-	return c.UpdateProjectBuildData(projectName, encodedMdata)
+	return c.UpdateProjectBuildData(projectName, mdata)
 }
 
 // UpdateProjectBuildData updates existing project bkt with recent build's metadata
-func (c *DeploymentDataManager) UpdateProjectBuildData(projectName string, mdata []byte) error {
+func (c *DeploymentDataManager) UpdateProjectBuildData(projectName string, mdata DeploymentMetadata) error {
+	// encode metadata so it can be stored as byte array
+	encodedMdata, err := json.Marshal(mdata)
+	if err != nil {
+		return fmt.Errorf("failure encrypting metadata: %s", err.Error())
+	}
 	return c.db.Update(func(tx *bolt.Tx) error {
 		depProjectBkt := tx.Bucket(deployedProjectsBucket)
 		projectBkt := depProjectBkt.Bucket([]byte(projectName))
 
-		if err := projectBkt.Put([]byte(time.Now().String()), mdata); err != nil {
-			return err
+		if err := projectBkt.Put([]byte(time.Now().String()), encodedMdata); err != nil {
+			return fmt.Errorf("failure updating db with project metadata: %s", err.Error())
 		}
 		return nil
 	})
