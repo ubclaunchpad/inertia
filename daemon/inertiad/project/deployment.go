@@ -332,14 +332,14 @@ func (d *Deployment) UpdateContainerHistory(cli *docker.Client) error {
 	// Get project hash
 	head, err := d.repo.Head()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed fetching repo head when updating container history: %s", err.Error())
 	}
 	// Retrieve container for recently deployed project
 	ctx := context.Background()
 	var recentlyBuiltContainer types.Container
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failure fetching list of containers: %s", err.Error())
 	}
 	for _, container := range containers {
 		if container.Names[0] == d.project {
@@ -354,7 +354,7 @@ func (d *Deployment) UpdateContainerHistory(cli *docker.Client) error {
 	}
 	containerJSON, err := cli.ContainerInspect(ctx, containerID)
 	if err != nil {
-		return err // TODO: Add more context to error
+		return fmt.Errorf("failure fetching container metadata: %s", err.Error())
 	}
 	containerState := containerJSON.ContainerJSONBase.State // similar to running "docker inspect {container}"
 	var containerStatus, containerStartedAtTime string
@@ -370,7 +370,10 @@ func (d *Deployment) UpdateContainerHistory(cli *docker.Client) error {
 		StartedAt:       containerStartedAtTime}
 
 	// Update db with newly built container metadata
-	d.dataManager.AddProjectBuildData(d.project, metadata)
+	err = d.dataManager.AddProjectBuildData(d.project, metadata)
+	if err != nil {
+		return fmt.Errorf("failure adding build metadata: %s", err.Error())
+	}
 
 	return err
 }
