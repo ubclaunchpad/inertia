@@ -74,7 +74,7 @@ func (n *SlackNotifier) Notify(text string, options *NotifyOptions) error {
 	msg := MessageArray{
 		Attachments: []Message{
 			{
-				Text:  "*" + text + "*" + "\nCheck details <blank_url>",
+				Text:  "*" + text + "*",
 				Color: colorToString(options.Color),
 			},
 		},
