@@ -148,7 +148,6 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 }
 
 // AddProjectBuildData stores and tracks metadata from successful builds
-// TODO: definitely need to add more context to errors
 func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata DeploymentMetadata) error {
 	// encode metadata so it can be stored as byte array
 	encodedMdata, err := json.Marshal(mdata)
