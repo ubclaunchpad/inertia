@@ -174,7 +174,8 @@ func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata De
 }
 
 // UpdateProjectBuildData updates existing project bkt with recent build's metadata
-func (c *DeploymentDataManager) UpdateProjectBuildData(projectName string, mdata DeploymentMetadata) error {
+func (c *DeploymentDataManager) UpdateProjectBuildData(projectName string,
+	mdata DeploymentMetadata) error {
 	// encode metadata so it can be stored as byte array
 	encodedMdata, err := json.Marshal(mdata)
 	if err != nil {
