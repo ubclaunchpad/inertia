@@ -147,8 +147,8 @@ func (c *DeploymentDataManager) GetEnvVariables(decrypt bool) ([]string, error) 
 	return envs, err
 }
 
-// TODO: Change name, error check, only insert project mdata inside private helper 'update build'
 // AddProjectBuildData stores and tracks metadata from successful builds
+// TODO: Change name, error check, only insert project mdata inside private helper 'update build'
 func (c *DeploymentDataManager) AddProjectBuildData(projectName string, mdata DeploymentMetadata) error {
 	// encode metadata so it can be stored as byte array
 	encodedMdata, err := json.Marshal(mdata)
