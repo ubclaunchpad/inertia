@@ -125,6 +125,17 @@ type FakeDeployer struct {
 	setConfigArgsForCall []struct {
 		arg1 project.DeploymentConfig
 	}
+	UpdateContainerHistoryStub        func(*client.Client) error
+	updateContainerHistoryMutex       sync.RWMutex
+	updateContainerHistoryArgsForCall []struct {
+		arg1 *client.Client
+	}
+	updateContainerHistoryReturns struct {
+		result1 error
+	}
+	updateContainerHistoryReturnsOnCall map[int]struct {
+		result1 error
+	}
 	WatchStub        func(*client.Client) (<-chan string, <-chan error)
 	watchMutex       sync.RWMutex
 	watchArgsForCall []struct {
@@ -712,6 +723,66 @@ func (fake *FakeDeployer) SetConfigArgsForCall(i int) project.DeploymentConfig {
 	return argsForCall.arg1
 }
 
+func (fake *FakeDeployer) UpdateContainerHistory(arg1 *client.Client) error {
+	fake.updateContainerHistoryMutex.Lock()
+	ret, specificReturn := fake.updateContainerHistoryReturnsOnCall[len(fake.updateContainerHistoryArgsForCall)]
+	fake.updateContainerHistoryArgsForCall = append(fake.updateContainerHistoryArgsForCall, struct {
+		arg1 *client.Client
+	}{arg1})
+	fake.recordInvocation("UpdateContainerHistory", []interface{}{arg1})
+	fake.updateContainerHistoryMutex.Unlock()
+	if fake.UpdateContainerHistoryStub != nil {
+		return fake.UpdateContainerHistoryStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.updateContainerHistoryReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeDeployer) UpdateContainerHistoryCallCount() int {
+	fake.updateContainerHistoryMutex.RLock()
+	defer fake.updateContainerHistoryMutex.RUnlock()
+	return len(fake.updateContainerHistoryArgsForCall)
+}
+
+func (fake *FakeDeployer) UpdateContainerHistoryCalls(stub func(*client.Client) error) {
+	fake.updateContainerHistoryMutex.Lock()
+	defer fake.updateContainerHistoryMutex.Unlock()
+	fake.UpdateContainerHistoryStub = stub
+}
+
+func (fake *FakeDeployer) UpdateContainerHistoryArgsForCall(i int) *client.Client {
+	fake.updateContainerHistoryMutex.RLock()
+	defer fake.updateContainerHistoryMutex.RUnlock()
+	argsForCall := fake.updateContainerHistoryArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeDeployer) UpdateContainerHistoryReturns(result1 error) {
+	fake.updateContainerHistoryMutex.Lock()
+	defer fake.updateContainerHistoryMutex.Unlock()
+	fake.UpdateContainerHistoryStub = nil
+	fake.updateContainerHistoryReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeDeployer) UpdateContainerHistoryReturnsOnCall(i int, result1 error) {
+	fake.updateContainerHistoryMutex.Lock()
+	defer fake.updateContainerHistoryMutex.Unlock()
+	fake.UpdateContainerHistoryStub = nil
+	if fake.updateContainerHistoryReturnsOnCall == nil {
+		fake.updateContainerHistoryReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.updateContainerHistoryReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeDeployer) Watch(arg1 *client.Client) (<-chan string, <-chan error) {
 	fake.watchMutex.Lock()
 	ret, specificReturn := fake.watchReturnsOnCall[len(fake.watchArgsForCall)]
@@ -798,6 +869,8 @@ func (fake *FakeDeployer) Invocations() map[string][][]interface{} {
 	defer fake.pruneMutex.RUnlock()
 	fake.setConfigMutex.RLock()
 	defer fake.setConfigMutex.RUnlock()
+	fake.updateContainerHistoryMutex.RLock()
+	defer fake.updateContainerHistoryMutex.RUnlock()
 	fake.watchMutex.RLock()
 	defer fake.watchMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

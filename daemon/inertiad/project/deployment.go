@@ -36,6 +36,8 @@ type Deployer interface {
 	GetBranch() string
 	CompareRemotes(string) error
 
+	UpdateContainerHistory(cli *docker.Client) error
+
 	GetDataManager() (*DeploymentDataManager, bool)
 
 	Watch(*docker.Client) (<-chan string, <-chan error)
@@ -68,6 +70,15 @@ type DeploymentConfig struct {
 	RemoteURL     string
 	Branch        string
 	PemFilePath   string
+}
+
+// DeploymentMetadata is used to store metadata relevant
+// to the most recent deployment
+type DeploymentMetadata struct {
+	Hash            string
+	ContainerID     string
+	ContainerStatus string
+	StartedAt       string
 }
 
 // NewDeployment creates a new deployment
@@ -311,6 +322,59 @@ func (d *Deployment) CompareRemotes(remoteURL string) error {
 	if localRemoteURL != common.GetSSHRemoteURL(remoteURL) {
 		return errors.New("The given remote URL does not match that of the repository in\nyour remote - try 'inertia [remote] reset'")
 	}
+	return nil
+}
+
+// UpdateContainerHistory will update container bucket with recent build's
+// metadata
+func (d *Deployment) UpdateContainerHistory(cli *docker.Client) error {
+
+	// Get project hash
+	head, err := d.repo.Head()
+	if err != nil {
+		return fmt.Errorf("failed fetching repo head when updating container history: %s", err.Error())
+	}
+	// Retrieve container for recently deployed project
+	ctx := context.Background()
+	var recentlyBuiltContainer types.Container
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return fmt.Errorf("failure fetching list of containers: %s", err.Error())
+	}
+	for _, container := range containers {
+		if container.Names[0] == d.project {
+			recentlyBuiltContainer = container
+		}
+	}
+
+	// Get container metadata
+	var containerID string
+	if len(recentlyBuiltContainer.ID) > 0 {
+		containerID = recentlyBuiltContainer.ID
+	}
+	containerJSON, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return fmt.Errorf("failure fetching container metadata: %s", err.Error())
+	}
+	containerState := containerJSON.ContainerJSONBase.State // similar to running "docker inspect {container}"
+	var containerStatus, containerStartedAtTime string
+	if containerState != nil {
+		containerStatus = containerState.Status
+		containerStartedAtTime = containerState.StartedAt
+	}
+
+	metadata := DeploymentMetadata{
+		Hash:            head.Hash().String(),
+		ContainerID:     containerID,
+		ContainerStatus: containerStatus,
+		StartedAt:       containerStartedAtTime}
+
+	// Update db with newly built container metadata
+	err = d.dataManager.AddProjectBuildData(d.project, metadata)
+	if err != nil {
+		return fmt.Errorf("failure adding build metadata: %s", err.Error())
+	}
+
 	return nil
 }
 
