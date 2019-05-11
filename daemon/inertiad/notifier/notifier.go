@@ -66,7 +66,6 @@ type Message struct {
 
 // Notify sends the notification
 func (n *SlackNotifier) Notify(text string, options *NotifyOptions) error {
-	// check if url is empty
 	if n.hookURL == "" {
 		return nil
 	}
@@ -90,10 +89,13 @@ func (n *SlackNotifier) Notify(text string, options *NotifyOptions) error {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %v", err.Error())
+	}
 	bodyString := string(body)
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return errors.New("Http request rejected by Slack. Error: " + bodyString)
+		return errors.New("http request rejected by Slack. Error: " + bodyString)
 	}
 
 	return nil
