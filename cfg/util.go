@@ -3,6 +3,7 @@ package cfg
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -31,10 +32,20 @@ func SetProperty(name string, value string, obj interface{}) error {
 				var fieldPtr = fieldVal.Elem().Addr()
 				return SetProperty(strings.Join(parts[1:], "."), value, fieldPtr.Interface())
 			}
-			if fieldVal.IsValid() && fieldVal.CanSet() && fieldVal.Kind() == reflect.String {
-				// attempt to set string
-				fieldVal.SetString(value)
-				return nil
+			if fieldVal.IsValid() && fieldVal.CanSet() {
+				if fieldVal.Kind() == reflect.String {
+					// attempt to set string
+					fieldVal.SetString(value)
+					return nil
+				}
+
+				if fieldVal.Kind() == reflect.Bool {
+					// attempt to set boolean
+					if _, err := strconv.ParseBool(value); err == nil {
+						fieldVal.SetBool(true)
+						return nil
+					}
+				}
 			}
 		}
 	}

@@ -54,6 +54,18 @@ func TestSetProperty(t *testing.T) {
 				}
 				return nil
 			}},
+		{"ok: set boolean",
+			args{"daemon.verify-ssl", "true", &Remote{
+				Daemon: &Daemon{VerifySSL: false},
+			}},
+			false,
+			func(d interface{}) error {
+				var remote = d.(*Remote)
+				if !remote.Daemon.VerifySSL {
+					return fmt.Errorf("value not set (found '%t')", remote.Daemon.VerifySSL)
+				}
+				return nil
+			}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
