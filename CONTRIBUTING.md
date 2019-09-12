@@ -96,7 +96,7 @@ $> make install       # installs Inertia build tagged as "test" to gopath
 $> inertia --version  # check what version you have installed
 ```
 
-A build tagged as `test` allows you to use `make testdaemon` for local development. See the next section for more details. Alternatively, you can manually edit `.inertia.toml` to use your desired daemon version - see the [Release Streams](#release-streams) documentation for more details.
+A build tagged as `test` allows you to use `make testdaemon` for local development. See the next section for more details. Alternatively, you can manually edit the remote configuration to use your desired daemon version (see [Setting Up a Test Environment](#setting-up-a-testing-environment)).
 
 Note that if you install Inertia using these commands or any variation of `go install`, you may have to remove the binary using `go clean -i github.com/ubclaunchpad/inertia` to use an Inertia CLI installed using Homebrew. To go back to a `go install`ed version of Inertia, you need to run `brew uninstall inertia`.
 
@@ -269,7 +269,7 @@ $> inertia local init
 $> inertia local status
 ```
 
-The above steps will pull and use a daemon image from Docker Hub based on the version in your `.inertia.toml`.
+The above steps will pull and use a daemon image from Docker Hub based on the version in your remote configuration. The location of the remote configuration file can be can be found using `inertia remote config-path`.
 
 Following these steps, you can run Inertia through deployment:
 
