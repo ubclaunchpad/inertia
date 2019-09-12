@@ -21,11 +21,10 @@ ARG INERTIA_VERSION
 ENV BUILD_HOME=/go/src/github.com/ubclaunchpad/inertia \
     INERTIA_VERSION=${INERTIA_VERSION}
 WORKDIR ${BUILD_HOME}
-COPY Gopkg.toml .
-COPY Gopkg.lock .
+COPY go.mod .
+COPY go.mod .
 RUN apk add --update --no-cache git
-RUN go get -u github.com/golang/dep/cmd/dep
-RUN dep ensure -v -vendor-only
+RUN go mod download
 
 ### Part 4 - Building the Inertia daemon
 FROM daemon-build-base AS daemon-build-env
