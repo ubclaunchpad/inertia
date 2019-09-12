@@ -20,11 +20,11 @@ func InertiaDir() string {
 	if os.Getenv("INERTIA_PATH") != "" {
 		return os.Getenv("INERTIA_PATH")
 	}
-	home, err := os.UserHomeDir()
+	confDir, err := os.UserConfigDir()
 	if err != nil {
-		return "/.inertia"
+		return "/inertia"
 	}
-	return filepath.Join(home, ".inertia")
+	return filepath.Join(confDir, "inertia")
 }
 
 // InertiaConfigPath gets the path to global Inertia configuration
@@ -35,7 +35,7 @@ func GetInertiaConfig() (*cfg.Inertia, error) {
 	raw, err := ioutil.ReadFile(InertiaConfigPath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.New("config file doesn't exist")
+			return nil, errors.New("global config file doesn't exist - try running 'inertia init --global'")
 		}
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func GetProject(path string) (*cfg.Project, error) {
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.New("config file doesn't exist - try running inertia init")
+			return nil, errors.New("project config file doesn't exist - try running 'inertia init'")
 		}
 		return nil, err
 	}
