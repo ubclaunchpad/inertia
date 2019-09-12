@@ -269,7 +269,7 @@ $> inertia local init
 $> inertia local status
 ```
 
-The above steps will pull and use a daemon image from Docker Hub based on the version in your `.inertia.toml`.
+The above steps will pull and use a daemon image from Docker Hub based on the version in your remote configuration. The location of the remote configuration file can be can be found using `inertia remote config-path`.
 
 Following these steps, you can run Inertia through deployment:
 
