@@ -24,8 +24,7 @@ install:
   - set Path=c:\go\bin;c:\gopath\bin;%PATH%
   - go version
   - go env
-  - go get -u github.com/golang/dep/cmd/dep
-  - dep ensure -v
+  - go mod download
 
 deploy: false
 

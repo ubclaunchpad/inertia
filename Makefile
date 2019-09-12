@@ -25,7 +25,7 @@ lint:
 	go vet ./...
 	go test -run xxxx ./...
 	diff -u <(echo -n) <(gofmt -d -s `find . -type f -name '*.go' -not -path "./vendor/*"`)
-	diff -u <(echo -n) <(golint `go list ./... | grep -v /vendor/`)
+	diff -u <(echo -n) <(go run golang.org/x/lint/golint `go list ./... | grep -v /vendor/`)
 	(cd ./daemon/web; npm run lint)
 	(cd ./daemon/web; npm run sass-lint)
 
@@ -191,14 +191,12 @@ run-docs-api:
 ## prod-deps: install only production dependencies
 .PHONY: prod-deps
 prod-deps:
-	dep ensure -v
+	go mod download
 	make web-deps
 
 ## dev-deps: install only development dependencies and tools
 .PHONY: dev-deps
 dev-deps:
-	go get -u github.com/UnnoTed/fileb0x
-	go get -u golang.org/x/lint/golint
 	npm install -g redoc-cli
 
 ## docker-deps: download required docker containers
@@ -219,7 +217,7 @@ mocks:
 ## scripts: recompile script assets
 .PHONY: scripts
 scripts:
-	fileb0x b0x.yml
+	go run github.com/UnnoTed/fileb0x b0x.yml
 
 ## testdaemon-scp: copy test daemon image from ./images to test VPS
 .PHONY: testdaemon-scp

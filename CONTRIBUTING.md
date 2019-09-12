@@ -60,7 +60,7 @@ Please free free to open up a ticket if any of these instructions are unclear or
 
 ## Setup
 
-First, [install Go](https://golang.org/doc/install#install) and grab Inertia's source code:
+First, [install Go](https://golang.org/doc/install#install) (at least v1.13) and grab Inertia's source code:
 
 ```bash
 $> go get -u github.com/ubclaunchpad/inertia
@@ -84,7 +84,7 @@ export GOBIN=$HOME/go/bin
 ```
 
 Inertia uses:
-- [dep](https://github.com/golang/dep) for managing Golang dependencies
+
 - [npm](https://www.npmjs.com) to manage dependencies for Inertia's React web app
 - [Docker](https://www.docker.com/community-edition) for various application functionalities and integration testing
 
