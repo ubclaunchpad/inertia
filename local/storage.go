@@ -20,11 +20,11 @@ func InertiaDir() string {
 	if os.Getenv("INERTIA_PATH") != "" {
 		return os.Getenv("INERTIA_PATH")
 	}
-	home, err := os.UserHomeDir()
+	confDir, err := os.UserConfigDir()
 	if err != nil {
-		return "/.inertia"
+		return "/inertia"
 	}
-	return filepath.Join(home, ".inertia")
+	return filepath.Join(confDir, "inertia")
 }
 
 // InertiaConfigPath gets the path to global Inertia configuration
