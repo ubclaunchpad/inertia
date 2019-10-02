@@ -24,4 +24,5 @@ jobs:
           SRC_ENDPOINT=https://sourcegraph.example.com \
           REPOSITORY=github.com/ubclaunchpad/inertia \
           COMMIT=$(git rev-parse HEAD | tr -d "\n") \
+          SRC_LSIF_UPLOAD_TOKEN= ${{ secrets.sourcegraph_lsif_token }} \
           bash upload.sh data.lsif
