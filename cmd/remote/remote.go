@@ -31,13 +31,15 @@ func AttachRemoteCmd(inertia *core.Cmd) {
 		Long: `Configures local settings for a remote host - add, remove, and list configured
 Inertia remotes.
 
-Requires Inertia to be set up via 'inertia init'.
+Requires Inertia to be set up via 'inertia init'. To see where the remote
+configuration is stored, run 'inertia remote config-path'.
 
 For example:
-inertia init
-inertia remote add gcloud
-inertia gcloud init        # set up Inertia
-inertia gcloud status      # check on status of Inertia daemon
+
+	inertia init
+	inertia remote add gcloud
+	inertia gcloud init        # set up Inertia
+	inertia gcloud status      # check on status of Inertia daemon
 `,
 		PersistentPreRun: func(*cobra.Command, []string) {
 			// Ensure project initialized, load config
@@ -56,6 +58,7 @@ inertia gcloud status      # check on status of Inertia daemon
 	remote.attachListCmd()
 	remote.attachRemoveCmd()
 	remote.attachUpgradeCmd()
+	remote.attachConfigPathCmd()
 
 	// add to parent
 	inertia.AddCommand(remote.Command)
@@ -333,4 +336,18 @@ func (root *RemoteCmd) attachSetCmd() {
 		},
 	}
 	root.AddCommand(set)
+}
+
+func (root *RemoteCmd) attachConfigPathCmd() {
+	var cfgPath = &cobra.Command{
+		Use:   "config-path",
+		Short: "Output path to remote configuration.",
+		Long: `Outputs where remotes are stored. Note that the configuration directory
+can be set using INERTIA_PATH.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			out.Printf("global configuration directory: '%s'\n", local.InertiaDir())
+			out.Printf("global configuration path:      '%s'\n", local.InertiaConfigPath())
+		},
+	}
+	root.AddCommand(cfgPath)
 }

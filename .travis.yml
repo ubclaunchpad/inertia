@@ -1,6 +1,6 @@
 language: go
 go:
-  - "1.12"
+  - "1.13"
 services:
   - docker
 
@@ -11,7 +11,7 @@ env:
 
 cache:
   directories:
-    - vendor
+    - $GOPATH/pkg
     - images
     - daemon/web/node_modules
 
@@ -23,8 +23,7 @@ jobs:
     - stage: precache and test build
       script: true
       install:
-        - go get github.com/golang/dep/cmd/dep
-        - dep ensure -v           # cache vendor
+        - go mod download         # cache dependencies
         - make daemon TAG=test    # cache daemon image
         - make web-deps           # cache node_modules
 

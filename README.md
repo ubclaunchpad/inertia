@@ -101,7 +101,7 @@ Many of our projects rely on hosting providers for deployment. Unfortunately we 
 The primary design goals of Inertia are to:
 
 * minimize setup time for new projects
-* maximimise compatibility across different client and VPS platforms
+* maximise compatibility across different client and VPS platforms
 * offer an easy-to-learn interface for managing deployed applications
 
 ### How It Works
