@@ -4,14 +4,15 @@ package mocks
 import (
 	"sync"
 
-	"github.com/ubclaunchpad/inertia/daemon/inertiad/notifier"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/notify"
 )
 
 type FakeNotifier struct {
-	NotifyStub        func(string) error
+	NotifyStub        func(string, notify.Options) error
 	notifyMutex       sync.RWMutex
 	notifyArgsForCall []struct {
 		arg1 string
+		arg2 notify.Options
 	}
 	notifyReturns struct {
 		result1 error
@@ -23,16 +24,17 @@ type FakeNotifier struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeNotifier) Notify(arg1 string) error {
+func (fake *FakeNotifier) Notify(arg1 string, arg2 notify.Options) error {
 	fake.notifyMutex.Lock()
 	ret, specificReturn := fake.notifyReturnsOnCall[len(fake.notifyArgsForCall)]
 	fake.notifyArgsForCall = append(fake.notifyArgsForCall, struct {
 		arg1 string
-	}{arg1})
-	fake.recordInvocation("Notify", []interface{}{arg1})
+		arg2 notify.Options
+	}{arg1, arg2})
+	fake.recordInvocation("Notify", []interface{}{arg1, arg2})
 	fake.notifyMutex.Unlock()
 	if fake.NotifyStub != nil {
-		return fake.NotifyStub(arg1)
+		return fake.NotifyStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -47,17 +49,17 @@ func (fake *FakeNotifier) NotifyCallCount() int {
 	return len(fake.notifyArgsForCall)
 }
 
-func (fake *FakeNotifier) NotifyCalls(stub func(string) error) {
+func (fake *FakeNotifier) NotifyCalls(stub func(string, notify.Options) error) {
 	fake.notifyMutex.Lock()
 	defer fake.notifyMutex.Unlock()
 	fake.NotifyStub = stub
 }
 
-func (fake *FakeNotifier) NotifyArgsForCall(i int) string {
+func (fake *FakeNotifier) NotifyArgsForCall(i int) (string, notify.Options) {
 	fake.notifyMutex.RLock()
 	defer fake.notifyMutex.RUnlock()
 	argsForCall := fake.notifyArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeNotifier) NotifyReturns(result1 error) {
@@ -107,4 +109,4 @@ func (fake *FakeNotifier) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ notifier.Notifier = new(FakeNotifier)
+var _ notify.Notifier = new(FakeNotifier)

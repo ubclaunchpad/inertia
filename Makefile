@@ -213,8 +213,8 @@ mocks:
 		./daemon/inertiad/project/deployment.go Deployer
 	counterfeiter -o ./daemon/inertiad/build/mocks/builder.go \
 		./daemon/inertiad/build/builder.go ContainerBuilder
-	counterfeiter -o ./daemon/inertiad/notifier/mocks/notifier.go \
-		./daemon/inertiad/notifier/notifier.go Notifier
+	counterfeiter -o ./daemon/inertiad/notify/mocks/notify.go \
+		./daemon/inertiad/notify/notifier.go Notifier
 
 ## scripts: recompile script assets
 .PHONY: scripts
