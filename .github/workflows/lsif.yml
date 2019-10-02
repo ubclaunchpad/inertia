@@ -12,10 +12,10 @@ jobs:
     - uses: actions/setup-go@v1
       with:
           go-version: '1.13'
-    - name: Install LSIF generator
-      run: (cd ~ && go get github.com/sourcegraph/lsif-go/cmd/lsif-go)
-    - name: Generate LSIF
-      run: lsif-go --noContents --out=data.lsif
+    - name: Generate LSIF data
+      run: |
+        (cd ~ && go get github.com/sourcegraph/lsif-go/cmd/lsif-go && go install github.com/sourcegraph/lsif-go/cmd/lsif-go)
+        lsif-go --noContents --out=data.lsif
     - name: Download LSIF to Sourcegraph uploader
       run: curl -O https://raw.githubusercontent.com/sourcegraph/sourcegraph/master/lsif/upload.sh
     - name: Upload LSIF to Sourcegraph
