@@ -18,7 +18,8 @@ jobs:
       run: lsif-go --noContents --out=data.lsif
     - name: Download LSIF to Sourcegraph uploader
       run: curl -O https://raw.githubusercontent.com/sourcegraph/sourcegraph/master/lsif/upload.sh
-    - name: |
+    - name: Upload LSIF to Sourcegraph
+      run: |
         env \
           SRC_ENDPOINT=https://sourcegraph.example.com \
           REPOSITORY=github.com/ubclaunchpad/inertia \
