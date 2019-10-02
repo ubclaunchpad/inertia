@@ -1,0 +1,26 @@
+name: LSIF Upload
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-go@v1
+      with:
+          go-version: '1.13'
+    - name: Install LSIF generator
+      run: go get github.com/sourcegraph/lsif-go/cmd/lsif-go
+    - name: Generate LSIF
+      run: lsif-go --noContents --out=data.lsif
+    - name: Download LSIF to Sourcegraph uploader
+      run: curl -O https://raw.githubusercontent.com/sourcegraph/sourcegraph/master/lsif/upload.sh
+    - name: |
+        env \
+          SRC_ENDPOINT=https://sourcegraph.example.com \
+          REPOSITORY=github.com/ubclaunchpad/inertia \
+          COMMIT=$(git rev-parse HEAD | tr -d "\n") \
+          bash upload.sh data.lsif
