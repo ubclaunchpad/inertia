@@ -2,7 +2,7 @@ name: LSIF Upload
 
 on:
   push:
-    branches: [ 'master', 'chore/lsif' ]
+    branches: [ 'master' ]
 
 jobs:
   build:
