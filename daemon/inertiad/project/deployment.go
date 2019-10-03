@@ -13,14 +13,16 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
+	gogit "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/common"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/build"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/crypto"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/git"
-	gogit "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/notify"
 )
 
 // Deployer manages the deployed user project
@@ -60,6 +62,8 @@ type Deployment struct {
 	mux  sync.Mutex
 
 	dataManager *DeploymentDataManager
+
+	notifiers notify.Notifiers
 }
 
 // DeploymentConfig is used to configure Deployment
@@ -148,6 +152,8 @@ func (d *Deployment) SetConfig(cfg DeploymentConfig) {
 	if cfg.BuildFilePath != "" {
 		d.buildFilePath = cfg.BuildFilePath
 	}
+
+	// TODO: register notifiers
 }
 
 // DeployOptions is used to configure how the deployment handles the deploy
@@ -196,7 +202,19 @@ func (d *Deployment) Deploy(
 	// Build project
 	deploy, err := d.builder.Build(strings.ToLower(d.buildType), *conf, cli, out)
 	if err != nil {
+		if notifyErr := d.notifiers.Notify("Build error", notify.Options{
+			Color: notify.Red,
+		}); notifyErr != nil {
+			fmt.Fprintln(out, notifyErr.Error())
+		}
 		return func() error { return nil }, err
+	}
+
+	// Send build complete slack notification
+	if notifyErr := d.notifiers.Notify("Build completed", notify.Options{
+		Color: notify.Green,
+	}); notifyErr != nil {
+		fmt.Fprintln(out, notifyErr.Error())
 	}
 
 	// Deploy
