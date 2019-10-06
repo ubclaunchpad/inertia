@@ -27,7 +27,7 @@
       alt="GoDocs available" />
   </a>
 
-  <a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general">
+  <a href="https://hub.docker.com/r/ubclaunchpad/inertia">
     <img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed"
       alt="inertiad image">
   </a>
