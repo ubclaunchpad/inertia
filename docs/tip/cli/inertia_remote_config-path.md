@@ -1,25 +1,20 @@
-## inertia remote rm
+## inertia remote config-path
 
-Remove a configured remote
+Output path to remote configuration.
 
 ### Synopsis
 
-Remove a remote from Inertia's configuration file.
+Outputs where remotes are stored. Note that the configuration directory
+can be set using INERTIA_PATH.
 
 ```
-inertia remote rm [remote] [flags]
-```
-
-### Examples
-
-```
-inertia remote rm staging
+inertia remote config-path [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for rm
+  -h, --help   help for config-path
 ```
 
 ### Options inherited from parent commands

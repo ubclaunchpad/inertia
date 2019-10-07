@@ -21,13 +21,13 @@ inertia remote upgrade dev staging
 ```
       --all              upgrade all remotes
   -h, --help             help for upgrade
-      --version string   specify Inertia daemon version to set (default "v0.5.2-28-g4d124ef")
+      --version string   specify Inertia daemon version to set (default "v0.6.0-preview1-11-gbc4bb8e")
 ```
 
 ### Options inherited from parent commands
 
 ```
-      --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --config string   specify relative path to Inertia project configuration (default "inertia.toml")
       --simple          disable colour and emoji output
 ```
 

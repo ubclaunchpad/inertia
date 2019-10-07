@@ -7,12 +7,12 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg"
 )
 
-// Init sets up Inertia configuration
-func Init() (*cfg.Inertia, error) {
+// Initialize sets up Inertia configuration
+func Initialize() (*cfg.Remotes, error) {
 	var inertiaPath = InertiaDir()
 	os.MkdirAll(inertiaPath, os.ModePerm)
-	var inertia = cfg.NewInertiaConfig()
-	return inertia, Write(InertiaConfigPath(), inertia)
+	var remotes = cfg.NewRemotesConfig()
+	return remotes, Write(InertiaRemotesPath(), remotes)
 }
 
 // InitProject creates the inertia config file and returns an error if Inertia

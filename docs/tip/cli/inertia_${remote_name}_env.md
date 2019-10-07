@@ -22,7 +22,7 @@ as follows:
 ### Options inherited from parent commands
 
 ```
-      --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --config string   specify relative path to Inertia project configuration (default "inertia.toml")
       --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
       --simple          disable colour and emoji output

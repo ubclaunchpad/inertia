@@ -106,7 +106,7 @@ By default, the profile called 'default' will be used.`,
 			if _, ok := p.root.config.GetProfile(args[0]); !ok {
 				out.Fatalf("profile '%s' does not exist", args[0])
 			}
-			cfg, err := local.GetInertiaConfig()
+			cfg, err := local.GetRemotes()
 			if err != nil {
 				out.Fatal(err)
 			}

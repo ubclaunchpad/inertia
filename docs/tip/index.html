@@ -528,7 +528,7 @@ used to access it. Inertia will also need a few ports exposed, namely one for
 the Inertia daemon (port <code>4303</code> by default) and whatever ports you need for your
 deployed project.</p>
 
-<p>Configured remotes are stored globally in <code>~/.inertia/inertia.global</code>.</p>
+<p>Configured remotes are stored globally in <code>~/.inertia/inertia.remotes</code>.</p>
 
 <aside class="notice">
 If you use a non-standard SSH port (i.e. not port <code>22</code>) or want to
@@ -646,7 +646,7 @@ your remote, and spin up the Inertia daemon!</p>
 inertia remote show <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span>
 </code></pre>
 <blockquote>
-<p>An example <code>~/.inertia/inertia.global</code>:</p>
+<p>An example <code>~/.inertia/inertia.remotes</code>:</p>
 </blockquote>
 <pre class="highlight toml tab-toml"><code><span class="c"># ... other stuff</span>
 
@@ -682,7 +682,7 @@ to <code>me</code> and print out the new settings:</p>
 inertia remote show my_remote
 </code></pre>
 <p>Once you&#39;ve added a remote, remote-specific settings are available in
-<code>~/.inertia/inertia.global</code>.</p>
+<code>~/.inertia/inertia.remotes</code>.</p>
 
 <aside class="notice">
 For the most part, unless you filled in something incorrectly while adding a

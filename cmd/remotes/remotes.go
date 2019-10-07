@@ -27,7 +27,7 @@ func AttachRemotesCmds(root *core.Cmd) {
 	if err != nil {
 		return
 	}
-	cfg, err := local.GetInertiaConfig()
+	cfg, err := local.GetRemotes()
 	if err != nil {
 		return
 	}
@@ -35,12 +35,12 @@ func AttachRemotesCmds(root *core.Cmd) {
 	for _, r := range cfg.Remotes {
 		if _, ok := remotes[r.Name]; ok {
 			out.Fatalf("you have configured multiple remotes named '%s' - please rename one in %s",
-				r.Name, local.InertiaConfigPath())
+				r.Name, local.InertiaRemotesPath())
 		}
 		for _, child := range root.Commands() {
 			if child.Name() == r.Name {
 				out.Fatalf("you have configured a remote named '%s', which is an Inertia command - please rename it in %s",
-					r.Name, local.InertiaConfigPath())
+					r.Name, local.InertiaRemotesPath())
 			}
 		}
 		remotes[r.Name] = true

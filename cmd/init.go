@@ -35,10 +35,10 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 		Args:    cobra.RangeArgs(0, 1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if global, _ := cmd.Flags().GetBool(flagGlobal); global {
-				if _, err := local.Init(); err != nil {
+				if _, err := local.Initialize(); err != nil {
 					out.Fatal(err)
 				}
-				out.Printf("global Inertia configuration intialized at %s", local.InertiaConfigPath())
+				out.Printf("global Inertia configuration intialized in '%s'", local.InertiaDir())
 				return
 			}
 
@@ -46,7 +46,7 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 			var highlight = out.NewColorer(out.CY)
 
 			// Check for global inertia configuration
-			if _, err := local.GetInertiaConfig(); err != nil {
+			if _, err := local.GetRemotes(); err != nil {
 				resp, err := input.Prompt(
 					highlight.Sf(":question: Could not find global inertia configuration in %s (%s) - would you like to initialize it?",
 						local.InertiaDir(), err.Error()))
@@ -54,10 +54,10 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 					out.Fatal(err)
 				}
 				if resp == "y" || resp == "yes" {
-					if _, err := local.Init(); err != nil {
+					if _, err := local.Initialize(); err != nil {
 						out.Fatal(err)
 					}
-					out.Printf("global Inertia configuration intialized at %s\n", local.InertiaConfigPath())
+					out.Printf("global Inertia configuration intialized in '%s'\n", local.InertiaRemotesPath())
 				} else {
 					out.Fatal("aborting: global inertia configuration is required to set up Inertia")
 				}
