@@ -14,7 +14,7 @@ Once you have set up a remote with 'inertia remote add [remote]', use
 'inertia [remote] --help' to see what you can do with your remote. To list
 available remotes, use 'inertia remote ls'.
 
-Global inertia configuration is stored in '~/.inertia/inertia.global'.
+Global inertia configuration is stored in '~/.inertia'.
 
 💻  Repository:    https://github.com/ubclaunchpad/inertia/
 🎫  Issue tracker: https://github.com/ubclaunchpad/inertia/issues
@@ -23,7 +23,7 @@ Global inertia configuration is stored in '~/.inertia/inertia.global'.
 ### Options
 
 ```
-      --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --config string   specify relative path to Inertia project configuration (default "inertia.toml")
   -h, --help            help for inertia
       --simple          disable colour and emoji output
 ```

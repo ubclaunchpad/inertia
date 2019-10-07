@@ -4,22 +4,22 @@ import (
 	"github.com/ubclaunchpad/inertia/cfg/internal/identity"
 )
 
-// Inertia denotes global Inertia configuration
-type Inertia struct {
+// Remotes denotes global Inertia configuration
+type Remotes struct {
 	// Remotes tracks globally configured remotes. It is a list instead of a map
 	// to better align with TOML best practices
 	Remotes []*Remote `toml:"remote"`
 }
 
-// NewInertiaConfig instantiates a new Inertia configuration
-func NewInertiaConfig() *Inertia {
-	return &Inertia{
+// NewRemotesConfig instantiates a new Inertia configuration
+func NewRemotesConfig() *Remotes {
+	return &Remotes{
 		Remotes: make([]*Remote, 0),
 	}
 }
 
 // GetRemote retrieves a remote by name
-func (i *Inertia) GetRemote(name string) (*Remote, bool) {
+func (i *Remotes) GetRemote(name string) (*Remote, bool) {
 	if name == "" {
 		return nil, false
 	}
@@ -31,7 +31,7 @@ func (i *Inertia) GetRemote(name string) (*Remote, bool) {
 }
 
 // SetRemote adds or updates a remote to configuration
-func (i *Inertia) SetRemote(remote Remote) {
+func (i *Remotes) SetRemote(remote Remote) {
 	if remote.Name == "" {
 		return
 	}
@@ -44,7 +44,7 @@ func (i *Inertia) SetRemote(remote Remote) {
 }
 
 // RemoveRemote removes remote with given name
-func (i *Inertia) RemoveRemote(name string) bool {
+func (i *Remotes) RemoveRemote(name string) bool {
 	if name == "" {
 		return false
 	}

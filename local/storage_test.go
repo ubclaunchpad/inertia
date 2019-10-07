@@ -23,7 +23,7 @@ func TestWrite(t *testing.T) {
 		wantErr bool
 	}{
 		{"nothing to write to", args{"", nil, nil}, true},
-		{"ok: write to path", args{"./test-config.toml", &cfg.Inertia{
+		{"ok: write to path", args{"./test-config.toml", &cfg.Remotes{
 			Remotes: []*cfg.Remote{
 				{
 					Name: "dev",
@@ -72,7 +72,7 @@ func TestWrite(t *testing.T) {
 				},
 			},
 		}, nil}, false},
-		{"ok: write to writers", args{"", &cfg.Inertia{
+		{"ok: write to writers", args{"", &cfg.Remotes{
 			Remotes: make([]*cfg.Remote, 0),
 		}, []io.Writer{os.Stdout}}, false},
 	}

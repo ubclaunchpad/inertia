@@ -7,5 +7,5 @@ For a more general usage guide, refer to the [Inertia Usage Guide](https://inert
 
 For documentation regarding the daemon API, refer to the [API Reference](https://inertia.ubclaunchpad.com/api).
 
-* Generated: 2019-Mar-15
-* Version: v0.5.2-28-g4d124ef
+* Generated: 2019-Oct-06
+* Version: v0.6.0-preview1-11-gbc4bb8e

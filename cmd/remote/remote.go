@@ -18,7 +18,7 @@ import (
 // RemoteCmd is the parent class for the 'inertia remote' subcommands
 type RemoteCmd struct {
 	*cobra.Command
-	config *cfg.Inertia
+	remotes *cfg.Remotes
 }
 
 // AttachRemoteCmd attaches 'remote' subcommands to the given parent command
@@ -44,7 +44,7 @@ For example:
 		PersistentPreRun: func(*cobra.Command, []string) {
 			// Ensure project initialized, load config
 			var err error
-			remote.config, err = local.GetInertiaConfig()
+			remote.remotes, err = local.GetRemotes()
 			if err != nil {
 				out.Fatal(err)
 			}
@@ -87,7 +87,7 @@ Inertia commands.`,
 		Example: "inertia remote add staging --daemon.gen-secret --ip 1.2.3.4",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if _, found := root.config.GetRemote(args[0]); found {
+			if _, found := root.remotes.GetRemote(args[0]); found {
 				out.Fatalf("remote '%s' already exists", args[0])
 			}
 			for _, child := range root.Parent().Commands() {
@@ -201,7 +201,7 @@ func (root *RemoteCmd) attachListCmd() {
 		Long:  `Lists all currently configured remotes.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var verbose, _ = cmd.Flags().GetBool(flagVerbose)
-			for _, remote := range root.config.Remotes {
+			for _, remote := range root.remotes.Remotes {
 				if verbose {
 					out.Print(out.C("remote '%s'\n", out.BO, out.CY).With(remote.Name))
 					out.Println(out.FormatRemoteDetails(*remote))
@@ -244,7 +244,7 @@ func (root *RemoteCmd) attachShowCmd() {
 		Example: "inertia remote show staging",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			remote, found := root.config.GetRemote(args[0])
+			remote, found := root.remotes.GetRemote(args[0])
 			if found {
 				out.Print(out.C("remote '%s'\n", out.BO, out.CY).With(remote.Name))
 				out.Println(out.FormatRemoteDetails(*remote))
@@ -282,7 +282,7 @@ func (root *RemoteCmd) attachUpgradeCmd() {
 			var remotes = args
 			if all {
 				out.Printf("updating configuration to version '%s' for all remotes\n", version)
-				for _, r := range root.config.Remotes {
+				for _, r := range root.remotes.Remotes {
 					r.Version = version
 					if err := local.SaveRemote(r); err != nil {
 						out.Fatalf("could not update remote '%s': %s", r.Name, err.Error())
@@ -294,7 +294,7 @@ func (root *RemoteCmd) attachUpgradeCmd() {
 				out.Printf("setting configuration to version '%s' for remotes %s\n",
 					version, strings.Join(remotes, ", "))
 				for _, n := range remotes {
-					if r, ok := root.config.GetRemote(n); ok {
+					if r, ok := root.remotes.GetRemote(n); ok {
 						r.Version = version
 						if err := local.SaveRemote(r); err != nil {
 							out.Fatalf("could not update remote '%s': %s", n, err.Error())
@@ -320,7 +320,7 @@ func (root *RemoteCmd) attachSetCmd() {
 		Long:  `Updates the given property of the given remote's configuration.`,
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			remote, found := root.config.GetRemote(args[0])
+			remote, found := root.remotes.GetRemote(args[0])
 			if found {
 				if err := cfg.SetProperty(args[1], args[2], remote); err == nil {
 					if err := local.SaveRemote(remote); err != nil {
@@ -345,8 +345,7 @@ func (root *RemoteCmd) attachConfigPathCmd() {
 		Long: `Outputs where remotes are stored. Note that the configuration directory
 can be set using INERTIA_PATH.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			out.Printf("global configuration directory: '%s'\n", local.InertiaDir())
-			out.Printf("global configuration path:      '%s'\n", local.InertiaConfigPath())
+			out.Println(local.InertiaRemotesPath())
 		},
 	}
 	root.AddCommand(cfgPath)

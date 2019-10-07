@@ -22,10 +22,10 @@ var exampleRemote = &Remote{
 }
 
 func TestNewInertiaConfig(t *testing.T) {
-	assert.NotNil(t, NewInertiaConfig())
+	assert.NotNil(t, NewRemotesConfig())
 }
 
-func TestInertia_GetRemote(t *testing.T) {
+func TestRemotes_GetRemote(t *testing.T) {
 	type fields struct {
 		Remotes []*Remote
 	}
@@ -50,7 +50,7 @@ func TestInertia_GetRemote(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var i = &Inertia{
+			var i = &Remotes{
 				Remotes: tt.fields.Remotes,
 			}
 			got, found := i.GetRemote(tt.args.name)
@@ -88,7 +88,7 @@ func TestInertia_SetRemote(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var i = &Inertia{
+			var i = &Remotes{
 				Remotes: tt.fields.Remotes,
 			}
 			i.SetRemote(tt.args.remote)
@@ -124,7 +124,7 @@ func TestInertia_RemoveRemote(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var i = &Inertia{
+			var i = &Remotes{
 				Remotes: tt.fields.Remotes,
 			}
 			assert.Equal(t, tt.want, i.RemoveRemote(tt.args.name))

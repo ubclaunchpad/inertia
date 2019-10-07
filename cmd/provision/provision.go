@@ -20,7 +20,7 @@ import (
 // ProvisionCmd is the parent class for the 'inertia provision' subcommands
 type ProvisionCmd struct {
 	*cobra.Command
-	config  *cfg.Inertia
+	remotes *cfg.Remotes
 	project *cfg.Project
 	cfgPath string
 }
@@ -39,7 +39,7 @@ func AttachProvisionCmd(inertia *core.Cmd) {
 		Long:  `Provisions a new remote host set up for continuous deployment with Inertia.`,
 		PersistentPreRun: func(*cobra.Command, []string) {
 			var err error
-			prov.config, err = local.GetInertiaConfig()
+			prov.remotes, err = local.GetRemotes()
 			if err != nil {
 				out.Fatalf(err.Error())
 			}
@@ -84,8 +84,7 @@ This ensures that your project ports are properly exposed and externally accessi
 `,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			var config = root.config
-			if _, found := config.GetRemote(args[0]); found {
+			if _, found := root.remotes.GetRemote(args[0]); found {
 				out.Fatal("remote with name already exists")
 			}
 
