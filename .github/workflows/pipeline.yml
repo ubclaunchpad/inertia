@@ -49,21 +49,21 @@ jobs:
     needs: [ test ]
     strategy:
       matrix:
-        case: [ debian:9.3, centos:7, amazon:1, ubuntu:16.04, ubuntu:18.04 ]
+        case: [ debian-9.3, centos-7, amazon-1, ubuntu-16.04, ubuntu-18.04 ]
         include:
-        - case: debian:9.3
+        - case: debian-9.3
           os_name: debian
           os_version: 9.3
-        - case: centos:7
+        - case: centos-7
           os_name: centos
           os_version: 7
-        - case: amazon:1
+        - case: amazon-1
           os_name: amazon
           os_version: 1
-        - case: ubuntu:16.04
+        - case: ubuntu-16.04
           os_name: ubuntu
           os_version: 16.04
-        - case: ubuntu:18.04
+        - case: ubuntu-18.04
           os_name: ubuntu
           os_version: 18.04
       fail-fast: false
