@@ -1,9 +1,6 @@
 package crypto
 
 import (
-	"os"
-	"path"
-
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
@@ -18,7 +15,7 @@ var (
 	TestMasterToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uX2lkIjoiIiwidXNlciI6Im1hc3RlciIsImFkbWluIjp0cnVlLCJleHBpcnkiOiIwMDAxLTAxLTAxVDAwOjAwOjAwWiJ9.tX9mIJOQ-S-_nJL6kjK8hAe5x5z6SpmDewDh5kUHOlk"
 
 	// TestInertiaKeyPath the path to Inertia's test RSA key
-	TestInertiaKeyPath = path.Join(os.Getenv("GOPATH"), "/src/github.com/ubclaunchpad/inertia/test/keys/id_rsa")
+	TestInertiaKeyPath = "../../../test/keys/id_rsa"
 )
 
 // GetFakeAPIKey is a helper function that implements jwt.keyFunc and returns
