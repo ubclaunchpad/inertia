@@ -2,6 +2,9 @@ name: Pipeline
 
 on: [ push, pull_request ]
 
+env:
+  CI: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
