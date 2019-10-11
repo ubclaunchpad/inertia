@@ -5,6 +5,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/cfg"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 )
@@ -72,6 +74,8 @@ func TestBuilder_Build(t *testing.T) {
 	cli, err := containers.NewDockerClient()
 	assert.NoError(t, err)
 	defer cli.Close()
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
 
 	// Run cases
 	for _, tt := range tests {
@@ -83,7 +87,8 @@ func TestBuilder_Build(t *testing.T) {
 			var (
 				// Generate random project name
 				testProjectName = "test_" + tt.args.buildType + "_" + strconv.Itoa(rand.Intn(100))
-				testProjectDir  = "../../../test/build/" + tt.args.buildType
+				// Docker mounts require an absolute path
+				testProjectDir = path.Clean(path.Join(cwd, "../../../test/build/"+tt.args.buildType))
 
 				b = NewBuilder(cfg.Config{
 					ProjectDirectory:     testProjectDir,
@@ -93,6 +98,8 @@ func TestBuilder_Build(t *testing.T) {
 			)
 
 			// Run build
+			t.Logf("Preparing to build test project with name '%s' from directory '%s'",
+				testProjectName, testProjectDir)
 			deploy, err := b.Build(tt.args.buildType, Config{
 				Name:           testProjectName,
 				BuildFilePath:  tt.args.buildFilePath,
