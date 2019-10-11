@@ -84,28 +84,10 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: inertia-daemon-image
-        path: images/inertia-daemon-image
+        path: images/
     - name: Set up daemon image
       run: make testdaemon-scp
     - name: Run bootstrap test
       run: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
     - name: Upload coverage stats
       run: bash <(curl -s https://codecov.io/bash)
-
-  # publish-latest:
-  #   runs-on: ubuntu-latest
-  #   needs: [ test-bootstrap ]
-  #   on:
-  #     push:
-  #       branch: [ master ]
-  #   steps:
-  #   - uses: actions/checkout@v1
-  #   # TODO
-
-  # publish-release:
-  #   runs-on: ubuntu-latest
-  #   needs: [ test-bootstrap ]
-  #   if: github.event_name === 'push'
-  #   steps:
-  #   - uses: actions/checkout@v1
-  #   # TODO
