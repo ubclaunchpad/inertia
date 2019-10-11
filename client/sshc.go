@@ -30,7 +30,7 @@ func (s *SSHClient) GetRunner() runner.SSHSession { return s.ssh }
 func (s *SSHClient) DaemonUp() error {
 	scriptBytes, err := internal.ReadFile("client/scripts/daemon-up.sh")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not initialize script: %w", err)
 	}
 	var daemonCmdStr = fmt.Sprintf(string(scriptBytes),
 		s.remote.Version, s.remote.Daemon.Port, s.remote.IP)
@@ -41,7 +41,7 @@ func (s *SSHClient) DaemonUp() error {
 func (s *SSHClient) DaemonDown() error {
 	scriptBytes, err := internal.ReadFile("client/scripts/daemon-down.sh")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not initialize script: %w", err)
 	}
 
 	stdout, stderr, err := s.ssh.Run(string(scriptBytes))
@@ -58,13 +58,13 @@ func (s *SSHClient) DaemonDown() error {
 func (s *SSHClient) InstallDocker() error {
 	installDockerSh, err := internal.ReadFile("client/scripts/docker.sh")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not initialize script: %w", err)
 	}
 
 	// Install docker.
 	cmdStr := string(installDockerSh)
 	if err = s.ssh.RunStream(cmdStr, false); err != nil {
-		return fmt.Errorf("docker installation: %s", err.Error())
+		return fmt.Errorf("docker installation failed: %w", err.Error())
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func (s *SSHClient) GenerateKeys() (string, error) {
 
 	scriptBytes, err := internal.ReadFile("client/scripts/keygen.sh")
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not initialize script: %w", err)
 	}
 
 	// Create deploy key.
@@ -87,7 +87,7 @@ func (s *SSHClient) GenerateKeys() (string, error) {
 	s.debugStdout("keygen.sh", stdout)
 	s.debugStderr("keygen.sh", stderr)
 	if err != nil {
-		return "", fmt.Errorf("key generation failed: %s", err.Error())
+		return "", fmt.Errorf("key generation failed: %w", err.Error())
 	}
 
 	return stdout.String(), nil
@@ -97,14 +97,14 @@ func (s *SSHClient) GenerateKeys() (string, error) {
 func (s *SSHClient) AssignAPIToken() error {
 	scriptBytes, err := internal.ReadFile("client/scripts/token.sh")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not initialize script: %w", err)
 	}
 	daemonCmdStr := fmt.Sprintf(string(scriptBytes), s.remote.Version)
 	stdout, stderr, err := s.ssh.Run(daemonCmdStr)
 	s.debugStdout("token.sh", stdout)
 	s.debugStderr("token.sh", stderr)
 	if err != nil {
-		return fmt.Errorf("api token generation failed: %s", err.Error())
+		return fmt.Errorf("api token generation failed: %w", err.Error())
 	}
 
 	// There may be a newline, remove it.
@@ -116,14 +116,14 @@ func (s *SSHClient) AssignAPIToken() error {
 func (s *SSHClient) UninstallInertia() error {
 	scriptBytes, err := internal.ReadFile("client/scripts/inertia-down.sh")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not initialize script: %w", err)
 	}
 
 	stdout, stderr, err := s.ssh.Run(string(scriptBytes))
 	s.debugStdout("inertia-down.sh", stdout)
 	s.debugStderr("inertia-down.sh", stderr)
 	if err != nil {
-		return fmt.Errorf("inertia shutdown failed: %s", err.Error())
+		return fmt.Errorf("inertia shutdown failed: %w", err.Error())
 	}
 
 	return nil

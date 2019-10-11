@@ -42,14 +42,15 @@ func TestBootstrap_Integration(t *testing.T) {
 	}
 
 	var c = newIntegrationClient()
-	require.NoError(t, Bootstrap(c, Options{Out: os.Stdout}))
+	c.WithDebug(true) // makes troubleshooting tests easier
+	require.NoError(t, Bootstrap(c, Options{Out: os.Stdout}), "bootstrap failed")
 
 	// Daemon setup takes a bit of time - do a crude wait
 	time.Sleep(5 * time.Second)
 
 	// Check if daemon is online following bootstrap
 	status, err := c.Status(context.Background())
-	require.NoError(t, err)
+	require.NoError(t, err, "status check of bootstrapped daemon failed")
 	t.Logf("daemon status: %+v", status)
 	assert.Equal(t, "test", status.InertiaVersion)
 }
