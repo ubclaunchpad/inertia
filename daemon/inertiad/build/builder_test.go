@@ -5,7 +5,6 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 	"testing"
@@ -84,10 +83,8 @@ func TestBuilder_Build(t *testing.T) {
 			var (
 				// Generate random project name
 				testProjectName = "test_" + tt.args.buildType + "_" + strconv.Itoa(rand.Intn(100))
-				testProjectDir  = path.Join(
-					os.Getenv("GOPATH"),
-					"/src/github.com/ubclaunchpad/inertia/test/build/"+tt.args.buildType,
-				)
+				testProjectDir  = "../../../test/build/" + tt.args.buildType
+
 				b = NewBuilder(cfg.Config{
 					ProjectDirectory:     testProjectDir,
 					DockerComposeVersion: DockerComposeVersion,
