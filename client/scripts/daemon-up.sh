@@ -62,4 +62,4 @@ sudo docker run -d \
     -e HOME="$HOME" \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     --name "$DAEMON_NAME" \
-    "$IMAGE" "$HOST_ADDRESS" > /dev/null 2>&1
+    "$IMAGE" "$HOST_ADDRESS" > /dev/null # 2>&1
