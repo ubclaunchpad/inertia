@@ -4,6 +4,7 @@ on: [ push, pull_request ]
 
 env:
   CI: true
+  GOVERSION: '1.13'
 
 jobs:
   lint:
@@ -11,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with: { go-version: '1.13' }
+      with: { go-version: $GOVERSION }
     - name: Install web dependencies
       run: make web-deps
     - name: Run linters
@@ -22,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with: { go-version: '1.13' }
+      with: { go-version: $GOVERSION }
     - name: Build daemon
       run: make daemon TAG=test
     - name: Cache daemon image
@@ -37,15 +38,16 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with: { go-version: '1.13' }
+      with: { go-version: $GOVERSION }
     - name: Install Docker dependencies
       run: bash test/docker_deps.sh
     - name: Start test container
       run: docker run --name testcontainer -d nginx
     - name: Execute tests
       run: go test -race -tags no_bootstrap -coverprofile=coverage.txt ./...
-    - name: Upload coverage stats
-      run: bash <(curl -s https://codecov.io/bash)
+    - uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.codecov_token }}
 
   test-bootstrap:
     runs-on: ubuntu-latest
@@ -73,7 +75,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with: { go-version: '1.13' }
+      with: { go-version: $GOVERSION }
     - name: Start mock VPS (${{ matrix.case }})
       run: |
         make testenv \
@@ -89,5 +91,6 @@ jobs:
       run: make testdaemon-scp
     - name: Run bootstrap test
       run: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
-    - name: Upload coverage stats
-      run: bash <(curl -s https://codecov.io/bash)
+    - uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.codecov_token }}
