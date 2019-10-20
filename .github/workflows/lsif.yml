@@ -17,13 +17,8 @@ jobs:
       run: go get github.com/sourcegraph/lsif-go/cmd/lsif-go
     - name: Generate LSIF data
       run: go run github.com/sourcegraph/lsif-go/cmd/lsif-go --noContents --out=data.lsif
-    - name: Download LSIF to Sourcegraph uploader
-      run: curl -O https://raw.githubusercontent.com/sourcegraph/sourcegraph/master/lsif/upload.sh
-    - name: Upload LSIF to Sourcegraph
-      run: |
-        env \
-          SRC_ENDPOINT=https://sourcegraph.com \
-          REPOSITORY=github.com/ubclaunchpad/inertia \
-          COMMIT=$(git rev-parse HEAD | tr -d "\n") \
-          SRC_LSIF_UPLOAD_TOKEN=${{ secrets.sourcegraph_lsif_token }} \
-          bash upload.sh data.lsif
+    - name: Upload LSIF data
+      uses: sourcegraph/lsif-upload-action@0.1.2-dogfood
+      with:
+        file: data.lsif
+        access_token: ${{ secrets.lsif_access_token }}
