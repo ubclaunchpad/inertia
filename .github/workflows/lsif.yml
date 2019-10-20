@@ -3,7 +3,7 @@ name: LSIF Upload
 on:
   push:
     # TODO: enable when this feature stabilizes on sourcegraph's end
-    branches: []
+    branches: [ lsif ]
 
 jobs:
   build:
