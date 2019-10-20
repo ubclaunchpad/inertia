@@ -44,7 +44,7 @@ jobs:
       run: docker run --name testcontainer -d nginx
     - name: Execute tests
       run: go test -race -tags no_bootstrap -coverprofile=coverage.txt ./...
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v1.0.3
       with:
         token: ${{ secrets.codecov_token }}
 
@@ -90,6 +90,6 @@ jobs:
       run: make testdaemon-scp
     - name: Run bootstrap test
       run: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v1.0.3
       with:
         token: ${{ secrets.codecov_token }}
