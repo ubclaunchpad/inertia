@@ -4,7 +4,6 @@ on: [ push ]
 
 env:
   CI: true
-  GOVERSION: &goversion '1.13'
 
 jobs:
   lint:
@@ -12,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with: { go-version: *goversion }
+      with: { go-version: '1.13' }
     - name: Install web dependencies
       run: make web-deps
     - name: Run linters
@@ -23,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with: { go-version: *goversion }
+      with: { go-version: '1.13' }
     - name: Build daemon
       run: make daemon TAG=test
     - name: Cache daemon image
@@ -38,7 +37,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with: { go-version: *goversion }
+      with: { go-version: '1.13' }
     - name: Install Docker dependencies
       run: bash test/docker_deps.sh
     - name: Start test container
@@ -75,7 +74,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with: { go-version: *goversion }
+      with: { go-version: '1.13' }
     - name: Start mock VPS (${{ matrix.case }})
       run: |
         make testenv \
