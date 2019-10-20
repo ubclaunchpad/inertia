@@ -2,7 +2,8 @@ name: LSIF Upload
 
 on:
   push:
-    branches: [ 'master', 'chore/fix-publish' ]
+    # TODO: enable when this feature stabilizes on sourcegraph's end
+    branches: []
 
 jobs:
   build:
@@ -21,4 +22,4 @@ jobs:
       uses: sourcegraph/lsif-upload-action@0.1.2-dogfood
       with:
         file: data.lsif
-        access_token: ${{ secrets.lsif_access_token }}
+        access_token: ${{ secrets.sourcegraph_lsif_token }}
