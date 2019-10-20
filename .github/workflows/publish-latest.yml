@@ -1,4 +1,4 @@
-name: Pipeline
+name: Publish (latest)
 
 on:
   push:
@@ -11,5 +11,5 @@ jobs:
     - uses: actions/checkout@v1
     - name: Build and publish daemon:latest
       run: |
-        - docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_key }}
-        - make daemon-release RELEASE=latest
+        docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_key }}
+        make daemon-release RELEASE=latest
