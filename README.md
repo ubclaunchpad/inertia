@@ -7,9 +7,9 @@
 </p>
 
 <p align="center">
-  <a href="https://travis-ci.org/ubclaunchpad/inertia">
-    <img src="https://travis-ci.org/ubclaunchpad/inertia.svg?branch=master"
-      alt="Travis Build Status" />
+  <a href="https://github.com/ubclaunchpad/inertia/actions?workflow=Pipeline">
+    <img src="https://github.com/ubclaunchpad/inertia/workflows/Pipeline/badge.svg"
+      alt="Build Status" />
   </a>
 
   <a href="https://ci.appveyor.com/project/ubclaunchpad/inertia">
