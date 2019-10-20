@@ -44,7 +44,7 @@ func Bootstrap(c *client.Client, opts Options) error {
 	}
 	sshc, err := c.GetSSHClient()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initialize SSH client: %w", err)
 	}
 
 	fprintf(out, "Setting up remote '%s' at %s\n", c.Remote.Name, c.Remote.IP)

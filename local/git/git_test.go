@@ -1,7 +1,6 @@
 package git
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -17,13 +16,10 @@ func TestGetRepoRemote(t *testing.T) {
 func TestGetRepoCurrentBranch(t *testing.T) {
 	// This test does not work on Travis, since Travis cloning doesn't always
 	// set up branches correctly (typically detached) - same with Appveyor
-	if os.Getenv("TRAVIS") == "true" || os.Getenv("APPVEYOR") == "True" {
+	if os.Getenv("CI") == "true" || os.Getenv("TRAVIS") == "true" || os.Getenv("APPVEYOR") == "True" {
 		t.Skip("skipping test because of CI")
 	}
 	_, err := GetRepoCurrentBranch()
-	if err != nil {
-		fmt.Print(err)
-	}
 	assert.NoError(t, err)
 }
 

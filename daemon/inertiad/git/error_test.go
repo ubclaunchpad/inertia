@@ -1,14 +1,12 @@
 package git
 
 import (
-	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var testInertiaKeyPath = path.Join(os.Getenv("GOPATH"), "/src/github.com/ubclaunchpad/inertia/test/keys/id_rsa")
+var testInertiaKeyPath = "../../../test/keys/id_rsa"
 
 func TestGitAuthFailedErr(t *testing.T) {
 	err := AuthFailedErr(testInertiaKeyPath)

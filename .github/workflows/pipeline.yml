@@ -1,0 +1,97 @@
+name: Pipeline
+
+on: [ push ]
+
+env:
+  CI: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-go@v1
+      with: { go-version: '1.13' }
+    - name: Install web dependencies
+      run: make web-deps
+    - name: Run linters
+      run: make lint
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-go@v1
+      with: { go-version: '1.13' }
+    - name: Build daemon
+      run: make daemon TAG=test
+    - name: Cache daemon image
+      uses: actions/upload-artifact@v1
+      with:
+        name: inertia-daemon-image
+        path: images/inertia-daemon-image
+
+  test-core:
+    runs-on: ubuntu-latest
+    needs: [ build, lint ]
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-go@v1
+      with: { go-version: '1.13' }
+    - name: Install Docker dependencies
+      run: bash test/docker_deps.sh
+    - name: Start test container
+      run: docker run --name testcontainer -d nginx
+    - name: Execute tests
+      run: go test -race -tags no_bootstrap -coverprofile=coverage.txt ./...
+    - name: Upload code coverage
+      run: bash <(curl -s https://codecov.io/bash)
+      env:
+        CODECOV_TOKEN: ${{ secrets.codecov_token }}
+
+  test-bootstrap:
+    runs-on: ubuntu-latest
+    needs: [ test-core ]
+    strategy:
+      matrix:
+        case: [ debian-9.3, centos-7, amazon-1, ubuntu-16.04, ubuntu-18.04 ]
+        include:
+        - case: debian-9.3
+          os_name: debian
+          os_version: 9.3
+        - case: centos-7
+          os_name: centos
+          os_version: 7
+        - case: amazon-1
+          os_name: amazon
+          os_version: 1
+        - case: ubuntu-16.04
+          os_name: ubuntu
+          os_version: 16.04
+        - case: ubuntu-18.04
+          os_name: ubuntu
+          os_version: 18.04
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-go@v1
+      with: { go-version: '1.13' }
+    - name: Start mock VPS (${{ matrix.case }})
+      run: |
+        make testenv \
+          VPS_OS=${{ matrix.os_name }} \
+          VPS_VERSION=${{ matrix.os_version }} \
+          SSH_PORT=69
+    - name: Pull daemon image
+      uses: actions/download-artifact@v1
+      with:
+        name: inertia-daemon-image
+        path: images/
+    - name: Set up daemon image
+      run: make testdaemon-scp
+    - name: Run bootstrap test
+      run: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
+    - name: Upload code coverage
+      run: bash <(curl -s https://codecov.io/bash)
+      env:
+        CODECOV_TOKEN: ${{ secrets.codecov_token }}

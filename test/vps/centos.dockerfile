@@ -43,5 +43,8 @@ RUN mkdir ~/.inertia/ ; mkdir ~/.inertia/.ssl/
 COPY ./certs/ .
 RUN mv daemon.cert ~/.inertia/.ssl ; mv daemon.key ~/.inertia/.ssl
 
+# Copy dockerd configuration
+COPY ./vps/daemon.json /etc/docker/daemon.json
+
 EXPOSE 0-9000
 CMD ["/usr/sbin/init", "/usr/sbin/sshd", "-D"]
