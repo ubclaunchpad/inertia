@@ -51,6 +51,5 @@ func TestBootstrap_Integration(t *testing.T) {
 	// Check if daemon is online following bootstrap
 	status, err := c.Status(context.Background())
 	require.NoError(t, err, "status check of bootstrapped daemon failed")
-	t.Logf("daemon status: %+v", status)
 	assert.Equal(t, "test", status.InertiaVersion)
 }
