@@ -2,7 +2,7 @@ name: Publish (latest)
 
 on:
   push:
-    branches: [ master, 'chore/fix-publish' ]
+    branches: [ master ]
 
 jobs:
   daemon:
