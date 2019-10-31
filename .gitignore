@@ -43,6 +43,7 @@ tmp
 # Inertia web
 node_modules/
 public/
+yarn.lockk
 
 # JetBrains
 .idea
