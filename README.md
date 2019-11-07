@@ -91,8 +91,8 @@ If you...
 * are on a tight budget and need to switch between cloud providers as your free trials run out
 * want some lightweight team features for managing your deployment
 
-Inertia might be for you! For example, Inertia has been used by UBC Launch Pad
-teams to successfully execute automated deploys for projects like
+Inertia might be for you! For example, [UBC Launch Pad](https://www.ubclaunchpad.com/)
+teams have used Inertia to set up automated deployments for projects like
 [Rocket 2](https://github.com/ubclaunchpad/rocket2) and [Bumper](https://github.com/ubclaunchpad/bumper),
 and [nwPlus](https://www.nwplus.io/) used Inertia to stage previews of the
 [nwHacks 2019 website](https://github.com/nwplus/nwhacks2019) during development.
