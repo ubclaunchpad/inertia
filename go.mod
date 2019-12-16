@@ -6,7 +6,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Baozisoftware/qrcode-terminal-go v0.0.0-20170407111555-c0650d8dff0f
 	github.com/BurntSushi/toml v0.3.1
-	github.com/Microsoft/go-winio v0.4.12 // indirect
+	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/UnnoTed/fileb0x v1.1.3
 	github.com/aws/aws-sdk-go v1.17.9
 	github.com/boombuler/barcode v1.0.0 // indirect
@@ -23,17 +23,16 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.1
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kyokomi/emoji v2.1.1-0.20190303065119-51762253ec2b+incompatible
 	github.com/mattn/go-isatty v0.0.6 // indirect
-	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2 // indirect
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/gox v1.0.1
 	github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/pkg/errors v0.8.1 // indirect
 	github.com/pquerna/otp v1.1.0
 	github.com/russross/blackfriday v1.5.2 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
