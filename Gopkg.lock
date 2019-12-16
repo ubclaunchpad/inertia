@@ -175,12 +175,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:4a0c072e44da763409da72d41492373a034baf2e6d849c76d239b4abdfbb6c49"
+  digest = "1:d5344bb08f1d8dc55f9a513ac4f971a9c8baeb73690b7cde56f4fe8a9143ef62"
   name = "github.com/gorilla/websocket"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
-  version = "v1.4.0"
+  revision = "c3e18be99d19e6b3e8f1559eea2c161a665c4b6b"
+  version = "v1.4.1"
 
 [[projects]]
   digest = "1:406338ad39ab2e37b7f4452906442a3dbf0eb3379dd1f06aafb5c07e769a5fbb"
@@ -348,6 +348,43 @@
   pruneopts = "NUT"
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
   version = "v1.3.0"
+
+[[projects]]
+  digest = "1:c9ddb152687d1a5c13f4bfdc1cc7ab5db8b1b6a0c08d1f442894ef2e34e8e7fc"
+  name = "github.com/ubclaunchpad/inertia"
+  packages = [
+    "api",
+    "cfg",
+    "client",
+    "client/internal",
+    "cmd",
+    "cmd/cmd",
+    "cmd/config",
+    "cmd/host",
+    "cmd/inpututil",
+    "cmd/printutil",
+    "cmd/provision",
+    "cmd/remote",
+    "common",
+    "daemon/inertiad/auth",
+    "daemon/inertiad/build",
+    "daemon/inertiad/build/mocks",
+    "daemon/inertiad/cfg",
+    "daemon/inertiad/containers",
+    "daemon/inertiad/crypto",
+    "daemon/inertiad/daemon",
+    "daemon/inertiad/git",
+    "daemon/inertiad/log",
+    "daemon/inertiad/project",
+    "daemon/inertiad/project/mocks",
+    "daemon/inertiad/util",
+    "daemon/inertiad/webhook",
+    "local",
+    "provision",
+  ]
+  pruneopts = "NUT"
+  revision = "176cb3dec018bd65fe04b9e472d51aa2c05933fa"
+  version = "v0.5.3"
 
 [[projects]]
   digest = "1:3148cb3478c26a92b4c1a18abb9428234b281e278af6267840721a24b6cbc6a3"
@@ -526,6 +563,34 @@
     "github.com/pquerna/otp/totp",
     "github.com/spf13/cobra",
     "github.com/stretchr/testify/assert",
+    "github.com/ubclaunchpad/inertia/api",
+    "github.com/ubclaunchpad/inertia/cfg",
+    "github.com/ubclaunchpad/inertia/client",
+    "github.com/ubclaunchpad/inertia/client/internal",
+    "github.com/ubclaunchpad/inertia/cmd",
+    "github.com/ubclaunchpad/inertia/cmd/cmd",
+    "github.com/ubclaunchpad/inertia/cmd/config",
+    "github.com/ubclaunchpad/inertia/cmd/host",
+    "github.com/ubclaunchpad/inertia/cmd/inpututil",
+    "github.com/ubclaunchpad/inertia/cmd/printutil",
+    "github.com/ubclaunchpad/inertia/cmd/provision",
+    "github.com/ubclaunchpad/inertia/cmd/remote",
+    "github.com/ubclaunchpad/inertia/common",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/auth",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/build",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/build/mocks",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/cfg",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/containers",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/crypto",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/daemon",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/git",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/log",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/project",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/project/mocks",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/util",
+    "github.com/ubclaunchpad/inertia/daemon/inertiad/webhook",
+    "github.com/ubclaunchpad/inertia/local",
+    "github.com/ubclaunchpad/inertia/provision",
     "go.etcd.io/bbolt",
     "golang.org/x/crypto/bcrypt",
     "golang.org/x/crypto/pbkdf2",
