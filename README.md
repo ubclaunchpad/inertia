@@ -22,9 +22,9 @@
       alt="Clean code" />
   </a>
 
-  <a href="https://godoc.org/github.com/ubclaunchpad/inertia">
-    <img src="https://godoc.org/github.com/ubclaunchpad/inertia?status.svg"
-      alt="GoDocs available" />
+  <a href="https://pkg.go.dev/github.com/ubclaunchpad/inertia">
+    <img src="https://img.shields.io/badge/go.pkg.dev-reference-5272B4"
+      alt="go.pkg.dev documentation available" />
   </a>
 
   <a href="https://hub.docker.com/r/ubclaunchpad/inertia">
