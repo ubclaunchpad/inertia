@@ -11,8 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
-      with:
-          go-version: '1.13'
+      with: { go-version: '1.14' }
     - name: Install lsif-go
       working-directory: '/'
       run: go get github.com/sourcegraph/lsif-go/cmd/lsif-go
