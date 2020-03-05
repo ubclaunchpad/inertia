@@ -771,6 +771,28 @@ Just place your SSL certificate and key on your remote in `~/.inertia/ssl` as
 `daemon.cert` and `daemon.key` respectively, and the Inertia daemon will use
 them automatically.
 
+## Intermediary Containers
+
+<aside class="warning">
+This is an experimental solution to a problem we've run into - refer to
+<a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
+</aside>
+
+You can declare intermediary containers used during builds that don't persist for the lifetime of
+your project - for example, containers that run tasks. This tells the Inertia daemon not to worry
+if it detects that containers with the given names die.
+
+```toml
+name = "my_project"
+# ...
+
+[[profile]]
+  # ...
+  [profile.build]
+    # ...
+    intermediary_containers = [ "nginx" ]
+```
+
 # Miscellaneous
 
 ## Learn More
