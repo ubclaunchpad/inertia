@@ -101,32 +101,6 @@ func TestRemoveUser(t *testing.T) {
 	assert.Equal(t, errUserNotFound, err)
 }
 
-func TestTooManyLogins(t *testing.T) {
-	dir := "./test_users_login_limit"
-	manager, err := getTestUserManager(dir)
-	defer os.RemoveAll(dir)
-	assert.NoError(t, err)
-	defer manager.Close()
-
-	err = manager.AddUser("bobheadxi", "best_person_ever", true)
-	assert.NoError(t, err)
-
-	for i := 0; i < loginAttemptsLimit; i++ {
-		_, correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
-		assert.NoError(t, err)
-		assert.False(t, correct)
-	}
-
-	_, correct, err := manager.IsCorrectCredentials("bobheadxi", "not_quite_best")
-	assert.False(t, correct)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "login attempts")
-
-	err = manager.HasUser("bobheadxi")
-	assert.NotNil(t, err)
-	assert.Equal(t, errUserNotFound, err)
-}
-
 func TestEnableTotp(t *testing.T) {
 	dir := "./test_users"
 	manager, err := getTestUserManager(dir)
