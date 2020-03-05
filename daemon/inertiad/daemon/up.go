@@ -99,9 +99,8 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update container management history following a successful build and deployment
-	err = s.deployment.UpdateContainerHistory(s.docker)
-	if err != nil {
-		stream.Error(res.ErrInternalServer("failed to update container history following build", err))
+	if err = s.deployment.UpdateContainerHistory(s.docker); err != nil {
+		stream.Println("warning: failed to update container history:", err)
 	}
 
 	stream.Success(res.Msg("Project startup initiated!", http.StatusCreated))

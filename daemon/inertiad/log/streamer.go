@@ -68,8 +68,8 @@ func (s *Streamer) GetSocketWriter() (io.Writer, error) {
 }
 
 // Println prints to logger's standard writer
-func (s *Streamer) Println(a interface{}) {
-	fmt.Fprintln(s.Writer, a)
+func (s *Streamer) Println(a ...interface{}) {
+	fmt.Fprintln(s.Writer, a...)
 }
 
 // Error directs message and status to http.Error when appropriate
