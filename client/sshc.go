@@ -64,7 +64,7 @@ func (s *SSHClient) InstallDocker() error {
 	// Install docker.
 	cmdStr := string(installDockerSh)
 	if err = s.ssh.RunStream(cmdStr, false); err != nil {
-		return fmt.Errorf("docker installation failed: %w", err.Error())
+		return fmt.Errorf("docker installation failed: %w", err)
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func (s *SSHClient) GenerateKeys() (string, error) {
 	s.debugStdout("keygen.sh", stdout)
 	s.debugStderr("keygen.sh", stderr)
 	if err != nil {
-		return "", fmt.Errorf("key generation failed: %w", err.Error())
+		return "", fmt.Errorf("key generation failed: %w", err)
 	}
 
 	return stdout.String(), nil
@@ -104,7 +104,7 @@ func (s *SSHClient) AssignAPIToken() error {
 	s.debugStdout("token.sh", stdout)
 	s.debugStderr("token.sh", stderr)
 	if err != nil {
-		return fmt.Errorf("api token generation failed: %w", err.Error())
+		return fmt.Errorf("api token generation failed: %w", err)
 	}
 
 	// There may be a newline, remove it.
@@ -123,7 +123,7 @@ func (s *SSHClient) UninstallInertia() error {
 	s.debugStdout("inertia-down.sh", stdout)
 	s.debugStderr("inertia-down.sh", stderr)
 	if err != nil {
-		return fmt.Errorf("inertia shutdown failed: %w", err.Error())
+		return fmt.Errorf("inertia shutdown failed: %w", err)
 	}
 
 	return nil
