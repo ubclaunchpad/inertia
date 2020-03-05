@@ -125,8 +125,14 @@ func (p *EC2Provisioner) ListImageOptions(region string) ([]string, error) {
 		}
 		// Ignore nameless images
 		if image.Name != nil {
+			// Rudimentary filter to remove ECS images - see https://github.com/ubclaunchpad/inertia/issues/633
+			if strings.Contains(*image.ImageId, "ECS") || strings.Contains(*image.Description, "ECS") {
+				continue
+			}
+
 			images = append(images, fmt.Sprintf("%s (%s)", *image.ImageId, *image.Description))
 		}
+
 	}
 	return images, nil
 }
