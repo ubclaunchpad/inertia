@@ -197,20 +197,20 @@
   color: #f92672;
 }
     </style>
-    <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
-    <link href="stylesheets/print.css" rel="stylesheet" media="print" />
-      <script src="javascripts/all_nosearch.js"></script>
+    <link href="stylesheets/screen-af868d8f.css" rel="stylesheet" media="screen" />
+    <link href="stylesheets/print-4373c1b9.css" rel="stylesheet" media="print" />
+      <script src="javascripts/all_nosearch-c275c2f6.js"></script>
   </head>
 
   <body class="index" data-languages="[]">
     <a href="#" id="nav-button">
       <span>
         NAV
-        <img src="images/navbar.png" alt="Navbar" />
+        <img src="images/navbar-cad8cdcb.png" alt="Navbar" />
       </span>
     </a>
     <div class="toc-wrapper">
-      <img src="images/logo.png" class="logo" alt="Logo" />
+      <img src="images/logo-a410de0a.png" class="logo" alt="Logo" />
       <ul id="toc" class="toc-list-h1">
           <li>
             <a href="#inertia" class="toc-h1 toc-link" data-title="Inertia">Inertia</a>
@@ -291,6 +291,9 @@
                   </li>
                   <li>
                     <a href="#custom-ssl-certificate" class="toc-h2 toc-link" data-title="Custom SSL Certificate">Custom SSL Certificate</a>
+                  </li>
+                  <li>
+                    <a href="#intermediary-containers" class="toc-h2 toc-link" data-title="Intermediary Containers">Intermediary Containers</a>
                   </li>
               </ul>
           </li>
@@ -558,7 +561,7 @@ affordable, and a good choice to get started with.</p>
 
 <blockquote>
 <p>The IAM users page:
-<img src="images/aws-ec2-iam-add.png" alt="Aws ec2 iam add" /></p>
+<img src="images/aws-ec2-iam-add-acf0227b.png" alt="Aws ec2 iam add" /></p>
 </blockquote>
 
 <p>To get started, make an account on the <a href="aws.amazon.com">AWS website</a>. If you&#39;re
@@ -574,7 +577,7 @@ configure programmatic access to your AWS account. Under the &quot;Users&quot; t
 
 <blockquote>
 <p>Configuring IAM permissions:
-<img src="images/aws-ec2-iam-perm.png" alt="Aws ec2 iam perm" /></p>
+<img src="images/aws-ec2-iam-perm-408741e4.png" alt="Aws ec2 iam perm" /></p>
 </blockquote>
 
 <p>This will take you through a brief walkthrough to configure your new IAM user:</p>
@@ -1042,7 +1045,24 @@ repository&#39;s webhook deliveries as well.</p>
 <p>Just place your SSL certificate and key on your remote in <code>~/.inertia/ssl</code> as
 <code>daemon.cert</code> and <code>daemon.key</code> respectively, and the Inertia daemon will use
 them automatically.</p>
-<h1 id='miscellaneous'>Miscellaneous</h1><h2 id='learn-more'>Learn More</h2>
+<h2 id='intermediary-containers'>Intermediary Containers</h2>
+<aside class="warning">
+This is an experimental solution to a problem we've run into - refer to
+<a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
+</aside>
+
+<p>You can declare intermediary containers used during builds that don&#39;t persist for the lifetime of
+your project - for example, containers that run tasks. This tells the Inertia daemon not to worry
+if it detects that containers with the given names die.</p>
+<pre class="highlight toml tab-toml"><code><span class="py">name</span> <span class="p">=</span> <span class="s">"my_project"</span>
+<span class="c"># ...</span>
+
+<span class="nn">[[profile]]</span>
+  <span class="c"># ...</span>
+  <span class="nn">[profile.build]</span>
+    <span class="c"># ...</span>
+    <span class="py">intermediary_containers</span> <span class="p">=</span> <span class="p">[</span> <span class="s">"nginx"</span> <span class="p">]</span>
+</code></pre><h1 id='miscellaneous'>Miscellaneous</h1><h2 id='learn-more'>Learn More</h2>
 <blockquote>
 <p>Some quick links to help you get started:</p>
 

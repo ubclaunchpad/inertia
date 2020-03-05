@@ -50,10 +50,11 @@ type Deployment struct {
 	active    bool
 	directory string
 
-	project       string
-	branch        string
-	buildType     string
-	buildFilePath string
+	project                string
+	branch                 string
+	buildType              string
+	buildFilePath          string
+	intermediaryContainers []string
 
 	builder build.ContainerBuilder
 
@@ -68,12 +69,13 @@ type Deployment struct {
 
 // DeploymentConfig is used to configure Deployment
 type DeploymentConfig struct {
-	ProjectName   string
-	BuildType     string
-	BuildFilePath string
-	RemoteURL     string
-	Branch        string
-	PemFilePath   string
+	ProjectName            string
+	BuildType              string
+	BuildFilePath          string
+	RemoteURL              string
+	Branch                 string
+	PemFilePath            string
+	IntermediaryContainers []string
 }
 
 // DeploymentMetadata is used to store metadata relevant
@@ -152,6 +154,7 @@ func (d *Deployment) SetConfig(cfg DeploymentConfig) {
 	if cfg.BuildFilePath != "" {
 		d.buildFilePath = cfg.BuildFilePath
 	}
+	d.intermediaryContainers = cfg.IntermediaryContainers
 
 	// TODO: register notifiers
 }
@@ -451,23 +454,39 @@ func (d *Deployment) Watch(client *docker.Client) (<-chan string, <-chan error) 
 				}
 
 			case status := <-eventsCh:
+				var containerName string
 				if status.Actor.Attributes != nil {
-					logsCh <- fmt.Sprintf("container %s (%s) has stopped", status.Actor.Attributes["name"], status.ID[:11])
+					containerName = status.Actor.Attributes["name"]
+				}
+
+				if containerName != "" {
+					logsCh <- fmt.Sprintf("container %s (%s) has stopped", containerName, status.ID[:11])
 				} else {
 					logsCh <- fmt.Sprintf("container %s has stopped", status.ID[:11])
 				}
 
 				if d.active {
+					// Check if we should ignore this container's death
+					var ignore bool
+					if len(d.intermediaryContainers) > 0 && containerName == "" {
+						for _, c := range d.intermediaryContainers {
+							if containerName == c {
+								ignore = true
+							}
+						}
+					}
+
 					// Shut down all containers if one stops while project is active
-					d.active = false
-					logsCh <- "container stoppage was unexpected, project is active"
-					err := containers.StopActiveContainers(client, os.Stdout)
-					if err != nil {
-						logsCh <- ("error shutting down other active containers: " + err.Error())
+					if !ignore {
+						d.active = false
+						logsCh <- "container stoppage was unexpected, project is active"
+						err := containers.StopActiveContainers(client, os.Stdout)
+						if err != nil {
+							logsCh <- ("error shutting down other active containers: " + err.Error())
+						}
 					}
 				}
 			}
-
 		}
 	}()
 

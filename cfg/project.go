@@ -52,6 +52,8 @@ func AsBuildType(s string) (BuildType, error) {
 type Build struct {
 	Type          BuildType `toml:"type"`
 	BuildFilePath string    `toml:"buildfile"`
+
+	IntermediaryContainers []string `toml:"intermediary_containers"`
 }
 
 // NewProject sets up Inertia configuration with given properties

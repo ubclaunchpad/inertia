@@ -102,6 +102,7 @@ func (c *Client) Up(ctx context.Context, req UpRequest) error {
 			RemoteURL: common.GetSSHRemoteURL(req.URL),
 			Branch:    req.Profile.Branch,
 		},
+		IntermediaryContainers: req.Profile.Build.IntermediaryContainers,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to make request: %s", err.Error())
