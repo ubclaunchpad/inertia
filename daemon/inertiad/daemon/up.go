@@ -32,11 +32,12 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	// apply configuration updates
 	s.state.WebhookSecret = upReq.WebHookSecret
 	s.deployment.SetConfig(project.DeploymentConfig{
-		ProjectName:   upReq.Project,
-		BuildType:     upReq.BuildType,
-		BuildFilePath: upReq.BuildFilePath,
-		RemoteURL:     gitOpts.RemoteURL,
-		Branch:        gitOpts.Branch,
+		ProjectName:            upReq.Project,
+		BuildType:              upReq.BuildType,
+		BuildFilePath:          upReq.BuildFilePath,
+		RemoteURL:              gitOpts.RemoteURL,
+		Branch:                 gitOpts.Branch,
+		IntermediaryContainers: upReq.IntermediaryContainers,
 	})
 
 	// Configure streamer
