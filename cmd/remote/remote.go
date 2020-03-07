@@ -58,6 +58,7 @@ For example:
 	remote.attachListCmd()
 	remote.attachRemoveCmd()
 	remote.attachUpgradeCmd()
+	remote.attachResetCmd()
 	remote.attachConfigPathCmd()
 
 	// add to parent
@@ -336,6 +337,32 @@ func (root *RemoteCmd) attachSetCmd() {
 		},
 	}
 	root.AddCommand(set)
+}
+
+func (root *RemoteCmd) attachResetCmd() {
+	var resetCmd = &cobra.Command{
+		Use:   "reset",
+		Short: "Reset all remotes",
+		Long: `Removes all inertia remotes configuration - use 'inertia remote config-path'
+to see where the file is directly. Note that the configuration directory can be set using
+INERTIA_PATH.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			resp, err := input.Prompt("Would you like to reset ALL remote configuration?")
+			if err != nil {
+				out.Fatal(err)
+			}
+			if resp == "y" || resp == "yes" {
+				if err := os.Remove(local.InertiaRemotesPath()); err != nil {
+					out.Fatal(err)
+				} else {
+					println("remote configuration successfully removed")
+				}
+			} else {
+				out.Fatal("aborting")
+			}
+		},
+	}
+	root.AddCommand(resetCmd)
 }
 
 func (root *RemoteCmd) attachConfigPathCmd() {
