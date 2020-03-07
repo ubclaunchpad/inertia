@@ -21,7 +21,7 @@ inertia remote upgrade dev staging
 ```
       --all              upgrade all remotes
   -h, --help             help for upgrade
-      --version string   specify Inertia daemon version to set (default "v0.6.0-preview2-6-g729e2dc")
+      --version string   specify Inertia daemon version to set (default "v0.6.0-preview2-11-g795ed90")
 ```
 
 ### Options inherited from parent commands
