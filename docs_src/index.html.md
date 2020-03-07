@@ -91,12 +91,6 @@ scoop bucket add ubclaunchpad https://github.com/ubclaunchpad/scoop-bucket
 scoop install inertia
 ```
 
-> To build and install the CLI from source:
-
-```shell
-go get -u github.com/ubclaunchpad/inertia
-```
-
 The Inertia command line interface (CLI) can be installed from a few package
 managers such as npm, Homebrew and Scoop. For other platforms, you can 
 [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases).
