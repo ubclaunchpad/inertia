@@ -23,10 +23,7 @@ import (
 // AttachRemotesCmds reads configuration to attach a child command for each
 // configured remote in the configuration
 func AttachRemotesCmds(root *core.Cmd) {
-	project, err := local.GetProject(root.ProjectConfigPath)
-	if err != nil {
-		return
-	}
+	project, _ := local.GetProject(root.ProjectConfigPath)
 	cfg, err := local.GetRemotes()
 	if err != nil {
 		return
@@ -113,8 +110,11 @@ If the SSH key for your remote requires a passphrase, it can be provided via 'ID
 
 Run 'inertia [remote] init' to gather this information.`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if host.client == nil || host.project == nil {
+			if host.client == nil {
 				out.Fatal("failed to read configuration")
+			}
+			if host.project == nil {
+				out.Fatal("no project found in current directory - try 'inertia init'")
 			}
 			if host.getRemote().Version != inertia.Version {
 				out.Printf("[WARNING] Remote configuration version '%s' does not match your Inertia CLI version '%s'\n",
@@ -455,19 +455,36 @@ directory (~/inertia) from your remote host.`,
 }
 
 func (root *HostCmd) attachTokenCmd() {
-	var token = &cobra.Command{
+	var tokenCmd = &cobra.Command{
 		Use:   "token",
 		Short: "Generate tokens associated with permission levels for admin to share.",
 		Long:  `Generate tokens associated with permission levels for team leads to share`,
 		Run: func(cmd *cobra.Command, args []string) {
-			token, err := root.client.Token(root.ctx)
+			useSSH, err := cmd.Flags().GetBool("ssh")
 			if err != nil {
 				out.Fatal(err)
+			}
+			var token string
+			if useSSH {
+				sshc, err := root.client.GetSSHClient()
+				if err != nil {
+					out.Fatal(err.Error())
+				}
+				if err = sshc.AssignAPIToken(); err != nil {
+					out.Fatal(err.Error())
+				}
+				token = root.client.Remote.Daemon.Token
+			} else {
+				token, err = root.client.Token(root.ctx)
+				if err != nil {
+					out.Fatal(err)
+				}
 			}
 			out.Println(token)
 		},
 	}
-	root.AddCommand(token)
+	tokenCmd.Flags().Bool("ssh", false, "generate token over SSH")
+	root.AddCommand(tokenCmd)
 }
 
 func (root *HostCmd) attachUpgradeCmd() {

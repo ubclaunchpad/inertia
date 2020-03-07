@@ -341,7 +341,7 @@ func (root *RemoteCmd) attachSetCmd() {
 func (root *RemoteCmd) attachConfigPathCmd() {
 	var cfgPath = &cobra.Command{
 		Use:   "config-path",
-		Short: "Output path to remote configuration.",
+		Short: "Output path to remote configuration file",
 		Long: `Outputs where remotes are stored. Note that the configuration directory
 can be set using INERTIA_PATH.`,
 		Run: func(cmd *cobra.Command, args []string) {
