@@ -1,25 +1,16 @@
-name: LSIF Upload
-
+name: LSIF
 on:
-  push:
-    # TODO: enable when this feature stabilizes on sourcegraph's end
-    branches: [ lsif ]
-
+  - push
 jobs:
-  build:
+  index:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-go@v1
-      with:
-          go-version: '1.13'
-    - name: Install lsif-go
-      working-directory: '/'
-      run: go get github.com/sourcegraph/lsif-go/cmd/lsif-go
-    - name: Generate LSIF data
-      run: go run github.com/sourcegraph/lsif-go/cmd/lsif-go --noContents --out=data.lsif
-    - name: Upload LSIF data
-      uses: sourcegraph/lsif-upload-action@0.1.2-dogfood
-      with:
-        file: data.lsif
-        access_token: ${{ secrets.sourcegraph_lsif_token }}
+      - uses: actions/checkout@v1
+      - name: Generate LSIF Data
+        uses: sourcegraph/lsif-go-action@master
+        with:
+          verbose: "true"
+      - name: Upload LSIF data
+        uses: sourcegraph/lsif-upload-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
