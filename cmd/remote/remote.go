@@ -1,13 +1,18 @@
 package remotecmd
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/ubclaunchpad/inertia/cfg"
+	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
@@ -27,6 +32,7 @@ func AttachRemoteCmd(inertia *core.Cmd) {
 	remote.Command = &cobra.Command{
 		Use:     "remote",
 		Version: inertia.Version,
+		Aliases: []string{"r"},
 		Short:   "Configure the local settings for a remote host",
 		Long: `Configures local settings for a remote host - add, remove, and list configured
 Inertia remotes.
@@ -53,6 +59,7 @@ For example:
 
 	// add children
 	remote.attachAddCmd()
+	remote.attachLoginCmd()
 	remote.attachShowCmd()
 	remote.attachSetCmd()
 	remote.attachListCmd()
@@ -63,6 +70,20 @@ For example:
 
 	// add to parent
 	inertia.AddCommand(remote.Command)
+}
+
+func (root *RemoteCmd) validateRemoteName(name string) error {
+	if _, found := root.remotes.GetRemote(name); found {
+		return fmt.Errorf("remote '%s' already exists", name)
+	}
+	for _, child := range root.Parent().Commands() {
+		if child.Name() == name {
+			return fmt.Errorf(
+				"'%s' is the name of an Inertia command - please choose something else",
+				name)
+		}
+	}
+	return nil
 }
 
 func (root *RemoteCmd) attachAddCmd() {
@@ -88,14 +109,10 @@ Inertia commands.`,
 		Example: "inertia remote add staging --daemon.gen-secret --ip 1.2.3.4",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if _, found := root.remotes.GetRemote(args[0]); found {
-				out.Fatalf("remote '%s' already exists", args[0])
+			if err := root.validateRemoteName(args[0]); err != nil {
+				out.Fatalf(err.Error())
 			}
-			for _, child := range root.Parent().Commands() {
-				if child.Name() == args[0] {
-					out.Fatalf("'%s' is the name of an Inertia command - please choose something else", args[0])
-				}
-			}
+
 			homeEnvVar, err := os.UserHomeDir()
 			if err != nil {
 				out.Fatal(err)
@@ -192,6 +209,99 @@ Inertia commands.`,
 	addRemote.Flags().String(flagSSHUser, "", "user to use when accessing remote over SSH")
 	addRemote.Flags().BoolVar(&genWebhookSecret, flagWebhookGenerate, true, "toggle webhook secret generation")
 	root.AddCommand(addRemote)
+}
+
+func (root *RemoteCmd) attachLoginCmd() {
+	const (
+		flagIP         = "ip"
+		flagTotp       = "totp"
+		flagDaemonPort = "daemon.port"
+	)
+	var loginCmd = &cobra.Command{
+		Use:     "login [remote] [user]",
+		Short:   "Log in to a remote as an existing user.",
+		Long:    `Log in as an existing user to access a remote.`,
+		Example: "inertia remote login staging my_user --ip 1.2.3.4",
+		Args:    cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			var (
+				remoteName = args[0]
+				username   = args[1]
+				addr, _    = cmd.Flags().GetString(flagIP)
+				port, _    = cmd.Flags().GetString(flagDaemonPort)
+			)
+
+			// check that remote name is valid
+			if err := root.validateRemoteName(remoteName); err != nil {
+				out.Fatal(err.Error())
+			}
+
+			// init remote
+			remoteCfg := &cfg.Remote{
+				Name:     remoteName,
+				Version:  root.Version,
+				IP:       addr,
+				Daemon:   &cfg.Daemon{Port: port},
+				Profiles: make(map[string]string),
+			}
+
+			// prompt for password
+			out.Print("Password: ")
+			pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+			out.Println()
+			if err != nil {
+				out.Fatal(err.Error())
+			}
+
+			// set up client
+			var c = client.
+				NewClient(remoteCfg, client.Options{Out: os.Stdout}).
+				GetUserClient()
+			ctx, cancel := context.WithCancel(context.Background())
+			input.CatchSigterm(cancel)
+
+			// authenticate
+			var totp, _ = cmd.Flags().GetString(flagTotp)
+			var req = client.AuthenticateRequest{
+				User:     username,
+				Password: string(pwBytes),
+				TOTP:     totp,
+			}
+			token, err := c.Authenticate(ctx, req)
+			if err != nil && err != client.ErrNeedTotp {
+				out.Fatal(err)
+			}
+			if err == client.ErrNeedTotp {
+				// a TOTP is required
+				out.Print("Authentication code (or backup code): ")
+				totpBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+				out.Println()
+				if err != nil {
+					out.Fatal(err)
+				}
+				// retry with TOTP
+				req.TOTP = string(totpBytes)
+				token, err = c.Authenticate(ctx, req)
+				if err != nil {
+					out.Fatal(err)
+				}
+			}
+
+			// init token and save remote
+			remoteCfg.Daemon.Token = token
+			if err := local.SaveRemote(remoteCfg); err != nil {
+				out.Fatal(err)
+			}
+			out.Printf(":rocket: Successfully logged in to remote '%s' (%s) as user '%s'!",
+				remoteName, addr, username)
+			out.Printf("Try running 'inertia %s status' to check on your remote.", remoteName)
+		},
+	}
+	loginCmd.Flags().String(flagIP, "", "IP address of remote")
+	loginCmd.Flags().String(flagTotp, "", "auth code or backup code for 2FA")
+	loginCmd.Flags().String(flagDaemonPort, "4303", "remote daemon port")
+
+	root.AddCommand(loginCmd)
 }
 
 func (root *RemoteCmd) attachListCmd() {
