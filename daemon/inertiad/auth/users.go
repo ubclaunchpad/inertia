@@ -15,6 +15,10 @@ var (
 	errMissingCredentials = errors.New("no credentials provided")
 )
 
+const (
+	masterKey = "master"
+)
+
 // userProps are properties associated with user, used
 // for database entries
 type userProps struct {
@@ -54,7 +58,7 @@ func newUserManager(dbPath string) (*userManager, error) {
 		if err != nil {
 			return err
 		}
-		return users.Put([]byte("master"), bytes)
+		return users.Put([]byte(masterKey), bytes)
 	})
 	if err != nil {
 		return nil, err
@@ -72,12 +76,16 @@ func (m *userManager) Close() error {
 // Reset deletes all users and drops all active sessions
 func (m *userManager) Reset() error {
 	return m.db.Update(func(tx *bolt.Tx) error {
-		err := tx.DeleteBucket(m.usersBucket)
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucket(m.usersBucket)
-		return err
+		users := tx.Bucket(m.usersBucket)
+		return users.ForEach(func(username, v []byte) error {
+			if string(username) != masterKey {
+				if err := users.Delete(username); err != nil {
+					tx.Rollback()
+					return err
+				}
+			}
+			return nil
+		})
 	})
 }
 
