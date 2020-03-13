@@ -52,7 +52,7 @@ ENV INERTIA_PROJECT_DIR=/app/host/inertia/project/ \
     INERTIA_GH_KEY_PATH=/app/host/.ssh/id_rsa_inertia_deploy
 
 # Build tool versions
-ENV INERTIA_DOCKERCOMPOSE=docker/compose:1.23.2
+ENV INERTIA_DOCKERCOMPOSE=docker/compose:1.25.4
 
 # Serve the daemon by default.
 ENTRYPOINT ["inertiad", "run"]
