@@ -59,6 +59,12 @@ func TestAllUserManagementOperations(t *testing.T) {
 
 	err = manager.HasUser("bobheadxi")
 	assert.Equal(t, errUserNotFound, err)
+
+	// reset should not remove master key
+	err = manager.Reset()
+	assert.NoError(t, err)
+	err = manager.HasUser(masterKey)
+	assert.NoError(t, err)
 }
 
 func TestIsAdmin(t *testing.T) {
