@@ -10,7 +10,7 @@ type Config struct {
 	SecretsDirectory string // "/app/host/.inertia/"
 
 	// Build tools
-	DockerComposeVersion string // "docker/compose:1.21.0"
+	DockerComposeVersion string // "docker/compose:${version}"
 
 	WebhookSecret string
 }
