@@ -58,17 +58,21 @@ started to address these problems.
 
 This site primarily documents how to set up and use Inertia - to learn more
 about the project, check out our [GitHub repository](https://github.com/ubclaunchpad/inertia)!
-A complete command reference for the Inertia CLI is also available [here](/cli).
-If you're interested in building on Inertia, check out the [API reference](/api).
+Additional resources you might want to consult include:
 
-If you're looking for the latest pre-release documentation, check out the
-[*preview* versions of our documentation](https://inertia.ubclaunchpad.com/tip).
-Note that `/tip` documentation includes unreleased features and changes.
+* [complete command reference for the Inertia CLI](/cli)
+* [API reference for the Inertia daemon](/api)
 
 <aside class="notice">
 This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
 please feel free to
 <a href='https://github.com/ubclaunchpad/inertia/issues/new/choose'>open a ticket</a>!
+</aside>
+
+<aside class="warning">
+If you're looking for the latest pre-release documentation, check out the
+<a href="https://inertia.ubclaunchpad.com/tip"><i>preview</i> versions of our documentation</a>.
+Note that <code>/tip/...</code> documentation includes unreleased features and changes.
 </aside>
 
 # Getting Started
@@ -588,7 +592,22 @@ inertia --version # verify installation
 inertia ${remote_name} upgrade --all
 ```
 
-TODO
+The version of Inertia you are using can be seen in Inertia's `inertia.toml`
+configuration file, or by running `inertia --version`. The version in
+`inertia.toml` is used to determine what version of the Inertia daemon to use
+when you run `inertia ${remote_name} init`.
+
+You can manually change the daemon version used by editing the Inertia
+configuration file. If you are building from source, you can also check out the
+desired version and run `make inertia-tagged` or `make RELEASE=$STREAM`.
+Inertia daemon releases are tagged as follows:
+
+- `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
+- `latest` denotes the newest builds on `master`.
+- `canary` denotes experimental builds used for testing and development - do not use this.
+
+You can see the list of available tags on
+[Docker Hub](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags).
 
 # Advanced Usage
 
@@ -720,32 +739,6 @@ To use these tokens, you can place them in your `inertia.toml` under `token`, or
 use them in requests to the Inertia API by placing them as a `Bearer` token in
 your request header under `Authorization`.
 
-## Inertia Release Streams
-
-The version of Inertia you are using can be seen in Inertia's `inertia.toml`
-configuration file, or by running `inertia --version`. The version in
-`inertia.toml` is used to determine what version of the Inertia daemon to use
-when you run `inertia ${remote_name} init`.
-
-> To switch over to the latest build and upgrade your remote:
-
-```shell
-inertia config set version "latest"
-inertia ${remote_name} upgrade
-```
-
-You can manually change the daemon version used by editing the Inertia
-configuration file. If you are building from source, you can also check out the
-desired version and run `make inertia-tagged` or `make RELEASE=$STREAM`.
-Inertia daemon releases are tagged as follows:
-
-- `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
-- `latest` denotes the newest builds on `master`.
-- `canary` denotes experimental builds used for testing and development - do not use this.
-
-You can see the list of available tags on
-[Docker Hub](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags).
-
 ## Custom SSL Certificate
 
 By default, the Inertia daemon generates a self-signed SSL certificate for its
@@ -772,10 +765,6 @@ This is an experimental solution to a problem we've run into - refer to
 <a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
 </aside>
 
-You can declare intermediary containers used during builds that don't persist for the lifetime of
-your project - for example, containers that run tasks. This tells the Inertia daemon not to worry
-if it detects that containers with the given names die.
-
 ```toml
 name = "my_project"
 # ...
@@ -786,6 +775,10 @@ name = "my_project"
     # ...
     intermediary_containers = [ "nginx" ]
 ```
+
+You can declare "intermediary" containers used during builds that don't persist for the lifetime of
+your project - for example, containers that run tasks. This tells the Inertia daemon not to worry
+if it detects that containers with the given names die.
 
 # Miscellaneous
 

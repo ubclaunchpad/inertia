@@ -14,6 +14,7 @@ inertia ${remote_name} token [flags]
 
 ```
   -h, --help   help for token
+      --ssh    generate token over SSH
 ```
 
 ### Options inherited from parent commands
