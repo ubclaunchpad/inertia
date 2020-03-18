@@ -61,7 +61,7 @@ about the project, check out our [GitHub repository](https://github.com/ubclaunc
 Additional resources you might want to consult include:
 
 * [complete command reference for the Inertia CLI](/cli)
-* [API reference for the Inertia API](/api).
+* [API reference for the Inertia daemon](/api)
 
 <aside class="notice">
 This page is a <b>work in progress</b> - if anything seems incomplete or unclear,
@@ -180,32 +180,6 @@ Parameter         | Description
 `branch`          | The git branch of your project to continuously deploy.
 `build.type`      | This should be either `dockerfile` or `docker-compose`, depending on which you are using.
 `build.buildfile` | Path to your build configuration file, such as `Dockerfile` or `docker-compose.yml`, relative to the root of your project.
-
-## Inertia Release Streams
-
-The version of Inertia you are using can be seen in Inertia's `inertia.toml`
-configuration file, or by running `inertia --version`. The version in
-`inertia.toml` is used to determine what version of the Inertia daemon to use
-when you run `inertia ${remote_name} init`.
-
-> To switch over to the latest build and upgrade your remote:
-
-```shell
-inertia config set version "latest"
-inertia ${remote_name} upgrade
-```
-
-You can manually change the daemon version used by editing the Inertia
-configuration file. If you are building from source, you can also check out the
-desired version and run `make inertia-tagged` or `make RELEASE=$STREAM`.
-Inertia daemon releases are tagged as follows:
-
-- `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
-- `latest` denotes the newest builds on `master`.
-- `canary` denotes experimental builds used for testing and development - do not use this.
-
-You can see the list of available tags on
-[Docker Hub](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags).
 
 # Deploying Your Project
 
@@ -618,7 +592,22 @@ inertia --version # verify installation
 inertia ${remote_name} upgrade --all
 ```
 
-TODO
+The version of Inertia you are using can be seen in Inertia's `inertia.toml`
+configuration file, or by running `inertia --version`. The version in
+`inertia.toml` is used to determine what version of the Inertia daemon to use
+when you run `inertia ${remote_name} init`.
+
+You can manually change the daemon version used by editing the Inertia
+configuration file. If you are building from source, you can also check out the
+desired version and run `make inertia-tagged` or `make RELEASE=$STREAM`.
+Inertia daemon releases are tagged as follows:
+
+- `v0.x.x` denotes [official, tagged releases](https://github.com/ubclaunchpad/inertia/releases) - these are recommended.
+- `latest` denotes the newest builds on `master`.
+- `canary` denotes experimental builds used for testing and development - do not use this.
+
+You can see the list of available tags on
+[Docker Hub](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags).
 
 # Advanced Usage
 

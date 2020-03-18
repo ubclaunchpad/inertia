@@ -224,9 +224,6 @@
                   <li>
                     <a href="#project-configuration" class="toc-h2 toc-link" data-title="Project Configuration">Project Configuration</a>
                   </li>
-                  <li>
-                    <a href="#inertia-release-streams" class="toc-h2 toc-link" data-title="Inertia Release Streams">Inertia Release Streams</a>
-                  </li>
               </ul>
           </li>
           <li>
@@ -371,7 +368,7 @@ Additional resources you might want to consult include:</p>
 
 <ul>
 <li><a href="/cli">complete command reference for the Inertia CLI</a></li>
-<li><a href="/api">API reference for the Inertia API</a>.</li>
+<li><a href="/api">API reference for the Inertia daemon</a></li>
 </ul>
 
 <aside class="notice">
@@ -507,31 +504,6 @@ fields:</p>
 <td>Path to your build configuration file, such as <code>Dockerfile</code> or <code>docker-compose.yml</code>, relative to the root of your project.</td>
 </tr>
 </tbody></table>
-<h2 id='inertia-release-streams'>Inertia Release Streams</h2>
-<p>The version of Inertia you are using can be seen in Inertia&#39;s <code>inertia.toml</code>
-configuration file, or by running <code>inertia --version</code>. The version in
-<code>inertia.toml</code> is used to determine what version of the Inertia daemon to use
-when you run <code>inertia ${remote_name} init</code>.</p>
-
-<blockquote>
-<p>To switch over to the latest build and upgrade your remote:</p>
-</blockquote>
-<pre class="highlight shell tab-shell"><code>inertia config <span class="nb">set </span>version <span class="s2">"latest"</span>
-inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> upgrade
-</code></pre>
-<p>You can manually change the daemon version used by editing the Inertia
-configuration file. If you are building from source, you can also check out the
-desired version and run <code>make inertia-tagged</code> or <code>make RELEASE=$STREAM</code>.
-Inertia daemon releases are tagged as follows:</p>
-
-<ul>
-<li><code>v0.x.x</code> denotes <a href="https://github.com/ubclaunchpad/inertia/releases">official, tagged releases</a> - these are recommended.</li>
-<li><code>latest</code> denotes the newest builds on <code>master</code>.</li>
-<li><code>canary</code> denotes experimental builds used for testing and development - do not use this.</li>
-</ul>
-
-<p>You can see the list of available tags on
-<a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags">Docker Hub</a>.</p>
 <h1 id='deploying-your-project'>Deploying Your Project</h1>
 <p>When deploying a project, you typically deploy to a &quot;remote&quot;.</p>
 
@@ -923,7 +895,24 @@ inertia --version <span class="c"># verify installation</span>
 </blockquote>
 <pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> upgrade --all
 </code></pre>
-<p>TODO</p>
+<p>The version of Inertia you are using can be seen in Inertia&#39;s <code>inertia.toml</code>
+configuration file, or by running <code>inertia --version</code>. The version in
+<code>inertia.toml</code> is used to determine what version of the Inertia daemon to use
+when you run <code>inertia ${remote_name} init</code>.</p>
+
+<p>You can manually change the daemon version used by editing the Inertia
+configuration file. If you are building from source, you can also check out the
+desired version and run <code>make inertia-tagged</code> or <code>make RELEASE=$STREAM</code>.
+Inertia daemon releases are tagged as follows:</p>
+
+<ul>
+<li><code>v0.x.x</code> denotes <a href="https://github.com/ubclaunchpad/inertia/releases">official, tagged releases</a> - these are recommended.</li>
+<li><code>latest</code> denotes the newest builds on <code>master</code>.</li>
+<li><code>canary</code> denotes experimental builds used for testing and development - do not use this.</li>
+</ul>
+
+<p>You can see the list of available tags on
+<a href="https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags">Docker Hub</a>.</p>
 <h1 id='advanced-usage'>Advanced Usage</h1>
 <p>This section details various advanced usage tips. If you can&#39;t find what you&#39;re
 looking for here, try using the <code>--help</code> flag on relevant commands - Inertia
