@@ -1,20 +1,21 @@
-## inertia remote config-path
+## inertia remote reset
 
-Output path to remote configuration file
+Reset all remotes
 
 ### Synopsis
 
-Outputs where remotes are stored. Note that the configuration directory
-can be set using INERTIA_PATH.
+Removes all inertia remotes configuration - use 'inertia remote config-path'
+to see where the file is directly. Note that the configuration directory can be set using
+INERTIA_PATH.
 
 ```
-inertia remote config-path [flags]
+inertia remote reset [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for config-path
+  -h, --help   help for reset
 ```
 
 ### Options inherited from parent commands
