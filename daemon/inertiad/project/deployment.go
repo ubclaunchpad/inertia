@@ -47,8 +47,9 @@ type Deployer interface {
 
 // Deployment represents the deployed project
 type Deployment struct {
-	active    bool
-	directory string
+	active           bool
+	directory        string
+	persistDirectory string
 
 	project                string
 	branch                 string
@@ -90,8 +91,11 @@ type DeploymentMetadata struct {
 // NewDeployment creates a new deployment
 func NewDeployment(
 	projectDirectory string,
+	persistDirectory string,
+
 	databasePath string,
 	databaseKeyPath string,
+
 	builder build.ContainerBuilder,
 ) (*Deployment, error) {
 
@@ -103,9 +107,10 @@ func NewDeployment(
 
 	// Create deployment
 	return &Deployment{
-		directory:   projectDirectory,
-		builder:     builder,
-		dataManager: manager,
+		directory:        projectDirectory,
+		persistDirectory: persistDirectory,
+		builder:          builder,
+		dataManager:      manager,
 	}, nil
 }
 
@@ -129,6 +134,11 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 
 	// Remove existing git repo if there is one
 	os.RemoveAll(filepath.Join(d.directory, ".git"))
+
+	// Remove existing /persist data
+	if d.persistDirectory != "" {
+		os.RemoveAll(d.persistDirectory)
+	}
 
 	// Initialize repository
 	d.repo, err = git.InitializeRepository(cfg.RemoteURL, git.RepoOptions{
@@ -411,9 +421,10 @@ func (d *Deployment) GetDataManager() (manager *DeploymentDataManager, found boo
 // config without env values if error.
 func (d *Deployment) GetBuildConfiguration() (*build.Config, error) {
 	conf := &build.Config{
-		Name:           d.project,
-		BuildFilePath:  d.buildFilePath,
-		BuildDirectory: d.directory,
+		Name:             d.project,
+		BuildFilePath:    d.buildFilePath,
+		BuildDirectory:   d.directory,
+		PersistDirectory: d.persistDirectory,
 	}
 	if d.dataManager != nil {
 		env, err := d.dataManager.GetEnvVariables(true)

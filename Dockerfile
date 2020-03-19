@@ -48,6 +48,7 @@ COPY --from=web-build-env \
 # Directories
 ENV INERTIA_PROJECT_DIR=/app/host/inertia/project/ \
     INERTIA_DATA_DIR=/app/host/inertia/data/ \
+    INERTIA_PERSIST_DIR=/app/host/inertia/persist \
     INERTIA_SECRETS_DIR=/app/host/.inertia/ \
     INERTIA_GH_KEY_PATH=/app/host/.ssh/id_rsa_inertia_deploy
 

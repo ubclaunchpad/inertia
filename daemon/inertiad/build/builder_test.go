@@ -58,6 +58,7 @@ func TestBuilder_Build(t *testing.T) {
 	type args struct {
 		buildType     string
 		buildFilePath string
+		persistPath   string
 	}
 	tests := []struct {
 		name           string
@@ -65,9 +66,13 @@ func TestBuilder_Build(t *testing.T) {
 		wantErr        bool
 		expectedErrMsg string
 	}{
-		{"type docker-compose", args{"docker-compose", ""}, false, ""},
-		{"type dockerfile", args{"dockerfile", ""}, false, ""},
-		{"type dockerfile should fail", args{"dockerfile", "fail.Dockerfile"}, true, "image build failed"},
+		{"type docker-compose", args{"docker-compose", "", ""}, false, ""},
+
+		{"type dockerfile", args{"dockerfile", "", ""}, false, ""},
+		{"type dockerfile should fail", args{"dockerfile", "fail.Dockerfile", ""}, true, "image build failed"},
+
+		{"type dockerfile with persist", args{"dockerfile", "", "persist"}, false, ""},
+		{"type docker-compose with persist", args{"dockerfile", "", "persist"}, false, ""},
 	}
 
 	// Setup
@@ -91,19 +96,24 @@ func TestBuilder_Build(t *testing.T) {
 				testProjectDir = path.Clean(path.Join(cwd, "../../../test/build/"+tt.args.buildType))
 
 				b = NewBuilder(cfg.Config{
-					ProjectDirectory:     testProjectDir,
 					DockerComposeVersion: DockerComposeVersion,
 				}, killTestContainers)
 				out = os.Stdout
 			)
 
+			// set up test persist dir
+			if tt.args.persistPath != "" {
+				tt.args.persistPath = path.Clean(path.Join(cwd, "../../../test/build/tmp"+tt.args.persistPath))
+			}
+
 			// Run build
 			t.Logf("Preparing to build test project with name '%s' from directory '%s'",
 				testProjectName, testProjectDir)
 			deploy, err := b.Build(tt.args.buildType, Config{
-				Name:           testProjectName,
-				BuildFilePath:  tt.args.buildFilePath,
-				BuildDirectory: testProjectDir,
+				Name:             testProjectName,
+				BuildFilePath:    tt.args.buildFilePath,
+				BuildDirectory:   testProjectDir,
+				PersistDirectory: tt.args.persistPath,
 			}, cli, out)
 			if tt.wantErr {
 				assert.NotNil(t, err)

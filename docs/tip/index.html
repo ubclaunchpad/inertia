@@ -284,6 +284,9 @@
                     <a href="#resource-management" class="toc-h2 toc-link" data-title="Resource Management">Resource Management</a>
                   </li>
                   <li>
+                    <a href="#persistent-data" class="toc-h2 toc-link" data-title="Persistent Data">Persistent Data</a>
+                  </li>
+                  <li>
                     <a href="#generating-api-keys" class="toc-h2 toc-link" data-title="Generating API Keys">Generating API Keys</a>
                   </li>
                   <li>
@@ -1009,6 +1012,17 @@ storage).</p>
 When interacting with your remote over SSH, be wary of manipulating assets that
 Inertia depends on such as files in <code>~/inertia/data/</code> and
 <code>~/.inertia</code>, as well as build images such as <code>docker/compose</code>.
+</aside>
+<h2 id='persistent-data'>Persistent Data</h2>
+<p>If your project depends on data on disk that must be persisted across builds, you can
+take advantage of a <code>/persist</code> directory that is mounted into your project when it is
+deployed. Data in this directory is not ephemeral and persists across deployments.</p>
+
+<aside class="warning">
+If no pervious deployment is detected when Inertia tries to run a deployment - for
+example, if the repository was removed with <code>inertia [remote] reset</code> -
+this data will be removed. To properly persist data, it is advised that you leverage
+a third-party service (for example, <a href="https://aws.amazon.com/dynamodb/">Amazon DynamoDB</a>).
 </aside>
 <h2 id='generating-api-keys'>Generating API Keys</h2><pre class="highlight shell tab-shell"><code>inertia <span class="k">${</span><span class="nv">remote_name</span><span class="k">}</span> token
 </code></pre>

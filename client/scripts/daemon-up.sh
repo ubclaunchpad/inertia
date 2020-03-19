@@ -28,6 +28,9 @@ mkdir -p "$HOME"/inertia/data
 # Configuration
 mkdir -p "$HOME"/inertia/config
 
+# Persistent data
+mkdir -p "$HOME"/inertia/persist
+
 # Inertia secrets
 mkdir -p "$HOME"/.inertia
 mkdir -p "$HOME"/.inertia/ssl
