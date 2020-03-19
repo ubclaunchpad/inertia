@@ -726,6 +726,13 @@ If your project depends on data on disk that must be persisted across builds, yo
 take advantage of a `/persist` directory that is mounted into your project when it is
 deployed. Data in this directory is not ephemeral and persists across deployments.
 
+<aside class="warning">
+If no pervious deployment is detected when Inertia tries to run a deployment - for
+example, if the repository was removed with <code>inertia [remote] reset</code> -
+this data will be removed. To properly persist data, it is advised that you leverage
+a third-party service (for example, <a href="https://aws.amazon.com/dynamodb/">Amazon DynamoDB</a>).
+</aside>
+
 ## Generating API Keys
 
 ```shell

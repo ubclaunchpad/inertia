@@ -135,6 +135,11 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 	// Remove existing git repo if there is one
 	os.RemoveAll(filepath.Join(d.directory, ".git"))
 
+	// Remove existing /persist data
+	if d.persistDirectory != "" {
+		os.RemoveAll(d.persistDirectory)
+	}
+
 	// Initialize repository
 	d.repo, err = git.InitializeRepository(cfg.RemoteURL, git.RepoOptions{
 		Directory: d.directory,
