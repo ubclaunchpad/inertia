@@ -822,6 +822,14 @@ Add a cool Inertia badge to your README if you use Inertia!
 
 [![Deployed with Inertia](https://img.shields.io/badge/deploying%20with-inertia-blue.svg)](https://github.com/ubclaunchpad/inertia)
 
+```markdown
+![inertia status](https://img.shields.io/endpoint?url=https://INERTIA_ADDRESS:4303/status?badge=true)
+```
+
+A live status badge is also available - just replace `INERTIA_ADDRESS` in the example with the
+address of your Inertia daemon and you'll be able to check on the status of your project using
+the badge!
+
 # Contributing
 
 Any contribution (pull requests, feedback, bug reports, ideas, etc.) is welcome!
