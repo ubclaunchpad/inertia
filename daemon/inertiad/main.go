@@ -26,10 +26,14 @@ var runCmd = &cobra.Command{
 host address as an argument.
 
 Example:
-    inertia daemon run 0.0.0.0 -p 8081`,
+    inertia daemon run 0.0.0.0 --port 8081`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var conf = cfg.New()
+
+		// Init webhook secret
+		var webhookSecret, _ = cmd.Flags().GetString("webhook.secret")
+		conf.WebhookSecret = webhookSecret
 
 		// Set up deployment
 		var projectDatabasePath = path.Join(conf.DataDirectory, "project.db")

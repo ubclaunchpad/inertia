@@ -57,7 +57,7 @@ func TestSSHClient_DaemonUp(t *testing.T) {
 	// Get original script for comparison
 	script, err := ioutil.ReadFile("scripts/daemon-up.sh")
 	assert.NoError(t, err)
-	actualCommand := fmt.Sprintf(string(script), "test", "4303", "127.0.0.1")
+	actualCommand := fmt.Sprintf(string(script), "test", "4303", "127.0.0.1", "")
 
 	// Get SSH runner
 	sshc, err := client.GetSSHClient()
@@ -68,6 +68,13 @@ func TestSSHClient_DaemonUp(t *testing.T) {
 	call, interact := session.RunStreamArgsForCall(0)
 	assert.False(t, interact)
 	assert.Equal(t, actualCommand, call)
+
+	// Check with WEBHOOK_SECRET provided, make sure the right command is run.
+	sshc.remote.Daemon.WebHookSecret = "sekret"
+	assert.NoError(t, sshc.DaemonUp())
+	call, interact = session.RunStreamArgsForCall(1)
+	assert.False(t, interact)
+	assert.Contains(t, call, "sekret")
 }
 
 func TestSSHClient_DaemonDown(t *testing.T) {
