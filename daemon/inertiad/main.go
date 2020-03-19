@@ -36,6 +36,7 @@ Example:
 		var projectDatabaseKeypath = path.Join(conf.SecretsDirectory, "db.key")
 		deployment, err := project.NewDeployment(
 			conf.ProjectDirectory,
+			conf.PersistDirectory,
 			projectDatabasePath,
 			projectDatabaseKeypath,
 			build.NewBuilder(*conf, containers.StopActiveContainers))

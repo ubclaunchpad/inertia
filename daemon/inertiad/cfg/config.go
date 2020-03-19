@@ -6,6 +6,7 @@ import "os"
 type Config struct {
 	// Directories
 	ProjectDirectory string // "/app/host/inertia/project/"
+	PersistDirectory string // "/app/host/inertia/persist"
 	DataDirectory    string // "/app/host/inertia/data/"
 	SecretsDirectory string // "/app/host/.inertia/"
 
@@ -22,5 +23,6 @@ func New() *Config {
 		DataDirectory:        os.Getenv("INERTIA_DATA_DIR"),
 		DockerComposeVersion: os.Getenv("INERTIA_DOCKERCOMPOSE"),
 		ProjectDirectory:     os.Getenv("INERTIA_PROJECT_DIR"),
+		PersistDirectory:     os.Getenv("INERTIA_PERSIST_DIR"),
 	}
 }

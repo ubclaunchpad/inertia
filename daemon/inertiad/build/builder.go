@@ -78,8 +78,9 @@ func (b *Builder) PruneAll(docker *docker.Client, out io.Writer) error {
 type Config struct {
 	Name string
 
-	BuildFilePath  string
-	BuildDirectory string
+	BuildFilePath    string
+	BuildDirectory   string
+	PersistDirectory string
 
 	EnvValues []string
 }
@@ -131,6 +132,16 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 		dockercomposeFilePath = d.BuildFilePath
 	}
 
+	// set up bindings
+	binds := []string{
+		getTrueDirectory(d.BuildDirectory) + ":/build",
+		"/var/run/docker.sock:/var/run/docker.sock",
+	}
+	if d.PersistDirectory != "" {
+		binds = append(binds, getTrueDirectory(d.PersistDirectory)+":/persist")
+	}
+
+	// set up docker-compose runner
 	resp, err := cli.ContainerCreate(
 		ctx, &container.Config{
 			Image:      b.dockerComposeVersion,
@@ -144,10 +155,7 @@ func (b *Builder) dockerCompose(d Config, cli *docker.Client,
 		},
 		&container.HostConfig{
 			AutoRemove: true,
-			Binds: []string{
-				getTrueDirectory(d.BuildDirectory) + ":/build",
-				"/var/run/docker.sock:/var/run/docker.sock",
-			},
+			Binds:      binds,
 		}, nil, b.buildStageName,
 	)
 	if err != nil {
@@ -255,6 +263,12 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 	}
 	reportProjectBuildComplete(d.Name, out)
 
+	// set up bindings
+	binds := []string{}
+	if d.PersistDirectory != "" {
+		binds = append(binds, getTrueDirectory(d.PersistDirectory)+":/persist")
+	}
+
 	// Create container from image
 	reportProjectContainerCreateBegin(d.Name, out)
 	containerResp, err := cli.ContainerCreate(
@@ -263,6 +277,7 @@ func (b *Builder) dockerBuild(d Config, cli *docker.Client,
 			Env:   d.EnvValues,
 		},
 		&container.HostConfig{
+			Binds:        binds,
 			PortBindings: portMap,
 		}, nil, d.Name)
 	if err != nil {
