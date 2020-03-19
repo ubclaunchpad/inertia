@@ -30,7 +30,9 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	var gitOpts = upReq.GitOptions
 
 	// apply configuration updates
-	s.state.WebhookSecret = upReq.WebHookSecret
+	if upReq.WebHookSecret != "" {
+		s.state.WebhookSecret = upReq.WebHookSecret
+	}
 	s.deployment.SetConfig(project.DeploymentConfig{
 		ProjectName:            upReq.Project,
 		BuildType:              upReq.BuildType,

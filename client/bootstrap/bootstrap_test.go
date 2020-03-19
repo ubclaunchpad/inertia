@@ -26,7 +26,8 @@ func newIntegrationClient() *client.Client {
 			SSHPort:      "69",
 		},
 		Daemon: &cfg.Daemon{
-			Port: "4303",
+			Port:          "4303",
+			WebHookSecret: "sekret",
 		},
 	}
 	return client.NewClient(remote, client.Options{
