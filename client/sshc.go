@@ -33,7 +33,7 @@ func (s *SSHClient) DaemonUp() error {
 		return fmt.Errorf("could not initialize script: %w", err)
 	}
 	var daemonCmdStr = fmt.Sprintf(string(scriptBytes),
-		s.remote.Version, s.remote.Daemon.Port, s.remote.IP)
+		s.remote.Version, s.remote.Daemon.Port, s.remote.IP, s.remote.Daemon.WebHookSecret)
 	return s.ssh.RunStream(daemonCmdStr, false)
 }
 
