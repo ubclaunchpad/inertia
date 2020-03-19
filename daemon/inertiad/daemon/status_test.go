@@ -1,7 +1,10 @@
 package daemon
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +14,14 @@ import (
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/project/mocks"
 )
+
+func readBadge(body io.Reader) (*shieldsIOData, error) {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(body)
+	bytes := buf.Bytes()
+	var data shieldsIOData
+	return &data, json.Unmarshal(bytes, &data)
+}
 
 func TestStatusHandlerBuildInProgress(t *testing.T) {
 	var s = &Server{
@@ -37,6 +48,17 @@ func TestStatusHandlerBuildInProgress(t *testing.T) {
 
 	handler.ServeHTTP(recorder, req)
 	assert.Equal(t, recorder.Code, http.StatusOK)
+
+	// check badge
+	recorder = httptest.NewRecorder()
+	req, err = http.NewRequest("GET", "/status?badge=true", nil)
+	assert.NoError(t, err)
+	handler.ServeHTTP(recorder, req)
+	assert.Equal(t, recorder.Code, http.StatusOK)
+	badge, err := readBadge(recorder.Result().Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "deploying", badge.Message)
+	assert.False(t, badge.IsError)
 }
 
 func TestStatusHandlerNoContainers(t *testing.T) {
@@ -64,6 +86,17 @@ func TestStatusHandlerNoContainers(t *testing.T) {
 
 	handler.ServeHTTP(recorder, req)
 	assert.Equal(t, recorder.Code, http.StatusOK)
+
+	// check badge
+	recorder = httptest.NewRecorder()
+	req, err = http.NewRequest("GET", "/status?badge=true", nil)
+	assert.NoError(t, err)
+	handler.ServeHTTP(recorder, req)
+	assert.Equal(t, recorder.Code, http.StatusOK)
+	badge, err := readBadge(recorder.Result().Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "project offline", badge.Message)
+	assert.True(t, badge.IsError)
 }
 
 func TestStatusHandlerActiveContainers(t *testing.T) {
@@ -93,6 +126,17 @@ func TestStatusHandlerActiveContainers(t *testing.T) {
 	assert.Equal(t, recorder.Code, http.StatusOK)
 	assert.Contains(t, recorder.Body.String(), "mycontainer_1")
 	assert.Contains(t, recorder.Body.String(), "yourcontainer_2")
+
+	// check badge
+	recorder = httptest.NewRecorder()
+	req, err = http.NewRequest("GET", "/status?badge=true", nil)
+	assert.NoError(t, err)
+	handler.ServeHTTP(recorder, req)
+	assert.Equal(t, recorder.Code, http.StatusOK)
+	badge, err := readBadge(recorder.Result().Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "deployed", badge.Message)
+	assert.False(t, badge.IsError)
 }
 
 func TestStatusHandlerStatusError(t *testing.T) {
@@ -114,4 +158,15 @@ func TestStatusHandlerStatusError(t *testing.T) {
 
 	handler.ServeHTTP(recorder, req)
 	assert.Equal(t, recorder.Code, http.StatusInternalServerError)
+
+	// check badge
+	recorder = httptest.NewRecorder()
+	req, err = http.NewRequest("GET", "/status?badge=true", nil)
+	assert.NoError(t, err)
+	handler.ServeHTTP(recorder, req)
+	assert.Equal(t, recorder.Code, http.StatusOK)
+	badge, err := readBadge(recorder.Result().Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "errored", badge.Message)
+	assert.True(t, badge.IsError)
 }
