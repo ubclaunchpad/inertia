@@ -720,6 +720,12 @@ Inertia depends on such as files in <code>~/inertia/data/</code> and
 <code>~/.inertia</code>, as well as build images such as <code>docker/compose</code>.
 </aside>
 
+## Persistent Data
+
+If your project depends on data on disk that must be persisted across builds, you can
+take advantage of a `/persist` directory that is mounted into your project when it is
+deployed. Data in this directory is not ephemeral and persists across deployments.
+
 ## Generating API Keys
 
 ```shell
