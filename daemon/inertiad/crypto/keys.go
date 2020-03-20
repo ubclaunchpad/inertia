@@ -6,7 +6,7 @@ import (
 	"os"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
 var (

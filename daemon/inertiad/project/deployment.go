@@ -13,8 +13,8 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
-	gogit "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+	gogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 
 	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/common"

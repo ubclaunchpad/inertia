@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
+	git "github.com/go-git/go-git/v5"
 	"github.com/stretchr/testify/assert"
-	git "gopkg.in/src-d/go-git.v4"
 )
 
 const (
