@@ -14,14 +14,16 @@ inertia ${remote_name} token [flags]
 
 ```
   -h, --help   help for token
+      --ssh    generate token over SSH
 ```
 
 ### Options inherited from parent commands
 
 ```
-      --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --config string   specify relative path to Inertia project configuration (default "inertia.toml")
+      --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
-      --verify-ssl      verify SSL communications - requires a signed SSL certificate
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

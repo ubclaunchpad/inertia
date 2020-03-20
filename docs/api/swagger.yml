@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  version: 0.5.2
+  version: 0.6.0
   title: Inertia Daemon API Reference
   description: |
 
@@ -279,16 +279,30 @@ paths:
           example: 500
       responses:
         200:
-          description: Log contents retrieved
+          description: Success!
           content:
-            text/plain:
-              type: string
-              example: |
-                No deployment detected
-                Setting up project...
-                Cloning branch dev from git@github.com:example/example.git...
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/OKResponse'
+                  - type: object
+                    required: [ data ]
+                    properties:
+                      data:
+                        type: object
+                        required: [ token ]
+                        properties:
+                          token:
+                            type: array
+                            items:
+                              type: string
+                            description: Array of log entries
+                            example:
+                              - No deployment detected
+                              - Setting up project...
+                              - Cloning branch dev from git@github.com:example/example.git...
         4XX,5XX:
-          $ref: '#/components/responses/Error'
+          $ref: '#/components/responses/Error'           
 
   # auth
 

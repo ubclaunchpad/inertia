@@ -1,6 +1,6 @@
 {
   "name": "inertia-cli",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "Inertia-CLI",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,7 +13,7 @@
     "url": "git+https://github.com/ubclaunchpad/inertia.git"
   },
   "keywords": [
-    "ubc-launchpad",
+    "ubc",
     "launchpad",
     "inertia",
     "inertia-cli"
@@ -23,7 +23,7 @@
   "bugs": {
     "url": "https://github.com/ubclaunchpad/inertia/issues"
   },
-  "homepage": "https://github.com/ubclaunchpad/inertia#readme",
+  "homepage": "https://inertia.ubclaunchpad.com",
   "dependencies": {
     "fs-extra": "^7.0.1",
     "mkdirp": "^0.5.1",

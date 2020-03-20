@@ -34,9 +34,10 @@ inertia provision ec2 [name] [flags]
 ### Options inherited from parent commands
 
 ```
-      --config string        specify relative path to Inertia configuration (default "inertia.toml")
+      --config string        specify relative path to Inertia project configuration (default "inertia.toml")
   -d, --daemon.port string   daemon port (default "4303")
   -p, --ports stringArray    ports your project uses
+      --simple               disable colour and emoji output
 ```
 
 ### SEE ALSO
