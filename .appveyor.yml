@@ -9,7 +9,7 @@ clone_folder: c:\gopath\src\github.com\ubclaunchpad\inertia
 environment:
   GOPATH: c:\gopath
   DEPTESTBYPASS501: 1
-  GOVERSION: "1.13"
+  GOVERSION: "1.14"
 
 init:
   - git config --global core.autocrlf input

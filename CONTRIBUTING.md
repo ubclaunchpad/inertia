@@ -60,7 +60,7 @@ Please free free to open up a ticket if any of these instructions are unclear or
 
 ## Setup
 
-First, [install Go](https://golang.org/doc/install#install) (at least v1.13) and grab Inertia's source code:
+First, [install Go](https://golang.org/doc/install#install) (at least v1.14) and grab Inertia's source code:
 
 ```bash
 $> go get -u github.com/ubclaunchpad/inertia
