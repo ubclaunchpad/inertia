@@ -20,9 +20,20 @@ func (n Notifiers) Notify(msg string, opts Options) error {
 	return errs
 }
 
+// Exists checks if the given notifier is already configured
+func (n Notifiers) Exists(nt Notifier) bool {
+	for _, notif := range n {
+		if notif.IsEqual(nt) {
+			return true
+		}
+	}
+	return false
+}
+
 // Notifier manages notifications
 type Notifier interface {
 	Notify(string, Options) error
+	IsEqual(Notifier) bool
 }
 
 // Options is used to configure formatting of notifications

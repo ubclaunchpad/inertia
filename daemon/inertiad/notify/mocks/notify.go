@@ -8,6 +8,17 @@ import (
 )
 
 type FakeNotifier struct {
+	IsEqualStub        func(notify.Notifier) bool
+	isEqualMutex       sync.RWMutex
+	isEqualArgsForCall []struct {
+		arg1 notify.Notifier
+	}
+	isEqualReturns struct {
+		result1 bool
+	}
+	isEqualReturnsOnCall map[int]struct {
+		result1 bool
+	}
 	NotifyStub        func(string, notify.Options) error
 	notifyMutex       sync.RWMutex
 	notifyArgsForCall []struct {
@@ -22,6 +33,66 @@ type FakeNotifier struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeNotifier) IsEqual(arg1 notify.Notifier) bool {
+	fake.isEqualMutex.Lock()
+	ret, specificReturn := fake.isEqualReturnsOnCall[len(fake.isEqualArgsForCall)]
+	fake.isEqualArgsForCall = append(fake.isEqualArgsForCall, struct {
+		arg1 notify.Notifier
+	}{arg1})
+	fake.recordInvocation("IsEqual", []interface{}{arg1})
+	fake.isEqualMutex.Unlock()
+	if fake.IsEqualStub != nil {
+		return fake.IsEqualStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.isEqualReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeNotifier) IsEqualCallCount() int {
+	fake.isEqualMutex.RLock()
+	defer fake.isEqualMutex.RUnlock()
+	return len(fake.isEqualArgsForCall)
+}
+
+func (fake *FakeNotifier) IsEqualCalls(stub func(notify.Notifier) bool) {
+	fake.isEqualMutex.Lock()
+	defer fake.isEqualMutex.Unlock()
+	fake.IsEqualStub = stub
+}
+
+func (fake *FakeNotifier) IsEqualArgsForCall(i int) notify.Notifier {
+	fake.isEqualMutex.RLock()
+	defer fake.isEqualMutex.RUnlock()
+	argsForCall := fake.isEqualArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeNotifier) IsEqualReturns(result1 bool) {
+	fake.isEqualMutex.Lock()
+	defer fake.isEqualMutex.Unlock()
+	fake.IsEqualStub = nil
+	fake.isEqualReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeNotifier) IsEqualReturnsOnCall(i int, result1 bool) {
+	fake.isEqualMutex.Lock()
+	defer fake.isEqualMutex.Unlock()
+	fake.IsEqualStub = nil
+	if fake.isEqualReturnsOnCall == nil {
+		fake.isEqualReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.isEqualReturnsOnCall[i] = struct {
+		result1 bool
+	}{result1}
 }
 
 func (fake *FakeNotifier) Notify(arg1 string, arg2 notify.Options) error {
@@ -88,6 +159,8 @@ func (fake *FakeNotifier) NotifyReturnsOnCall(i int, result1 error) {
 func (fake *FakeNotifier) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.isEqualMutex.RLock()
+	defer fake.isEqualMutex.RUnlock()
 	fake.notifyMutex.RLock()
 	defer fake.notifyMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
