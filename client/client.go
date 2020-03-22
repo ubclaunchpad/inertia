@@ -92,6 +92,11 @@ type UpRequest struct {
 // Up brings the project up on the remote VPS instance specified
 // in the deployment object.
 func (c *Client) Up(ctx context.Context, req UpRequest) error {
+	notif := req.Profile.Notifiers
+	if notif == nil {
+		notif = &cfg.Notifiers{}
+	}
+
 	resp, err := c.post(ctx, "/up", &api.UpRequest{
 		Stream:        false,
 		Project:       req.Project,
@@ -103,6 +108,7 @@ func (c *Client) Up(ctx context.Context, req UpRequest) error {
 			Branch:    req.Profile.Branch,
 		},
 		IntermediaryContainers: req.Profile.Build.IntermediaryContainers,
+		SlackNotificationURL:   notif.SlackNotificationURL,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to make request: %s", err.Error())

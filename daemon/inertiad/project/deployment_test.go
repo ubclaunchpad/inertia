@@ -25,16 +25,18 @@ func newDefaultFakeBuilder(builder func() error, stopper func() error) *mocks.Fa
 func TestSetConfig(t *testing.T) {
 	deployment := &Deployment{}
 	deployment.SetConfig(DeploymentConfig{
-		ProjectName:   "wow",
-		Branch:        "amazing",
-		BuildType:     "best",
-		BuildFilePath: "/robertcompose.yml",
+		ProjectName:          "wow",
+		Branch:               "amazing",
+		BuildType:            "best",
+		BuildFilePath:        "/robertcompose.yml",
+		SlackNotificationURL: "https://my.slack.url",
 	})
 
 	assert.Equal(t, "wow", deployment.project)
 	assert.Equal(t, "amazing", deployment.branch)
 	assert.Equal(t, "best", deployment.buildType)
 	assert.Equal(t, "/robertcompose.yml", deployment.buildFilePath)
+	assert.Len(t, deployment.notifiers, 1)
 }
 
 func TestDeployMock(t *testing.T) {

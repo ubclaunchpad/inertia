@@ -77,6 +77,9 @@ type DeploymentConfig struct {
 	Branch                 string
 	PemFilePath            string
 	IntermediaryContainers []string
+
+	// TODO: maybe improve format for generic notifiers
+	SlackNotificationURL string
 }
 
 // DeploymentMetadata is used to store metadata relevant
@@ -166,7 +169,16 @@ func (d *Deployment) SetConfig(cfg DeploymentConfig) {
 	}
 	d.intermediaryContainers = cfg.IntermediaryContainers
 
-	// TODO: register notifiers
+	// register notifiers
+	if len(d.notifiers) == 0 {
+		d.notifiers = notify.Notifiers{}
+	}
+	if cfg.SlackNotificationURL != "" {
+		nt := notify.NewSlackNotifier(cfg.SlackNotificationURL)
+		if !d.notifiers.Exists(nt) {
+			d.notifiers = append(d.notifiers, nt)
+		}
+	}
 }
 
 // DeployOptions is used to configure how the deployment handles the deploy
@@ -215,7 +227,7 @@ func (d *Deployment) Deploy(
 	// Build project
 	deploy, err := d.builder.Build(strings.ToLower(d.buildType), *conf, cli, out)
 	if err != nil {
-		if notifyErr := d.notifiers.Notify("Build error", notify.Options{
+		if notifyErr := d.notifiers.Notify(fmt.Sprintf("Build error: %s", err), notify.Options{
 			Color: notify.Red,
 		}); notifyErr != nil {
 			fmt.Fprintln(out, notifyErr.Error())
