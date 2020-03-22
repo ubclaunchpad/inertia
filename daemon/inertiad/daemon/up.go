@@ -33,14 +33,17 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	if upReq.WebHookSecret != "" {
 		s.state.WebhookSecret = upReq.WebHookSecret
 	}
-	s.deployment.SetConfig(project.DeploymentConfig{
+	conf := project.DeploymentConfig{
 		ProjectName:            upReq.Project,
 		BuildType:              upReq.BuildType,
 		BuildFilePath:          upReq.BuildFilePath,
 		RemoteURL:              gitOpts.RemoteURL,
 		Branch:                 gitOpts.Branch,
+		PemFilePath:            crypto.DaemonGithubKeyLocation,
 		IntermediaryContainers: upReq.IntermediaryContainers,
-	})
+		SlackNotificationURL:   upReq.SlackNotificationURL,
+	}
+	s.deployment.SetConfig(conf)
 
 	// Configure streamer
 	var stream = log.NewStreamer(log.StreamerOptions{
@@ -55,17 +58,7 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 	var skipUpdate = false
 	if status, _ := s.deployment.GetStatus(s.docker); status.CommitHash == "" {
 		stream.Println("No deployment detected")
-		if err = s.deployment.Initialize(
-			project.DeploymentConfig{
-				ProjectName:   upReq.Project,
-				BuildType:     upReq.BuildType,
-				BuildFilePath: upReq.BuildFilePath,
-				RemoteURL:     gitOpts.RemoteURL,
-				Branch:        gitOpts.Branch,
-				PemFilePath:   crypto.DaemonGithubKeyLocation,
-			},
-			stream,
-		); err != nil {
+		if err = s.deployment.Initialize(conf, stream); err != nil {
 			stream.Error(res.Err(err.Error(), http.StatusPreconditionFailed))
 			return
 		}

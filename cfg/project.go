@@ -18,9 +18,10 @@ type Project struct {
 
 // Profile denotes a deployment configuration
 type Profile struct {
-	Name   string `toml:"name"`
-	Branch string `toml:"branch"`
-	Build  *Build `toml:"build"`
+	Name      string     `toml:"name"`
+	Branch    string     `toml:"branch"`
+	Build     *Build     `toml:"build"`
+	Notifiers *Notifiers `toml:"notifiers"`
 }
 
 // Identifier implements identity.Identifier
@@ -103,4 +104,9 @@ func (p *Project) RemoveProfile(name string) bool {
 	ok := identity.Remove(name, &ids)
 	p.Profiles = asProfiles(ids)
 	return ok
+}
+
+// Notifiers defines options for notifications on a profile
+type Notifiers struct {
+	SlackNotificationURL string `toml:"slack_notification_url"`
 }

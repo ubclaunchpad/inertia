@@ -207,13 +207,13 @@ docker-deps:
 ## mocks: generate Go mocks
 .PHONY: mocks
 mocks:
-	counterfeiter -o ./client/runner/mocks/session.go \
+	go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./client/runner/mocks/session.go \
 		./client/runner/ssh.go SSHSession
-	counterfeiter -o ./daemon/inertiad/project/mocks/deployer.go \
+	go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./daemon/inertiad/project/mocks/deployer.go \
 		./daemon/inertiad/project/deployment.go Deployer
-	counterfeiter -o ./daemon/inertiad/build/mocks/builder.go \
+	go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./daemon/inertiad/build/mocks/builder.go \
 		./daemon/inertiad/build/builder.go ContainerBuilder
-	counterfeiter -o ./daemon/inertiad/notify/mocks/notify.go \
+	go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./daemon/inertiad/notify/mocks/notify.go \
 		./daemon/inertiad/notify/notifier.go Notifier
 
 ## scripts: recompile script assets
