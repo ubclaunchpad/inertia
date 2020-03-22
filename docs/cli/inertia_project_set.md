@@ -19,7 +19,8 @@ inertia project set [property] [value] [flags]
 ### Options inherited from parent commands
 
 ```
-      --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --config string   specify relative path to Inertia project configuration (default "inertia.toml")
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

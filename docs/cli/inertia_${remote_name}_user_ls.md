@@ -19,9 +19,10 @@ inertia ${remote_name} user ls [flags]
 ### Options inherited from parent commands
 
 ```
-      --config string   specify relative path to Inertia configuration (default "inertia.toml")
-  -d, --debug           enable debug output from Inertia client
+      --config string   specify relative path to Inertia project configuration (default "inertia.toml")
+      --debug           enable debug output from Inertia client
   -s, --short           don't stream output from command
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

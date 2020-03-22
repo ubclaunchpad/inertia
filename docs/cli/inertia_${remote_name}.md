@@ -12,22 +12,23 @@ Requires:
 
 Continuous deployment requires the daemon's webhook address to be registered in your remote repository.
 
-If the SSH key for your remote requires a passphrase, it can be provided via 'PEM_PASSPHRASE'.
+If the SSH key for your remote requires a passphrase, it can be provided via 'IDENTITY_PASSPHRASE'.
 
 Run 'inertia [remote] init' to gather this information.
 
 ### Options
 
 ```
-  -h, --help         help for ${remote_name}
-  -s, --short        don't stream output from command
-      --verify-ssl   verify SSL communications - requires a signed SSL certificate
+      --debug   enable debug output from Inertia client
+  -h, --help    help for ${remote_name}
+  -s, --short   don't stream output from command
 ```
 
 ### Options inherited from parent commands
 
 ```
-      --config string   specify relative path to Inertia configuration (default "inertia.toml")
+      --config string   specify relative path to Inertia project configuration (default "inertia.toml")
+      --simple          disable colour and emoji output
 ```
 
 ### SEE ALSO

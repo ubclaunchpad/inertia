@@ -1,25 +1,21 @@
-## inertia remote rm
+## inertia remote reset
 
-Remove a configured remote
+Reset all remotes
 
 ### Synopsis
 
-Remove a remote from Inertia's configuration file.
+Removes all inertia remotes configuration - use 'inertia remote config-path'
+to see where the file is directly. Note that the configuration directory can be set using
+INERTIA_PATH.
 
 ```
-inertia remote rm [remote] [flags]
-```
-
-### Examples
-
-```
-inertia remote rm staging
+inertia remote reset [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for rm
+  -h, --help   help for reset
 ```
 
 ### Options inherited from parent commands

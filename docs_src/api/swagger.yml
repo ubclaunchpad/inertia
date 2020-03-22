@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  version: 0.5.2
+  version: 0.6.0
   title: Inertia Daemon API Reference
   description: |
 
