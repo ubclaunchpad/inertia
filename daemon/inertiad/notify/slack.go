@@ -57,6 +57,17 @@ func (n *SlackNotifier) Notify(text string, options Options) error {
 	return nil
 }
 
+// IsEqual implements Notifier by checking the provided notifier is a slack notifier
+// and if it has the same hook URL
+func (n *SlackNotifier) IsEqual(nt Notifier) bool {
+	switch v := nt.(type) {
+	case *SlackNotifier:
+		return n.hookURL == v.hookURL
+	default:
+		return false
+	}
+}
+
 func colorToString(color Color) string {
 	return string(color)
 }

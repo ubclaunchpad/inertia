@@ -24,6 +24,7 @@ type UpRequest struct {
 	GitOptions             GitOptions `json:"git_options"`
 	WebHookSecret          string     `json:"webhook_secret"`
 	IntermediaryContainers []string   `json:"intermediary_containers"`
+	SlackNotificationURL   string     `json:"slack_notification_url"`
 }
 
 // GitOptions represents GitHub-related deployment options
