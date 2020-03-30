@@ -23,6 +23,8 @@ search: false
 [![](https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed)](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general)
 [![](https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social)](https://github.com/ubclaunchpad/inertia)
 
+<script src="https://hypothes.is/embed.js" async></script>
+
 <br />
 
 > **Main Features**
