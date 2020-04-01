@@ -47,13 +47,14 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 
 			// Check for global inertia configuration
 			if _, err := local.GetRemotes(); err != nil {
-				resp, err := input.Prompt(
-					highlight.Sf(":question: Could not find global inertia configuration in %s (%s) - would you like to initialize it?",
-						local.InertiaDir(), err.Error()))
+				should, err := input.NewPrompt(nil).
+					Prompt(highlight.Sf(":question: Could not find global inertia configuration in %s - would you like to initialize it? (y/N)",
+						local.InertiaDir())).
+					GetBool()
 				if err != nil {
 					out.Fatal(err)
 				}
-				if resp == "y" || resp == "yes" {
+				if should {
 					if _, err := local.Initialize(); err != nil {
 						out.Fatal(err)
 					}
@@ -96,12 +97,14 @@ See https://inertia.ubclaunchpad.com/#project-configuration for more details.`,
 			if err != nil {
 				out.Fatal(err)
 			}
-			if resp, err := input.Promptf(
-				":evergreen_tree: %s",
-				highlight.Sf(
-					"Enter the branch you would like to deploy (leave blank for '%s'):",
-					branch,
-				)); err == nil {
+			resp, err := input.NewPrompt(&input.PromptConfig{AllowEmpty: true}).
+				Promptf(":evergreen_tree: %s",
+					highlight.Sf(
+						"Enter the branch you would like to deploy (leave blank for '%s'):",
+						branch,
+					)).
+				GetString()
+			if err == nil && resp != "" {
 				branch = resp
 			}
 

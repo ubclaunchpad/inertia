@@ -125,7 +125,9 @@ func Test_chooseFromListWalkthrough(t *testing.T) {
 		os.Stdin = in
 		defer func() { os.Stdin = old }()
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ChooseFromListWalkthrough(tt.args.optionName, tt.args.options)
+			got, err := NewPrompt(nil).
+				PromptFromList(tt.args.optionName, tt.args.options).
+				GetString()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("chooseFromListWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
 				return
