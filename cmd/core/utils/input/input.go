@@ -109,7 +109,7 @@ func (p *PromptInteraction) PromptFromList(optionName string, options []string) 
 func (p *PromptInteraction) GetBool() (bool, error) {
 	yes := p.resp == "y"
 	if !yes && !p.conf.AllowInvalid {
-		if p.resp != "N" {
+		if p.resp != "N" && p.resp != "" {
 			return false, fmt.Errorf("illegal input '%s' provided: %w", p.resp, ErrInvalidInput)
 		}
 	}
