@@ -5,99 +5,80 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ubclaunchpad/inertia/cfg"
 )
 
-func Test_addProjectWalkthrough(t *testing.T) {
-	tests := []struct {
-		name              string
-		wantBuildType     cfg.BuildType
-		wantBuildFilePath string
-		wantErr           bool
-	}{
-		{"invalid build type", "", "", true},
-		{"invalid build file path", "dockerfile", "", true},
-		{"docker-compose", "docker-compose", "docker-compose.yml", false},
+func TestPromptInteraction_GetBool(t *testing.T) {
+	type fields struct {
+		conf PromptConfig
+		in   string
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			in, err := ioutil.TempFile("", "")
-			assert.NoError(t, err)
-			defer in.Close()
-
-			fmt.Fprintln(in, tt.wantBuildType)
-			fmt.Fprintln(in, tt.wantBuildFilePath)
-
-			_, err = in.Seek(0, io.SeekStart)
-			assert.NoError(t, err)
-
-			var old = os.Stdin
-			os.Stdin = in
-			defer func() { os.Stdin = old }()
-			gotBuildType, gotBuildFilePath, err := AddProjectWalkthrough()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("addProjectWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !tt.wantErr {
-				if gotBuildType != tt.wantBuildType {
-					t.Errorf("addProjectWalkthrough() gotBuildType = %v, want %v", gotBuildType, tt.wantBuildType)
-				}
-				if gotBuildFilePath != tt.wantBuildFilePath {
-					t.Errorf("addProjectWalkthrough() gotBuildFilePath = %v, want %v", gotBuildFilePath, tt.wantBuildFilePath)
-				}
-			}
-		})
-	}
-}
-
-func Test_enterEC2CredentialsWalkthrough(t *testing.T) {
 	tests := []struct {
 		name    string
-		wantID  string
-		wantKey string
+		fields  fields
+		want    bool
 		wantErr bool
 	}{
-		{"bad ID", "", "asdf", true},
-		{"bad key", "asdf", "", true},
-		{"good", "asdf", "asdf", false},
+		{"y", fields{PromptConfig{}, "y\n"}, true, false},
+		{"N", fields{PromptConfig{}, "N\n"}, false, false},
+
+		{"disallowed empty", fields{PromptConfig{}, "\n"}, false, true},
+		{"allowed empty", fields{PromptConfig{AllowEmpty: true}, "\n"}, false, false},
+		{"disallowed invalid", fields{PromptConfig{}, "asdf\n"}, false, true},
+		{"allowed invalid", fields{PromptConfig{AllowInvalid: true}, "asdf\n"}, false, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			in, err := ioutil.TempFile("", "")
-			assert.NoError(t, err)
-			defer in.Close()
-
-			fmt.Fprintln(in, tt.wantID)
-			fmt.Fprintln(in, tt.wantKey)
-
-			_, err = in.Seek(0, io.SeekStart)
-			assert.NoError(t, err)
-
-			var old = os.Stdin
-			os.Stdin = in
-			defer func() { os.Stdin = old }()
-			gotID, gotKey, err := EnterEC2CredentialsWalkthrough()
+			got, err := NewPromptOnInput(strings.NewReader(tt.fields.in), &tt.fields.conf).
+				Prompt("test prompt (y/N)").
+				GetBool()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("enterEC2CredentialsWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("PromptInteraction.GetBool() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !tt.wantErr {
-				if gotID != tt.wantID {
-					t.Errorf("enterEC2CredentialsWalkthrough() gotId = %v, want %v", gotID, tt.wantID)
-				}
-				if gotKey != tt.wantKey {
-					t.Errorf("enterEC2CredentialsWalkthrough() gotKey = %v, want %v", gotKey, tt.wantKey)
-				}
+			if got != tt.want {
+				t.Errorf("PromptInteraction.GetBool() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_chooseFromListWalkthrough(t *testing.T) {
+func TestPromptInteraction_GetString(t *testing.T) {
+	type fields struct {
+		conf PromptConfig
+		in   string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    string
+		wantErr bool
+	}{
+		{"arbitrary string", fields{PromptConfig{}, "hello\n"}, "hello", false},
+
+		{"disallowed empty", fields{PromptConfig{}, "\n"}, "", true},
+		{"allowed empty", fields{PromptConfig{AllowEmpty: true}, "\n"}, "", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewPromptOnInput(strings.NewReader(tt.fields.in), &tt.fields.conf).
+				Promptf("test prompt %s", "hello").
+				GetString()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PromptInteraction.GetString() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("PromptInteraction.GetString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPromptInteraction_PromptFromList(t *testing.T) {
 	type args struct {
 		optionName string
 		options    []string
@@ -125,14 +106,16 @@ func Test_chooseFromListWalkthrough(t *testing.T) {
 		os.Stdin = in
 		defer func() { os.Stdin = old }()
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ChooseFromListWalkthrough(tt.args.optionName, tt.args.options)
+			got, err := NewPrompt(nil).
+				PromptFromList(tt.args.optionName, tt.args.options).
+				GetString()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("chooseFromListWalkthrough() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("PromptFromList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !tt.wantErr {
 				if got != tt.want {
-					t.Errorf("chooseFromListWalkthrough() = %v, want %v", got, tt.want)
+					t.Errorf("PromptFromList() = %v, want %v", got, tt.want)
 				}
 			}
 		})

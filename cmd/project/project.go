@@ -75,11 +75,13 @@ func (root *ProjectCmd) attachResetCmd() {
 		Long: `Removes your project configuration by deleting the configuration file.
 	This is irreversible.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := input.Prompt("Would you like to reset your project configuration?")
+			should, err := input.NewPrompt(nil).
+				Prompt("Would you like to reset your project configuration? (y/N)").
+				GetBool()
 			if err != nil {
 				out.Fatal(err)
 			}
-			if resp == "y" || resp == "yes" {
+			if should {
 				if err := os.Remove(root.projectConfigPath); err != nil {
 					out.Fatal(err)
 				}

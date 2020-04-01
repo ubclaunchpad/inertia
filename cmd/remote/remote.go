@@ -131,37 +131,38 @@ Inertia commands.`,
 			out.Printf("creating new remote '%s'\n", args[0])
 			var highlight = out.NewColorer(out.CY)
 			if addr == "" {
-				addr, err = input.Prompt(highlight.S(":globe_with_meridians: Enter IP address of remote:"))
+				addr, err = input.NewPrompt(nil).
+					Prompt(highlight.S(":globe_with_meridians: Enter IP address of remote:")).
+					GetString()
 				if err != nil {
 					out.Fatal(err)
-				}
-				if addr == "" {
-					out.Fatal("invalid IP address provided")
 				}
 			}
 
 			if keyPath == "" {
-				if resp, err := input.Prompt(
-					highlight.Sf(":key: Enter path to identity file (leave blank to use '%s'):", defaultKey),
-				); err == nil && resp != "" {
+				resp, err := input.NewPrompt(&input.PromptConfig{AllowEmpty: true}).
+					Prompt(highlight.Sf(":key: Enter path to identity file (leave blank to use '%s'):", defaultKey)).
+					GetString()
+				if err == nil && resp != "" {
 					keyPath = resp
 				} else {
 					keyPath = defaultKey
 				}
 			}
 			if user == "" {
-				user, err = input.Prompt(highlight.Sf(":dancer: Enter user for the identity file:"))
+				user, err = input.NewPrompt(nil).
+					Prompt(highlight.Sf(":dancer: Enter user for the identity file:")).
+					GetString()
 				if err != nil {
 					out.Fatal(err)
-				}
-				if user == "" {
-					out.Fatal("invalid user provided")
 				}
 			}
 
 			var webhookSecret string
 			if !genWebhookSecret {
-				secret, err := input.Prompt(highlight.Sf(":secret: Enter a webhook secret (leave blank to generate one):"))
+				secret, err := input.NewPrompt(&input.PromptConfig{AllowEmpty: true}).
+					Prompt(highlight.Sf(":secret: Enter a webhook secret (leave blank to generate one):")).
+					GetString()
 				if err == nil && secret != "" {
 					webhookSecret = secret
 				} else {
@@ -457,11 +458,13 @@ func (root *RemoteCmd) attachResetCmd() {
 to see where the file is directly. Note that the configuration directory can be set using
 INERTIA_PATH.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := input.Prompt("Would you like to reset ALL remote configuration?")
+			should, err := input.NewPrompt(nil).
+				Prompt("Would you like to reset ALL remote configuration? (y/N)").
+				GetBool()
 			if err != nil {
 				out.Fatal(err)
 			}
-			if resp == "y" || resp == "yes" {
+			if should {
 				if err := os.Remove(local.InertiaRemotesPath()); err != nil {
 					out.Fatal(err)
 				} else {

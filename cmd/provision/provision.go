@@ -124,7 +124,7 @@ This ensures that your project ports are properly exposed and externally accessi
 					out.Fatal(err)
 				}
 			} else {
-				keyID, key, err := input.EnterEC2CredentialsWalkthrough()
+				keyID, key, err := enterEC2CredentialsWalkthrough()
 				if err != nil {
 					out.Fatal(err)
 				}
@@ -139,7 +139,9 @@ This ensures that your project ports are properly exposed and externally accessi
 
 			// Prompt for region
 			out.Println("See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions for a list of available regions.")
-			region, err := input.Prompt(highlight.S("Please enter a region: "))
+			region, err := input.NewPrompt(nil).
+				Prompt(highlight.S("Please enter a region: ")).
+				GetString()
 			if err != nil {
 				out.Fatal(err)
 			}
@@ -150,7 +152,10 @@ This ensures that your project ports are properly exposed and externally accessi
 			if err != nil {
 				out.Fatal(err)
 			}
-			image, err := input.ChooseFromListWalkthrough("image", images)
+			// allow arbitrary
+			image, err := input.NewPrompt(&input.PromptConfig{AllowInvalid: true}).
+				PromptFromList("image", images).
+				GetString()
 			if err != nil {
 				out.Fatal(err)
 			}
