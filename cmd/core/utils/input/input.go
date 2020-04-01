@@ -9,19 +9,14 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 )
 
 var (
-	errInvalidInput  = errors.New("invalid input")
-	errEmptyInput    = errors.New("empty input")
-	errInvalidOption = errors.New("invalid option")
-
-	errInvalidUser          = errors.New("invalid user")
-	errInvalidAddress       = errors.New("invalid IP address")
-	errInvalidBuildType     = errors.New("invalid build type")
-	errInvalidBuildFilePath = errors.New("invalid buildfile path")
+	// ErrEmptyInput is returned on empty imputs - toggle with AllowEmpty
+	ErrEmptyInput = errors.New("empty input")
+	// ErrInvalidInput is returned on disallowed inputs - toggle with AllowInvalid
+	ErrInvalidInput = errors.New("invalid input")
 )
 
 // CatchSigterm listens in the background for some kind of interrupt and calls
@@ -105,7 +100,7 @@ func (p *PromptInteraction) PromptFromList(optionName string, options []string) 
 				return p
 			}
 		}
-		p.err = fmt.Errorf("invalid input %s: %w", p.resp, errInvalidOption)
+		p.err = fmt.Errorf("illegal option '%s' chosen: %w", p.resp, ErrInvalidInput)
 	}
 	return p
 }
@@ -115,7 +110,7 @@ func (p *PromptInteraction) GetBool() (bool, error) {
 	yes := p.resp == "y"
 	if !yes && !p.conf.AllowInvalid {
 		if p.resp != "N" {
-			return false, errInvalidInput
+			return false, fmt.Errorf("illegal input '%s' provided: %w", p.resp, ErrInvalidInput)
 		}
 	}
 	return yes, p.err
@@ -124,61 +119,4 @@ func (p *PromptInteraction) GetBool() (bool, error) {
 // GetString retreives the raw string response from the prompt
 func (p *PromptInteraction) GetString() (string, error) {
 	return p.resp, p.err
-}
-
-// AddProjectWalkthrough is the command line walkthrough that asks for details
-// about the project the user intends to deploy.
-func AddProjectWalkthrough() (
-	buildType cfg.BuildType, buildFilePath string, err error,
-) {
-	resp, err := NewPrompt(nil).
-		PromptFromList("build type", []string{"docker-compose", "dockerfile"}).
-		GetString()
-	if err != nil {
-		return "", "", errInvalidBuildType
-	}
-	buildType, err = cfg.AsBuildType(resp)
-	if err != nil {
-		return "", "", err
-	}
-
-	buildFilePath, err = NewPrompt(nil).
-		Prompt(out.C("Please enter the path to your build configuration file:", out.CY)).
-		GetString()
-	if err != nil || buildFilePath == "" {
-		return "", "", errInvalidBuildFilePath
-	}
-	return
-}
-
-// EnterEC2CredentialsWalkthrough prints promts to stdout and reads input from
-// given reader
-func EnterEC2CredentialsWalkthrough() (id, key string, err error) {
-	out.Print(`To get your credentials:
-	1. Open the IAM console (https://console.aws.amazon.com/iam/home?#home).
-	2. In the navigation pane of the console, choose Users. You may have to create a user.
-	3. Choose your IAM user name (not the check box).
-	4. Choose the Security credentials tab and then choose Create access key.
-	5. To see the new access key, choose Show. Your credentials will look something like this:
-
-		Access key ID: AKIAIOSFODNN7EXAMPLE
-		Secret access key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-	`)
-
-	var response string
-
-	out.Print("\nKey ID:       ")
-	_, err = fmt.Fscanln(os.Stdin, &response)
-	if err != nil {
-		return
-	}
-	id = response
-
-	out.Print("\nAccess Key:   ")
-	_, err = fmt.Fscanln(os.Stdin, &response)
-	if err != nil {
-		return
-	}
-	key = response
-	return
 }

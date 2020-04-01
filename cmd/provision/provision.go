@@ -124,7 +124,7 @@ This ensures that your project ports are properly exposed and externally accessi
 					out.Fatal(err)
 				}
 			} else {
-				keyID, key, err := input.EnterEC2CredentialsWalkthrough()
+				keyID, key, err := enterEC2CredentialsWalkthrough()
 				if err != nil {
 					out.Fatal(err)
 				}
