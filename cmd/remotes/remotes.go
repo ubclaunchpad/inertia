@@ -488,11 +488,16 @@ func (root *HostCmd) attachTokenCmd() {
 }
 
 func (root *HostCmd) attachUpgradeCmd() {
-	const flagVersion = "version"
+	const (
+		flagVersion = "version"
+	)
 	var upgrade = &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade Inertia daemon to match the CLI.",
-		Long:  `Restarts the Inertia daemon to upgrade it to the same version as your CLI`,
+		Long: `Restarts the Inertia daemon to upgrade it to the same version as your CLI.
+
+To upgrade your remote, you must upgrade your CLI first to the correct version - drop by
+https://github.com/ubclaunchpad/inertia/releases for more details.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			sshc, err := root.client.GetSSHClient()
 			if err != nil {
@@ -504,12 +509,11 @@ func (root *HostCmd) attachUpgradeCmd() {
 				out.Fatal(err)
 			}
 
-			var version = root.getRemote().Version
 			if v, _ := cmd.Flags().GetString(flagVersion); v != "" {
-				version = v
+				root.getRemote().Version = v
 			}
 
-			out.Printf("Starting up the Inertia daemon (version %s)\n", version)
+			out.Printf("Starting up the Inertia daemon (version %s)\n", root.getRemote().Version)
 			if err := sshc.DaemonUp(); err != nil {
 				out.Fatal(err)
 			}
