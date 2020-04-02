@@ -14,7 +14,7 @@ const (
 )
 
 // FormatStatus prints the given deployment status
-func FormatStatus(s *api.DeploymentStatus) string {
+func FormatStatus(remoteName string, s *api.DeploymentStatus) string {
 	var (
 		inertiaStatus   = "inertia daemon " + s.InertiaVersion + "\n"
 		branchStatus    = " - Branch:     " + s.Branch + "\n"
@@ -46,6 +46,17 @@ func FormatStatus(s *api.DeploymentStatus) string {
 		activeContainers += " - " + container + "\n"
 	}
 	statusString += activeContainers
+
+	// report new version if one is available
+	if s.NewVersionAvailable != nil && *s.NewVersionAvailable != "" {
+		statusString += C("\n:rocket: Inertia version %s is now available!\n", CY).
+			With(*s.NewVersionAvailable).String()
+		statusString += fmt.Sprintf("Go to https://github.com/ubclaunchpad/inertia/releases/tag/%s for more details.\n",
+			*s.NewVersionAvailable)
+		statusString += fmt.Sprintf("Run 'inertia %s upgrade --help' for tips on upgrading.\n",
+			remoteName)
+	}
+
 	return statusString
 }
 

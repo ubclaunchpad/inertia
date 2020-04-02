@@ -1,10 +1,14 @@
 package daemon
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/blang/semver"
 	"github.com/go-chi/render"
 
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
 
@@ -60,6 +64,14 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		// deployed
 		render.JSON(w, r, badge)
 		return
+	}
+
+	// check for new version
+	current, _ := semver.Parse(strings.TrimPrefix(s.version, "v"))
+	latest, tagCheckErr := containers.GetLatestImageTag(r.Context(), "ubclaunchpad/inertia", &current)
+	if tagCheckErr == nil {
+		verStr := fmt.Sprintf("v%s", latest.String())
+		status.NewVersionAvailable = &verStr
 	}
 
 	// standard responses

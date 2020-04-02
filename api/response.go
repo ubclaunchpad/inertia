@@ -91,4 +91,7 @@ type DeploymentStatus struct {
 	BuildType            string   `json:"build_type"`
 	Containers           []string `json:"containers"`
 	BuildContainerActive bool     `json:"build_active"`
+
+	// returns tag of latest version on dockerhub
+	NewVersionAvailable *string `json:"new_version_available"`
 }
