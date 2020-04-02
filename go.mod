@@ -9,6 +9,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/UnnoTed/fileb0x v1.1.4
 	github.com/aws/aws-sdk-go v1.29.28
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v1.4.2-0.20190301231049-8aca18d631f3
