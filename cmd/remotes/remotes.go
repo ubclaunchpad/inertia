@@ -232,7 +232,7 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 			}
 			out.Printf("daemon on remote '%s' is online at %s\n",
 				root.remote, host)
-			out.Println(out.FormatStatus(status))
+			out.Println(out.FormatStatus("robert", status))
 		},
 	}
 	root.AddCommand(stat)
