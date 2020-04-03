@@ -25,10 +25,6 @@ func TestNewBuilder(t *testing.T) {
 	assert.NotNil(t, b)
 }
 
-const (
-	DockerComposeVersion = "docker/compose:1.25.4"
-)
-
 // killTestContainers is a helper for tests - it implements project.ContainerStopper
 func killTestContainers(cli *docker.Client, w io.Writer) error {
 	ctx := context.Background()
@@ -77,11 +73,10 @@ func TestBuilder_Build(t *testing.T) {
 
 	// Setup
 	cli, err := containers.NewDockerClient()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer cli.Close()
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
-
 	// Run cases
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -96,7 +91,7 @@ func TestBuilder_Build(t *testing.T) {
 				testProjectDir = path.Clean(path.Join(cwd, "../../../test/build/"+tt.args.buildType))
 
 				b = NewBuilder(cfg.Config{
-					DockerComposeVersion: DockerComposeVersion,
+					DockerComposeVersion: "docker/compose:latest",
 				}, killTestContainers)
 				out = os.Stdout
 			)

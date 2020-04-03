@@ -1,6 +1,12 @@
 package cfg
 
-import "os"
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
+)
 
 // Config provides basic daemon configuration
 type Config struct {
@@ -18,10 +24,16 @@ type Config struct {
 
 // New creates a new daemon configuration from environment values
 func New() *Config {
+	dcVersionString := "latest"
+	dcVersion, err := containers.GetLatestImageTag(context.TODO(), "docker/compose", nil)
+	if err == nil {
+		dcVersionString = dcVersion.String()
+	}
+
 	return &Config{
 		SecretsDirectory:     os.Getenv("INERTIA_SECRETS_DIR"),
 		DataDirectory:        os.Getenv("INERTIA_DATA_DIR"),
-		DockerComposeVersion: os.Getenv("INERTIA_DOCKERCOMPOSE"),
+		DockerComposeVersion: fmt.Sprintf("docker/compose:%s", dcVersionString),
 		ProjectDirectory:     os.Getenv("INERTIA_PROJECT_DIR"),
 		PersistDirectory:     os.Getenv("INERTIA_PERSIST_DIR"),
 	}

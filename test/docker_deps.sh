@@ -1,4 +1,4 @@
 #!/bin/sh
 
 echo "Installing build images"
-docker pull docker/compose:1.25.4
+docker pull docker/compose:latest

@@ -115,7 +115,7 @@ func (b *Builder) Build(buildType string, d Config,
 // 	    -v /var/run/docker.sock:/var/run/docker.sock \
 // 	    -v $HOME:/build \
 // 	    -w="/build/project" \
-// 	    docker/compose:1.18.0 up --build
+// 	    docker/compose:latest up --build
 //
 // This starts a new container running a docker-compose image for
 // the sole purpose of building the project. This container is
