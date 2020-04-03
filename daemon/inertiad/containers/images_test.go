@@ -81,4 +81,8 @@ func TestGetLatestImageTag(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, latest)
 	assert.True(t, latest.GT(v))
+
+	latest, err = GetLatestImageTag(context.Background(), "docker/compose", nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, latest)
 }

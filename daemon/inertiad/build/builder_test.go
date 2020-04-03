@@ -77,11 +77,6 @@ func TestBuilder_Build(t *testing.T) {
 	defer cli.Close()
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
-
-	// get latest
-	dcVersion, err := containers.GetLatestImageTag(context.TODO(), "docker/compose", nil)
-	require.NoError(t, err)
-
 	// Run cases
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -96,7 +91,7 @@ func TestBuilder_Build(t *testing.T) {
 				testProjectDir = path.Clean(path.Join(cwd, "../../../test/build/"+tt.args.buildType))
 
 				b = NewBuilder(cfg.Config{
-					DockerComposeVersion: "docker/compose:" + dcVersion.String(),
+					DockerComposeVersion: "docker/compose:latest",
 				}, killTestContainers)
 				out = os.Stdout
 			)
