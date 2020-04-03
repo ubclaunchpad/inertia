@@ -48,7 +48,7 @@ func (res *imageTagsResult) getLatest(min *semver.Version) (*semver.Version, err
 		v, err := semver.Parse(strings.TrimPrefix(tag.Name, "v"))
 		// ignore invalid tags - these are probably previews
 		if err == nil {
-			if v.GT(latest) {
+			if v.Pre == nil && v.GT(latest) {
 				latest = v
 			}
 		}

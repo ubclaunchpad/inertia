@@ -52,6 +52,13 @@ func Test_imageTagsResult_getLatest(t *testing.T) {
 			args{},
 			nil,
 			true},
+		{"should NOT return release candidates",
+			imageTagsResult{Results: []imageTagDescription{
+				{Name: "v0.6.0-rc1"}, {Name: "v0.5.0"},
+			}},
+			args{},
+			semverMustParsePtr("0.5.0"),
+			false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
