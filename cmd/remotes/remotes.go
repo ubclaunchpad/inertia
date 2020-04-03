@@ -517,6 +517,10 @@ https://github.com/ubclaunchpad/inertia/releases for more details.`,
 			if err := sshc.DaemonUp(); err != nil {
 				out.Fatal(err)
 			}
+
+			if err := local.SaveRemote(root.getRemote()); err != nil {
+				out.Fatal(err)
+			}
 		},
 	}
 	upgrade.Flags().String(flagVersion, "", "version of Inertia daemon to spin up")
