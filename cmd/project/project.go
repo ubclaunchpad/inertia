@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
 	"github.com/ubclaunchpad/inertia/cfg"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/input"
@@ -55,13 +56,13 @@ func (root *ProjectCmd) attachSetCmd() {
 		Long:  `Updates a property of your Inertia project configuration and save it to inertia.toml.`,
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := cfg.SetProperty(args[0], args[1], root.config); err != nil {
+			if err := cfg.SetProperty(args[0], args[1], root.config); err == nil {
 				if err := local.Write(root.projectConfigPath, root.config); err != nil {
 					out.Fatal(err)
 				}
 				out.Println("configuration setting '" + args[0] + "' has been updated")
 			} else {
-				out.Println("configuration setting '" + args[0] + "' not found")
+				out.Println("configuration setting '" + args[0] + "' could not be updated: " + err.Error())
 			}
 		},
 	}
