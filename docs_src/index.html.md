@@ -168,6 +168,7 @@ a few project-wide settings stored here:
 
 Parameter | Description
 --------- | -----------
+`version` | Minimum version of Inertia CLI required by this configuration.
 `name`    | The name of the project you are deploying.
 `url`     | Your project source, typically your Git repository.
 

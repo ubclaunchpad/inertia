@@ -4,7 +4,10 @@ Upgrade Inertia daemon to match the CLI.
 
 ### Synopsis
 
-Restarts the Inertia daemon to upgrade it to the same version as your CLI
+Restarts the Inertia daemon to upgrade it to the same version as your CLI.
+
+To upgrade your remote, you must upgrade your CLI first to the correct version - drop by
+https://github.com/ubclaunchpad/inertia/releases/latest for more details.
 
 ```
 inertia ${remote_name} upgrade [flags]
