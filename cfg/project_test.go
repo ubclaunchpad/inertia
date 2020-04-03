@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -126,6 +127,57 @@ func TestProject_RemoveProfile(t *testing.T) {
 			profile, found := p.GetProfile(tt.args.name)
 			assert.False(t, found)
 			assert.Nil(t, profile)
+		})
+	}
+}
+
+func TestProject_ValidateVersion(t *testing.T) {
+	type args struct {
+		v string
+	}
+	tests := []struct {
+		name    string
+		fields  *Project
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"no version provided",
+			&Project{InertiaMinVersion: "v0.5.0"},
+			args{""},
+			"",
+			true},
+		{"no version configured",
+			&Project{InertiaMinVersion: ""},
+			args{"v0.5.0"},
+			"no inertia version",
+			false},
+		{"not in range",
+			&Project{InertiaMinVersion: "v0.5.3"},
+			args{"v0.6.0"},
+			"",
+			true},
+		{"ok - same version",
+			&Project{InertiaMinVersion: "v0.5.3"},
+			args{"v0.5.3"},
+			"",
+			false},
+		{"ok - higher version",
+			&Project{InertiaMinVersion: "v0.5.3"},
+			args{"v0.5.8"},
+			"",
+			false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.fields.ValidateVersion(tt.args.v)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Project.ValidateVersion() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !strings.Contains(got, tt.want) {
+				t.Errorf("Project.ValidateVersion() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

@@ -1,19 +1,66 @@
 package cfg
 
 import (
+	"errors"
 	"fmt"
+	"strings"
+
+	"github.com/blang/semver"
 
 	"github.com/ubclaunchpad/inertia/cfg/internal/identity"
 )
 
 // Project represents the current project's configuration.
 type Project struct {
+	// InertiaMinVersion declares a minimum inertia version
+	InertiaMinVersion string `toml:"version"`
+
 	Name string `toml:"name"`
 	URL  string `toml:"url"`
 
 	// Profiles tracks configured project profiles. It is a list instead of a map
 	// to better align with TOML best practices
 	Profiles []*Profile `toml:"profile"`
+}
+
+// ValidateVersion checks if the given version is compatible with the project version. It errors if
+// the incompatibility is strict, otherwise returns an error message.
+func (p *Project) ValidateVersion(v string) (string, error) {
+	// check special cases
+	switch v {
+	case "":
+		return "", errors.New("no version provided")
+	case "test":
+		return "version is a test build", nil
+	}
+	switch p.InertiaMinVersion {
+	case "":
+		return "no inertia version configured in project", nil
+	case "test":
+		return "", errors.New("inertia project version is a test build - please change it to a release version")
+	}
+
+	// note that inertia versions start with v, unlike the semver spec
+	project, err := semver.Parse(strings.TrimLeft(p.InertiaMinVersion, "v"))
+	if err != nil {
+		return "", fmt.Errorf("project version is invalid: %w", err)
+	}
+	current, err := semver.Parse(strings.TrimLeft(v, "v"))
+	if err != nil {
+		return "", fmt.Errorf("version is invalid: %w", err)
+	}
+
+	// generate allowed range and check
+	upperAllowed := semver.MustParse(project.String())
+	upperAllowed.Minor++
+	upperAllowed.Patch = 0
+	constraints := fmt.Sprintf(">=%s <%s", project, upperAllowed)
+	print(constraints)
+	if semver.MustParseRange(constraints)(current) {
+		return "", nil
+	}
+	return "", fmt.Errorf("version '%s' does not satisfy project inertia version constraints '%s'",
+		current, constraints)
 }
 
 // Profile denotes a deployment configuration
