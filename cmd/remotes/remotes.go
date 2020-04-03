@@ -24,6 +24,34 @@ import (
 // configured remote in the configuration
 func AttachRemotesCmds(root *core.Cmd) {
 	project, _ := local.GetProject(root.ProjectConfigPath)
+
+	// execute some project validation, since AttachRemotesCmds always runs
+	if project != nil {
+		if project.InertiaMinVersion == "" {
+			// init version if none is set
+			project.InertiaMinVersion = root.Version
+			local.Write(root.ProjectConfigPath, project)
+		} else {
+			// else validate the provided version
+			var msg string
+			warn, err := project.ValidateVersion(root.Version)
+			if err != nil || warn != "" {
+				if err != nil {
+					msg += out.C(":warning: error when validating project configuration against CLI version: %s\n",
+						out.RD, out.BO).With(err).String()
+				}
+				if warn != "" {
+					msg += out.C(":warning: warning when validating project configuration against CLI version: %s\n",
+						out.YE, out.BO).With(warn).String()
+				}
+				msg += out.C("for details on the latest Inertia releases, please see https://github.com/ubclaunchpad/inertia/releases/latest\n",
+					out.BO).String()
+			}
+			out.Println(msg)
+		}
+	}
+
+	// parse and attach remotes
 	cfg, err := local.GetRemotes()
 	if err != nil {
 		return
@@ -497,7 +525,7 @@ func (root *HostCmd) attachUpgradeCmd() {
 		Long: `Restarts the Inertia daemon to upgrade it to the same version as your CLI.
 
 To upgrade your remote, you must upgrade your CLI first to the correct version - drop by
-https://github.com/ubclaunchpad/inertia/releases for more details.`,
+https://github.com/ubclaunchpad/inertia/releases/latest for more details.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			sshc, err := root.client.GetSSHClient()
 			if err != nil {
