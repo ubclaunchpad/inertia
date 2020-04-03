@@ -13,16 +13,18 @@ https://github.com/ubclaunchpad/inertia/milestones/NUMBER
 
 **Tasks**
 
-Make a new PR:
+Make a new PR and merge when everything is ready:
 
 * [ ] generate release documentation (`make docs`)
 * [ ] generate new tip documentation (`make docs-tip`)
-* [ ] draft changelog
+* [ ] update `contrib/npm` version
 
 Update distribution streams:
 
-* [ ] https://github.com/ubclaunchpad/homebrew-tap
-* [ ] https://github.com/ubclaunchpad/scoop-bucket
+* [ ] draft changelog
+* [ ] make release and let builds run
+* [ ] update https://github.com/ubclaunchpad/homebrew-tap
+* [ ] update https://github.com/ubclaunchpad/scoop-bucket
 * [ ] run `npm publish` in `contrib/npm`
 
 ---
