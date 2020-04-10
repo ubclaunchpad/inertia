@@ -33,17 +33,21 @@ func newDocgenCmd(root *core.Cmd) *cobra.Command {
 		Hidden:  true,
 		Version: Version,
 		Args:    cobra.MinimumNArgs(1),
-		Short:   "Generate command reference for the Inertia CLI.",
+		Example: "inertia contrib completions ${fpath[1]} -f zsh",
+		Short:   "Generate completions for the Inertia CLI.",
+		Long:    `Generate completions for the Inertia CLI. Supports bash and zsh.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			outPath := args[0]
 			var format, _ = cmd.Flags().GetString(flagFormat)
 
 			switch format {
 			case "zsh":
+				// https://github.com/spf13/cobra/blob/master/zsh_completions.md
 				if err := root.GenZshCompletionFile(outPath); err != nil {
 					out.Fatal(err)
 				}
 			case "bash":
+				// https://github.com/spf13/cobra/blob/master/bash_completions.md
 				if err := root.GenBashCompletionFile(outPath); err != nil {
 					out.Fatal(err)
 				}
