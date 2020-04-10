@@ -3,11 +3,34 @@ package cmd
 import (
 	"os"
 	"os/exec"
+	"path"
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cmd/core"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
 )
+
+func getPluginPath() string {
+	priority := []string{
+		"INERTIA_PLUGINSPATH",
+		"GOBIN",
+	}
+	var pluginPath string
+	for _, p := range priority {
+		pluginPath = os.Getenv(p)
+		if pluginPath != "" {
+			break
+		}
+	}
+	// try generating GOBIN
+	if pluginPath == "" {
+		gopath := os.Getenv("GOPATH")
+		if gopath != "" {
+			pluginPath = path.Join(gopath, "bin")
+		}
+	}
+	return pluginPath
+}
 
 func attachContribPlugins(inertia *core.Cmd) {
 	var contrib = &cobra.Command{
@@ -34,9 +57,9 @@ Use $INERTIA_PLUGINSPATH to configure where Inertia should look for plugins.`,
 				return
 			}
 			var (
-				path     = os.Getenv("INERTIA_PLUGINSPATH")
-				tool     = path + "inertia-" + args[0]
-				toolArgs []string
+				pluginPath = getPluginPath()
+				tool       = path.Join(pluginPath, "inertia-"+args[0])
+				toolArgs   []string
 			)
 			if len(args) > 1 {
 				toolArgs = args[1:]
