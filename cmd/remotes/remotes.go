@@ -22,11 +22,11 @@ import (
 
 // AttachRemotesCmds reads configuration to attach a child command for each
 // configured remote in the configuration
-func AttachRemotesCmds(root *core.Cmd) {
+func AttachRemotesCmds(root *core.Cmd, validateConfig bool) {
 	project, _ := local.GetProject(root.ProjectConfigPath)
 
 	// execute some project validation, since AttachRemotesCmds always runs
-	if project != nil {
+	if project != nil && validateConfig {
 		if project.InertiaMinVersion == "" {
 			// init version if none is set
 			project.InertiaMinVersion = root.Version
