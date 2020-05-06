@@ -30,7 +30,7 @@ const exe = process.platform === 'win32' ? '.exe' : '';
 function getBinURL () {
   // Verify system
   if (!(process.arch in ARCH_PLATFORM_MAPPINGS) || !(process.platform in ARCH_PLATFORM_MAPPINGS)) {
-    console.error(`Inertia-CLI is not supported on this system: ${process.platform}-${process.arch}`);
+    console.error(`Inertia CLI is not supported on this system: ${process.platform}-${process.arch}`);
     return;
   }
 
