@@ -87,7 +87,7 @@ brew install ubclaunchpad/tap/inertia
 > Node.js users can install the CLI using [npm](https://www.npmjs.com/get-npm): 
 
 ```shell
-npm install -g inertia-cli
+npm install -g @ubclaunchpad/inertia
 ```
 
 > Windows users can install the CLI using [Scoop](http://scoop.sh):

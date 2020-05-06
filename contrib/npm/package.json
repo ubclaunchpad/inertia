@@ -1,7 +1,7 @@
 {
-  "name": "inertia-cli",
+  "name": "@ubclaunchpad/inertia",
   "version": "0.6.0",
-  "description": "Inertia-CLI",
+  "description": "✈️ Effortless, self-hosted continuous deployment for small teams and projects ",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "node ./src/install.js",
@@ -14,9 +14,10 @@
   },
   "keywords": [
     "ubc",
-    "launchpad",
+    "launch-pad",
+    "inertia-cli",
     "inertia",
-    "inertia-cli"
+    "cli"
   ],
   "author": "UBC Launch Pad",
   "license": "MIT",
