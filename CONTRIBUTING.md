@@ -54,9 +54,18 @@ For example, [Issue #261](https://github.com/ubclaunchpad/inertia/issues/261) ha
 
 Please free free to open up a ticket if any of these instructions are unclear or straight up do not work on your platform!
 
-- [Installation and Setup](#installation-and-setup)
+- [Guidelines](#guidelines)
+  - [Commits](#commits)
+  - [Merging Pull Requests](#merging-pull-requests)
+  - [Branch Naming](#branch-naming)
+- [Setup](#setup)
 - [Project Overview](#project-overview)
-- [Testing Environment](#setting-up-a-testing-environment)
+  - [Makefile](#makefile)
+  - [CLI](#cli)
+  - [Client](#client)
+  - [Daemon](#daemon)
+  - [Documentation](#documentation)
+- [Setting up a Testing Environment](#setting-up-a-testing-environment)
 
 ## Setup
 
@@ -83,12 +92,7 @@ export GOPATH=$HOME/go
 export GOBIN=$HOME/go/bin
 ```
 
-Inertia uses:
-
-- [npm](https://www.npmjs.com) to manage dependencies for Inertia's React web app
-- [Docker](https://www.docker.com/community-edition) for various application functionalities and integration testing
-
-Make sure all of the above are installed (and that the Docker daemon is online) before running:
+Inertia uses [Docker](https://www.docker.com/community-edition) for various application functionalities and integration testing. Make sureit is installed (and that the Docker daemon is online) before running:
 
 ```bash
 $> make deps          # installs dependencies
@@ -176,20 +180,7 @@ This sneaky configuration file can be found under
 `Docker -> Preferences -> Daemon -> Advanced -> Edit File`.
 
 The daemon also exposes a [REST API](https://inertia.ubclaunchpad.com/api) for
-the CLI and web app.
-
-### Web
-
-Inertia Web provides a web interface to manage an Inertia deployment. The web application codebase is in `./daemon/web/`.
-
-To run a local instance of Inertia Web:
-
-```bash
-$> make web-deps   # install npm dependencies
-$> make web-run    # run local instance of application                    
-```
-
-Make sure you have a local daemon set up for this web app to work - see the previous section for more details.
+the CLI.
 
 ### Documentation
 
