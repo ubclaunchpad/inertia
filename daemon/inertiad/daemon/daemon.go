@@ -94,22 +94,12 @@ func (s *Server) Run(host, port string) error {
 	}()
 
 	// Set up endpoints
-	var (
-		webPrefix        = "/web/"
-		userDatabasePath = path.Join(s.state.DataDirectory, "users.db")
-	)
-	handler, err := auth.NewPermissionsHandler(
-		userDatabasePath, host, 120)
+	handler, err := auth.NewPermissionsHandler(path.Join(s.state.DataDirectory, "users.db"), host, 120)
 	if err != nil {
 		return err
 	}
 	defer handler.Close()
 	println("Permissions manager successfully created")
-
-	// Inertia web
-	handler.AttachPublicHandler(
-		webPrefix,
-		http.StripPrefix(webPrefix, http.FileServer(http.Dir("/daemon/inertia-web"))))
 
 	// GitHub webhook endpoint
 	handler.AttachPublicHandlerFunc("/webhook",

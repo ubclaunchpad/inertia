@@ -26,8 +26,6 @@ lint:
 	go test -run xxxx ./...
 	diff -u <(echo -n) <(gofmt -d -s `find . -type f -name '*.go' -not -path "./vendor/*"`)
 	diff -u <(echo -n) <(go run golang.org/x/lint/golint `go list ./... | grep -v /vendor/`)
-	(cd ./daemon/web; npm run lint)
-	(cd ./daemon/web; npm run sass-lint)
 
 ## clean: remove testenv, binaries, build directories, caches, and more
 .PHONY: clean
@@ -71,30 +69,6 @@ daemon:
 ## gen: rewrite all generated code (mocks, scripts, etc.)
 .PHONY: gen
 gen: scripts mocks
-
-##    ___
-##  * WEB
-##    ‾‾‾
-
-## web-deps: install Inertia Web dependencies. use PACKAGE to install specific package
-.PHONY: web-deps
-web-deps:
-	(cd ./daemon/web; npm install $(PACKAGE))
-
-## web-run: run local development instance of Inertia Web
-.PHONY: web-run
-web-run:
-	(cd ./daemon/web; npm start)
-
-## web-sandbox: run sandboxed development instance of Inertia Web
-.PHONY: web-run
-web-run-sandbox:
-	(cd ./daemon/web; npm start:sandbox)
-
-## web-build: build Inertia Web
-.PHONY: web-build
-web-build:
-	(cd ./daemon/web; npm install --production; npm run build)
 
 ##    _______
 ##  * TESTING
@@ -192,7 +166,6 @@ run-docs-api:
 .PHONY: prod-deps
 prod-deps:
 	go mod download
-	make web-deps
 
 ## dev-deps: install only development dependencies and tools
 .PHONY: dev-deps
