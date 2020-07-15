@@ -807,7 +807,7 @@ if it detects that containers with the given names die.
 > * [Daemon, API, and Builds](https://github.com/ubclaunchpad/inertia/wiki/Daemon,-API,-and-Builds)
 > * [Web App](https://github.com/ubclaunchpad/inertia/wiki/Web-App)
 > * [CI Pipeline](https://github.com/ubclaunchpad/inertia/wiki/CI-Pipeline)
-> * [Documentation](https://godoc.org/github.com/ubclaunchpad/inertia)
+> * [Documentation](https://pkg.go.dev/github.com/ubclaunchpad/inertia/)
 
 Check out our [GitHub repository](https://github.com/ubclaunchpad/inertia) and
 [Wiki](https://github.com/ubclaunchpad/inertia/wiki)!

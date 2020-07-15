@@ -23,7 +23,7 @@
   </a>
 
   <a href="https://pkg.go.dev/github.com/ubclaunchpad/inertia">
-    <img src="https://img.shields.io/badge/go.pkg.dev-reference-5272B4"
+    <img src="https://pkg.go.dev/badge/github.com/ubclaunchpad/inertia"
       alt="go.pkg.dev documentation available" />
   </a>
 
