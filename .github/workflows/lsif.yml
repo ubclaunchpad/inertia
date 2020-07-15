@@ -4,13 +4,10 @@ on:
 jobs:
   index:
     runs-on: ubuntu-latest
+    container: sourcegraph/lsif-go
     steps:
       - uses: actions/checkout@v1
-      - name: Generate LSIF Data
-        uses: sourcegraph/lsif-go-action@master
-        with:
-          verbose: "true"
+      - name: Generate LSIF data
+        run: lsif-go
       - name: Upload LSIF data
-        uses: sourcegraph/lsif-upload-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        run: src lsif upload -github-token=${{ secrets.GITHUB_TOKEN }}
