@@ -106,7 +106,7 @@ Note that if you install Inertia using these commands or any variation of `go in
 
 ## Project Overview
 
-[![GoDoc](https://godoc.org/github.com/ubclaunchpad/inertia?status.svg)](https://godoc.org/github.com/ubclaunchpad/inertia)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/ubclaunchpad/inertia)](https://pkg.go.dev/github.com/ubclaunchpad/inertia)
 
 The Inertia codebase is split up into several components - this section gives a quick introduction on how to work with each.
 

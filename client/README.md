@@ -1,6 +1,6 @@
 # Client
 
-[![GoDoc](https://godoc.org/github.com/ubclaunchpad/inertia?status.svg)](https://godoc.org/github.com/ubclaunchpad/inertia/client)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/ubclaunchpad/inertia)](https://pkg.go.dev/github.com/ubclaunchpad/inertia/client)
 
 This package contains Inertia's clientside interface to remote Inertia daemons. It can be imported for use if you don't like the CLI - for example:
 
