@@ -9,7 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Build and publish daemon:latest
+    - name: Build daemon
+      run: make daemon-release RELEASE=latest
+
+    - name: Publish to Docker Hub
       run: |
         docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_key }}
-        make daemon-release RELEASE=latest
+        docker push ubclaunchpad/inertia:latest
+    - name: Publish to GitHub Container Registry
+      run: |
+        echo ${{ secrets.GH_PACKAGES_TOKEN }} | docker login ghcr.io --username $GITHUB_ACTOR --password-stdin
+        docker tag ubclaunchpad/inertia:latest ghcr.io/ubclaunchpad/inertia:latest
+        docker push ghcr.io/ubclaunchpad/inertia:latest

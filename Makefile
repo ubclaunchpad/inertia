@@ -219,12 +219,11 @@ testenv-clean:
 install-tagged:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
 
-## daemon-release: build the daemon and push it to the UBC Launch Pad Docker Hub
+## daemon-release: build the daemon as ubclaunchpad/inertia:RELEASE
 .PHONY: daemon-release
 daemon-release:
 	docker build --build-arg INERTIA_VERSION=$(RELEASE) \
 		-t ubclaunchpad/inertia:$(RELEASE) .
-	docker push ubclaunchpad/inertia:$(RELEASE)
 
 ## cli-release: cross-compile Inertia CLI binaries for distribution
 .PHONY: cli-release
