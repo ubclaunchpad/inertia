@@ -20,6 +20,7 @@ test
 # Non-daemon source code
 client
 *_test.go
+contrib/npm
 
 # Dependencies
 bin
