@@ -87,7 +87,7 @@ brew install ubclaunchpad/tap/inertia
 > Node.js users can install the CLI using [npm](https://www.npmjs.com/get-npm): 
 
 ```shell
-npm install -g inertia-cli
+npm install -g @ubclaunchpad/inertia
 ```
 
 > Windows users can install the CLI using [Scoop](http://scoop.sh):
@@ -808,7 +808,7 @@ if it detects that containers with the given names die.
 > * [Daemon, API, and Builds](https://github.com/ubclaunchpad/inertia/wiki/Daemon,-API,-and-Builds)
 > * [Web App](https://github.com/ubclaunchpad/inertia/wiki/Web-App)
 > * [CI Pipeline](https://github.com/ubclaunchpad/inertia/wiki/CI-Pipeline)
-> * [Documentation](https://godoc.org/github.com/ubclaunchpad/inertia)
+> * [Documentation](https://pkg.go.dev/github.com/ubclaunchpad/inertia/)
 
 Check out our [GitHub repository](https://github.com/ubclaunchpad/inertia) and
 [Wiki](https://github.com/ubclaunchpad/inertia/wiki)!

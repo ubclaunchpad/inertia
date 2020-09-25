@@ -2,7 +2,6 @@
 
 # Specify platforms and release version
 PLATFORMS="linux/amd64 linux/386 darwin/amd64 windows/amd64 windows/386"
-RELEASE=$(git describe --tags)
 echo "Building release $RELEASE"
 
 # Build, tag and push Inertia Docker image

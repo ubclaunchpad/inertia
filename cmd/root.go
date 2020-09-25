@@ -21,7 +21,7 @@ func getVersion(version string) string {
 }
 
 // NewInertiaCmd is a new Inertia command
-func NewInertiaCmd(version, inertiaConfigPath string) *core.Cmd {
+func NewInertiaCmd(version, inertiaConfigPath string, validateConfig bool) *core.Cmd {
 	cobra.EnableCommandSorting = false
 
 	// instantiate top-level command
@@ -77,7 +77,7 @@ Global inertia configuration is stored in '%s'.
 	attachContribPlugins(root)
 
 	// attach configured remotes last
-	remotescmd.AttachRemotesCmds(root)
+	remotescmd.AttachRemotesCmds(root, validateConfig)
 
 	return root
 }
