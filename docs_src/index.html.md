@@ -168,6 +168,7 @@ a few project-wide settings stored here:
 
 Parameter | Description
 --------- | -----------
+`version` | Minimum version of Inertia CLI required by this configuration.
 `name`    | The name of the project you are deploying.
 `url`     | Your project source, typically your Git repository.
 
@@ -775,11 +776,6 @@ them automatically.
 
 ## Intermediary Containers
 
-<aside class="warning">
-This is an experimental solution to a problem we've run into - refer to
-<a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
-</aside>
-
 ```toml
 name = "my_project"
 # ...
@@ -790,6 +786,11 @@ name = "my_project"
     # ...
     intermediary_containers = [ "nginx" ]
 ```
+
+<aside class="warning">
+This is an experimental solution to a problem we've run into - refer to
+<a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
+</aside>
 
 You can declare "intermediary" containers used during builds that don't persist for the lifetime of
 your project - for example, containers that run tasks. This tells the Inertia daemon not to worry

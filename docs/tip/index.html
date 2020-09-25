@@ -472,6 +472,10 @@ a few project-wide settings stored here:</p>
 </tr>
 </thead><tbody>
 <tr>
+<td><code>version</code></td>
+<td>Minimum version of Inertia CLI required by this configuration.</td>
+</tr>
+<tr>
 <td><code>name</code></td>
 <td>The name of the project you are deploying.</td>
 </tr>
@@ -1051,12 +1055,7 @@ repository&#39;s webhook deliveries as well.</p>
 <p>Just place your SSL certificate and key on your remote in <code>~/.inertia/ssl</code> as
 <code>daemon.cert</code> and <code>daemon.key</code> respectively, and the Inertia daemon will use
 them automatically.</p>
-<h2 id='intermediary-containers'>Intermediary Containers</h2>
-<aside class="warning">
-This is an experimental solution to a problem we've run into - refer to
-<a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
-</aside>
-<pre class="highlight toml tab-toml"><code><span class="py">name</span> <span class="p">=</span> <span class="s">"my_project"</span>
+<h2 id='intermediary-containers'>Intermediary Containers</h2><pre class="highlight toml tab-toml"><code><span class="py">name</span> <span class="p">=</span> <span class="s">"my_project"</span>
 <span class="c"># ...</span>
 
 <span class="nn">[[profile]]</span>
@@ -1065,6 +1064,11 @@ This is an experimental solution to a problem we've run into - refer to
     <span class="c"># ...</span>
     <span class="py">intermediary_containers</span> <span class="p">=</span> <span class="p">[</span> <span class="s">"nginx"</span> <span class="p">]</span>
 </code></pre>
+<aside class="warning">
+This is an experimental solution to a problem we've run into - refer to
+<a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
+</aside>
+
 <p>You can declare &quot;intermediary&quot; containers used during builds that don&#39;t persist for the lifetime of
 your project - for example, containers that run tasks. This tells the Inertia daemon not to worry
 if it detects that containers with the given names die.</p>

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  version: 0.6.0
+  version: 0.6.1
   title: Inertia Daemon API Reference
   description: |
 
@@ -246,6 +246,8 @@ paths:
                             example: [ /docker-compose, /server ]
                           build_active:
                             type: boolean
+                          new_version_available:
+                            type: string
         4XX,5XX:
           $ref: '#/components/responses/Error'
 
