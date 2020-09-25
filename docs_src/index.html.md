@@ -776,11 +776,6 @@ them automatically.
 
 ## Intermediary Containers
 
-<aside class="warning">
-This is an experimental solution to a problem we've run into - refer to
-<a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
-</aside>
-
 ```toml
 name = "my_project"
 # ...
@@ -791,6 +786,11 @@ name = "my_project"
     # ...
     intermediary_containers = [ "nginx" ]
 ```
+
+<aside class="warning">
+This is an experimental solution to a problem we've run into - refer to
+<a href="https://github.com/ubclaunchpad/inertia/issues/607">#607</a> for more details.
+</aside>
 
 You can declare "intermediary" containers used during builds that don't persist for the lifetime of
 your project - for example, containers that run tasks. This tells the Inertia daemon not to worry
