@@ -5,6 +5,7 @@ VPS_OS = ubuntu
 RELEASE = test
 CLI_VERSION_VAR = main.Version
 PROJECTNAME=inertia
+DAEMON_IMAGE=ubclaunchpad/inertiad
 
 .PHONY: help
 help: Makefile
@@ -61,6 +62,7 @@ install:
 daemon:
 	mkdir -p ./images
 	rm -f ./images/inertia-daemon-image
+	# TODO - replace ubclaunchpad/inertia with DAEMON_IMAGE
 	docker build --build-arg INERTIA_VERSION=$(TAG) \
 		-t ubclaunchpad/inertia:test .
 	docker save -o ./images/inertia-daemon-image ubclaunchpad/inertia:test
@@ -219,11 +221,11 @@ testenv-clean:
 install-tagged:
 	go install -ldflags "-X $(CLI_VERSION_VAR)=$(TAG)"
 
-## daemon-release: build the daemon as ubclaunchpad/inertia:RELEASE
+## daemon-release: build the daemon as ubclaunchpad/inertiad:RELEASE
 .PHONY: daemon-release
 daemon-release:
 	docker build --build-arg INERTIA_VERSION=$(RELEASE) \
-		-t ubclaunchpad/inertia:$(RELEASE) .
+		-t $(DAEMON_IMAGE):$(RELEASE) .
 
 ## cli-release: cross-compile Inertia CLI binaries for distribution
 .PHONY: cli-release

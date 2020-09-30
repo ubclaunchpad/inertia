@@ -15,9 +15,11 @@ jobs:
     - name: Publish to Docker Hub
       run: |
         docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_key }}
+        # Publish as legacy name
+        docker tag ubclaunchpad/inertiad:latest ubclaunchpad/inertia:latest
         docker push ubclaunchpad/inertia:latest
     - name: Publish to GitHub Container Registry
       run: |
         echo ${{ secrets.GH_PACKAGES_TOKEN }} | docker login ghcr.io --username $GITHUB_ACTOR --password-stdin
-        docker tag ubclaunchpad/inertia:latest ghcr.io/ubclaunchpad/inertia:latest
-        docker push ghcr.io/ubclaunchpad/inertia:latest
+        docker tag ubclaunchpad/inertiad:latest ghcr.io/ubclaunchpad/inertiad:latest
+        docker push ghcr.io/ubclaunchpad/inertiad:latest

@@ -19,12 +19,14 @@ jobs:
     - name: Publish to Docker Hub
       run: |
         docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_key }}
+        # Publish as legacy name
+        docker tag ubclaunchpad/inertiad:$(git describe --tags) ubclaunchpad/inertia:$(git describe --tags)
         docker push ubclaunchpad/inertia:$(git describe --tags)
     - name: Publish to GitHub Container Registry
       run: |
         echo ${{ secrets.GH_PACKAGES_TOKEN }} | docker login ghcr.io --username $GITHUB_ACTOR --password-stdin
-        docker tag ubclaunchpad/inertia:$(git describe --tags) ghcr.io/ubclaunchpad/inertia:$(git describe --tags)
-        docker push ghcr.io/ubclaunchpad/inertia:$(git describe --tags)
+        docker tag ubclaunchpad/inertiad:$(git describe --tags) ghcr.io/ubclaunchpad/inertiad:$(git describe --tags)
+        docker push ghcr.io/ubclaunchpad/inertiad:$(git describe --tags)
     - name: Publish CLI
       uses: softprops/action-gh-release@v1
       with:
