@@ -55,7 +55,6 @@ func (p *Project) ValidateVersion(v string) (string, error) {
 	upperAllowed.Minor++
 	upperAllowed.Patch = 0
 	constraints := fmt.Sprintf(">=%s <%s", project, upperAllowed)
-	print(constraints)
 	if semver.MustParseRange(constraints)(current) {
 		return "", nil
 	}
