@@ -84,12 +84,6 @@ Note that <code>/tip/...</code> documentation includes unreleased features and c
 brew install ubclaunchpad/tap/inertia
 ```
 
-> Node.js users can install the CLI using [npm](https://www.npmjs.com/get-npm): 
-
-```shell
-npm install -g @ubclaunchpad/inertia
-```
-
 > Windows users can install the CLI using [Scoop](http://scoop.sh):
 
 ```shell
@@ -98,7 +92,7 @@ scoop install inertia
 ```
 
 The Inertia command line interface (CLI) can be installed from a few package
-managers such as npm, Homebrew and Scoop. For other platforms, you can 
+managers such as Homebrew or Scoop. For other platforms, you can
 [download the appropriate binary from the Releases page](https://github.com/ubclaunchpad/inertia/releases).
 
 You can also build Inertia from source, though this requires Golang to be

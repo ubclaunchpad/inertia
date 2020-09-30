@@ -17,15 +17,13 @@ Make a new PR and merge when everything is ready:
 
 * [ ] generate release documentation (`make docs`)
 * [ ] generate new tip documentation (`make docs-tip`)
-* [ ] update `contrib/npm` version
 
 Update distribution streams:
 
 * [ ] draft changelog
 * [ ] make release and let builds run
-* [ ] update https://github.com/ubclaunchpad/homebrew-tap
-* [ ] update https://github.com/ubclaunchpad/scoop-bucket
-* [ ] run `npm publish` in `contrib/npm`
+* [ ] update [`ubclaunchpad/homebrew-tap`](https://github.com/`ubclaunchpad/homebrew-tap)
+* [ ] update [`ubclaunchpad/scoop-bucket`](https://github.com/ubclaunchpad/scoop-bucket)
 
 ---
 
@@ -35,7 +33,7 @@ Update distribution streams:
 
 TODO
 
-## ⚠️ Breaking Changes 
+## ⚠️ Breaking Changes
 
 * TODO
 
