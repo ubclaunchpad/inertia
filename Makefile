@@ -62,10 +62,11 @@ install:
 daemon:
 	mkdir -p ./images
 	rm -f ./images/inertia-daemon-image
+	# TODO - replace ubclaunchpad/inertia with DAEMON_IMAGE
 	docker build --build-arg INERTIA_VERSION=$(TAG) \
-		-t $(DAEMON_IMAGE):test .
-	docker save -o ./images/inertia-daemon-image $(DAEMON_IMAGE):test
-	docker rmi $(DAEMON_IMAGE):test
+		-t ubclaunchpad/inertia:test .
+	docker save -o ./images/inertia-daemon-image ubclaunchpad/inertia:test
+	docker rmi ubclaunchpad/inertia:test
 
 ## gen: rewrite all generated code (mocks, scripts, etc.)
 .PHONY: gen
