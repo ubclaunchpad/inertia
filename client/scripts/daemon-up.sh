@@ -11,7 +11,7 @@ DAEMON_PORT="%[2]s"
 HOST_ADDRESS="%[3]s"
 WEBHOOK_SECRET="%[4]s"
 
-# Inertia image details.
+# Inertia image details. TODO: replace with ghcr.io/ubclaunchpad/inertiad
 DAEMON_NAME=inertia-daemon
 IMAGE=ubclaunchpad/inertia:$DAEMON_RELEASE
 
