@@ -43,6 +43,9 @@ func TestBootstrap_Integration(t *testing.T) {
 	}
 
 	var c = newIntegrationClient()
+	if os.Getenv("INTEGRATION_PULL_IMAGE") == "true" {
+		c.Remote.Version = "latest"
+	}
 	c.WithDebug(true) // makes troubleshooting tests easier
 	require.NoError(t, Bootstrap(c, Options{Out: os.Stdout}), "bootstrap failed")
 
@@ -52,5 +55,5 @@ func TestBootstrap_Integration(t *testing.T) {
 	// Check if daemon is online following bootstrap
 	status, err := c.Status(context.Background())
 	require.NoError(t, err, "status check of bootstrapped daemon failed")
-	assert.Equal(t, "test", status.InertiaVersion)
+	assert.Equal(t, c.Remote.Version, status.InertiaVersion)
 }
