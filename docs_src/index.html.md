@@ -603,8 +603,8 @@ Inertia daemon releases are tagged as follows:
 - `latest` denotes the newest builds on `master`.
 - `canary` denotes experimental builds used for testing and development - do not use this.
 
-You can see the list of available tags on
-[Docker Hub](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags).
+You can see the list of available tags in the
+[GitHub Container Registry](https://github.com/orgs/ubclaunchpad/packages/container/package/inertiad).
 
 # Advanced Usage
 
