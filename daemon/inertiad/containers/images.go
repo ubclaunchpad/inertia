@@ -11,7 +11,7 @@ import (
 	"github.com/blang/semver"
 )
 
-type imageTagDescription struct {
+type dockerHubImageTagDescription struct {
 	Creator int `json:"creator"`
 	ID      int `json:"id"`
 	Images  []struct {
@@ -31,21 +31,31 @@ type imageTagDescription struct {
 	V2                  bool      `json:"v2"`
 }
 
-type imageTagsResult struct {
-	Count    int                   `json:"count"`
-	Next     string                `json:"next"`
-	Previous interface{}           `json:"previous"`
-	Results  []imageTagDescription `json:"results"`
+type dockerHubImageTagsResult struct {
+	Count    int                            `json:"count"`
+	Next     string                         `json:"next"`
+	Previous interface{}                    `json:"previous"`
+	Results  []dockerHubImageTagDescription `json:"results"`
 }
 
-func (res *imageTagsResult) getLatest(min *semver.Version) (*semver.Version, error) {
+func (res *dockerHubImageTagsResult) getVersions() versions {
+	versions := []string{}
+	for _, tag := range res.Results {
+		versions = append(versions, tag.Name)
+	}
+	return versions
+}
+
+type versions []string
+
+func (v versions) getLatest(min *semver.Version) (*semver.Version, error) {
 	var latest semver.Version
 	if min != nil {
 		latest = *min
 	}
 
-	for _, tag := range res.Results {
-		v, err := semver.Parse(strings.TrimPrefix(tag.Name, "v"))
+	for _, version := range v {
+		v, err := semver.Parse(strings.TrimPrefix(version, "v"))
 		// ignore invalid tags - these are probably previews
 		if err == nil {
 			if v.Pre == nil && v.GT(latest) {
@@ -61,21 +71,52 @@ func (res *imageTagsResult) getLatest(min *semver.Version) (*semver.Version, err
 	return &latest, latest.Validate()
 }
 
+// Image describes a Docker image. An empty registry defaults to DockerHub
+type Image struct {
+	Registry   string
+	Repository string
+}
+
 // GetLatestImageTag retrieves the most recent valid semver tag of an image
-func GetLatestImageTag(ctx context.Context, image string, min *semver.Version) (*semver.Version, error) {
-	target := fmt.Sprintf("https://registry.hub.docker.com/v2/repositories/%s/tags/", image)
-	req, err := http.NewRequest("GET", target, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, err
-	}
-	var res imageTagsResult
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil, err
+func GetLatestImageTag(ctx context.Context, image Image, min *semver.Version) (*semver.Version, error) {
+	var v versions
+	switch image.Registry {
+	case "ghcr.io":
+		// ghcr.io has no REST API yet, so we just check releases
+		target := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", image.Repository)
+		req, err := http.NewRequest("GET", target, nil)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+		if err != nil {
+			return nil, err
+		}
+		var res struct {
+			TagName string `json:"tag_name"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+			return nil, err
+		}
+		v = []string{res.TagName}
+
+	default:
+		// assume dockerhub
+		target := fmt.Sprintf("https://registry.hub.docker.com/v2/repositories/%s/tags/", image.Repository)
+		req, err := http.NewRequest("GET", target, nil)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+		if err != nil {
+			return nil, err
+		}
+		var res dockerHubImageTagsResult
+		if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+			return nil, err
+		}
+		v = res.getVersions()
 	}
 
-	return res.getLatest(min)
+	return v.getLatest(min)
 }

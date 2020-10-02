@@ -57,8 +57,10 @@ jobs:
     needs: [ test-core ]
     strategy:
       matrix:
-        case: [ debian-9.3, centos-7, amazon-1, ubuntu-16.04, ubuntu-18.04 ]
+        case: [ debian-9.3, centos-7, amazon-1, ubuntu-16.04, ubuntu-18.04, pull-image ]
         include:
+        # These test cases verify that the inertia daemon built from this commit can
+        # start correctly on various emulated platforms.
         - case: debian-9.3
           os_name: debian
           os_version: 9.3
@@ -74,26 +76,35 @@ jobs:
         - case: ubuntu-18.04
           os_name: ubuntu
           os_version: 18.04
+        # This test case verifies that we pull and run published images correctly.
+        - case: pull-image
+          os_name: ubuntu
+          os_version: 18.04
+          pull_image: true
       fail-fast: false
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
       with: { go-version: '1.15' }
-    - name: Start mock VPS (${{ matrix.case }})
+    - name: Start mock VPS (${{ matrix.os_name }} ${{ matrix.os_version }})
       run: |
         make testenv \
           VPS_OS=${{ matrix.os_name }} \
           VPS_VERSION=${{ matrix.os_version }} \
           SSH_PORT=69
     - name: Pull daemon image
+      if: ${{ ! matrix.pull_image }}
       uses: actions/download-artifact@v1
       with:
         name: inertia-daemon-image
         path: images/
     - name: Set up daemon image
+      if: ${{ ! matrix.pull_image }}
       run: make testdaemon-scp
     - name: Run bootstrap test
-      run: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
+      run: go test ./client/bootstrap -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
+      env:
+        INTEGRATION_PULL_IMAGE: ${{ matrix.pull_image }}
     - name: Upload code coverage
       run: bash <(curl -s https://codecov.io/bash)
       env:

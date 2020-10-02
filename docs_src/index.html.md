@@ -20,7 +20,7 @@ search: false
 ✈️ *Effortless, self-hosted continuous deployment for small teams and projects*
 
 [![](https://img.shields.io/github/release/ubclaunchpad/inertia.svg)](https://github.com/ubclaunchpad/inertia/releases/latest)
-[![](https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed)](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general)
+[![](https://img.shields.io/github/downloads/ubclaunchpad/inertia/total)](#getting-started)
 [![](https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social)](https://github.com/ubclaunchpad/inertia)
 
 <script src="https://hypothes.is/embed.js" async></script>
@@ -603,8 +603,8 @@ Inertia daemon releases are tagged as follows:
 - `latest` denotes the newest builds on `master`.
 - `canary` denotes experimental builds used for testing and development - do not use this.
 
-You can see the list of available tags on
-[Docker Hub](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/tags).
+You can see the list of available tags in the
+[GitHub Container Registry](https://github.com/orgs/ubclaunchpad/packages/container/package/inertiad).
 
 # Advanced Usage
 

@@ -8,7 +8,7 @@ and control your deployed application.
 Even though it is built as command line application, inertiad not intended for
 direct use - the Inertia daemon is supposed to be deployed as a Docker container,
 the image for which can be found here:
-https://hub.docker.com/r/ubclaunchpad/inertia/
+https://github.com/orgs/ubclaunchpad/packages/container/package/inertiad
 
 When used, however, it offers two main commands:
 

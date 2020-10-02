@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/.static/inertia-with-name.png" width="25%" alt="Inertia"/>
+  <img src="https://github.com/ubclaunchpad/inertia/blob/master/.static/inertia-with-name.png?raw=true" width="25%" alt="Inertia"/>
 </p>
 
 <p align="center">
@@ -27,9 +27,9 @@
       alt="go.pkg.dev documentation available" />
   </a>
 
-  <a href="https://hub.docker.com/r/ubclaunchpad/inertia">
-    <img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed"
-      alt="inertiad image">
+  <a href="https://inertia.ubclaunchpad.com/#getting-started">
+    <img src="https://img.shields.io/github/downloads/ubclaunchpad/inertia/total"
+      alt="inertia CLI downloads">
   </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases/latest">
@@ -50,7 +50,7 @@
 <br>
 
 <p align="center">
-    <img src="/.static/inertia-init.png" width="35%" />
+    <img src="https://github.com/ubclaunchpad/inertia/blob/master/.static/inertia-init.png?raw=true" width="35%" />
 </p>
 
 <br>

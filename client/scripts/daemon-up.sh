@@ -11,9 +11,9 @@ DAEMON_PORT="%[2]s"
 HOST_ADDRESS="%[3]s"
 WEBHOOK_SECRET="%[4]s"
 
-# Inertia image details. TODO: replace with ghcr.io/ubclaunchpad/inertiad
+# Inertia image details.
 DAEMON_NAME=inertia-daemon
-IMAGE=ubclaunchpad/inertia:$DAEMON_RELEASE
+IMAGE=ghcr.io/ubclaunchpad/inertiad:$DAEMON_RELEASE
 
 # It doesn't matter what port the daemon runs on in the container
 # as long as it is mapped to the correct DAEMON_PORT.
