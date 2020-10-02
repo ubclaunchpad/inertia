@@ -64,9 +64,9 @@ daemon:
 	rm -f ./images/inertia-daemon-image
 	# TODO - replace ubclaunchpad/inertia with DAEMON_IMAGE
 	docker build --build-arg INERTIA_VERSION=$(TAG) \
-		-t ubclaunchpad/inertia:test .
-	docker save -o ./images/inertia-daemon-image ubclaunchpad/inertia:test
-	docker rmi ubclaunchpad/inertia:test
+		-t ghcr.io/ubclaunchpad/inertiad:test .
+	docker save -o ./images/inertia-daemon-image ghcr.io/ubclaunchpad/inertiad:test
+	docker rmi ghcr.io/ubclaunchpad/inertiad:test
 
 ## gen: rewrite all generated code (mocks, scripts, etc.)
 .PHONY: gen

@@ -20,7 +20,7 @@ search: false
 ✈️ *Effortless, self-hosted continuous deployment for small teams and projects*
 
 [![](https://img.shields.io/github/release/ubclaunchpad/inertia.svg)](https://github.com/ubclaunchpad/inertia/releases/latest)
-[![](https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed)](https://cloud.docker.com/u/ubclaunchpad/repository/docker/ubclaunchpad/inertia/general)
+[![](https://img.shields.io/github/downloads/ubclaunchpad/inertia/total)](#getting-started)
 [![](https://img.shields.io/github/stars/ubclaunchpad/inertia.svg?style=social)](https://github.com/ubclaunchpad/inertia)
 
 <script src="https://hypothes.is/embed.js" async></script>

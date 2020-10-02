@@ -27,9 +27,9 @@
       alt="go.pkg.dev documentation available" />
   </a>
 
-  <a href="https://hub.docker.com/r/ubclaunchpad/inertia">
-    <img src="https://img.shields.io/docker/pulls/ubclaunchpad/inertia.svg?colorB=0db7ed"
-      alt="inertiad image">
+  <a href="https://inertia.ubclaunchpad.com/#getting-started">
+    <img src="https://img.shields.io/github/downloads/ubclaunchpad/inertia/total"
+      alt="inertia CLI downloads">
   </a>
 
   <a href="https://github.com/ubclaunchpad/inertia/releases/latest">

@@ -11,4 +11,4 @@ sudo docker run --rm \
     -e SSH_KNOWN_HOSTS='/app/host/.ssh/known_hosts' \
     -e HOME=$HOME \
     --entrypoint=inertiad \
-    ubclaunchpad/inertia:$RELEASE token
+    ghcr.io/ubclaunchpad/inertiad:$RELEASE token
