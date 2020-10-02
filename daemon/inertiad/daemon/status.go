@@ -68,7 +68,11 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 
 	// check for new version
 	current, _ := semver.Parse(strings.TrimPrefix(s.version, "v"))
-	latest, tagCheckErr := containers.GetLatestImageTag(r.Context(), "ubclaunchpad/inertia", &current)
+	latest, tagCheckErr := containers.GetLatestImageTag(r.Context(), containers.Image{
+		Registry: "ghcr.io",
+		// check inertia repository instead of inertiad, since ghcr.io has no REST API yet
+		Repository: "ubclaunchpad/inertia",
+	}, &current)
 	if tagCheckErr == nil {
 		verStr := fmt.Sprintf("v%s", latest.String())
 		status.NewVersionAvailable = &verStr

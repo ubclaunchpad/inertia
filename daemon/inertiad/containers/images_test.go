@@ -21,39 +21,39 @@ func Test_imageTagsResult_getLatest(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		fields  imageTagsResult
+		fields  dockerHubImageTagsResult
 		args    args
 		want    *semver.Version
 		wantErr bool
 	}{
 		{"should get latest if no min is provided",
-			imageTagsResult{Results: []imageTagDescription{
+			dockerHubImageTagsResult{Results: []dockerHubImageTagDescription{
 				{Name: "v0.7.0"}, {Name: "v0.6.1"}, {Name: "v0.6.0-rc1"}, {Name: "v0.6.0-preview1"},
 			}},
 			args{},
 			semverMustParsePtr("0.7.0"),
 			false},
 		{"should get latest if min is provided",
-			imageTagsResult{Results: []imageTagDescription{
+			dockerHubImageTagsResult{Results: []dockerHubImageTagDescription{
 				{Name: "v0.7.0"}, {Name: "v0.6.1"}, {Name: "v0.6.0-rc1"}, {Name: "v0.6.0-preview1"},
 			}},
 			args{&testVersion},
 			semverMustParsePtr("0.7.0"),
 			false},
 		{"should return same version if nothing newer is available",
-			imageTagsResult{Results: []imageTagDescription{
+			dockerHubImageTagsResult{Results: []dockerHubImageTagDescription{
 				{Name: "v0.6.0-rc1"}, {Name: "v0.6.0-preview1"},
 			}},
 			args{&testVersion},
 			&testVersion,
 			false},
 		{"error if no new is available",
-			imageTagsResult{Results: []imageTagDescription{}},
+			dockerHubImageTagsResult{Results: []dockerHubImageTagDescription{}},
 			args{},
 			nil,
 			true},
 		{"should NOT return release candidates",
-			imageTagsResult{Results: []imageTagDescription{
+			dockerHubImageTagsResult{Results: []dockerHubImageTagDescription{
 				{Name: "v0.6.0-rc1"}, {Name: "v0.5.0"},
 			}},
 			args{},
@@ -62,7 +62,7 @@ func Test_imageTagsResult_getLatest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.fields.getLatest(tt.args.min)
+			got, err := tt.fields.getVersions().getLatest(tt.args.min)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("%+v", got)
 				t.Errorf("imageTagsResult.getLatest() error = %v, wantErr %v", err, tt.wantErr)
@@ -77,12 +77,17 @@ func Test_imageTagsResult_getLatest(t *testing.T) {
 
 func TestGetLatestImageTag(t *testing.T) {
 	v := semver.MustParse("0.5.0")
-	latest, err := GetLatestImageTag(context.Background(), "ubclaunchpad/inertia", &v)
+	latest, err := GetLatestImageTag(context.Background(), Image{
+		Registry:   "ghcr.io",
+		Repository: "ubclaunchpad/inertia",
+	}, &v)
 	assert.NoError(t, err)
 	assert.NotNil(t, latest)
 	assert.True(t, latest.GT(v))
 
-	latest, err = GetLatestImageTag(context.Background(), "docker/compose", nil)
+	latest, err = GetLatestImageTag(context.Background(), Image{
+		Repository: "docker/compose",
+	}, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, latest)
 }

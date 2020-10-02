@@ -25,7 +25,9 @@ type Config struct {
 // New creates a new daemon configuration from environment values
 func New() *Config {
 	dcVersionString := "latest"
-	dcVersion, err := containers.GetLatestImageTag(context.TODO(), "docker/compose", nil)
+	dcVersion, err := containers.GetLatestImageTag(context.TODO(), containers.Image{
+		Repository: "docker/compose",
+	}, nil)
 	if err == nil {
 		dcVersionString = dcVersion.String()
 	}
