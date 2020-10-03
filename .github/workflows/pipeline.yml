@@ -34,6 +34,7 @@ jobs:
         name: inertia-daemon-image
         path: images/inertia-daemon-image
 
+  # On Ubuntu, we run all our tests, except for the bootstrap tests
   test-core:
     runs-on: ubuntu-latest
     needs: [ build, lint ]
@@ -47,11 +48,30 @@ jobs:
       run: docker run --name testcontainer -d nginx
     - name: Execute tests
       run: go test -race -tags no_bootstrap -coverprofile=coverage.txt ./...
-    - name: Upload code coverage
-      run: bash <(curl -s https://codecov.io/bash)
-      env:
-        CODECOV_TOKEN: ${{ secrets.codecov_token }}
+    - uses: codecov/codecov-action@v1
+      with:
+        file: coverage.txt
+        flags: test-core
+        fail_ci_if_error: true
+  
+  # On Windows, we run a subset of unit tests (primarily for the CLI)
+  test-windows:
+    runs-on: windows-latest
+    needs: [ build, lint ]
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-go@v1
+      with: { go-version: '1.15' }
+    - name: Execute tests
+      run: |
+        go test -short -coverprofile="coverage.txt" ./cfg ./client ./cmd ./common ./local ./provision
+    - uses: codecov/codecov-action@v1
+      with:
+        file: coverage.txt
+        flags: test-windows
+        fail_ci_if_error: true
 
+  # Test Inertia daemon initialization in a variety of scenarios
   test-bootstrap:
     runs-on: ubuntu-latest
     needs: [ test-core ]
@@ -105,7 +125,8 @@ jobs:
       run: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
       env:
         INTEGRATION_PULL_IMAGE: ${{ matrix.pull_image }}
-    - name: Upload code coverage
-      run: bash <(curl -s https://codecov.io/bash)
-      env:
-        CODECOV_TOKEN: ${{ secrets.codecov_token }}
+    - uses: codecov/codecov-action@v1
+      with:
+        file: coverage.txt
+        flags: test-bootstrap-${{ matrix.case }}
+        fail_ci_if_error: true

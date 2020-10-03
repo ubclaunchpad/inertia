@@ -9,3 +9,9 @@ coverage:
     project:
       default:
         threshold: 3
+codecov:
+  notify:
+    # wait for upload from test-core, test-windows, and one of test-bootstrap
+    after_n_builds: 3
+comment:
+  after_n_builds: 3
