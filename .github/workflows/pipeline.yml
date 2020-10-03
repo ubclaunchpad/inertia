@@ -48,10 +48,11 @@ jobs:
       run: docker run --name testcontainer -d nginx
     - name: Execute tests
       run: go test -race -tags no_bootstrap -coverprofile=coverage.txt ./...
-    - name: Upload code coverage
-      run: bash <(curl -s https://codecov.io/bash)
-      env:
-        CODECOV_TOKEN: ${{ secrets.codecov_token }}
+    - uses: codecov/codecov-action@v1
+      with:
+        file: coverage.txt
+        flags: test-core
+        fail_ci_if_error: true
   
   # On Windows, we run a subset of unit tests (primarily for the CLI)
   test-windows:
@@ -64,10 +65,11 @@ jobs:
     - name: Execute tests
       run: |
         go test -short -coverprofile="coverage.txt" ./cfg ./client ./cmd ./common ./local ./provision
-    - name: Upload code coverage
-      run: bash <(curl -s https://codecov.io/bash)
-      env:
-        CODECOV_TOKEN: ${{ secrets.codecov_token }}
+    - uses: codecov/codecov-action@v1
+      with:
+        file: coverage.txt
+        flags: test-windows
+        fail_ci_if_error: true
 
   # Test Inertia daemon initialization in a variety of scenarios
   test-bootstrap:
@@ -123,7 +125,8 @@ jobs:
       run: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
       env:
         INTEGRATION_PULL_IMAGE: ${{ matrix.pull_image }}
-    - name: Upload code coverage
-      run: bash <(curl -s https://codecov.io/bash)
-      env:
-        CODECOV_TOKEN: ${{ secrets.codecov_token }}
+    - uses: codecov/codecov-action@v1
+      with:
+        file: coverage.txt
+        flags: test-bootstrap-${{ matrix.case }}
+        fail_ci_if_error: true
