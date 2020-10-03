@@ -102,7 +102,7 @@ jobs:
       if: ${{ ! matrix.pull_image }}
       run: make testdaemon-scp
     - name: Run bootstrap test
-      run: go test ./client/bootstrap -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
+      run: go test ./... -v -run 'TestBootstrap_Integration' -coverprofile=coverage.txt -ldflags "-X github.com/ubclaunchpad/inertia/cmd.Version=test"
       env:
         INTEGRATION_PULL_IMAGE: ${{ matrix.pull_image }}
     - name: Upload code coverage
