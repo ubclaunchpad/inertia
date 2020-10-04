@@ -9,7 +9,7 @@ import (
 
 // AuthFailedErr attaches the daemon key in the error message
 func AuthFailedErr(path ...string) error {
-	keyLoc := crypto.DaemonGithubKeyLocation
+	keyLoc := crypto.DaemonInertiaKeyLocation
 	if len(path) > 0 {
 		keyLoc = path[0]
 	}

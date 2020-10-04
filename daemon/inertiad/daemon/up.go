@@ -39,7 +39,7 @@ func (s *Server) upHandler(w http.ResponseWriter, r *http.Request) {
 		BuildFilePath:          upReq.BuildFilePath,
 		RemoteURL:              gitOpts.RemoteURL,
 		Branch:                 gitOpts.Branch,
-		PemFilePath:            crypto.DaemonGithubKeyLocation,
+		PemFilePath:            crypto.DaemonInertiaKeyLocation,
 		IntermediaryContainers: upReq.IntermediaryContainers,
 		SlackNotificationURL:   upReq.SlackNotificationURL,
 	}

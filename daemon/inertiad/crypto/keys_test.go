@@ -13,9 +13,9 @@ func TestGetAPIPrivateKey(t *testing.T) {
 	assert.Contains(t, string(key.([]byte)), "user: git, name: ssh-public-keys")
 }
 
-func TestGetGithubKey(t *testing.T) {
+func TestGetInertiaKey(t *testing.T) {
 	identityFile, err := os.Open(TestInertiaKeyPath)
 	assert.NoError(t, err)
-	_, err = GetGithubKey(identityFile)
+	_, err = GetInertiaKey(identityFile)
 	assert.NoError(t, err)
 }
