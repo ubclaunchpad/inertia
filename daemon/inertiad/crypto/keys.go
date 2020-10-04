@@ -10,13 +10,13 @@ import (
 )
 
 var (
-	// DaemonGithubKeyLocation is the default path of the generated deploy key
-	DaemonGithubKeyLocation = os.Getenv("INERTIA_GH_KEY_PATH") //"/app/host/.ssh/id_rsa_inertia_deploy"
+	// DaemonInertiaKeyLocation is the default path of the generated deploy key
+	DaemonInertiaKeyLocation = os.Getenv("INERTIA_GH_KEY_PATH") //"/app/host/.ssh/id_rsa_inertia_deploy"
 )
 
 // GetAPIPrivateKey returns the private RSA key to authenticate HTTP
 // requests sent to the daemon. For now, we simply use the GitHub
-// deploy key. Retrieves from default DaemonGithubKeyLocation.
+// deploy key. Retrieves from default DaemonInertiaKeyLocation.
 func GetAPIPrivateKey(t *jwt.Token) (interface{}, error) {
 	return getAPIPrivateKeyFromPath(t, os.Getenv("INERTIA_GH_KEY_PATH"))
 }
@@ -26,16 +26,16 @@ func getAPIPrivateKeyFromPath(t *jwt.Token, path string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	key, err := GetGithubKey(pemFile)
+	key, err := GetInertiaKey(pemFile)
 	if err != nil {
 		return nil, err
 	}
 	return []byte(key.String()), nil
 }
 
-// GetGithubKey returns an ssh.AuthMethod from the given io.Reader
+// GetInertiaKey returns an ssh.AuthMethod from the given io.Reader
 // for use with the go-git library
-func GetGithubKey(pemFile io.Reader) (ssh.AuthMethod, error) {
+func GetInertiaKey(pemFile io.Reader) (ssh.AuthMethod, error) {
 	bytes, err := ioutil.ReadAll(pemFile)
 	if err != nil {
 		return nil, err

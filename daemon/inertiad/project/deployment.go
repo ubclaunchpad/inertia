@@ -130,7 +130,7 @@ func (d *Deployment) Initialize(cfg DeploymentConfig, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	d.auth, err = crypto.GetGithubKey(pemFile)
+	d.auth, err = crypto.GetInertiaKey(pemFile)
 	if err != nil {
 		return err
 	}
