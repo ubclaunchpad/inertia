@@ -44,7 +44,7 @@ func AttachRemotesCmds(root *core.Cmd, validateConfig bool) {
 					msg += out.C(":warning: warning when validating project configuration against CLI version: %s\n",
 						out.YE, out.BO).With(warn).String()
 				}
-				msg += out.C("for details on the latest Inertia releases, please see https://github.com/ubclaunchpad/inertia/releases/latest\n",
+				msg += out.C("for details on the latest Inertia releases, please see https://github.com/ubclaunchpad/inertia/releases/latest",
 					out.BO).String()
 			}
 			out.Println(msg)
@@ -79,7 +79,6 @@ func AttachRemotesCmds(root *core.Cmd, validateConfig bool) {
 // HostCmd is the parent class for a subcommand for a configured remote host
 type HostCmd struct {
 	*cobra.Command
-	remote  string
 	project *cfg.Project
 
 	client *client.Client
@@ -258,8 +257,8 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 			if err != nil {
 				out.Fatal(err)
 			}
-			out.Printf("daemon on remote '%s' is online at %s\n",
-				root.remote, host)
+			out.Printf("daemon on remote %q is online at %s\n",
+				root.getRemote().Name, host)
 			out.Println(out.FormatStatus("robert", status))
 		},
 	}
@@ -386,7 +385,8 @@ func (root *HostCmd) attachSendFileCmd() {
 				out.Fatal(err.Error())
 			}
 
-			out.Println("File", args[0], "has been copied to", remotePath, "on remote", root.remote)
+			out.Printf("File %q has been copied to %q on remote %q\n",
+				args[0], remotePath, root.getRemote().Name)
 		},
 	}
 	sendFile.Flags().StringP(flagDest, "d", "", "path relative from project root to send file to")
@@ -438,7 +438,7 @@ allowing you to assign a different Inertia project to this remote.`,
 			if err := root.client.Reset(root.ctx); err != nil {
 				out.Fatal(err)
 			}
-			out.Printf("project on remote '%s' successfully reset\n", root.remote)
+			out.Printf("project on remote %q successfully reset\n", root.getRemote().Name)
 		},
 	}
 	root.AddCommand(reset)
