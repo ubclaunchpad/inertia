@@ -3,11 +3,13 @@ package remotecmd
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
 
+	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
@@ -65,6 +67,7 @@ For example:
 	remote.attachListCmd()
 	remote.attachRemoveCmd()
 	remote.attachUpgradeCmd()
+	remote.attachImportCmd()
 	remote.attachResetCmd()
 	remote.attachConfigPathCmd()
 
@@ -448,6 +451,43 @@ func (root *RemoteCmd) attachSetCmd() {
 		},
 	}
 	root.AddCommand(set)
+}
+
+func (root *RemoteCmd) attachImportCmd() {
+	var importCmd = &cobra.Command{
+		Use:   "import [file] [remote]",
+		Short: "Import remote from a remote configuration file",
+		Long: `Import remote from another remote configuration file into your global
+remotes configuration.`,
+		Args: cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			var (
+				importPath = args[0]
+				remoteName = args[1]
+			)
+
+			// load provided config
+			raw, err := ioutil.ReadFile(importPath)
+			if err != nil {
+				out.Fatal(err)
+			}
+			var remotes cfg.Remotes
+			if err = toml.Unmarshal(raw, &remotes); err != nil {
+				out.Fatalf("failed to read configuration file %q: %v", importPath, err)
+			}
+			remoteCfg, found := remotes.GetRemote(remoteName)
+			if !found {
+				out.Fatalf("no remote %q found in %q", remoteName, importPath)
+			}
+
+			// import provided config
+			if err := local.SaveRemote(remoteCfg); err != nil {
+				out.Fatal(err)
+			}
+			out.Printf("imported remote %q from %q\n", remoteName, importPath)
+		},
+	}
+	root.AddCommand(importCmd)
 }
 
 func (root *RemoteCmd) attachResetCmd() {
