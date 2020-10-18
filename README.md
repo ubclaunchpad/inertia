@@ -12,11 +12,6 @@
       alt="Build Status" />
   </a>
 
-  <a href="https://ci.appveyor.com/project/ubclaunchpad/inertia">
-    <img src="https://ci.appveyor.com/api/projects/status/2fll6p9677bujb7q/branch/master?svg=true"
-      alt="Appveyor Build Status" />
-  </a>
-
   <a href="https://goreportcard.com/report/github.com/ubclaunchpad/inertia">
     <img src="https://goreportcard.com/badge/github.com/ubclaunchpad/inertia"
       alt="Clean code" />
