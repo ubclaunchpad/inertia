@@ -27,7 +27,7 @@ func FormatStatus(remoteName string, s *api.DeploymentStatus) string {
 	// been instantiated on the remote yet
 	var statusString = branchStatus + commitStatus + commitMessage + buildTypeStatus
 	if s.Branch == "" && s.CommitHash == "" && s.CommitMessage == "" {
-		return statusString + msgNoDeployment
+		statusString += msgNoDeployment
 	}
 
 	// If build container is active, that means that a build
