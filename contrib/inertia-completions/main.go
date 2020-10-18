@@ -1,3 +1,16 @@
+/*
+
+Inertia-completions is a tool for generating Inertia shell completions.
+
+For example, to generate completions for zsh:
+
+    inertia contrib completions ${fpath[1]} -f zsh
+
+Learn more about `inertia/contrib` tools:
+
+	inertia contrib -h
+
+*/
 package main
 
 import (
