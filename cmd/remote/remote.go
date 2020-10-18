@@ -293,7 +293,7 @@ func (root *RemoteCmd) attachLoginCmd() {
 			if err := local.SaveRemote(remoteCfg); err != nil {
 				out.Fatal(err)
 			}
-			out.Printf(":rocket: Successfully logged in to remote '%s' (%s) as user '%s'!",
+			out.Printf(":rocket: Successfully logged in to remote '%s' (%s) as user '%s'!\n",
 				remoteName, addr, username)
 			out.Printf("Try running 'inertia %s status' to check on your remote.", remoteName)
 		},
