@@ -386,11 +386,9 @@ func (c *Client) ListEnv(ctx context.Context) ([]string, error) {
 func (c *Client) do(req *http.Request) (*http.Response, error) {
 	resp, err := buildHTTPSClient(c.Remote.Daemon.VerifySSL).Do(req)
 	if err != nil {
+		// special error handling
 		if strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "refused") {
 			return resp, errors.New("daemon on remote appears offline or inaccessible")
-		}
-		if strings.Contains(err.Error(), api.MsgTokenExpired) {
-			return resp, errors.New("token expired - try running 'inertia [remote] user login' to reauthenticate")
 		}
 	}
 	return resp, err
