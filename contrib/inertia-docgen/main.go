@@ -4,7 +4,7 @@ Inertia-docgen is a tool for generating Inertia command documentation.
 
 For example, to generate a man-page reference:
 
-    inertia contrib docgen --ouput $PATH --format man
+	inertia contrib docgen --ouput $PATH --format man
 
 Generated Markdown documentation is currently published to
 https://inertia.ubclaunchpad.com/cli

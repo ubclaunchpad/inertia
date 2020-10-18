@@ -6,17 +6,17 @@ have an identifier.
 Why does this exist? Because, for example, you can't have
 `Set(v string, ids ...Identifier)` and:
 
-    profiles := []*Profile{ ... }
-    identity.Set(v, profiles...)
+	profiles := []*Profile{ ... }
+	identity.Set(v, profiles...)
 
 With the above code, you get:
 
-    cannot use p.Profiles (type []*Profile) as type []identity.Identifier in argument to identity.Set
+	cannot use p.Profiles (type []*Profile) as type []identity.Identifier in argument to identity.Set
 
 Even though this works:
 
-    profiles := []*Profile{ ... }
-    identity.Set(v, profiles[0], profiles[1])
+	profiles := []*Profile{ ... }
+	identity.Set(v, profiles[0], profiles[1])
 
 tl;dr generics please? :(
 
