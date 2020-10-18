@@ -17,7 +17,7 @@ func TestFormatStatus(t *testing.T) {
 		BuildContainerActive: true,
 		Containers:           []string{"wow"},
 	})
-	assert.Contains(t, out, "inertia daemon 9000")
+	assert.Contains(t, out, "9000")
 	assert.Contains(t, out, "Active containers")
 
 	t.Run("with build active", func(t *testing.T) {
@@ -29,7 +29,7 @@ func TestFormatStatus(t *testing.T) {
 			BuildContainerActive: true,
 			Containers:           make([]string, 0),
 		})
-		assert.Contains(t, out, "inertia daemon 9000")
+		assert.Contains(t, out, "9000")
 		assert.Contains(t, out, msgBuildInProgress)
 	})
 
@@ -44,7 +44,7 @@ func TestFormatStatus(t *testing.T) {
 			Containers:           []string{"wow"},
 			NewVersionAvailable:  &version,
 		})
-		assert.Contains(t, out, "inertia daemon 9000")
+		assert.Contains(t, out, "9000")
 		assert.Contains(t, out, version)
 		assert.Contains(t, out, "robert")
 	})
@@ -59,7 +59,7 @@ func TestFormatStatusNoDeployment(t *testing.T) {
 		BuildContainerActive: false,
 		Containers:           make([]string, 0),
 	})
-	assert.Contains(t, out, "inertia daemon 9000")
+	assert.Contains(t, out, "9000")
 	assert.Contains(t, out, msgNoDeployment)
 }
 

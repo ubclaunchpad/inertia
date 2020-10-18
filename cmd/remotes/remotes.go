@@ -37,14 +37,14 @@ func AttachRemotesCmds(root *core.Cmd, validateConfig bool) {
 			warn, err := project.ValidateVersion(root.Version)
 			if err != nil || warn != "" {
 				if err != nil {
-					msg += out.C(":warning: error when validating project configuration against CLI version: %s\n",
+					msg += out.C(":warning: Error when validating project configuration against CLI version: %s\n",
 						out.RD, out.BO).With(err).String()
 				}
 				if warn != "" {
-					msg += out.C(":warning: warning when validating project configuration against CLI version: %s\n",
+					msg += out.C(":warning: Warning when validating project configuration against CLI version: %s\n",
 						out.YE, out.BO).With(warn).String()
 				}
-				msg += out.C("for details on the latest Inertia releases, please see https://github.com/ubclaunchpad/inertia/releases/latest",
+				msg += out.C("For details on the latest Inertia releases, please see https://github.com/ubclaunchpad/inertia/releases/latest",
 					out.BO).String()
 			}
 			out.Println(msg)
@@ -144,8 +144,8 @@ Run 'inertia [remote] init' to gather this information.`,
 				out.Fatal("no project found in current directory - try 'inertia init'")
 			}
 			if host.getRemote().Version != inertia.Version {
-				out.Printf("[WARNING] Remote configuration version '%s' does not match your Inertia CLI version '%s'\n",
-					host.getRemote().Version, inertia.Version)
+				out.Println(out.C(":warning: Remote configuration version %q does not match your Inertia CLI version %q", out.CY).
+					With(host.getRemote().Version, inertia.Version))
 			}
 			var debug, _ = cmd.Flags().GetBool(flagDebug)
 			host.client.WithDebug(debug)
@@ -253,13 +253,14 @@ Requires the Inertia daemon to be active on your remote - do this by running 'in
 				out.Fatal(err)
 			}
 
-			host, err := root.getRemote().DaemonAddr()
+			remote := root.getRemote()
+			host, err := remote.DaemonAddr()
 			if err != nil {
 				out.Fatal(err)
 			}
-			out.Printf("daemon on remote %q is online at %s\n",
-				root.getRemote().Name, host)
-			out.Println(out.FormatStatus("robert", status))
+			out.Printf("Inertia daemon on remote %q (%s) is online\n",
+				remote.Name, host)
+			out.Print(out.FormatStatus(remote.Name, status))
 		},
 	}
 	root.AddCommand(stat)

@@ -16,7 +16,7 @@ const (
 // FormatStatus prints the given deployment status
 func FormatStatus(remoteName string, s *api.DeploymentStatus) string {
 	var (
-		inertiaStatus   = "inertia daemon " + s.InertiaVersion + "\n"
+		inertiaStatus   = "Inertia daemon " + s.InertiaVersion + "\n"
 		branchStatus    = " - Branch:     " + s.Branch + "\n"
 		commitStatus    = " - Commit:     " + s.CommitHash + "\n"
 		commitMessage   = " - Message:    " + s.CommitMessage + "\n"
@@ -25,7 +25,7 @@ func FormatStatus(remoteName string, s *api.DeploymentStatus) string {
 
 	// If no branch/commit, then it's likely the deployment has not
 	// been instantiated on the remote yet
-	var statusString = inertiaStatus + branchStatus + commitStatus + commitMessage + buildTypeStatus
+	var statusString = branchStatus + commitStatus + commitMessage + buildTypeStatus
 	if s.Branch == "" && s.CommitHash == "" && s.CommitMessage == "" {
 		return statusString + msgNoDeployment
 	}
@@ -34,18 +34,21 @@ func FormatStatus(remoteName string, s *api.DeploymentStatus) string {
 	// attempt was made but only the daemon and docker-compose
 	// are active, indicating a build failure or build-in-progress
 	if len(s.Containers) == 0 {
-		errorString := statusString + msgNoContainersActive
+		errorString := msgNoContainersActive
 		if s.BuildContainerActive {
-			errorString = statusString + msgBuildInProgress
+			errorString = msgBuildInProgress
 		}
-		return errorString
+		statusString += errorString
+	} else {
+		activeContainers := "Active containers:\n"
+		for _, container := range s.Containers {
+			activeContainers += " - " + container + "\n"
+		}
+		statusString += activeContainers
 	}
 
-	activeContainers := "Active containers:\n"
-	for _, container := range s.Containers {
-		activeContainers += " - " + container + "\n"
-	}
-	statusString += activeContainers
+	// Report version information
+	statusString += inertiaStatus
 
 	// report new version if one is available
 	if s.NewVersionAvailable != nil && *s.NewVersionAvailable != "" {

@@ -25,19 +25,19 @@ type Project struct {
 
 // ValidateVersion checks if the given version is compatible with the project version. It errors if
 // the incompatibility is strict, otherwise returns an error message.
-func (p *Project) ValidateVersion(v string) (string, error) {
+func (p *Project) ValidateVersion(v string) (warning string, err error) {
 	// check special cases
 	switch v {
 	case "":
-		return "", errors.New("no version provided")
+		return "", errors.New("no CLI version provided")
 	case "test":
-		return "version is a test build", nil
+		return "CLI version is a test build", nil
 	}
 	switch p.InertiaMinVersion {
 	case "":
-		return "no inertia version configured in project", nil
+		return "no version configured in project", nil
 	case "test":
-		return "", errors.New("inertia project version is a test build - please change it to a release version")
+		return "", errors.New("project version is a test build - please change it to a release version")
 	}
 
 	// note that inertia versions start with v, unlike the semver spec
@@ -47,7 +47,7 @@ func (p *Project) ValidateVersion(v string) (string, error) {
 	}
 	current, err := semver.Parse(strings.TrimLeft(v, "v"))
 	if err != nil {
-		return "", fmt.Errorf("version is invalid: %w", err)
+		return "", fmt.Errorf("CLI version is invalid: %w", err)
 	}
 
 	// generate allowed range and check
@@ -58,7 +58,7 @@ func (p *Project) ValidateVersion(v string) (string, error) {
 	if semver.MustParseRange(constraints)(current) {
 		return "", nil
 	}
-	return "", fmt.Errorf("version '%s' does not satisfy project inertia version constraints '%s'",
+	return "", fmt.Errorf("project version %q does not satisfy CLI version constraints %q",
 		current, constraints)
 }
 

@@ -95,7 +95,7 @@ This ensures that your project ports are properly exposed and externally accessi
 				stringProjectPorts, _ = cmd.Flags().GetStringArray(flagPorts)
 			)
 			if stringProjectPorts == nil || len(stringProjectPorts) == 0 {
-				out.Print(out.C("[WARNING] no project ports provided - this means that no ports"+
+				out.Print(out.C(":warning: No project ports provided - this means that no ports"+
 					"will be exposed on your ec2 host. Use the '--ports' flag to set"+
 					"ports that you want to be accessible.\n", out.RD))
 			}
