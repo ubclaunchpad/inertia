@@ -150,7 +150,7 @@ func TestProject_ValidateVersion(t *testing.T) {
 		{"no version configured",
 			&Project{InertiaMinVersion: ""},
 			args{"v0.5.0"},
-			"no inertia version",
+			"no version configured in project",
 			false},
 		{"not in range",
 			&Project{InertiaMinVersion: "v0.5.3"},
