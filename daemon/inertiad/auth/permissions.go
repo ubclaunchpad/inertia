@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -154,10 +155,11 @@ func (h *PermissionsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check if token is valid
 	claims, err := h.sessions.GetSession(r)
 	if err != nil {
-		switch err {
-		case errSessionNotFound:
+		if errors.Is(err, errSessionNotFound) {
 			render.Render(w, r, res.ErrUnauthorized(err.Error()))
-		default:
+		} else if errors.Is(err, crypto.ErrTokenExpired) {
+			render.Render(w, r, res.ErrUnauthorized(api.MsgTokenExpired))
+		} else {
 			render.Render(w, r, res.ErrUnauthorized("failed to read token", "error", err))
 		}
 		return

@@ -219,10 +219,7 @@ func (c *Client) Down(ctx context.Context) error {
 // Status lists the currently active containers on the remote VPS instance
 func (c *Client) Status(ctx context.Context) (*api.DeploymentStatus, error) {
 	resp, err := c.get(ctx, "/status", nil)
-	if err != nil &&
-		(strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "refused")) {
-		return nil, errors.New("daemon on remote appears offline or inaccessible")
-	} else if err != nil {
+	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %s", err.Error())
 	}
 
@@ -386,6 +383,19 @@ func (c *Client) ListEnv(ctx context.Context) ([]string, error) {
 	return variables, base.Error()
 }
 
+func (c *Client) do(req *http.Request) (*http.Response, error) {
+	resp, err := buildHTTPSClient(c.Remote.Daemon.VerifySSL).Do(req)
+	if err != nil {
+		if strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "refused") {
+			return resp, errors.New("daemon on remote appears offline or inaccessible")
+		}
+		if strings.Contains(err.Error(), api.MsgTokenExpired) {
+			return resp, errors.New("token expired - try running 'inertia [remote] user login' to reauthenticate")
+		}
+	}
+	return resp, err
+}
+
 // Sends a GET request. "queries" contains query string arguments.
 func (c *Client) get(
 	ctx context.Context,
@@ -402,8 +412,7 @@ func (c *Client) get(
 	if queries != nil {
 		encodeQuery(req.URL, queries)
 	}
-
-	return buildHTTPSClient(c.Remote.Daemon.VerifySSL).Do(req)
+	return c.do(req)
 }
 
 func (c *Client) post(
@@ -428,8 +437,7 @@ func (c *Client) post(
 	if err != nil {
 		return nil, err
 	}
-
-	return buildHTTPSClient(c.Remote.Daemon.VerifySSL).Do(req)
+	return c.do(req)
 }
 
 func (c *Client) buildRequest(

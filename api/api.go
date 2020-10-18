@@ -4,6 +4,9 @@ const (
 	// MsgDaemonOK is the OK response upon successfully reaching daemon
 	MsgDaemonOK = "I'm a little Webhook, short and stout!"
 
+	// MsgTokenExpired indicates authentication method is expired
+	MsgTokenExpired = "token expired"
+
 	// Container is a constant used in HTTP GET query strings
 	Container = "container"
 
