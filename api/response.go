@@ -72,11 +72,11 @@ func (b *BaseResponse) Error() error {
 	if 100 <= b.HTTPStatusCode && b.HTTPStatusCode < 400 {
 		return nil
 	}
+	if strings.Contains(b.Message, MsgTokenExpired) || strings.Contains(b.Err, MsgTokenExpired) {
+		return errors.New("token expired - try running 'inertia [remote] user login' to reauthenticate")
+	}
 	if b.Err == "" {
 		return fmt.Errorf("[error %d] %s", b.HTTPStatusCode, b.Message)
-	}
-	if strings.Contains(b.Err, MsgTokenExpired) {
-		return errors.New("token expired - try running 'inertia [remote] user login' to reauthenticate")
 	}
 	return fmt.Errorf("[error %d] %s: (%s)", b.HTTPStatusCode, b.Message, b.Err)
 }
