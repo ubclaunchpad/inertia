@@ -51,6 +51,8 @@ func TestBuilder_Build(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
+	var containerStartWaitDuration = 20 * time.Second
+
 	type args struct {
 		buildType     string
 		buildFilePath string
@@ -122,7 +124,7 @@ func TestBuilder_Build(t *testing.T) {
 			assert.NoError(t, err)
 
 			// Arbitrary wait for containers to start
-			time.Sleep(10 * time.Second)
+			time.Sleep(containerStartWaitDuration)
 
 			// Check for containers
 			containers, err := cli.ContainerList(
