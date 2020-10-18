@@ -245,7 +245,7 @@ func (root *RemoteCmd) attachLoginCmd() {
 				Name:     remoteName,
 				Version:  root.Version,
 				IP:       addr,
-				Daemon:   &cfg.Daemon{Port: port},
+				Daemon:   &cfg.Daemon{Port: port, User: username},
 				Profiles: make(map[string]string),
 			}
 

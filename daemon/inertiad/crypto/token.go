@@ -7,12 +7,12 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-const (
-	// TokenInvalidErrorMsg says that the token is invalid
-	TokenInvalidErrorMsg = "token invalid"
+var (
+	// ErrInvalidToken says that the token is invalid
+	ErrInvalidToken = errors.New("token invalid")
 
-	// TokenExpiredErrorMsg says that the token is expired
-	TokenExpiredErrorMsg = "token expired"
+	// ErrTokenExpired says that the token is expired
+	ErrTokenExpired = errors.New("token expired")
 )
 
 // TokenClaims represents a JWT token's claims
@@ -30,7 +30,7 @@ func (t *TokenClaims) Valid() error {
 	}
 
 	if !t.Expiry.After(time.Now()) {
-		return errors.New(TokenExpiredErrorMsg)
+		return ErrTokenExpired
 	}
 	return nil
 }
@@ -57,14 +57,14 @@ func ValidateToken(tokenString string, lookup jwt.Keyfunc) (*TokenClaims, error)
 
 	// Verify signing algorithm and token
 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok || !token.Valid {
-		return nil, errors.New(TokenInvalidErrorMsg)
+		return nil, ErrInvalidToken
 	}
 
 	// Verify the claims and token.
 	if claim, ok := token.Claims.(*TokenClaims); ok {
 		return claim, nil
 	}
-	return nil, errors.New(TokenInvalidErrorMsg)
+	return nil, ErrInvalidToken
 }
 
 // GenerateMasterToken creates a "master" JSON Web Token (JWT) for a client to use

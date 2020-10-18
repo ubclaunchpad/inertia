@@ -27,6 +27,7 @@ type SSH struct {
 type Daemon struct {
 	Port          string `toml:"port"`
 	Token         string `toml:"token"`
+	User          string `toml:"user,omitempty"`
 	WebHookSecret string `toml:"webhook-secret"`
 	VerifySSL     bool   `toml:"verify-ssl"`
 }

@@ -110,11 +110,27 @@ remotely.`,
 func (root *UserCmd) attachLoginCmd() {
 	var login = &cobra.Command{
 		Use:   "login [user]",
-		Short: "Authenticate with the remote",
-		Long:  "Retreives an access token from the remote using your credentials.",
-		Args:  cobra.ExactArgs(1),
+		Short: "Authenticate with the remote as a user",
+		Long: `Retreives an access token from the remote using your credentials.
+	
+If this remote was previously authenticated against as a user, then the user
+argument is optional.`,
+		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			var username = args[0]
+			remote := root.host.getRemote()
+
+			// retrieve credentials
+			var username string
+			if len(args) > 0 {
+				username = args[0]
+			} else {
+				daemonUser := remote.Daemon.User
+				if daemonUser != "" {
+					username = daemonUser
+				} else {
+					out.Fatal("username is required, but none is provided or configured")
+				}
+			}
 			out.Print("Password: ")
 			pwBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 			out.Println()
@@ -122,6 +138,7 @@ func (root *UserCmd) attachLoginCmd() {
 				out.Fatal(err)
 			}
 
+			// authenticate against remote
 			var totp, _ = cmd.Flags().GetString("totp")
 			var req = client.AuthenticateRequest{
 				User:     username,
@@ -132,7 +149,6 @@ func (root *UserCmd) attachLoginCmd() {
 			if err != nil && err != client.ErrNeedTotp {
 				out.Fatal(err)
 			}
-
 			if err == client.ErrNeedTotp {
 				// a TOTP is required
 				out.Print("Authentication code (or backup code): ")
@@ -148,8 +164,10 @@ func (root *UserCmd) attachLoginCmd() {
 				}
 			}
 
-			root.host.getRemote().Daemon.Token = token
-			if err = local.SaveRemote(root.host.getRemote()); err != nil {
+			// update remote configuration
+			remote.Daemon.Token = token
+			remote.Daemon.User = username
+			if err = local.SaveRemote(remote); err != nil {
 				out.Fatal(err)
 			}
 
