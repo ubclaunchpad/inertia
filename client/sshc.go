@@ -30,7 +30,7 @@ func (s *SSHClient) GetRunner() runner.SSHSession { return s.ssh }
 
 // DaemonUp brings the daemon up on the remote instance.
 func (s *SSHClient) DaemonUp() error {
-	scriptBytes, err := internal.ReadFile("client/scripts/daemon-up.sh")
+	scriptBytes, err := internal.ReadFile("scripts/daemon-up.sh")
 	if err != nil {
 		return fmt.Errorf("could not initialize script: %w", err)
 	}
@@ -41,7 +41,7 @@ func (s *SSHClient) DaemonUp() error {
 
 // DaemonDown brings the daemon down on the remote instance
 func (s *SSHClient) DaemonDown() error {
-	scriptBytes, err := internal.ReadFile("client/scripts/daemon-down.sh")
+	scriptBytes, err := internal.ReadFile("scripts/daemon-down.sh")
 	if err != nil {
 		return fmt.Errorf("could not initialize script: %w", err)
 	}
@@ -58,7 +58,7 @@ func (s *SSHClient) DaemonDown() error {
 
 // InstallDocker installs docker on a remote vps.
 func (s *SSHClient) InstallDocker() error {
-	installDockerSh, err := internal.ReadFile("client/scripts/docker.sh")
+	installDockerSh, err := internal.ReadFile("scripts/docker.sh")
 	if err != nil {
 		return fmt.Errorf("could not initialize script: %w", err)
 	}
@@ -79,7 +79,7 @@ func (s *SSHClient) GenerateKeys() (string, error) {
 		return "", errors.New("client not configured for SSH access")
 	}
 
-	scriptBytes, err := internal.ReadFile("client/scripts/keygen.sh")
+	scriptBytes, err := internal.ReadFile("scripts/keygen.sh")
 	if err != nil {
 		return "", fmt.Errorf("could not initialize script: %w", err)
 	}
@@ -97,7 +97,7 @@ func (s *SSHClient) GenerateKeys() (string, error) {
 
 // AssignAPIToken generates an API token and assigns it to client.Remote
 func (s *SSHClient) AssignAPIToken() error {
-	scriptBytes, err := internal.ReadFile("client/scripts/token.sh")
+	scriptBytes, err := internal.ReadFile("scripts/token.sh")
 	if err != nil {
 		return fmt.Errorf("could not initialize script: %w", err)
 	}
@@ -116,7 +116,7 @@ func (s *SSHClient) AssignAPIToken() error {
 
 // UninstallInertia removes the inertia/ directory on the remote instance
 func (s *SSHClient) UninstallInertia() error {
-	scriptBytes, err := internal.ReadFile("client/scripts/inertia-down.sh")
+	scriptBytes, err := internal.ReadFile("scripts/inertia-down.sh")
 	if err != nil {
 		return fmt.Errorf("could not initialize script: %w", err)
 	}

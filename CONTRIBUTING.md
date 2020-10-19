@@ -125,16 +125,16 @@ This code should only include the CLI user interface and code used to manage loc
 
 The Inertia client package manages all clientside functionality. The client codebase is in `./client/`.
 
-To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary - instead, we use [fileb0x](https://github.com/UnnoTed/fileb0x) to compile shell scripts into our Go executables. If you make changes to the bootstrapping shell scripts in `client/scripts/`, compile them by running:
+To bootstrap servers, some bash scripting is often involved, but we'd like to avoid shipping bash scripts with our go binary - instead, we use [fileb0x](https://github.com/UnnoTed/fileb0x) to compile shell scripts into our Go executables. If you make changes to the bootstrapping shell scripts in [`client/scripts/`](./client/scripts), compile them by running:
 
 ```bash
 $> make scripts
 ```
 
-Then use your asset!
+Then use your asset! Note that you must remove the `client/` part of the path:
 
 ```go
-shellScriptData, err := ReadFile("client/scripts/myshellscript.sh")
+shellScriptData, err := ReadFile("scripts/myshellscript.sh")
 if err != nil {
   return errors.New("No asset with that name")
 }
