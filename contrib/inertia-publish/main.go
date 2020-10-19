@@ -79,7 +79,10 @@ func (c *channelConfig) Publish(version, outdir string, renderedTemplate []byte,
 	repoPath := filepath.Join(outdir, c.Repository)
 	os.RemoveAll(repoPath)
 	clone := newCommand(outdir, "git", "clone",
-		fmt.Sprintf("git@github.com:%s.git", c.Repository),
+		// "Personal access tokens can only be used for HTTPS Git operations.""
+		// https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token#using-a-token-on-the-command-line
+		fmt.Sprintf("https://github.com/%s.git", c.Repository),
+		// clone into subdirectory
 		c.Repository)
 	if err := clone.Run(); err != nil {
 		return err
