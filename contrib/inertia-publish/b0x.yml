@@ -1,11 +1,10 @@
-# all folders and files are relative to the path 
-# where fileb0x was run at!
+# all folders and files are relative to the path where fileb0x is run
 
 # package
-pkg: internal
+pkg: templates
 
 # destination
-dest: "./client/internal"
+dest: "./templates"
 
 # gofmt
 fmt: true
@@ -22,4 +21,4 @@ custom:
   - files: 
     # everything inside the folder
     # type: array of strings
-    - "./client/scripts/"
+    - "./templates/"

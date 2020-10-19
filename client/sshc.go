@@ -13,6 +13,8 @@ import (
 	"github.com/ubclaunchpad/inertia/client/runner"
 )
 
+//go:generate go run github.com/UnnoTed/fileb0x b0x.yml
+
 // SSHClient implements Inertia's SSH commands
 type SSHClient struct {
 	om    sync.Mutex

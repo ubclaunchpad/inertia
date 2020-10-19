@@ -4,6 +4,7 @@
 *.so
 *.dylib
 /bin
+/dist
 
 # Inertia binaries
 /inertia.*
