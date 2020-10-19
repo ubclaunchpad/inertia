@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/blang/semver"
 	"github.com/gorilla/websocket"
 
 	"github.com/ubclaunchpad/inertia/api"
@@ -22,6 +23,9 @@ import (
 	"github.com/ubclaunchpad/inertia/client/runner"
 	"github.com/ubclaunchpad/inertia/common"
 )
+
+// MinDaemonVersion is the minimum inertiad version supported by this library
+var MinDaemonVersion = semver.Version{Major: 0, Minor: 6, Patch: 2}
 
 // Client manages a deployment
 type Client struct {
@@ -42,20 +46,28 @@ type Options struct {
 }
 
 // NewClient sets up a client to communicate to the daemon at the given remote
-func NewClient(remote *cfg.Remote, opts Options) *Client {
+func NewClient(remote *cfg.Remote, opts Options) (*Client, error) {
 	if opts.Out == nil {
 		opts.Out = common.DevNull{}
 	}
 
 	if remote.Version == "" {
 		remote.Version = "latest"
+	} else if remote.Version != "test" && remote.Version != "latest" {
+		daemonVersion, err := semver.Parse(strings.TrimLeft(remote.Version, "v"))
+		if err != nil {
+			return nil, fmt.Errorf("daemon version is invalid: %w", err)
+		}
+		if daemonVersion.LT(MinDaemonVersion) {
+			return nil, fmt.Errorf("daemon version <v0.7.0 is not supported by this version of the Inertia client")
+		}
 	}
 
 	return &Client{
 		out:    opts.Out,
 		Remote: remote,
 		ssh:    runner.NewSSHRunner(remote.IP, remote.SSH, opts.SSH),
-	}
+	}, nil
 }
 
 // WithWriter sets the given io.Writer as the client's default output

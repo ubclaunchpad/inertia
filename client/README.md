@@ -17,7 +17,7 @@ import (
 
 func main() {
 	// set up a client to your remote
-	var inertia = client.NewClient(
+	inertia, _ := client.NewClient(
 		&cfg.Remote{
 			Version: "v0.6.0",
 			Name:    "gcloud",

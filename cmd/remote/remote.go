@@ -258,9 +258,11 @@ func (root *RemoteCmd) attachLoginCmd() {
 			}
 
 			// set up client
-			var c = client.
-				NewClient(remoteCfg, client.Options{Out: os.Stdout}).
-				GetUserClient()
+			c, err := client.NewClient(remoteCfg, client.Options{Out: os.Stdout})
+			if err != nil {
+				out.Fatal(err.Error())
+			}
+			users := c.GetUserClient()
 			ctx, cancel := context.WithCancel(context.Background())
 			input.CatchSigterm(cancel)
 
@@ -271,7 +273,7 @@ func (root *RemoteCmd) attachLoginCmd() {
 				Password: string(pwBytes),
 				TOTP:     totp,
 			}
-			token, err := c.Authenticate(ctx, req)
+			token, err := users.Authenticate(ctx, req)
 			if err != nil && err != client.ErrNeedTotp {
 				out.Fatal(err)
 			}
@@ -285,7 +287,7 @@ func (root *RemoteCmd) attachLoginCmd() {
 				}
 				// retry with TOTP
 				req.TOTP = string(totpBytes)
-				token, err = c.Authenticate(ctx, req)
+				token, err = users.Authenticate(ctx, req)
 				if err != nil {
 					out.Fatal(err)
 				}
