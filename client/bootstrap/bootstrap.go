@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/fatih/color"
-	"github.com/kyokomi/emoji"
+	"github.com/kyokomi/emoji/v2"
 
 	"github.com/ubclaunchpad/inertia/client"
 	"github.com/ubclaunchpad/inertia/common"
