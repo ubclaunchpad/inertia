@@ -194,7 +194,7 @@ mocks:
 ## scripts: recompile script assets
 .PHONY: scripts
 scripts:
-	go run github.com/UnnoTed/fileb0x b0x.yml
+	go generate ./...
 
 ## testdaemon-scp: copy test daemon image from ./images to test VPS
 .PHONY: testdaemon-scp
@@ -226,11 +226,6 @@ install-tagged:
 daemon-release:
 	docker build --build-arg INERTIA_VERSION=$(RELEASE) \
 		-t $(DAEMON_IMAGE):$(RELEASE) .
-
-## cli-release: cross-compile Inertia CLI binaries for distribution
-.PHONY: cli-release
-cli-release:
-	bash .scripts/release.sh
 
 ##    ____________
 ##  * EXPERIMENTAL

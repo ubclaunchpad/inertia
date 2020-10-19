@@ -8,6 +8,7 @@ echo "Building release $RELEASE"
 make daemon-release RELEASE="$RELEASE"
 
 # Build Inertia Go binaries for specified platforms
-go run github.com/mitchellh/gox -output="inertia.$(git describe --tags).{{.OS}}.{{.Arch}}" \
+OUTDIR=${OUTDIR:-"dist"}
+go run github.com/mitchellh/gox -output="${OUTDIR}/inertia.$(git describe --tags).{{.OS}}.{{.Arch}}" \
     -ldflags "-w -s -X main.Version=$RELEASE" \
     -osarch="$PLATFORMS" \

@@ -20,16 +20,15 @@ Make a new PR and merge when everything is ready:
 
 Update distribution streams:
 
-* [ ] draft changelog
-* [ ] make release and let builds run
-* [ ] update [`ubclaunchpad/homebrew-tap`](https://github.com/`ubclaunchpad/homebrew-tap)
-* [ ] update [`ubclaunchpad/scoop-bucket`](https://github.com/ubclaunchpad/scoop-bucket)
+* [ ] draft changelog using template below
+* [ ] publish GitHub release with the changleog and let pipelines run
+* [ ] ensure release is live in [releases](https://github.com/ubclaunchpad/inertia/releases), [packages](https://github.com/orgs/ubclaunchpad/packages/container/package/inertiad), [`ubclaunchpad/homebrew-tap`](https://github.com/`ubclaunchpad/homebrew-tap), and [`ubclaunchpad/scoop-bucket`](https://github.com/ubclaunchpad/scoop-bucket)
 
 ---
 
 **Draft Changelog**
 
-![Publish (release)](https://github.com/ubclaunchpad/inertia/workflows/Publish%20(release)/badge.svg) ![Publish (latest)](https://github.com/ubclaunchpad/inertia/workflows/Publish%20(latest)/badge.svg)
+![Publish (release)](https://github.com/ubclaunchpad/inertia/workflows/Publish%20(release)/badge.svg) [![Docs](https://img.shields.io/website?label=docs&up_message=live&url=https%3A%2F%2Finertia.ubclaunchpad.com)](https://inertia.ubclaunchpad.com)
 
 TODO
 
@@ -41,7 +40,7 @@ TODO
 
 * TODO
 
-## ⚒ Fixes 
+## ⚒ Fixes
 
 * TODO
 

@@ -1,0 +1,5 @@
+{
+    "version": "{{ .Version }}",
+    "url": "https://github.com/ubclaunchpad/inertia/releases/download/{{ .Version }}/inertia.{{ .Version }}.windows.386.exe",
+    "bin": "inertia.exe"
+}

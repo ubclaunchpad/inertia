@@ -14,22 +14,34 @@ jobs:
     - name: Build release
       run: |
         docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_key }}
-        RELEASE=$(git describe --tags) bash .scripts/release.sh
+        RELEASE=$(git describe --tags) bash .scripts/build_release.sh
 
-    - name: Publish to Docker Hub
+    # Inertia daemon
+    - name: 'daemon: publish to Docker Hub'
       run: |
         docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_key }}
         # Publish as legacy name
         docker tag ubclaunchpad/inertiad:$(git describe --tags) ubclaunchpad/inertia:$(git describe --tags)
         docker push ubclaunchpad/inertia:$(git describe --tags)
-    - name: Publish to GitHub Container Registry
+    - name: 'daemon: publish to GitHub Container Registry'
       run: |
         echo ${{ secrets.GH_PACKAGES_TOKEN }} | docker login ghcr.io --username $GITHUB_ACTOR --password-stdin
         docker tag ubclaunchpad/inertiad:$(git describe --tags) ghcr.io/ubclaunchpad/inertiad:$(git describe --tags)
         docker push ghcr.io/ubclaunchpad/inertiad:$(git describe --tags)
-    - name: Publish CLI
+
+    # Inertia CLI
+    - name: 'cli: publish to GitHub'
       uses: softprops/action-gh-release@v1
       with:
         files: inertia.v*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: 'cli: publish to Homebrew and Scoop'
+      if: github.event.release.prerelease != true
+      run: |
+        git config --global user.email 'team+bot@ubclaunchpad.com'
+        git config --global user.name 'ubclaunchpad-bot'
+        git config --global user.password ${{ secrets.LP_GH_PUBLIC_REPO_TOKEN }}
+        go run ./contrib/inertia-publish $(git describe --tags) \
+          homebrew scoop \
+          --dryrun=false

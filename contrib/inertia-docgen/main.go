@@ -33,8 +33,8 @@ import (
 	remotescmd "github.com/ubclaunchpad/inertia/cmd/remotes"
 )
 
-// Version denotes the version of the binary
 var (
+	// Version denotes the version of the binary
 	Version string
 
 	mdReadmeTemplate = `# Inertia Command Reference
