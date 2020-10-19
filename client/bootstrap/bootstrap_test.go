@@ -30,11 +30,12 @@ func newIntegrationClient() *client.Client {
 			WebHookSecret: "sekret",
 		},
 	}
-	return client.NewClient(remote, client.Options{
+	c, _ := client.NewClient(remote, client.Options{
 		SSH:   runner.SSHOptions{},
 		Out:   os.Stdout,
 		Debug: true,
 	})
+	return c
 }
 
 func TestBootstrap_Integration(t *testing.T) {

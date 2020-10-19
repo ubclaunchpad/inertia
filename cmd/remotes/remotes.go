@@ -105,15 +105,19 @@ func AttachRemoteHostCmd(
 ) {
 	ctx, cancel := context.WithCancel(context.Background())
 	input.CatchSigterm(cancel)
+	c, err := client.NewClient(opts.RemoteCfg, client.Options{
+		SSH: runner.SSHOptions{
+			KeyPassphrase: os.Getenv(local.EnvSSHPassphrase),
+		},
+		Out: os.Stdout,
+	})
+	if err != nil {
+		out.Fatalf("error loading remote %s: %v", opts.RemoteCfg.Name, err)
+	}
 	var host = &HostCmd{
 		project: opts.ProjectCfg,
-		client: client.NewClient(opts.RemoteCfg, client.Options{
-			SSH: runner.SSHOptions{
-				KeyPassphrase: os.Getenv(local.EnvSSHPassphrase),
-			},
-			Out: os.Stdout,
-		}),
-		ctx: ctx,
+		client:  c,
+		ctx:     ctx,
 	}
 	host.Command = &cobra.Command{
 		Use: opts.RemoteCfg.Name + " [command]",
