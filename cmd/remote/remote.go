@@ -338,7 +338,6 @@ func (root *RemoteCmd) attachRemoveCmd() {
 		Example: "inertia remote rm staging",
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			out.Printf("removing remotes %s\n", strings.Join(args, ", "))
 			for _, r := range args {
 				if err := local.RemoveRemote(r); err != nil {
 					out.Fatal(err.Error())
