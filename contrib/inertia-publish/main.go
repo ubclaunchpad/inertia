@@ -57,6 +57,12 @@ func generateSums(buildDir string) map[string]string {
 	}); err != nil {
 		out.Fatal(err)
 	}
+
+	// if no sums were generated, some setup is likely missing
+	if len(sums) == 0 {
+		out.Fatal("no binary sums generated - was '.scripts/build_release.sh' run?")
+	}
+
 	return sums
 }
 
@@ -158,7 +164,9 @@ func main() {
 					out.Fatal(err)
 				}
 				var rendered bytes.Buffer
-				tmpl.Execute(&rendered, data)
+				if err := tmpl.Execute(&rendered, data); err != nil {
+					out.Fatal(err)
+				}
 				if err := conf.Publish(data.Version, outdir, rendered.Bytes(), dryRun); err != nil {
 					out.Fatal(err)
 				}
