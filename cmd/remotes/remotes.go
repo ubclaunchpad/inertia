@@ -112,7 +112,8 @@ func AttachRemoteHostCmd(
 		Out: os.Stdout,
 	})
 	if err != nil {
-		out.Fatalf("error loading remote %s: %v", opts.RemoteCfg.Name, err)
+		out.Printf(":warning: Failed to load remote %q: %v\n", opts.RemoteCfg.Name, err)
+		return
 	}
 	var host = &HostCmd{
 		project: opts.ProjectCfg,

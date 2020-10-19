@@ -59,7 +59,7 @@ func NewClient(remote *cfg.Remote, opts Options) (*Client, error) {
 			return nil, fmt.Errorf("daemon version is invalid: %w", err)
 		}
 		if daemonVersion.LT(MinDaemonVersion) {
-			return nil, fmt.Errorf("daemon version <v0.7.0 is not supported by this version of the Inertia client")
+			return nil, fmt.Errorf("daemon version <%s is not supported by this version of the Inertia client", MinDaemonVersion.String())
 		}
 	}
 

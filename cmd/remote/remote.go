@@ -378,10 +378,10 @@ func (root *RemoteCmd) attachUpgradeCmd() {
 		flagAll     = "all"
 	)
 	var upgrade = &cobra.Command{
-		Use:     "upgrade",
+		Use:     "upgrade [remotes]",
 		Short:   "Upgrade your remote configuration version to match the CLI",
 		Long:    `Upgrade your remote configuration version to match the CLI and save it to global settings.`,
-		Example: "inertia remote upgrade dev staging",
+		Example: "inertia remote upgrade my-remote",
 		Run: func(cmd *cobra.Command, args []string) {
 			var version = root.Version
 			if v, _ := cmd.Flags().GetString(flagVersion); v != "" {
