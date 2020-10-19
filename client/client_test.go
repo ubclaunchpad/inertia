@@ -62,12 +62,32 @@ func newMockClient(t *testing.T, ts *httptest.Server) *Client {
 }
 
 func TestNewClient(t *testing.T) {
-	var c = NewClient(&cfg.Remote{}, Options{})
+	c, err := NewClient(&cfg.Remote{}, Options{})
+	assert.NoError(t, err)
 	assert.NotNil(t, c)
 	c.WithDebug(false)
 	assert.False(t, c.debug)
 	c.WithWriter(os.Stdout)
 	assert.Equal(t, os.Stdout, c.out)
+
+	t.Run("with supported special version strings", func(t *testing.T) {
+		c, err := NewClient(&cfg.Remote{Version: "test"}, Options{})
+		assert.NoError(t, err)
+		assert.NotNil(t, c)
+		c2, err := NewClient(&cfg.Remote{Version: "latest"}, Options{})
+		assert.NoError(t, err)
+		assert.NotNil(t, c2)
+	})
+
+	t.Run("with bad version", func(t *testing.T) {
+		_, err := NewClient(&cfg.Remote{Version: "asdf"}, Options{})
+		assert.Error(t, err)
+	})
+
+	t.Run("with unsupported version", func(t *testing.T) {
+		_, err := NewClient(&cfg.Remote{Version: "v0.6.1"}, Options{})
+		assert.Error(t, err)
+	})
 }
 
 func TestClient_Up(t *testing.T) {

@@ -194,9 +194,12 @@ This ensures that your project ports are properly exposed and externally accessi
 			local.SaveRemote(remote)
 
 			// Create inertia client
-			var inertia = client.NewClient(remote, client.Options{
+			inertia, err := client.NewClient(remote, client.Options{
 				SSH: runner.SSHOptions{KeyPassphrase: os.Getenv(local.EnvSSHPassphrase)},
 			})
+			if err != nil {
+				out.Fatal((err))
+			}
 
 			// Bootstrap remote
 			out.Println(highlight.Sf("Initializing Inertia daemon at %s...", inertia.Remote.IP))
