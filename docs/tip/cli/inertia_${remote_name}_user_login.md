@@ -1,10 +1,13 @@
 ## inertia ${remote_name} user login
 
-Authenticate with the remote
+Authenticate with the remote as a user
 
 ### Synopsis
 
 Retreives an access token from the remote using your credentials.
+	
+If this remote was previously authenticated against as a user, then the user
+argument is optional.
 
 ```
 inertia ${remote_name} user login [user] [flags]

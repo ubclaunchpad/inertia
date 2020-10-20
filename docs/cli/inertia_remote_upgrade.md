@@ -7,13 +7,13 @@ Upgrade your remote configuration version to match the CLI
 Upgrade your remote configuration version to match the CLI and save it to global settings.
 
 ```
-inertia remote upgrade [flags]
+inertia remote upgrade [remotes] [flags]
 ```
 
 ### Examples
 
 ```
-inertia remote upgrade dev staging
+inertia remote upgrade my-remote
 ```
 
 ### Options
@@ -21,7 +21,7 @@ inertia remote upgrade dev staging
 ```
       --all              upgrade all remotes
   -h, --help             help for upgrade
-      --version string   specify Inertia daemon version to set (default "v0.6.1-3-g1e2ae0c")
+      --version string   specify Inertia daemon version to set (default "v0.6.2-24-g47a3d50")
 ```
 
 ### Options inherited from parent commands
