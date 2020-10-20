@@ -19,12 +19,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/spf13/cobra"
 	"github.com/ubclaunchpad/inertia/cmd/core/utils/out"
