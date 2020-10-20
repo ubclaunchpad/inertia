@@ -47,4 +47,4 @@ jobs:
         git config --global user.email 'team+bot@ubclaunchpad.com'
         git config --global user.name 'ubclaunchpad-bot'
         go run ./contrib/inertia-publish $(git describe --tags) --dryrun=false \
-          homebrew scoop \
+          homebrew scoop

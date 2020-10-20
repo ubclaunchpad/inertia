@@ -77,6 +77,7 @@ func newCommand(dir, name string, args ...string) *exec.Cmd {
 func getCloneURL(repository string) string {
 	// GIT_CREDENTIALS should be $USER:$TOKEN
 	if creds := os.Getenv("GIT_CREDENTIALS"); creds != "" {
+		println("Using GIT_CREDENTIALS to clone")
 		// "Personal access tokens can only be used for HTTPS Git operations.""
 		// https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token#using-a-token-on-the-command-line
 		return fmt.Sprintf("https://%s@github.com/%s.git", creds, repository)
