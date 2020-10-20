@@ -10,8 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build daemon
-      run: make daemon-release RELEASE=latest
-
+      run: RELEASE=latest bash .scripts/build_release_daemon.sh
     - name: Publish to GitHub Container Registry
       run: |
         echo ${{ secrets.GH_PACKAGES_TOKEN }} | docker login ghcr.io --username $GITHUB_ACTOR --password-stdin

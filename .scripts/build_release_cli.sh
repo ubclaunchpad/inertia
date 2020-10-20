@@ -2,10 +2,7 @@
 
 # Specify platforms and release version
 PLATFORMS="linux/amd64 linux/386 darwin/amd64 windows/amd64 windows/386"
-echo "Building release $RELEASE"
-
-# Build, tag and push Inertia Docker image
-make daemon-release RELEASE="$RELEASE"
+echo "Building CLI release $RELEASE"
 
 # Build Inertia Go binaries for specified platforms
 OUTDIR=${OUTDIR:-"dist"}
