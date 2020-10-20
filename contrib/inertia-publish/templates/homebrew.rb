@@ -6,7 +6,7 @@ class Inertia < Formula
   # Stable
   version "{{ .Version }}"
   sha256 "{{ index .Sha256 "darwin.amd64" }}"
-  url "https://github.com/ubclaunchpad/inertia/releases/download/v#{version}/inertia.v#{version}.darwin.amd64"
+  url "https://github.com/ubclaunchpad/inertia/releases/download/#{version}/inertia.#{version}.darwin.amd64"
 
   # Build from latest commit
   head "https://github.com/ubclaunchpad/inertia.git"
@@ -20,7 +20,7 @@ class Inertia < Formula
       system "go", "mod", "download"
       system "go", "build", "-o", "#{bin}/inertia"
     else
-      mv "inertia.v#{version}.darwin.amd64", "inertia"
+      mv "inertia.#{version}.darwin.amd64", "inertia"
       bin.install "inertia"
     end
   end

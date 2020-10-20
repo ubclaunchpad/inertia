@@ -17,7 +17,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -52,7 +52,7 @@ func generateSums(buildDir string) map[string]string {
 		}
 		sum := sha256.Sum256(data)
 		build := strings.Join(parts[len(parts)-2:], ".")
-		sums[build] = base64.URLEncoding.EncodeToString(sum[:])
+		sums[build] = hex.EncodeToString(sum[:])
 		return nil
 	}); err != nil {
 		out.Fatal(err)
