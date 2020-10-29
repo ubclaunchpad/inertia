@@ -24,6 +24,25 @@ At the very least, all pull requests need to pass our Travis builds and receive 
 
 See the [Development Tips](#development-tips) section to get started with the codebase!
 
+# Development Tips
+
+👷 This section will walk you through Inertia's codebase, how to get a development environment set up, and outline the various tools available to help you out.
+
+Please free free to open up a ticket if any of these instructions are unclear or straight up do not work on your platform!
+
+- [Guidelines](#guidelines)
+  - [Commits](#commits)
+  - [Merging Pull Requests](#merging-pull-requests)
+  - [Branch Naming](#branch-naming)
+- [Setup](#setup)
+- [Project Overview](#project-overview)
+  - [Makefile](#makefile)
+  - [CLI](#cli)
+  - [Client](#client)
+  - [Daemon](#daemon)
+  - [Documentation](#documentation)
+- [Setting up a Testing Environment](#setting-up-a-testing-environment)
+
 ## Guidelines
 
 ### Commits
@@ -47,25 +66,6 @@ Branches should be named to refer to the component of Inertia the changes pertai
 ```
 
 For example, [Issue #261](https://github.com/ubclaunchpad/inertia/issues/261) has the label `area: client` - in that case, the branch name should be `client/#261-ec2-provisioning`. If there are multiple `area` labels, just choose the most relevant one.
-
-# Development Tips
-
-👷 This section will walk you through Inertia's codebase, how to get a development environment set up, and outline the various tools available to help you out.
-
-Please free free to open up a ticket if any of these instructions are unclear or straight up do not work on your platform!
-
-- [Guidelines](#guidelines)
-  - [Commits](#commits)
-  - [Merging Pull Requests](#merging-pull-requests)
-  - [Branch Naming](#branch-naming)
-- [Setup](#setup)
-- [Project Overview](#project-overview)
-  - [Makefile](#makefile)
-  - [CLI](#cli)
-  - [Client](#client)
-  - [Daemon](#daemon)
-  - [Documentation](#documentation)
-- [Setting up a Testing Environment](#setting-up-a-testing-environment)
 
 ## Setup
 
