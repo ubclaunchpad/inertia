@@ -73,7 +73,7 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		// check inertia repository instead of inertiad, since ghcr.io has no REST API yet
 		Repository: "ubclaunchpad/inertia",
 	}, &current)
-	if tagCheckErr == nil {
+	if tagCheckErr == nil && current.NE(*latest) {
 		verStr := fmt.Sprintf("v%s", latest.String())
 		status.NewVersionAvailable = &verStr
 	}
