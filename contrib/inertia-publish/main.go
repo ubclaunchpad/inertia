@@ -25,8 +25,9 @@ import (
 	templatedata "github.com/ubclaunchpad/inertia/contrib/inertia-publish/templates"
 )
 
-//go:generate go run github.com/UnnoTed/fileb0x b0x.yml
-
+// channelConfigs defines the supported release channels at Launch Pad.
+//
+// See the `channelConfig` struct documentation for more details.
 var channelConfigs = map[string]channelConfig{
 	"homebrew": {
 		Repository: "ubclaunchpad/homebrew-tap",
