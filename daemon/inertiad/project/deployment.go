@@ -26,6 +26,8 @@ import (
 )
 
 // Deployer manages the deployed user project
+//
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./mocks/deployer.go ./deployment.go Deployer
 type Deployer interface {
 	Deploy(*docker.Client, io.Writer, DeployOptions) (func() error, error)
 	Initialize(cfg DeploymentConfig, out io.Writer) error

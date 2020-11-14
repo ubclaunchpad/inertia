@@ -31,6 +31,8 @@ func (n Notifiers) Exists(nt Notifier) bool {
 }
 
 // Notifier manages notifications
+//
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./mocks/notify.go ./notifier.go Notifier
 type Notifier interface {
 	Notify(string, Options) error
 	IsEqual(Notifier) bool
