@@ -22,6 +22,8 @@ type SSHSession interface {
 }
 
 // SSHRunner runs commands over SSH and captures results.
+//
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./mocks/session.go ./ssh.go SSHSession
 type SSHRunner struct {
 	user    string
 	ip      string

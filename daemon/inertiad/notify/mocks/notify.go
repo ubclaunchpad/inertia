@@ -41,15 +41,16 @@ func (fake *FakeNotifier) IsEqual(arg1 notify.Notifier) bool {
 	fake.isEqualArgsForCall = append(fake.isEqualArgsForCall, struct {
 		arg1 notify.Notifier
 	}{arg1})
+	stub := fake.IsEqualStub
+	fakeReturns := fake.isEqualReturns
 	fake.recordInvocation("IsEqual", []interface{}{arg1})
 	fake.isEqualMutex.Unlock()
-	if fake.IsEqualStub != nil {
-		return fake.IsEqualStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.isEqualReturns
 	return fakeReturns.result1
 }
 
@@ -102,15 +103,16 @@ func (fake *FakeNotifier) Notify(arg1 string, arg2 notify.Options) error {
 		arg1 string
 		arg2 notify.Options
 	}{arg1, arg2})
+	stub := fake.NotifyStub
+	fakeReturns := fake.notifyReturns
 	fake.recordInvocation("Notify", []interface{}{arg1, arg2})
 	fake.notifyMutex.Unlock()
-	if fake.NotifyStub != nil {
-		return fake.NotifyStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.notifyReturns
 	return fakeReturns.result1
 }
 
