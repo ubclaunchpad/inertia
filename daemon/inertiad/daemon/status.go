@@ -29,6 +29,7 @@ type shieldsIOData struct {
 func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	status, err := s.deployment.GetStatus(s.docker)
 	status.InertiaVersion = s.version
+	status.NewVersionAvailable = &s.version
 
 	// badge generator for https://shields.io/endpoint
 	if r.URL.Query().Get("badge") == "true" {
@@ -77,6 +78,7 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		verStr := fmt.Sprintf("v%s", latest.String())
 		status.NewVersionAvailable = &verStr
 	}
+
 
 	// standard responses
 	if status.CommitHash == "" {
