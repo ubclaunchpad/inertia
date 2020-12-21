@@ -159,15 +159,16 @@ func (fake *FakeDeployer) CompareRemotes(arg1 string) error {
 	fake.compareRemotesArgsForCall = append(fake.compareRemotesArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.CompareRemotesStub
+	fakeReturns := fake.compareRemotesReturns
 	fake.recordInvocation("CompareRemotes", []interface{}{arg1})
 	fake.compareRemotesMutex.Unlock()
-	if fake.CompareRemotesStub != nil {
-		return fake.CompareRemotesStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.compareRemotesReturns
 	return fakeReturns.result1
 }
 
@@ -221,15 +222,16 @@ func (fake *FakeDeployer) Deploy(arg1 *client.Client, arg2 io.Writer, arg3 proje
 		arg2 io.Writer
 		arg3 project.DeployOptions
 	}{arg1, arg2, arg3})
+	stub := fake.DeployStub
+	fakeReturns := fake.deployReturns
 	fake.recordInvocation("Deploy", []interface{}{arg1, arg2, arg3})
 	fake.deployMutex.Unlock()
-	if fake.DeployStub != nil {
-		return fake.DeployStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.deployReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -285,15 +287,16 @@ func (fake *FakeDeployer) Destroy(arg1 *client.Client, arg2 io.Writer) error {
 		arg1 *client.Client
 		arg2 io.Writer
 	}{arg1, arg2})
+	stub := fake.DestroyStub
+	fakeReturns := fake.destroyReturns
 	fake.recordInvocation("Destroy", []interface{}{arg1, arg2})
 	fake.destroyMutex.Unlock()
-	if fake.DestroyStub != nil {
-		return fake.DestroyStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.destroyReturns
 	return fakeReturns.result1
 }
 
@@ -346,15 +349,16 @@ func (fake *FakeDeployer) Down(arg1 *client.Client, arg2 io.Writer) error {
 		arg1 *client.Client
 		arg2 io.Writer
 	}{arg1, arg2})
+	stub := fake.DownStub
+	fakeReturns := fake.downReturns
 	fake.recordInvocation("Down", []interface{}{arg1, arg2})
 	fake.downMutex.Unlock()
-	if fake.DownStub != nil {
-		return fake.DownStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.downReturns
 	return fakeReturns.result1
 }
 
@@ -405,15 +409,16 @@ func (fake *FakeDeployer) GetBranch() string {
 	ret, specificReturn := fake.getBranchReturnsOnCall[len(fake.getBranchArgsForCall)]
 	fake.getBranchArgsForCall = append(fake.getBranchArgsForCall, struct {
 	}{})
+	stub := fake.GetBranchStub
+	fakeReturns := fake.getBranchReturns
 	fake.recordInvocation("GetBranch", []interface{}{})
 	fake.getBranchMutex.Unlock()
-	if fake.GetBranchStub != nil {
-		return fake.GetBranchStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.getBranchReturns
 	return fakeReturns.result1
 }
 
@@ -457,15 +462,16 @@ func (fake *FakeDeployer) GetDataManager() (*project.DeploymentDataManager, bool
 	ret, specificReturn := fake.getDataManagerReturnsOnCall[len(fake.getDataManagerArgsForCall)]
 	fake.getDataManagerArgsForCall = append(fake.getDataManagerArgsForCall, struct {
 	}{})
+	stub := fake.GetDataManagerStub
+	fakeReturns := fake.getDataManagerReturns
 	fake.recordInvocation("GetDataManager", []interface{}{})
 	fake.getDataManagerMutex.Unlock()
-	if fake.GetDataManagerStub != nil {
-		return fake.GetDataManagerStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getDataManagerReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -513,15 +519,16 @@ func (fake *FakeDeployer) GetStatus(arg1 *client.Client) (api.DeploymentStatus, 
 	fake.getStatusArgsForCall = append(fake.getStatusArgsForCall, struct {
 		arg1 *client.Client
 	}{arg1})
+	stub := fake.GetStatusStub
+	fakeReturns := fake.getStatusReturns
 	fake.recordInvocation("GetStatus", []interface{}{arg1})
 	fake.getStatusMutex.Unlock()
-	if fake.GetStatusStub != nil {
-		return fake.GetStatusStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getStatusReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -577,15 +584,16 @@ func (fake *FakeDeployer) Initialize(arg1 project.DeploymentConfig, arg2 io.Writ
 		arg1 project.DeploymentConfig
 		arg2 io.Writer
 	}{arg1, arg2})
+	stub := fake.InitializeStub
+	fakeReturns := fake.initializeReturns
 	fake.recordInvocation("Initialize", []interface{}{arg1, arg2})
 	fake.initializeMutex.Unlock()
-	if fake.InitializeStub != nil {
-		return fake.InitializeStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.initializeReturns
 	return fakeReturns.result1
 }
 
@@ -638,15 +646,16 @@ func (fake *FakeDeployer) Prune(arg1 *client.Client, arg2 io.Writer) error {
 		arg1 *client.Client
 		arg2 io.Writer
 	}{arg1, arg2})
+	stub := fake.PruneStub
+	fakeReturns := fake.pruneReturns
 	fake.recordInvocation("Prune", []interface{}{arg1, arg2})
 	fake.pruneMutex.Unlock()
-	if fake.PruneStub != nil {
-		return fake.PruneStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.pruneReturns
 	return fakeReturns.result1
 }
 
@@ -697,9 +706,10 @@ func (fake *FakeDeployer) SetConfig(arg1 project.DeploymentConfig) {
 	fake.setConfigArgsForCall = append(fake.setConfigArgsForCall, struct {
 		arg1 project.DeploymentConfig
 	}{arg1})
+	stub := fake.SetConfigStub
 	fake.recordInvocation("SetConfig", []interface{}{arg1})
 	fake.setConfigMutex.Unlock()
-	if fake.SetConfigStub != nil {
+	if stub != nil {
 		fake.SetConfigStub(arg1)
 	}
 }
@@ -729,15 +739,16 @@ func (fake *FakeDeployer) UpdateContainerHistory(arg1 *client.Client) error {
 	fake.updateContainerHistoryArgsForCall = append(fake.updateContainerHistoryArgsForCall, struct {
 		arg1 *client.Client
 	}{arg1})
+	stub := fake.UpdateContainerHistoryStub
+	fakeReturns := fake.updateContainerHistoryReturns
 	fake.recordInvocation("UpdateContainerHistory", []interface{}{arg1})
 	fake.updateContainerHistoryMutex.Unlock()
-	if fake.UpdateContainerHistoryStub != nil {
-		return fake.UpdateContainerHistoryStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.updateContainerHistoryReturns
 	return fakeReturns.result1
 }
 
@@ -789,15 +800,16 @@ func (fake *FakeDeployer) Watch(arg1 *client.Client) (<-chan string, <-chan erro
 	fake.watchArgsForCall = append(fake.watchArgsForCall, struct {
 		arg1 *client.Client
 	}{arg1})
+	stub := fake.WatchStub
+	fakeReturns := fake.watchReturns
 	fake.recordInvocation("Watch", []interface{}{arg1})
 	fake.watchMutex.Unlock()
-	if fake.WatchStub != nil {
-		return fake.WatchStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.watchReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

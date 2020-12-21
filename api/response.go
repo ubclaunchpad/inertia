@@ -34,10 +34,11 @@ type KV struct {
 
 // Unmarshal reads the response and unmarshalls the BaseResponse as well any
 // requested key-value pairs.
+//
 // For example:
 //
-// 	  var totpResp = &api.TotpResponse{}
-//    api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: totpResp})
+//    var totpResp api.TotpResponse
+//    api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: &totpResp})
 //
 // Values provided in KV.Value MUST be explicit pointers, even if the value is
 // a pointer type, ie maps and slices.
@@ -96,6 +97,12 @@ type DeploymentStatus struct {
 	BuildType            string   `json:"build_type"`
 	Containers           []string `json:"containers"`
 	BuildContainerActive bool     `json:"build_active"`
+}
+
+// DeploymentStatusWithUpdateCheck extends DeploymentStatus with a field that denotes
+// whether a new version is available
+type DeploymentStatusWithUpdateCheck struct {
+	DeploymentStatus
 
 	// returns tag of latest version on dockerhub
 	NewVersionAvailable *string `json:"new_version_available"`

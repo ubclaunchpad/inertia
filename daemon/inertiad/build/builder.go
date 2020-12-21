@@ -20,6 +20,8 @@ import (
 
 // ContainerBuilder builds projects and returns a callback that can be used to deploy the project.
 // No relation to Bob the Builder, though a Bob did write this.
+//
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./mocks/builder.go ./builder.go ContainerBuilder
 type ContainerBuilder interface {
 	Build(string, Config, *docker.Client, io.Writer) (func() error, error)
 	GetBuildStageName() string

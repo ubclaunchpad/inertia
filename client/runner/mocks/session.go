@@ -73,15 +73,16 @@ func (fake *FakeSSHSession) CopyFile(arg1 io.Reader, arg2 string, arg3 string) e
 		arg2 string
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.CopyFileStub
+	fakeReturns := fake.copyFileReturns
 	fake.recordInvocation("CopyFile", []interface{}{arg1, arg2, arg3})
 	fake.copyFileMutex.Unlock()
-	if fake.CopyFileStub != nil {
-		return fake.CopyFileStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.copyFileReturns
 	return fakeReturns.result1
 }
 
@@ -133,15 +134,16 @@ func (fake *FakeSSHSession) Run(arg1 string) (*bytes.Buffer, *bytes.Buffer, erro
 	fake.runArgsForCall = append(fake.runArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.RunStub
+	fakeReturns := fake.runReturns
 	fake.recordInvocation("Run", []interface{}{arg1})
 	fake.runMutex.Unlock()
-	if fake.RunStub != nil {
-		return fake.RunStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	fakeReturns := fake.runReturns
 	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
@@ -199,15 +201,16 @@ func (fake *FakeSSHSession) RunSession(arg1 ...string) error {
 	fake.runSessionArgsForCall = append(fake.runSessionArgsForCall, struct {
 		arg1 []string
 	}{arg1})
+	stub := fake.RunSessionStub
+	fakeReturns := fake.runSessionReturns
 	fake.recordInvocation("RunSession", []interface{}{arg1})
 	fake.runSessionMutex.Unlock()
-	if fake.RunSessionStub != nil {
-		return fake.RunSessionStub(arg1...)
+	if stub != nil {
+		return stub(arg1...)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.runSessionReturns
 	return fakeReturns.result1
 }
 
@@ -260,15 +263,16 @@ func (fake *FakeSSHSession) RunStream(arg1 string, arg2 bool) error {
 		arg1 string
 		arg2 bool
 	}{arg1, arg2})
+	stub := fake.RunStreamStub
+	fakeReturns := fake.runStreamReturns
 	fake.recordInvocation("RunStream", []interface{}{arg1, arg2})
 	fake.runStreamMutex.Unlock()
-	if fake.RunStreamStub != nil {
-		return fake.RunStreamStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.runStreamReturns
 	return fakeReturns.result1
 }
 
