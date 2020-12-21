@@ -34,10 +34,11 @@ type KV struct {
 
 // Unmarshal reads the response and unmarshalls the BaseResponse as well any
 // requested key-value pairs.
+//
 // For example:
 //
-// 	  var totpResp = &api.TotpResponse{}
-//    api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: totpResp})
+//    var totpResp api.TotpResponse
+//    api.Unmarshal(resp.Body, api.KV{Key: "totp", Value: &totpResp})
 //
 // Values provided in KV.Value MUST be explicit pointers, even if the value is
 // a pointer type, ie maps and slices.
