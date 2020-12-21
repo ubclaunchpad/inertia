@@ -24,8 +24,8 @@ func readBadge(body io.Reader) (*shieldsIOData, error) {
 	return &data, json.Unmarshal(buf.Bytes(), &data)
 }
 
-func readStatus(t *testing.T, body io.Reader) (*api.DeploymentStatusWithUpdateCheck, error) {
-	var data api.DeploymentStatusWithUpdateCheck
+func readStatus(t *testing.T, body io.Reader) (*api.DeploymentStatusWithVersions, error) {
+	var data api.DeploymentStatusWithVersions
 	base, err := api.Unmarshal(body, api.KV{Key: "status", Value: &data})
 	if err != nil {
 		return nil, err
@@ -193,7 +193,6 @@ func TestStatusHandlerNotUpToDate(t *testing.T) {
 					CommitMessage:        "",
 					Containers:           []string{},
 					BuildContainerActive: false,
-					InertiaVersion:       someOldVersion,
 				}, nil
 			},
 		},

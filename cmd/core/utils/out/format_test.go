@@ -9,9 +9,9 @@ import (
 )
 
 func TestFormatStatus(t *testing.T) {
-	out := FormatStatus("robert", &api.DeploymentStatusWithUpdateCheck{
+	out := FormatStatus("robert", &api.DeploymentStatusWithVersions{
+		InertiaVersion: "9000",
 		DeploymentStatus: api.DeploymentStatus{
-			InertiaVersion:       "9000",
 			Branch:               "call",
 			CommitHash:           "me",
 			CommitMessage:        "maybe",
@@ -23,9 +23,9 @@ func TestFormatStatus(t *testing.T) {
 	assert.Contains(t, out, "Active containers")
 
 	t.Run("with build active", func(t *testing.T) {
-		out := FormatStatus("robert", &api.DeploymentStatusWithUpdateCheck{
+		out := FormatStatus("robert", &api.DeploymentStatusWithVersions{
+			InertiaVersion: "9000",
 			DeploymentStatus: api.DeploymentStatus{
-				InertiaVersion:       "9000",
 				Branch:               "call",
 				CommitHash:           "me",
 				CommitMessage:        "maybe",
@@ -39,9 +39,9 @@ func TestFormatStatus(t *testing.T) {
 
 	t.Run("with new version available", func(t *testing.T) {
 		version := "v0.6.0"
-		out := FormatStatus("robert", &api.DeploymentStatusWithUpdateCheck{
+		out := FormatStatus("robert", &api.DeploymentStatusWithVersions{
+			InertiaVersion: "9000",
 			DeploymentStatus: api.DeploymentStatus{
-				InertiaVersion:       "9000",
 				Branch:               "call",
 				CommitHash:           "me",
 				CommitMessage:        "maybe",
@@ -56,9 +56,9 @@ func TestFormatStatus(t *testing.T) {
 	})
 
 	t.Run("with no deployment", func(t *testing.T) {
-		out := FormatStatus("robert", &api.DeploymentStatusWithUpdateCheck{
+		out := FormatStatus("robert", &api.DeploymentStatusWithVersions{
+			InertiaVersion: "9000",
 			DeploymentStatus: api.DeploymentStatus{
-				InertiaVersion:       "9000",
 				Branch:               "",
 				CommitHash:           "",
 				CommitMessage:        "",

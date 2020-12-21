@@ -14,7 +14,7 @@ const (
 )
 
 // FormatStatus prints the given deployment status
-func FormatStatus(remoteName string, s *api.DeploymentStatusWithUpdateCheck) string {
+func FormatStatus(remoteName string, s *api.DeploymentStatusWithVersions) string {
 	var (
 		inertiaStatus   = "Inertia daemon " + s.InertiaVersion + "\n"
 		branchStatus    = " - Branch:     " + s.Branch + "\n"

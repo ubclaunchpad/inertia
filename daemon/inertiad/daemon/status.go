@@ -29,8 +29,9 @@ type shieldsIOData struct {
 // deployment and lists currently active project containers
 func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	status, statusErr := s.deployment.GetStatus(s.docker)
-	extendedStatus := &api.DeploymentStatusWithUpdateCheck{
+	extendedStatus := &api.DeploymentStatusWithVersions{
 		DeploymentStatus: status,
+		InertiaVersion:   s.version,
 	}
 
 	// badge generator for https://shields.io/endpoint

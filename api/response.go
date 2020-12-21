@@ -90,7 +90,6 @@ type TotpResponse struct {
 
 // DeploymentStatus lists details about the deployed project
 type DeploymentStatus struct {
-	InertiaVersion       string   `json:"version"`
 	Branch               string   `json:"branch"`
 	CommitHash           string   `json:"commit_hash"`
 	CommitMessage        string   `json:"commit_message"`
@@ -99,10 +98,13 @@ type DeploymentStatus struct {
 	BuildContainerActive bool     `json:"build_active"`
 }
 
-// DeploymentStatusWithUpdateCheck extends DeploymentStatus with a field that denotes
+// DeploymentStatusWithVersions extends DeploymentStatus with a field that denotes
 // whether a new version is available
-type DeploymentStatusWithUpdateCheck struct {
+type DeploymentStatusWithVersions struct {
 	DeploymentStatus
+
+	// current version
+	InertiaVersion string `json:"version"`
 
 	// returns tag of latest version on dockerhub
 	NewVersionAvailable *string `json:"new_version_available"`
