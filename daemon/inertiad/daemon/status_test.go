@@ -16,11 +16,22 @@ import (
 )
 
 func readBadge(body io.Reader) (*shieldsIOData, error) {
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(body)
-	bytes := buf.Bytes()
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(body); err != nil {
+		return nil, err
+	}
 	var data shieldsIOData
-	return &data, json.Unmarshal(bytes, &data)
+	return &data, json.Unmarshal(buf.Bytes(), &data)
+}
+
+func readStatus(t *testing.T, body io.Reader) (*api.DeploymentStatusWithVersions, error) {
+	var data api.DeploymentStatusWithVersions
+	base, err := api.Unmarshal(body, api.KV{Key: "status", Value: &data})
+	if err != nil {
+		return nil, err
+	}
+	t.Log(base.Message)
+	return &data, nil
 }
 
 func TestStatusHandlerBuildInProgress(t *testing.T) {
@@ -169,4 +180,40 @@ func TestStatusHandlerStatusError(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "errored", badge.Message)
 	assert.True(t, badge.IsError)
+}
+
+func TestStatusHandlerNotUpToDate(t *testing.T) {
+	const someOldVersion = "v0.6.0" // outdated version
+	var s = &Server{
+		deployment: &mocks.FakeDeployer{
+			GetStatusStub: func(*docker.Client) (api.DeploymentStatus, error) {
+				return api.DeploymentStatus{
+					Branch:               "wow",
+					CommitHash:           "abcde",
+					CommitMessage:        "",
+					Containers:           []string{},
+					BuildContainerActive: false,
+				}, nil
+			},
+		},
+		version: someOldVersion,
+	}
+
+	// Assemble request
+	req, err := http.NewRequest(http.MethodGet, "/status", nil)
+	assert.NoError(t, err)
+
+	// Record responses
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(s.statusHandler)
+
+	handler.ServeHTTP(recorder, req)
+	gotStat, err := readStatus(t, recorder.Result().Body)
+	assert.NoError(t, err)
+	assert.Equal(t, recorder.Code, http.StatusOK)
+
+	// Check status
+	assert.Equal(t, gotStat.InertiaVersion, someOldVersion)
+	assert.NotNil(t, gotStat.NewVersionAvailable, "new version should be available")
+	assert.NotEqual(t, gotStat.NewVersionAvailable, s.version)
 }

@@ -9,25 +9,29 @@ import (
 )
 
 func TestFormatStatus(t *testing.T) {
-	out := FormatStatus("robert", &api.DeploymentStatus{
-		InertiaVersion:       "9000",
-		Branch:               "call",
-		CommitHash:           "me",
-		CommitMessage:        "maybe",
-		BuildContainerActive: true,
-		Containers:           []string{"wow"},
+	out := FormatStatus("robert", &api.DeploymentStatusWithVersions{
+		InertiaVersion: "9000",
+		DeploymentStatus: api.DeploymentStatus{
+			Branch:               "call",
+			CommitHash:           "me",
+			CommitMessage:        "maybe",
+			BuildContainerActive: true,
+			Containers:           []string{"wow"},
+		},
 	})
 	assert.Contains(t, out, "9000")
 	assert.Contains(t, out, "Active containers")
 
 	t.Run("with build active", func(t *testing.T) {
-		out := FormatStatus("robert", &api.DeploymentStatus{
-			InertiaVersion:       "9000",
-			Branch:               "call",
-			CommitHash:           "me",
-			CommitMessage:        "maybe",
-			BuildContainerActive: true,
-			Containers:           make([]string, 0),
+		out := FormatStatus("robert", &api.DeploymentStatusWithVersions{
+			InertiaVersion: "9000",
+			DeploymentStatus: api.DeploymentStatus{
+				Branch:               "call",
+				CommitHash:           "me",
+				CommitMessage:        "maybe",
+				BuildContainerActive: true,
+				Containers:           make([]string, 0),
+			},
 		})
 		assert.Contains(t, out, "9000")
 		assert.Contains(t, out, msgBuildInProgress)
@@ -35,32 +39,36 @@ func TestFormatStatus(t *testing.T) {
 
 	t.Run("with new version available", func(t *testing.T) {
 		version := "v0.6.0"
-		out := FormatStatus("robert", &api.DeploymentStatus{
-			InertiaVersion:       "9000",
-			Branch:               "call",
-			CommitHash:           "me",
-			CommitMessage:        "maybe",
-			BuildContainerActive: true,
-			Containers:           []string{"wow"},
-			NewVersionAvailable:  &version,
+		out := FormatStatus("robert", &api.DeploymentStatusWithVersions{
+			InertiaVersion: "9000",
+			DeploymentStatus: api.DeploymentStatus{
+				Branch:               "call",
+				CommitHash:           "me",
+				CommitMessage:        "maybe",
+				BuildContainerActive: true,
+				Containers:           []string{"wow"},
+			},
+			NewVersionAvailable: &version,
 		})
 		assert.Contains(t, out, "9000")
 		assert.Contains(t, out, version)
 		assert.Contains(t, out, "robert")
 	})
-}
 
-func TestFormatStatusNoDeployment(t *testing.T) {
-	out := FormatStatus("robert", &api.DeploymentStatus{
-		InertiaVersion:       "9000",
-		Branch:               "",
-		CommitHash:           "",
-		CommitMessage:        "",
-		BuildContainerActive: false,
-		Containers:           make([]string, 0),
+	t.Run("with no deployment", func(t *testing.T) {
+		out := FormatStatus("robert", &api.DeploymentStatusWithVersions{
+			InertiaVersion: "9000",
+			DeploymentStatus: api.DeploymentStatus{
+				Branch:               "",
+				CommitHash:           "",
+				CommitMessage:        "",
+				BuildContainerActive: false,
+				Containers:           make([]string, 0),
+			},
+		})
+		assert.Contains(t, out, "9000")
+		assert.Contains(t, out, msgNoDeployment)
 	})
-	assert.Contains(t, out, "9000")
-	assert.Contains(t, out, msgNoDeployment)
 }
 
 func TestFormatRemoteDetails(t *testing.T) {
