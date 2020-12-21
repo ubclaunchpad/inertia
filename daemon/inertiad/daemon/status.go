@@ -8,6 +8,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/go-chi/render"
 
+	"github.com/ubclaunchpad/inertia/api"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/containers"
 	"github.com/ubclaunchpad/inertia/daemon/inertiad/res"
 )
@@ -28,8 +29,9 @@ type shieldsIOData struct {
 // deployment and lists currently active project containers
 func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	status, err := s.deployment.GetStatus(s.docker)
-	status.InertiaVersion = s.version
-	status.NewVersionAvailable = &s.version
+	extendedStatus := api.DeploymentStatusWithUpdateCheck{
+		DeploymentStatus: status,
+	}
 
 	// badge generator for https://shields.io/endpoint
 	if r.URL.Query().Get("badge") == "true" {
@@ -76,9 +78,8 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	}, &current)
 	if tagCheckErr == nil && current.NE(*latest) {
 		verStr := fmt.Sprintf("v%s", latest.String())
-		status.NewVersionAvailable = &verStr
+		extendedStatus.NewVersionAvailable = &verStr
 	}
-
 
 	// standard responses
 	if status.CommitHash == "" {

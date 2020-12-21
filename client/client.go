@@ -229,13 +229,13 @@ func (c *Client) Down(ctx context.Context) error {
 }
 
 // Status lists the currently active containers on the remote VPS instance
-func (c *Client) Status(ctx context.Context) (*api.DeploymentStatus, error) {
+func (c *Client) Status(ctx context.Context) (*api.DeploymentStatusWithUpdateCheck, error) {
 	resp, err := c.get(ctx, "/status", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %s", err.Error())
 	}
 
-	var status = &api.DeploymentStatus{}
+	var status = &api.DeploymentStatusWithUpdateCheck{}
 	base, err := c.unmarshal(resp.Body, api.KV{
 		Key: "status", Value: status,
 	})

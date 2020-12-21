@@ -23,11 +23,11 @@ func readBadge(body io.Reader) (*shieldsIOData, error) {
 	return &data, json.Unmarshal(bytes, &data)
 }
 
-func readStatus(body io.Reader) (*api.DeploymentStatus, error) {
+func readStatus(body io.Reader) (*api.DeploymentStatusWithUpdateCheck, error) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(body)
 	bytes := buf.Bytes()
-	var data api.DeploymentStatus
+	var data api.DeploymentStatusWithUpdateCheck
 	return &data, json.Unmarshal(bytes, &data)
 }
 
@@ -135,7 +135,7 @@ func TestStatusHandlerNotUpToDate(t *testing.T) {
 	handler := http.HandlerFunc(s.statusHandler)
 
 	handler.ServeHTTP(recorder, req)
-	stat, err := readStatus(recorder.Result().Body);
+	stat, err := readStatus(recorder.Result().Body)
 	assert.Equal(t, recorder.Code, http.StatusOK)
 
 	// Check status
