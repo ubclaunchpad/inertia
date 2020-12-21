@@ -85,15 +85,16 @@ func (fake *FakeContainerBuilder) Build(arg1 string, arg2 build.Config, arg3 *cl
 		arg3 *client.Client
 		arg4 io.Writer
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.BuildStub
+	fakeReturns := fake.buildReturns
 	fake.recordInvocation("Build", []interface{}{arg1, arg2, arg3, arg4})
 	fake.buildMutex.Unlock()
-	if fake.BuildStub != nil {
-		return fake.BuildStub(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.buildReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -147,15 +148,16 @@ func (fake *FakeContainerBuilder) GetBuildStageName() string {
 	ret, specificReturn := fake.getBuildStageNameReturnsOnCall[len(fake.getBuildStageNameArgsForCall)]
 	fake.getBuildStageNameArgsForCall = append(fake.getBuildStageNameArgsForCall, struct {
 	}{})
+	stub := fake.GetBuildStageNameStub
+	fakeReturns := fake.getBuildStageNameReturns
 	fake.recordInvocation("GetBuildStageName", []interface{}{})
 	fake.getBuildStageNameMutex.Unlock()
-	if fake.GetBuildStageNameStub != nil {
-		return fake.GetBuildStageNameStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.getBuildStageNameReturns
 	return fakeReturns.result1
 }
 
@@ -201,15 +203,16 @@ func (fake *FakeContainerBuilder) Prune(arg1 *client.Client, arg2 io.Writer) err
 		arg1 *client.Client
 		arg2 io.Writer
 	}{arg1, arg2})
+	stub := fake.PruneStub
+	fakeReturns := fake.pruneReturns
 	fake.recordInvocation("Prune", []interface{}{arg1, arg2})
 	fake.pruneMutex.Unlock()
-	if fake.PruneStub != nil {
-		return fake.PruneStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.pruneReturns
 	return fakeReturns.result1
 }
 
@@ -262,15 +265,16 @@ func (fake *FakeContainerBuilder) PruneAll(arg1 *client.Client, arg2 io.Writer) 
 		arg1 *client.Client
 		arg2 io.Writer
 	}{arg1, arg2})
+	stub := fake.PruneAllStub
+	fakeReturns := fake.pruneAllReturns
 	fake.recordInvocation("PruneAll", []interface{}{arg1, arg2})
 	fake.pruneAllMutex.Unlock()
-	if fake.PruneAllStub != nil {
-		return fake.PruneAllStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.pruneAllReturns
 	return fakeReturns.result1
 }
 
@@ -323,15 +327,16 @@ func (fake *FakeContainerBuilder) StopContainers(arg1 *client.Client, arg2 io.Wr
 		arg1 *client.Client
 		arg2 io.Writer
 	}{arg1, arg2})
+	stub := fake.StopContainersStub
+	fakeReturns := fake.stopContainersReturns
 	fake.recordInvocation("StopContainers", []interface{}{arg1, arg2})
 	fake.stopContainersMutex.Unlock()
-	if fake.StopContainersStub != nil {
-		return fake.StopContainersStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.stopContainersReturns
 	return fakeReturns.result1
 }
 

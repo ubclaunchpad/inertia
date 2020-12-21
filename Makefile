@@ -179,21 +179,9 @@ dev-deps:
 docker-deps:
 	bash test/docker_deps.sh
 
-## mocks: generate Go mocks
-.PHONY: mocks
-mocks:
-	go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./client/runner/mocks/session.go \
-		./client/runner/ssh.go SSHSession
-	go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./daemon/inertiad/project/mocks/deployer.go \
-		./daemon/inertiad/project/deployment.go Deployer
-	go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./daemon/inertiad/build/mocks/builder.go \
-		./daemon/inertiad/build/builder.go ContainerBuilder
-	go run github.com/maxbrunsfeld/counterfeiter/v6 -o ./daemon/inertiad/notify/mocks/notify.go \
-		./daemon/inertiad/notify/notifier.go Notifier
-
-## scripts: recompile script assets
-.PHONY: scripts
-scripts:
+## mocks: generate Go code and assets
+.PHONY: generate
+generate:
 	go generate ./...
 
 ## testdaemon-scp: copy test daemon image from ./images to test VPS
