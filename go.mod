@@ -31,7 +31,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	go.etcd.io/bbolt v1.3.5
 	go.uber.org/multierr v1.6.0
-	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	golang.org/x/crypto v0.1.0
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
-	golang.org/x/net v0.0.0-20201026091529-146b70c837a4
+	golang.org/x/net v0.1.0
 )
