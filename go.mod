@@ -24,7 +24,7 @@ require (
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.3.0
 	github.com/mitchellh/gox v1.0.1
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
-	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/pquerna/otp v1.3.0
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 // indirect
 	github.com/spf13/cobra v1.1.1
